@@ -7,7 +7,13 @@ import {
   resolveDescriptions,
   type DescriptionProvider,
 } from '../src/description-provider.js';
-import { resolveResources, resolveToolConfigs, useMCP } from '../src/plugin.js';
+import {
+  compileUriTemplate,
+  resolveResources,
+  resolveResourceTemplates,
+  resolveToolConfigs,
+  useMCP,
+} from '../src/plugin.js';
 
 describe('resolveToolConfigs', () => {
   it('returns inline source tools with query extracted', () => {
@@ -406,7 +412,11 @@ describe('resolveResources', () => {
   it('throws with context when file does not exist', () => {
     expect(() =>
       resolveResources([
-        { name: 'missing', uri: 'docs://missing', file: '/nonexistent/path.md' },
+        {
+          name: 'missing',
+          uri: 'docs://missing',
+          file: '/nonexistent/path.md',
+        },
       ]),
     ).toThrow(/Resource "missing" .* cannot read file/);
   });
@@ -414,7 +424,12 @@ describe('resolveResources', () => {
   it('resolves inline blob resource', () => {
     const b64 = Buffer.from('binary data').toString('base64');
     const resources = resolveResources([
-      { name: 'img', uri: 'files://icon.png', blob: b64, mimeType: 'image/png' },
+      {
+        name: 'img',
+        uri: 'files://icon.png',
+        blob: b64,
+        mimeType: 'image/png',
+      },
     ]);
     const r = resources.get('files://icon.png')!;
     expect(r.blob).toBe(b64);
@@ -429,7 +444,12 @@ describe('resolveResources', () => {
     const buf = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
     writeFileSync(filePath, buf);
     const resources = resolveResources([
-      { name: 'icon', uri: 'files://icon', file: filePath, mimeType: 'image/png' },
+      {
+        name: 'icon',
+        uri: 'files://icon',
+        file: filePath,
+        mimeType: 'image/png',
+      },
     ]);
     const r = resources.get('files://icon')!;
     expect(r.blob).toBe(buf.toString('base64'));
@@ -442,7 +462,12 @@ describe('resolveResources', () => {
     const filePath = join(dir, 'data.json');
     writeFileSync(filePath, '{"key": "value"}');
     const resources = resolveResources([
-      { name: 'data', uri: 'files://data', file: filePath, mimeType: 'application/json' },
+      {
+        name: 'data',
+        uri: 'files://data',
+        file: filePath,
+        mimeType: 'application/json',
+      },
     ]);
     const r = resources.get('files://data')!;
     expect(r.text).toBe('{"key": "value"}');
@@ -455,7 +480,13 @@ describe('resolveResources', () => {
     const buf = Buffer.from([0x00, 0x01, 0x02]);
     writeFileSync(filePath, buf);
     const resources = resolveResources([
-      { name: 'special', uri: 'files://special', file: filePath, mimeType: 'text/plain', binary: true },
+      {
+        name: 'special',
+        uri: 'files://special',
+        file: filePath,
+        mimeType: 'text/plain',
+        binary: true,
+      },
     ]);
     const r = resources.get('files://special')!;
     expect(r.blob).toBe(buf.toString('base64'));
@@ -468,6 +499,80 @@ describe('resolveResources', () => {
         { name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any,
       ]),
     ).toThrow('specify exactly one of');
+  });
+});
+
+describe('compileUriTemplate', () => {
+  it('compiles simple single-param template', () => {
+    const { pattern, paramNames } = compileUriTemplate('docs://schemas/{name}');
+    expect(paramNames).toEqual(['name']);
+    const match = pattern.exec('docs://schemas/users');
+    expect(match?.groups?.['name']).toBe('users');
+  });
+
+  it('compiles multi-param template', () => {
+    const { pattern, paramNames } = compileUriTemplate(
+      'files://{org}/{repo}/{path}',
+    );
+    expect(paramNames).toEqual(['org', 'repo', 'path']);
+    const match = pattern.exec('files://acme/gateway/README.md');
+    expect(match?.groups?.['org']).toBe('acme');
+    expect(match?.groups?.['repo']).toBe('gateway');
+    expect(match?.groups?.['path']).toBe('README.md');
+  });
+
+  it('does not match wrong prefix', () => {
+    const { pattern } = compileUriTemplate('docs://schemas/{name}');
+    expect(pattern.exec('other://schemas/users')).toBeNull();
+  });
+
+  it('does not match extra path segments', () => {
+    const { pattern } = compileUriTemplate('docs://schemas/{name}');
+    expect(pattern.exec('docs://schemas/users/extra')).toBeNull();
+  });
+
+  it('escapes special regex characters in literal parts', () => {
+    const { pattern } = compileUriTemplate('docs://api.v2/{name}');
+    expect(pattern.exec('docs://api.v2/users')).not.toBeNull();
+    expect(pattern.exec('docs://apiXv2/users')).toBeNull();
+  });
+
+  it('throws on invalid parameter names', () => {
+    expect(() => compileUriTemplate('docs://{my-param}')).toThrow(
+      'Invalid parameter name',
+    );
+    expect(() => compileUriTemplate('docs://{123}')).toThrow(
+      'Invalid parameter name',
+    );
+    expect(() => compileUriTemplate('docs://{a b}')).toThrow(
+      'Invalid parameter name',
+    );
+  });
+
+  it('throws on duplicate parameter names', () => {
+    expect(() => compileUriTemplate('docs://{name}/sub/{name}')).toThrow(
+      'Duplicate parameter name',
+    );
+  });
+
+  it('allows valid identifier-style parameter names', () => {
+    expect(() => compileUriTemplate('docs://{name}')).not.toThrow();
+    expect(() => compileUriTemplate('docs://{_private}')).not.toThrow();
+    expect(() => compileUriTemplate('docs://{$var}')).not.toThrow();
+    expect(() => compileUriTemplate('docs://{camelCase123}')).not.toThrow();
+  });
+});
+
+describe('resolveResourceTemplates', () => {
+  it('compiles templates with patterns', () => {
+    const handler = () => ({ text: 'hi' });
+    const templates = resolveResourceTemplates([
+      { uriTemplate: 'docs://{name}', name: 'doc', handler },
+    ]);
+    expect(templates).toHaveLength(1);
+    expect(templates[0]!.paramNames).toEqual(['name']);
+    expect(templates[0]!.pattern.test('docs://test')).toBe(true);
+    expect(templates[0]!.handler).toBe(handler);
   });
 });
 
@@ -519,6 +624,25 @@ describe('useMCP startup validation', () => {
       }),
     ).toThrow(
       'Unknown description provider type: "nonexistent" for resource "guide"',
+    );
+  });
+
+  it('throws when resource template descriptionProvider references unknown provider', () => {
+    expect(() =>
+      useMCP({
+        name: 'test',
+        tools: [],
+        resourceTemplates: [
+          {
+            uriTemplate: 'docs://{name}',
+            name: 'doc',
+            descriptionProvider: { type: 'nonexistent', prompt: 'test' },
+            handler: () => ({ text: 'hi' }),
+          },
+        ],
+      }),
+    ).toThrow(
+      'Unknown description provider type: "nonexistent" for resource template "doc"',
     );
   });
 });

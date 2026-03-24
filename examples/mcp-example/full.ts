@@ -434,6 +434,45 @@ const mcpPlugin = useMCP({
       file: join(__dirname, 'README.md'),
     },
   ],
+
+  // Resource Templates: parameterized resources with dynamic content.
+  // Clients discover templates via resources/templates/list, construct URIs
+  // from the template, and fetch content via resources/read.
+  // The handler receives extracted URI parameters and returns { text } or { blob }.
+  resourceTemplates: [
+    // Template 1: Dynamic weather data as a resource
+    {
+      uriTemplate: 'weather://{location}',
+      name: 'Weather Data',
+      title: 'Weather by Location',
+      description: 'Current weather data for any city, served as JSON',
+      mimeType: 'application/json',
+      handler: async (params) => {
+        // params.location is extracted from the URI, e.g. "weather://London": { location: "London" }
+        const data = weatherData[params.location.toLowerCase()] || {
+          temperature: 70,
+          conditions: 'Unknown',
+          humidity: 50,
+        }
+        return { text: JSON.stringify({ location: params.location, ...data }, null, 2) }
+      },
+    },
+
+    // Template 2: Handler can override mimeType per-call
+    {
+      uriTemplate: 'forecast://{location}/{days}',
+      name: 'Forecast',
+      description: 'Multi-day forecast as markdown',
+      handler: async (params) => {
+        const days = parseInt(params.days, 10) || 5
+        const lines = [`# ${days}-Day Forecast for ${params.location}`, '']
+        for (let i = 0; i < days; i++) {
+          lines.push(`- Day ${i + 1}: ${Math.round(60 + Math.random() * 20)}°F`)
+        }
+        return { text: lines.join('\n'), mimeType: 'text/markdown' }
+      },
+    },
+  ],
 })
 
 const gateway = createGatewayRuntime({

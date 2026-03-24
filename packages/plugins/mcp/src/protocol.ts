@@ -1,5 +1,10 @@
 import type { DescriptionProviderContext } from './description-provider.js';
-import type { MCPIcon, ResolvedResource, ToolHookContext } from './plugin.js';
+import type {
+  MCPIcon,
+  ResolvedResource,
+  ResolvedResourceTemplate,
+  ToolHookContext,
+} from './plugin.js';
 import {
   getByPath,
   type RegisteredTool,
@@ -294,7 +299,11 @@ export interface MCPHandlerOptions {
   /** Page size for resources/list pagination. Defaults to returning all resources (no pagination). */
   resourcesListPageSize?: number;
   resources?: Map<string, ResolvedResource>;
+  resourceTemplates?: ResolvedResourceTemplate[];
   resolveResourceDescriptions?: (
+    context?: DescriptionProviderContext,
+  ) => Promise<Map<string, string>>;
+  resolveTemplateDescriptions?: (
     context?: DescriptionProviderContext,
   ) => Promise<Map<string, string>>;
   requestContext?: {
@@ -343,7 +352,10 @@ export async function handleMCPRequest(
       if (options.serverWebsiteUrl)
         serverInfo['websiteUrl'] = options.serverWebsiteUrl;
       const capabilities: Record<string, unknown> = { tools: {} };
-      if (options.resources && options.resources.size > 0) {
+      const hasResources =
+        (options.resources && options.resources.size > 0) ||
+        (options.resourceTemplates && options.resourceTemplates.length > 0);
+      if (hasResources) {
         capabilities['resources'] = {};
       }
       const initResult: Record<string, unknown> = {
@@ -514,8 +526,7 @@ export async function handleMCPRequest(
           };
         }
       }
-      const pageSize =
-        options.resourcesListPageSize ?? resourceList.length;
+      const pageSize = options.resourcesListPageSize ?? resourceList.length;
       const page = resourceList.slice(startIndex, startIndex + pageSize);
       const nextIndex = startIndex + pageSize;
       const result: Record<string, unknown> = { resources: page };
@@ -524,6 +535,49 @@ export async function handleMCPRequest(
       }
 
       return { jsonrpc: '2.0', id, result };
+    }
+
+    case 'resources/templates/list': {
+      const allTemplates = options.resourceTemplates ?? [];
+
+      const templateList = allTemplates.map((t) => {
+        const entry: Record<string, unknown> = {
+          uriTemplate: t.uriTemplate,
+          name: t.name,
+        };
+        if (t.title) entry['title'] = t.title;
+        if (t.mimeType) entry['mimeType'] = t.mimeType;
+        if (t.icons) entry['icons'] = t.icons;
+        if (t.annotations) entry['annotations'] = t.annotations;
+        const desc = t.description;
+        if (desc) entry['description'] = desc;
+        return entry;
+      });
+
+      if (options.resolveTemplateDescriptions) {
+        try {
+          const descriptions =
+            await options.resolveTemplateDescriptions(providerContext);
+          for (const tmpl of templateList) {
+            const providerDesc = descriptions.get(
+              tmpl['uriTemplate'] as string,
+            );
+            if (providerDesc) {
+              tmpl['description'] = providerDesc;
+            }
+          }
+        } catch (err) {
+          console.warn(
+            `[MCP] Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: { resourceTemplates: templateList },
+      };
     }
 
     case 'resources/read': {
@@ -540,43 +594,105 @@ export async function handleMCPRequest(
       }
 
       const resource = options.resources?.get(readParams.uri);
-      if (!resource) {
+      if (resource) {
+        if (resource.blob == null && resource.text == null) {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32603,
+              message: `Resource "${resource.name}" (${resource.uri}) has no content`,
+            },
+          };
+        }
+
+        const contentItem: Record<string, unknown> = {
+          uri: resource.uri,
+          mimeType: resource.mimeType,
+        };
+        if (resource.blob != null) {
+          contentItem['blob'] = resource.blob;
+        } else {
+          contentItem['text'] = resource.text;
+        }
+
         return {
           jsonrpc: '2.0',
           id,
-          error: {
-            code: -32002,
-            message: 'Resource not found',
-            data: { uri: readParams.uri },
-          },
+          result: { contents: [contentItem] },
         };
       }
 
-      if (resource.blob == null && resource.text == null) {
-        return {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32603,
-            message: `Resource "${resource.name}" (${resource.uri}) has no content`,
-          },
-        };
-      }
+      if (options.resourceTemplates) {
+        for (const tmpl of options.resourceTemplates) {
+          const match = tmpl.pattern.exec(readParams.uri);
+          if (!match) continue;
 
-      const contentItem: Record<string, unknown> = {
-        uri: resource.uri,
-        mimeType: resource.mimeType,
-      };
-      if (resource.blob != null) {
-        contentItem['blob'] = resource.blob;
-      } else {
-        contentItem['text'] = resource.text;
+          const extractedParams: Record<string, string> = {};
+          for (const name of tmpl.paramNames) {
+            extractedParams[name] = match.groups?.[name] ?? '';
+          }
+
+          let handlerResult;
+          try {
+            handlerResult = await tmpl.handler(extractedParams);
+          } catch (err) {
+            console.error(
+              `[MCP] Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
+              err instanceof Error ? err.message : err,
+            );
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32002,
+                message: 'Resource handler failed',
+                data: {
+                  uri: readParams.uri,
+                  error: err instanceof Error ? err.message : String(err),
+                },
+              },
+            };
+          }
+
+          const mimeType =
+            handlerResult.mimeType ?? tmpl.mimeType ?? 'text/plain';
+          const contentItem: Record<string, unknown> = {
+            uri: readParams.uri,
+            mimeType,
+          };
+
+          if ('blob' in handlerResult && handlerResult.blob != null) {
+            contentItem['blob'] = handlerResult.blob;
+          } else if ('text' in handlerResult && handlerResult.text != null) {
+            contentItem['text'] = handlerResult.text;
+          } else {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: `Resource template handler for "${tmpl.uriTemplate}" returned neither text nor blob`,
+              },
+            };
+          }
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { contents: [contentItem] },
+          };
+        }
       }
 
       return {
         jsonrpc: '2.0',
         id,
-        result: { contents: [contentItem] },
+        error: {
+          code: -32002,
+          message: 'Resource not found',
+          data: { uri: readParams.uri },
+        },
       };
     }
 

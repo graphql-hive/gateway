@@ -137,6 +137,70 @@ export interface ResolvedResource {
   readonly descriptionProvider?: DescriptionProviderConfig;
 }
 
+export type ResourceTemplateResult =
+  | { text: string; mimeType?: string }
+  | { blob: string; mimeType?: string };
+
+export interface MCPResourceTemplateConfig {
+  uriTemplate: string;
+  name: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  icons?: MCPIcon[];
+  annotations?: MCPResourceAnnotations;
+  descriptionProvider?: DescriptionProviderConfig;
+  handler: (
+    params: Record<string, string>,
+  ) => ResourceTemplateResult | Promise<ResourceTemplateResult>;
+}
+
+export interface ResolvedResourceTemplate {
+  readonly uriTemplate: string;
+  readonly name: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly mimeType?: string;
+  readonly icons?: MCPIcon[];
+  readonly annotations?: MCPResourceAnnotations;
+  readonly descriptionProvider?: DescriptionProviderConfig;
+  readonly handler: MCPResourceTemplateConfig['handler'];
+  readonly pattern: RegExp;
+  readonly paramNames: string[];
+}
+
+const VALID_PARAM_NAME = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+
+export function compileUriTemplate(template: string): {
+  pattern: RegExp;
+  paramNames: string[];
+} {
+  const paramNames: string[] = [];
+  const escaped = template.replace(
+    /\{([^}]+)\}|([^{]+)/g,
+    (_match, param, literal) => {
+      if (param) {
+        if (!VALID_PARAM_NAME.test(param)) {
+          throw new Error(
+            `Invalid parameter name "{${param}}" in URI template "${template}". ` +
+              `Parameter names must be valid identifiers (letters, digits, underscores).`,
+          );
+        }
+        if (paramNames.includes(param)) {
+          throw new Error(
+            `Duplicate parameter name "{${param}}" in URI template "${template}". ` +
+              `Each parameter name must be unique.`,
+          );
+        }
+        paramNames.push(param);
+        return `(?<${param}>[^/]+)`;
+      }
+      return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    },
+  );
+  return { pattern: new RegExp(`^${escaped}$`), paramNames };
+}
+
 export interface MCPOutputOverrides {
   /** Dot-notation path to extract from the GraphQL response data, e.g. "search.items" */
   path?: string;
@@ -209,6 +273,7 @@ export interface MCPConfig {
   operationsStr?: string;
   tools: MCPToolConfig[];
   resources?: MCPResourceConfig[];
+  resourceTemplates?: MCPResourceTemplateConfig[];
   providers?: {
     langfuse?: LangfuseOptions & {
       defaults?: Partial<LangfuseGetPromptOptions>;
@@ -475,6 +540,27 @@ export function resolveResources(
   return map;
 }
 
+export function resolveResourceTemplates(
+  configs: MCPResourceTemplateConfig[],
+): ResolvedResourceTemplate[] {
+  return configs.map((cfg) => {
+    const { pattern, paramNames } = compileUriTemplate(cfg.uriTemplate);
+    return {
+      uriTemplate: cfg.uriTemplate,
+      name: cfg.name,
+      title: cfg.title,
+      description: cfg.description,
+      mimeType: cfg.mimeType,
+      icons: cfg.icons,
+      annotations: cfg.annotations,
+      descriptionProvider: cfg.descriptionProvider,
+      handler: cfg.handler,
+      pattern,
+      paramNames,
+    };
+  });
+}
+
 function loadOperationsSource(config: MCPConfig): string | undefined {
   if (!config.operationsPath) return undefined;
 
@@ -564,6 +650,27 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     ? Array.from(resolvedResources.values()).filter(
         (r) => r.descriptionProvider,
       )
+    : [];
+
+  // Resolve resource templates at startup
+  const resolvedTemplates =
+    config.resourceTemplates && config.resourceTemplates.length > 0
+      ? resolveResourceTemplates(config.resourceTemplates)
+      : undefined;
+
+  if (resolvedTemplates) {
+    for (const tmpl of resolvedTemplates) {
+      const providerType = tmpl.descriptionProvider?.type;
+      if (providerType && !config.providers?.[providerType]) {
+        throw new Error(
+          `Unknown description provider type: "${providerType}" for resource template "${tmpl.name}"`,
+        );
+      }
+    }
+  }
+
+  const providerTemplateConfigs = resolvedTemplates
+    ? resolvedTemplates.filter((t) => t.descriptionProvider)
     : [];
 
   // Resolved lazily on first use, then cached
@@ -676,6 +783,41 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 } catch (err) {
                   console.warn(
                     `[MCP] Resource description provider failed for "${resource.name}" (${resource.uri}): ${err instanceof Error ? err.message : String(err)}`,
+                  );
+                }
+              }
+              return map;
+            }
+          : undefined,
+      resourceTemplates: resolvedTemplates,
+      resolveTemplateDescriptions:
+        providerTemplateConfigs.length > 0
+          ? async (ctx) => {
+              if (!resolvedProviders) {
+                resolvedProviders = await resolveProviders(
+                  config.providers || {},
+                );
+              }
+              const map = new Map<string, string>();
+              for (const tmpl of providerTemplateConfigs) {
+                const providerType = tmpl.descriptionProvider!.type;
+                const provider = resolvedProviders[providerType];
+                if (!provider) {
+                  console.error(
+                    `[MCP] Description provider "${providerType}" not found for template "${tmpl.name}". This should not happen — provider was validated at startup.`,
+                  );
+                  continue;
+                }
+                try {
+                  const desc = await provider.fetchDescription(
+                    tmpl.name,
+                    tmpl.descriptionProvider!,
+                    ctx,
+                  );
+                  if (desc) map.set(tmpl.uriTemplate, desc);
+                } catch (err) {
+                  console.warn(
+                    `[MCP] Template description provider failed for "${tmpl.name}" (${tmpl.uriTemplate}): ${err instanceof Error ? err.message : String(err)}`,
                   );
                 }
               }
@@ -992,7 +1134,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         promptLabel &&
         providerToolConfigs.length === 0 &&
         fieldProviderToolConfigs.length === 0 &&
-        providerResourceConfigs.length === 0
+        providerResourceConfigs.length === 0 &&
+        providerTemplateConfigs.length === 0
       ) {
         console.warn(
           `[MCP] "promptLabel" query parameter was provided but no tools or resources use description providers. The parameter has no effect.`,

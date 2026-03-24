@@ -1230,11 +1230,7 @@ describe('MCP E2E', () => {
 
     afterAll(() => resourceGateway[Symbol.asyncDispose]?.());
 
-    function resourceMcpRequest(
-      method: string,
-      params: unknown = {},
-      id = 1,
-    ) {
+    function resourceMcpRequest(method: string, params: unknown = {}, id = 1) {
       return resourceGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1317,6 +1313,84 @@ describe('MCP E2E', () => {
       });
       const body = await res.json();
       expect(body.result.structuredContent.weather.temperature).toBe(12.5);
+    });
+  });
+
+  describe('resource templates', () => {
+    const templateGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'template-gateway',
+          tools: [],
+          resourceTemplates: [
+            {
+              uriTemplate: 'weather://{location}',
+              name: 'Weather Data',
+              title: 'Weather by Location',
+              description: 'Get weather data as a resource',
+              mimeType: 'application/json',
+              handler: async (params) => ({
+                text: JSON.stringify({
+                  location: params['location'],
+                  temperature: 72,
+                }),
+              }),
+            },
+          ],
+        }),
+      ],
+    } as any);
+
+    afterAll(() => templateGateway[Symbol.asyncDispose]?.());
+
+    function tmplRequest(method: string, params: unknown = {}, id = 1) {
+      return templateGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+      });
+    }
+
+    it('initialize advertises resources capability for templates-only', async () => {
+      const res = await tmplRequest('initialize');
+      const body = await res.json();
+      expect(body.result.capabilities.resources).toEqual({});
+    });
+
+    it('resources/templates/list returns templates', async () => {
+      const res = await tmplRequest('resources/templates/list');
+      const body = await res.json();
+      expect(body.result.resourceTemplates).toHaveLength(1);
+      expect(body.result.resourceTemplates[0]).toMatchObject({
+        uriTemplate: 'weather://{location}',
+        name: 'Weather Data',
+        title: 'Weather by Location',
+      });
+    });
+
+    it('resources/read resolves template and calls handler', async () => {
+      const res = await tmplRequest('resources/read', {
+        uri: 'weather://London',
+      });
+      const body = await res.json();
+      expect(body.result.contents[0].mimeType).toBe('application/json');
+      const data = JSON.parse(body.result.contents[0].text);
+      expect(data.location).toBe('London');
+      expect(data.temperature).toBe(72);
+    });
+
+    it('resources/read returns not found for non-matching URI', async () => {
+      const res = await tmplRequest('resources/read', {
+        uri: 'other://something',
+      });
+      const body = await res.json();
+      expect(body.error.code).toBe(-32002);
     });
   });
 });

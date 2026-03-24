@@ -1390,7 +1390,12 @@ describe('resources/list', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
-    [{ name: 'say_hello', query: 'query($name: String!) { hello(name: $name) }' }],
+    [
+      {
+        name: 'say_hello',
+        query: 'query($name: String!) { hello(name: $name) }',
+      },
+    ],
     schema,
   );
   const options: MCPHandlerOptions = {
@@ -1491,9 +1496,36 @@ describe('resources/list', () => {
       ...options,
       resourcesListPageSize: 1,
       resources: new Map([
-        ['r://a', { name: 'a', uri: 'r://a', mimeType: 'text/plain', size: 1, text: 'a' }],
-        ['r://b', { name: 'b', uri: 'r://b', mimeType: 'text/plain', size: 1, text: 'b' }],
-        ['r://c', { name: 'c', uri: 'r://c', mimeType: 'text/plain', size: 1, text: 'c' }],
+        [
+          'r://a',
+          {
+            name: 'a',
+            uri: 'r://a',
+            mimeType: 'text/plain',
+            size: 1,
+            text: 'a',
+          },
+        ],
+        [
+          'r://b',
+          {
+            name: 'b',
+            uri: 'r://b',
+            mimeType: 'text/plain',
+            size: 1,
+            text: 'b',
+          },
+        ],
+        [
+          'r://c',
+          {
+            name: 'c',
+            uri: 'r://c',
+            mimeType: 'text/plain',
+            size: 1,
+            text: 'c',
+          },
+        ],
       ]),
     };
 
@@ -1545,7 +1577,16 @@ describe('resources/list', () => {
       ...options,
       resourcesListPageSize: 10,
       resources: new Map([
-        ['r://a', { name: 'a', uri: 'r://a', mimeType: 'text/plain', size: 1, text: 'a' }],
+        [
+          'r://a',
+          {
+            name: 'a',
+            uri: 'r://a',
+            mimeType: 'text/plain',
+            size: 1,
+            text: 'a',
+          },
+        ],
       ]),
     };
 
@@ -1568,7 +1609,12 @@ describe('resources/read', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
-    [{ name: 'say_hello', query: 'query($name: String!) { hello(name: $name) }' }],
+    [
+      {
+        name: 'say_hello',
+        query: 'query($name: String!) { hello(name: $name) }',
+      },
+    ],
     schema,
   );
   const options: MCPHandlerOptions = {
@@ -1665,5 +1711,342 @@ describe('resources/read', () => {
     ]);
     // Should NOT have text field
     expect(body.result.contents[0].text).toBeUndefined();
+  });
+});
+
+describe('resources/templates/list', () => {
+  const schema = buildSchema(`
+    type Query { hello(name: String!): String }
+  `);
+  const registry = new ToolRegistry(
+    [
+      {
+        name: 'say_hello',
+        query: 'query($name: String!) { hello(name: $name) }',
+      },
+    ],
+    schema,
+  );
+  const options: MCPHandlerOptions = {
+    serverName: 'test-mcp',
+    serverVersion: '1.0.0',
+    registry,
+    execute: vi.fn(),
+  };
+
+  it('returns resource templates', async () => {
+    const opts: MCPHandlerOptions = {
+      ...options,
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://schemas/{name}',
+          name: 'Schema',
+          title: 'Schema Browser',
+          description: 'Browse schemas by name',
+          mimeType: 'text/graphql',
+          pattern: /^docs:\/\/schemas\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: () => ({ text: 'schema' }),
+        },
+      ],
+    };
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/templates/list',
+    });
+    expect(body.result.resourceTemplates).toHaveLength(1);
+    expect(body.result.resourceTemplates[0]).toMatchObject({
+      uriTemplate: 'docs://schemas/{name}',
+      name: 'Schema',
+      title: 'Schema Browser',
+      description: 'Browse schemas by name',
+      mimeType: 'text/graphql',
+    });
+  });
+
+  it('returns empty array when no templates configured', async () => {
+    const body = await callMCP(options, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/templates/list',
+    });
+    expect(body.result.resourceTemplates).toEqual([]);
+  });
+});
+
+describe('resources/read with templates', () => {
+  const schema = buildSchema(`
+    type Query { hello(name: String!): String }
+  `);
+  const registry = new ToolRegistry(
+    [
+      {
+        name: 'say_hello',
+        query: 'query($name: String!) { hello(name: $name) }',
+      },
+    ],
+    schema,
+  );
+
+  it('falls back to template when static resource not found', async () => {
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry,
+      execute: vi.fn(),
+      resources: new Map(),
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://schemas/{name}',
+          name: 'Schema',
+          mimeType: 'text/graphql',
+          pattern: /^docs:\/\/schemas\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: (params) => ({ text: `type ${params['name']} { id: ID! }` }),
+        },
+      ],
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://schemas/User' },
+    });
+    expect(body.result.contents).toEqual([
+      {
+        uri: 'docs://schemas/User',
+        mimeType: 'text/graphql',
+        text: 'type User { id: ID! }',
+      },
+    ]);
+  });
+
+  it('static resource takes priority over template', async () => {
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry,
+      execute: vi.fn(),
+      resources: new Map([
+        [
+          'docs://schemas/User',
+          {
+            name: 'user-schema',
+            uri: 'docs://schemas/User',
+            mimeType: 'text/graphql',
+            size: 6,
+            text: 'static',
+          },
+        ],
+      ]),
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://schemas/{name}',
+          name: 'Schema',
+          mimeType: 'text/graphql',
+          pattern: /^docs:\/\/schemas\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: () => ({ text: 'from template' }),
+        },
+      ],
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://schemas/User' },
+    });
+    expect(body.result.contents[0].text).toBe('static');
+  });
+
+  it('returns error when handler throws', async () => {
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry,
+      execute: vi.fn(),
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://{name}',
+          name: 'Doc',
+          pattern: /^docs:\/\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: () => {
+            throw new Error('not available');
+          },
+        },
+      ],
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://missing' },
+    });
+    expect(body.error.code).toBe(-32002);
+    expect(body.error.message).toBe('Resource handler failed');
+    expect(body.error.data.error).toBe('not available');
+  });
+
+  it('handler can return blob content', async () => {
+    const b64 = Buffer.from('binary').toString('base64');
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry,
+      execute: vi.fn(),
+      resourceTemplates: [
+        {
+          uriTemplate: 'files://{name}',
+          name: 'File',
+          mimeType: 'application/octet-stream',
+          pattern: /^files:\/\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: () => ({ blob: b64 }),
+        },
+      ],
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'files://test.bin' },
+    });
+    expect(body.result.contents[0].blob).toBe(b64);
+    expect(body.result.contents[0].text).toBeUndefined();
+  });
+
+  it('handler can override mimeType', async () => {
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry,
+      execute: vi.fn(),
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://{name}',
+          name: 'Doc',
+          mimeType: 'text/plain',
+          pattern: /^docs:\/\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: () => ({ text: '# Hello', mimeType: 'text/markdown' }),
+        },
+      ],
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://readme' },
+    });
+    expect(body.result.contents[0].mimeType).toBe('text/markdown');
+  });
+
+  it('returns error when handler returns unexpected shape', async () => {
+    const opts: MCPHandlerOptions = {
+      serverName: 'test-mcp',
+      serverVersion: '1.0.0',
+      registry: new ToolRegistry(
+        [
+          {
+            name: 'say_hello',
+            query: 'query($name: String!) { hello(name: $name) }',
+          },
+        ],
+        buildSchema('type Query { hello(name: String!): String }'),
+      ),
+      execute: vi.fn(),
+      resourceTemplates: [
+        {
+          uriTemplate: 'docs://{name}',
+          name: 'Doc',
+          pattern: /^docs:\/\/(?<name>[^/]+)$/,
+          paramNames: ['name'],
+          handler: (() => ({ data: 'oops' })) as any,
+        },
+      ],
+    };
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://test' },
+    });
+    expect(body.error.code).toBe(-32603);
+    expect(body.error.message).toContain('neither text nor blob');
+  });
+});
+
+describe('resources/templates/list description providers', () => {
+  const schema = buildSchema('type Query { hello(name: String!): String }');
+  const registry = new ToolRegistry(
+    [
+      {
+        name: 'say_hello',
+        query: 'query($name: String!) { hello(name: $name) }',
+      },
+    ],
+    schema,
+  );
+  const baseOptions: MCPHandlerOptions = {
+    serverName: 'test-mcp',
+    serverVersion: '1.0.0',
+    registry,
+    execute: vi.fn(),
+    resourceTemplates: [
+      {
+        uriTemplate: 'docs://{name}',
+        name: 'Doc',
+        description: 'Static description',
+        pattern: /^docs:\/\/(?<name>[^/]+)$/,
+        paramNames: ['name'],
+        handler: () => ({ text: 'hi' }),
+      },
+    ],
+  };
+
+  it('resolveTemplateDescriptions overrides static description', async () => {
+    const opts: MCPHandlerOptions = {
+      ...baseOptions,
+      resolveTemplateDescriptions: vi.fn(async () => {
+        return new Map([['docs://{name}', 'Provider description']]);
+      }),
+    };
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/templates/list',
+    });
+    expect(body.result.resourceTemplates[0].description).toBe(
+      'Provider description',
+    );
+  });
+
+  it('falls back to static description when resolveTemplateDescriptions throws', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const opts: MCPHandlerOptions = {
+      ...baseOptions,
+      resolveTemplateDescriptions: vi.fn(async () => {
+        throw new Error('provider down');
+      }),
+    };
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/templates/list',
+    });
+    expect(body.result.resourceTemplates[0].description).toBe(
+      'Static description',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider down'),
+    );
+    warnSpy.mockRestore();
   });
 });
