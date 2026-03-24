@@ -1116,4 +1116,68 @@ describe('MCP E2E', () => {
       await directiveGateway[Symbol.asyncDispose]?.();
     }
   });
+
+  it('tools/call preserves /mcp path through the Yoga pipeline (not rewritten to graphqlEndpoint)', async () => {
+    const capturedUrls: string[] = [];
+
+    const pathGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        {
+          onRequestParse({ request }: { request: Request }) {
+            capturedUrls.push(new URL(request.url).pathname);
+          },
+        } as any,
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'path-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Trigger schema load
+      await pathGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      capturedUrls.length = 0;
+
+      const res = await pathGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+
+      const body = await res.json();
+      expect(body.result.structuredContent.weather.temperature).toBe(12.5);
+
+      // The request going through onRequestParse should have /mcp, not /graphql
+      expect(capturedUrls).toContain('/mcp');
+      expect(capturedUrls).not.toContain('/graphql');
+    } finally {
+      await pathGateway[Symbol.asyncDispose]?.();
+    }
+  });
 });

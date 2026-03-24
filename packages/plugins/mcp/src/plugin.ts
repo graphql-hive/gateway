@@ -406,7 +406,6 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     ),
   );
 
-  const internalRequests = new WeakSet<Request>();
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
   let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
@@ -503,20 +502,45 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       mcpHandlerOptions = buildHandlerOptions();
     },
 
+    onRequestParse({
+      request,
+      url,
+      setRequestParser,
+    }: {
+      request: Request;
+      url: URL;
+      setRequestParser: (
+        parser: (req: Request) => {
+          query: string;
+          variables?: Record<string, unknown>;
+        },
+      ) => void;
+    }) {
+      const ctx = mcpToolCalls.get(request);
+      if (!ctx) {
+        if (url.pathname === mcpPath) {
+          console.warn(
+            '[MCP] onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
+          );
+        }
+        return;
+      }
+
+      setRequestParser(() => ({
+        query: ctx.tool.query,
+        variables: ctx.args,
+      }));
+    },
+
     async onRequest({
       request,
       url,
       endResponse,
-      setRequest,
       requestHandler,
       serverContext,
     }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
-      if (
-        config.disableGraphQLEndpoint &&
-        url.pathname === graphqlPath &&
-        !internalRequests.has(request)
-      ) {
+      if (config.disableGraphQLEndpoint && url.pathname === graphqlPath) {
         endResponse(new Response(null, { status: 404 }));
         return;
       }
@@ -533,7 +557,6 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: '{ __typename }' }),
           });
-          if (config.disableGraphQLEndpoint) internalRequests.add(bootstrapReq);
           await requestHandler(bootstrapReq, serverContext);
         } catch (bootstrapError) {
           console.error(
@@ -706,16 +729,15 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           }
         }
 
-        // Normal path: rewrite request to /graphql and let Yoga execute
-        const graphqlUrl = `${url.protocol}//${url.host}${graphqlPath}`;
-        const newRequest = new Request(graphqlUrl, {
+        // Route through Yoga's handle pipeline directly (parseRequest -> execute -> processResult)
+        // This bypasses useUnhandledRoute, keeping the original /mcp URL for monitoring/tracing
+        const mcpExecRequest = new Request(request.url, {
           method: 'POST',
           headers: request.headers,
-          body: JSON.stringify({ query: tool.query, variables: args }),
+          body: bodyText,
         });
 
-        if (config.disableGraphQLEndpoint) internalRequests.add(newRequest);
-        mcpToolCalls.set(newRequest, {
+        mcpToolCalls.set(mcpExecRequest, {
           jsonrpcId: body.id,
           toolName: callParams.name,
           args,
@@ -723,8 +745,24 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           headers: forwardedHeaders,
         });
 
-        setRequest(newRequest);
-        return; // Don't endResponse, request flows to onRequestParse
+        try {
+          const response = await requestHandler(mcpExecRequest, serverContext);
+          endResponse(response);
+        } catch (execError) {
+          console.error(
+            `[MCP] tools/call execution failed for tool "${callParams.name}":`,
+            execError instanceof Error ? execError.message : execError,
+          );
+          endResponse(
+            mcpErrorResponse(
+              body.id,
+              execError instanceof Error
+                ? execError.message
+                : String(execError),
+            ),
+          );
+        }
+        return;
       }
 
       // All other MCP methods (initialize, tools/list, etc.)
@@ -771,7 +809,20 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     },
 
     // Transform GraphQL execution result into MCP JSON-RPC response
-    onResultProcess({ request, setResultProcessor }: any) {
+    onResultProcess({
+      request,
+      setResultProcessor,
+    }: {
+      request: Request;
+      setResultProcessor: (
+        processor: (
+          result: unknown,
+          fetchAPI: unknown,
+          mediaType: string,
+        ) => Response | Promise<Response>,
+        mediaType: string,
+      ) => void;
+    }) {
       const ctx = mcpToolCalls.get(request);
       if (!ctx) return;
 
