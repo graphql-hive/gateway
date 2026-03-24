@@ -116,7 +116,7 @@
       // "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"]
     },
     "ignoreDeprecations": "6.0",
-    "types": ["node"]
+    "types": ["bun", "node"]
   },
   "include": [
     "./.yarn/custom-plugins",
