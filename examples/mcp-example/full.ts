@@ -394,6 +394,46 @@ const mcpPlugin = useMCP({
     //
     // Directive tools can be augmented by adding a matching entry here with the same name.
   ],
+
+  // Resources: read-only context that MCP clients can discover and fetch.
+  // Exposed via resources/list (metadata only) and resources/read (content).
+  // Content is resolved once at startup, either inline text or loaded from a file.
+  resources: [
+    // Resource 1: Inline text
+    {
+      name: 'api-guide',
+      uri: 'docs://api-guide',
+      title: 'API Guide',
+      description: 'How to use the Weather API',
+      mimeType: 'text/markdown',
+      text: [
+        '# Weather API Guide',
+        '',
+        '## Available Tools',
+        '- **get_weather** — current conditions for a city',
+        '- **get_forecast** — multi-day forecast',
+        '- **get_conditions** — just the conditions string',
+        '- **search_docs** — search documentation articles',
+        '- **cancel_order** — cancel an order (requires confirmation)',
+        '',
+        '## Tips',
+        '- Use city names (e.g. "London", "New York")',
+        '- Forecast defaults to 5 days; pass `days` to customize',
+        '- search_docs returns markdown tables for easy display',
+      ].join('\n'),
+      annotations: { audience: ['assistant'], priority: 0.9 },
+    },
+
+    // Resource 2: Loaded from file at startup
+    {
+      name: 'readme',
+      uri: 'docs://readme',
+      title: 'Project README',
+      description: 'Full project README with setup instructions',
+      mimeType: 'text/markdown',
+      file: join(__dirname, 'README.md'),
+    },
+  ],
 })
 
 const gateway = createGatewayRuntime({

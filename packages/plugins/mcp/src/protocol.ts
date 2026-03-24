@@ -1,5 +1,5 @@
 import type { DescriptionProviderContext } from './description-provider.js';
-import type { MCPIcon, ToolHookContext } from './plugin.js';
+import type { MCPIcon, ResolvedResource, ToolHookContext } from './plugin.js';
 import {
   getByPath,
   type RegisteredTool,
@@ -291,6 +291,12 @@ export interface MCPHandlerOptions {
   resolveFieldDescriptions?: (
     context?: DescriptionProviderContext,
   ) => Promise<Map<string, Map<string, string>>>;
+  /** Page size for resources/list pagination. Defaults to returning all resources (no pagination). */
+  resourcesListPageSize?: number;
+  resources?: Map<string, ResolvedResource>;
+  resolveResourceDescriptions?: (
+    context?: DescriptionProviderContext,
+  ) => Promise<Map<string, string>>;
   requestContext?: {
     headers: Record<string, string>;
   };
@@ -336,10 +342,14 @@ export async function handleMCPRequest(
       if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
       if (options.serverWebsiteUrl)
         serverInfo['websiteUrl'] = options.serverWebsiteUrl;
+      const capabilities: Record<string, unknown> = { tools: {} };
+      if (options.resources && options.resources.size > 0) {
+        capabilities['resources'] = {};
+      }
       const initResult: Record<string, unknown> = {
         protocolVersion,
         serverInfo,
-        capabilities: { tools: {} },
+        capabilities,
       };
       if (options.instructions)
         initResult['instructions'] = options.instructions;
@@ -434,6 +444,140 @@ export async function handleMCPRequest(
       }
 
       return { jsonrpc: '2.0', id, result };
+    }
+
+    case 'resources/list': {
+      const allResources = options.resources
+        ? Array.from(options.resources.values())
+        : [];
+
+      const resourceList = allResources.map((r) => {
+        const entry: Record<string, unknown> = {
+          uri: r.uri,
+          name: r.name,
+          mimeType: r.mimeType,
+        };
+        if (r.title) entry['title'] = r.title;
+        if (r.size != null) entry['size'] = r.size;
+        if (r.icons) entry['icons'] = r.icons;
+        if (r.annotations) entry['annotations'] = r.annotations;
+        const desc = r.description;
+        if (desc) entry['description'] = desc;
+        return entry;
+      });
+
+      if (options.resolveResourceDescriptions) {
+        try {
+          const descriptions =
+            await options.resolveResourceDescriptions(providerContext);
+          for (const resource of resourceList) {
+            const providerDesc = descriptions.get(resource['uri'] as string);
+            if (providerDesc) {
+              resource['description'] = providerDesc;
+            }
+          }
+        } catch (err) {
+          console.warn(
+            `[MCP] Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      if (options.resourcesListPageSize !== undefined) {
+        if (
+          !Number.isInteger(options.resourcesListPageSize) ||
+          options.resourcesListPageSize <= 0
+        ) {
+          throw new Error(
+            `[MCP] resourcesListPageSize must be a positive integer, got ${options.resourcesListPageSize}`,
+          );
+        }
+      }
+
+      const listParams = params as { cursor?: string } | undefined;
+      const cursor = listParams?.cursor;
+      let startIndex = 0;
+      if (cursor !== undefined && cursor !== '') {
+        startIndex = parseInt(cursor, 10);
+        if (
+          Number.isNaN(startIndex) ||
+          startIndex < 0 ||
+          startIndex >= resourceList.length
+        ) {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32602,
+              message: `Invalid cursor: ${JSON.stringify(cursor)}`,
+            },
+          };
+        }
+      }
+      const pageSize =
+        options.resourcesListPageSize ?? resourceList.length;
+      const page = resourceList.slice(startIndex, startIndex + pageSize);
+      const nextIndex = startIndex + pageSize;
+      const result: Record<string, unknown> = { resources: page };
+      if (nextIndex < resourceList.length) {
+        result['nextCursor'] = String(nextIndex);
+      }
+
+      return { jsonrpc: '2.0', id, result };
+    }
+
+    case 'resources/read': {
+      const readParams = (params ?? {}) as { uri?: string };
+      if (!readParams.uri) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: 'Missing required parameter: uri',
+          },
+        };
+      }
+
+      const resource = options.resources?.get(readParams.uri);
+      if (!resource) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32002,
+            message: 'Resource not found',
+            data: { uri: readParams.uri },
+          },
+        };
+      }
+
+      if (resource.blob == null && resource.text == null) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32603,
+            message: `Resource "${resource.name}" (${resource.uri}) has no content`,
+          },
+        };
+      }
+
+      const contentItem: Record<string, unknown> = {
+        uri: resource.uri,
+        mimeType: resource.mimeType,
+      };
+      if (resource.blob != null) {
+        contentItem['blob'] = resource.blob;
+      } else {
+        contentItem['text'] = resource.text;
+      }
+
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: { contents: [contentItem] },
+      };
     }
 
     case 'notifications/initialized':

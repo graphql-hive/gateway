@@ -1180,4 +1180,143 @@ describe('MCP E2E', () => {
       await pathGateway[Symbol.asyncDispose]?.();
     }
   });
+
+  describe('resources', () => {
+    const resourceGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'resource-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+          resources: [
+            {
+              name: 'agent-guide',
+              uri: 'docs://agent-guide',
+              title: 'Agent Guide',
+              description: 'How agents work',
+              mimeType: 'text/markdown',
+              text: '# Agent Guide\n\nAgents route requests based on intent.',
+              annotations: { audience: ['assistant'], priority: 0.9 },
+            },
+            {
+              name: 'api-reference',
+              uri: 'docs://api-reference',
+              text: 'GET /health - Health check endpoint',
+            },
+            {
+              name: 'icon',
+              uri: 'files://icon.png',
+              mimeType: 'image/png',
+              blob: Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString('base64'),
+            },
+          ],
+        }),
+      ],
+    } as any);
+
+    afterAll(() => resourceGateway[Symbol.asyncDispose]?.());
+
+    function resourceMcpRequest(
+      method: string,
+      params: unknown = {},
+      id = 1,
+    ) {
+      return resourceGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+      });
+    }
+
+    it('initialize advertises resources capability', async () => {
+      const res = await resourceMcpRequest('initialize');
+      const body = await res.json();
+      expect(body.result.capabilities.resources).toEqual({});
+      expect(body.result.capabilities.tools).toBeDefined();
+    });
+
+    it('resources/list returns configured resources', async () => {
+      // Trigger schema load
+      await resourceGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await resourceMcpRequest('resources/list');
+      const body = await res.json();
+      expect(body.result.resources).toHaveLength(3);
+
+      const guide = body.result.resources.find(
+        (r: any) => r.uri === 'docs://agent-guide',
+      );
+      expect(guide).toMatchObject({
+        name: 'agent-guide',
+        title: 'Agent Guide',
+        description: 'How agents work',
+        mimeType: 'text/markdown',
+        annotations: { audience: ['assistant'], priority: 0.9 },
+      });
+    });
+
+    it('resources/read returns content by URI', async () => {
+      const res = await resourceMcpRequest('resources/read', {
+        uri: 'docs://agent-guide',
+      });
+      const body = await res.json();
+      expect(body.result.contents).toEqual([
+        {
+          uri: 'docs://agent-guide',
+          mimeType: 'text/markdown',
+          text: '# Agent Guide\n\nAgents route requests based on intent.',
+        },
+      ]);
+    });
+
+    it('resources/read returns blob for binary resources', async () => {
+      const res = await resourceMcpRequest('resources/read', {
+        uri: 'files://icon.png',
+      });
+      const body = await res.json();
+      expect(body.result.contents).toEqual([
+        {
+          uri: 'files://icon.png',
+          mimeType: 'image/png',
+          blob: Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString('base64'),
+        },
+      ]);
+    });
+
+    it('resources/read returns error for unknown URI', async () => {
+      const res = await resourceMcpRequest('resources/read', {
+        uri: 'docs://nonexistent',
+      });
+      const body = await res.json();
+      expect(body.error.code).toBe(-32002);
+      expect(body.error.message).toBe('Resource not found');
+    });
+
+    it('tools still work alongside resources', async () => {
+      const res = await resourceMcpRequest('tools/call', {
+        name: 'get_weather',
+        arguments: { location: 'London' },
+      });
+      const body = await res.json();
+      expect(body.result.structuredContent.weather.temperature).toBe(12.5);
+    });
+  });
 });

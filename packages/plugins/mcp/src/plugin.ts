@@ -96,10 +96,45 @@ export interface MCPInputOverrides {
   };
 }
 
-export interface MCPContentAnnotations {
+export interface MCPAnnotations {
   audience?: Array<'user' | 'assistant'>;
   priority?: number;
   lastModified?: string;
+}
+
+export type MCPContentAnnotations = MCPAnnotations;
+export type MCPResourceAnnotations = MCPAnnotations;
+
+interface MCPResourceConfigBase {
+  name: string;
+  uri: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  icons?: MCPIcon[];
+  annotations?: MCPResourceAnnotations;
+  descriptionProvider?: DescriptionProviderConfig;
+}
+
+export type MCPResourceConfig = MCPResourceConfigBase &
+  (
+    | { text: string; file?: never; blob?: never }
+    | { file: string; text?: never; blob?: never; binary?: boolean }
+    | { blob: string; text?: never; file?: never }
+  );
+
+export interface ResolvedResource {
+  readonly name: string;
+  readonly uri: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly mimeType: string;
+  readonly size: number;
+  readonly icons?: MCPIcon[];
+  readonly annotations?: MCPResourceAnnotations;
+  readonly text?: string;
+  readonly blob?: string;
+  readonly descriptionProvider?: DescriptionProviderConfig;
 }
 
 export interface MCPOutputOverrides {
@@ -173,6 +208,7 @@ export interface MCPConfig {
   operationsPath?: string;
   operationsStr?: string;
   tools: MCPToolConfig[];
+  resources?: MCPResourceConfig[];
   providers?: {
     langfuse?: LangfuseOptions & {
       defaults?: Partial<LangfuseGetPromptOptions>;
@@ -323,6 +359,122 @@ export function resolveToolConfigs(
   return Array.from(merged.values());
 }
 
+const TEXT_MIME_PREFIXES = ['text/'];
+const TEXT_MIME_TYPES = new Set([
+  'application/json',
+  'application/xml',
+  'application/javascript',
+  'application/typescript',
+  'application/graphql',
+  'application/yaml',
+  'application/toml',
+  'application/xhtml+xml',
+  'application/svg+xml',
+  'application/x-sh',
+]);
+
+export function isTextMimeType(mimeType: string): boolean {
+  if (TEXT_MIME_PREFIXES.some((p) => mimeType.startsWith(p))) return true;
+  return TEXT_MIME_TYPES.has(mimeType);
+}
+
+export function resolveResources(
+  configs: MCPResourceConfig[],
+): Map<string, ResolvedResource> {
+  const map = new Map<string, ResolvedResource>();
+
+  for (const cfg of configs) {
+    // Runtime validation for JSON/YAML config that bypasses TypeScript's discriminated union
+    const raw = cfg as {
+      name: string;
+      uri: string;
+      text?: string;
+      file?: string;
+      blob?: string;
+    };
+    const sourceCount =
+      (raw.text != null ? 1 : 0) +
+      (raw.file != null ? 1 : 0) +
+      (raw.blob != null ? 1 : 0);
+    if (sourceCount > 1) {
+      throw new Error(
+        `Resource "${raw.name}" (${raw.uri}): specify exactly one of "text", "file", or "blob"`,
+      );
+    }
+    if (sourceCount === 0) {
+      throw new Error(
+        `Resource "${raw.name}" (${raw.uri}): must specify either "text", "file", or "blob"`,
+      );
+    }
+    if (map.has(cfg.uri)) {
+      throw new Error(
+        `Duplicate resource URI "${cfg.uri}" (resource "${cfg.name}")`,
+      );
+    }
+
+    const mimeType = cfg.mimeType || 'text/plain';
+    let text: string | undefined;
+    let blob: string | undefined;
+    let size: number;
+
+    if ('blob' in cfg && cfg.blob != null) {
+      // Inline base64 — decode to validate and get accurate size
+      const decoded = Buffer.from(cfg.blob, 'base64');
+      if (decoded.toString('base64') !== cfg.blob) {
+        throw new Error(
+          `Resource "${cfg.name}" (${cfg.uri}): "blob" field contains invalid base64 encoding`,
+        );
+      }
+      blob = cfg.blob;
+      size = decoded.length;
+    } else if ('file' in cfg && cfg.file != null) {
+      // File: detect text vs binary from mimeType (overridable with binary flag)
+      const filePath = resolve(cfg.file);
+      const isBinary =
+        cfg.binary !== undefined ? cfg.binary : !isTextMimeType(mimeType);
+      try {
+        if (isBinary) {
+          const buf = readFileSync(filePath);
+          blob = buf.toString('base64');
+          size = buf.length;
+        } else {
+          text = readFileSync(filePath, 'utf-8');
+          size = Buffer.byteLength(text);
+        }
+      } catch (err) {
+        throw new Error(
+          `Resource "${cfg.name}" (${cfg.uri}): cannot read file "${cfg.file}": ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      if (size === 0) {
+        console.warn(
+          `[MCP] Resource "${cfg.name}" (${cfg.uri}): file "${cfg.file}" is empty (0 bytes)`,
+        );
+      }
+    } else {
+      // Inline text
+      text = (cfg as { text: string }).text;
+      size = Buffer.byteLength(text);
+    }
+
+    map.set(cfg.uri, {
+      name: cfg.name,
+      uri: cfg.uri,
+      title: cfg.title,
+      description: cfg.description,
+      mimeType,
+      size,
+      icons: cfg.icons,
+      annotations: cfg.annotations,
+      text,
+      blob,
+      descriptionProvider: cfg.descriptionProvider,
+    });
+  }
+
+  return map;
+}
+
 function loadOperationsSource(config: MCPConfig): string | undefined {
   if (!config.operationsPath) return undefined;
 
@@ -390,6 +542,29 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       }
     }
   }
+
+  // Resolve resources at startup
+  const resolvedResources =
+    config.resources && config.resources.length > 0
+      ? resolveResources(config.resources)
+      : undefined;
+
+  if (resolvedResources) {
+    for (const [, resource] of resolvedResources) {
+      const providerType = resource.descriptionProvider?.type;
+      if (providerType && !config.providers?.[providerType]) {
+        throw new Error(
+          `Unknown description provider type: "${providerType}" for resource "${resource.name}"`,
+        );
+      }
+    }
+  }
+
+  const providerResourceConfigs = resolvedResources
+    ? Array.from(resolvedResources.values()).filter(
+        (r) => r.descriptionProvider,
+      )
+    : [];
 
   // Resolved lazily on first use, then cached
   let resolvedProviders: ProviderRegistry | undefined;
@@ -470,6 +645,41 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 }
               }
               return fieldDescs;
+            }
+          : undefined,
+      resources: resolvedResources,
+      resolveResourceDescriptions:
+        providerResourceConfigs.length > 0
+          ? async (ctx) => {
+              if (!resolvedProviders) {
+                resolvedProviders = await resolveProviders(
+                  config.providers || {},
+                );
+              }
+              const map = new Map<string, string>();
+              for (const resource of providerResourceConfigs) {
+                const providerType = resource.descriptionProvider!.type;
+                const provider = resolvedProviders[providerType];
+                if (!provider) {
+                  console.error(
+                    `[MCP] Description provider "${providerType}" not found for resource "${resource.name}". This should not happen — provider was validated at startup.`,
+                  );
+                  continue;
+                }
+                try {
+                  const desc = await provider.fetchDescription(
+                    resource.name,
+                    resource.descriptionProvider!,
+                    ctx,
+                  );
+                  if (desc) map.set(resource.uri, desc);
+                } catch (err) {
+                  console.warn(
+                    `[MCP] Resource description provider failed for "${resource.name}" (${resource.uri}): ${err instanceof Error ? err.message : String(err)}`,
+                  );
+                }
+              }
+              return map;
             }
           : undefined,
       execute: () => {
@@ -781,10 +991,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       if (
         promptLabel &&
         providerToolConfigs.length === 0 &&
-        fieldProviderToolConfigs.length === 0
+        fieldProviderToolConfigs.length === 0 &&
+        providerResourceConfigs.length === 0
       ) {
         console.warn(
-          `[MCP] "promptLabel" query parameter was provided but no tools use description providers. The parameter has no effect.`,
+          `[MCP] "promptLabel" query parameter was provided but no tools or resources use description providers. The parameter has no effect.`,
         );
       }
       const providerContext: DescriptionProviderContext | undefined =

@@ -118,6 +118,51 @@ describe('handleMCPRequest', () => {
     expect(body.result.instructions).toBeUndefined();
   });
 
+  it('initialize advertises resources capability when resources are configured', async () => {
+    const resourceOptions: MCPHandlerOptions = {
+      ...options,
+      resources: new Map([
+        [
+          'test://r',
+          {
+            name: 'r',
+            uri: 'test://r',
+            mimeType: 'text/plain',
+            size: 2,
+            text: 'hi',
+          },
+        ],
+      ]),
+    };
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'test', version: '1.0' },
+      },
+    });
+    expect(body.result.capabilities.resources).toEqual({});
+    expect(body.result.capabilities.tools).toBeDefined();
+  });
+
+  it('initialize omits resources capability when no resources configured', async () => {
+    const body = await callMCP(options, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'test', version: '1.0' },
+      },
+    });
+    expect(body.result.capabilities.resources).toBeUndefined();
+    expect(body.result.capabilities.tools).toBeDefined();
+  });
+
   it('handles tools/list request', async () => {
     const body = await callMCP(options, {
       jsonrpc: '2.0',
@@ -1337,5 +1382,288 @@ describe('handleMCPRequest', () => {
       expect.stringContaining('provider down'),
     );
     warnSpy.mockRestore();
+  });
+});
+
+describe('resources/list', () => {
+  const schema = buildSchema(`
+    type Query { hello(name: String!): String }
+  `);
+  const registry = new ToolRegistry(
+    [{ name: 'say_hello', query: 'query($name: String!) { hello(name: $name) }' }],
+    schema,
+  );
+  const options: MCPHandlerOptions = {
+    serverName: 'test-mcp',
+    serverVersion: '1.0.0',
+    registry,
+    execute: vi.fn(),
+  };
+
+  const resourceOptions: MCPHandlerOptions = {
+    ...options,
+    resources: new Map([
+      [
+        'docs://guide',
+        {
+          name: 'guide',
+          uri: 'docs://guide',
+          title: 'User Guide',
+          description: 'How to use the system',
+          mimeType: 'text/markdown',
+          size: 13,
+          text: '# User Guide',
+          annotations: { audience: ['assistant' as const], priority: 0.8 },
+        },
+      ],
+    ]),
+  };
+
+  it('returns resources with metadata', async () => {
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body.result.resources).toHaveLength(1);
+    expect(body.result.resources[0]).toMatchObject({
+      uri: 'docs://guide',
+      name: 'guide',
+      title: 'User Guide',
+      description: 'How to use the system',
+      mimeType: 'text/markdown',
+      size: 13,
+      annotations: { audience: ['assistant'], priority: 0.8 },
+    });
+    // should NOT include content in list response
+    expect(body.result.resources[0].content).toBeUndefined();
+    expect(body.result.resources[0].text).toBeUndefined();
+    expect(body.result.resources[0].blob).toBeUndefined();
+  });
+
+  it('returns empty array when no resources configured', async () => {
+    const body = await callMCP(options, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body.result.resources).toEqual([]);
+  });
+
+  it('resolveResourceDescriptions overrides static description', async () => {
+    const providerOptions: MCPHandlerOptions = {
+      ...resourceOptions,
+      resolveResourceDescriptions: vi.fn(async () => {
+        return new Map([['docs://guide', 'Provider description']]);
+      }),
+    };
+    const body = await callMCP(providerOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body.result.resources[0].description).toBe('Provider description');
+  });
+
+  it('falls back to static description when resolveResourceDescriptions throws', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const failingOptions: MCPHandlerOptions = {
+      ...resourceOptions,
+      resolveResourceDescriptions: vi.fn(async () => {
+        throw new Error('provider down');
+      }),
+    };
+    const body = await callMCP(failingOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body.result.resources).toHaveLength(1);
+    expect(body.result.resources[0].description).toBe('How to use the system');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider down'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('paginates with cursor and nextCursor', async () => {
+    const paginatedOptions: MCPHandlerOptions = {
+      ...options,
+      resourcesListPageSize: 1,
+      resources: new Map([
+        ['r://a', { name: 'a', uri: 'r://a', mimeType: 'text/plain', size: 1, text: 'a' }],
+        ['r://b', { name: 'b', uri: 'r://b', mimeType: 'text/plain', size: 1, text: 'b' }],
+        ['r://c', { name: 'c', uri: 'r://c', mimeType: 'text/plain', size: 1, text: 'c' }],
+      ]),
+    };
+
+    // First page
+    const body1 = await callMCP(paginatedOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body1.result.resources).toHaveLength(1);
+    expect(body1.result.resources[0].name).toBe('a');
+    expect(body1.result.nextCursor).toBe('1');
+
+    // Second page
+    const body2 = await callMCP(paginatedOptions, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'resources/list',
+      params: { cursor: '1' },
+    });
+    expect(body2.result.resources).toHaveLength(1);
+    expect(body2.result.resources[0].name).toBe('b');
+    expect(body2.result.nextCursor).toBe('2');
+
+    // Last page
+    const body3 = await callMCP(paginatedOptions, {
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'resources/list',
+      params: { cursor: '2' },
+    });
+    expect(body3.result.resources).toHaveLength(1);
+    expect(body3.result.resources[0].name).toBe('c');
+    expect(body3.result.nextCursor).toBeUndefined();
+  });
+
+  it('returns all resources when no pageSize configured', async () => {
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/list',
+    });
+    expect(body.result.resources).toHaveLength(1);
+    expect(body.result.nextCursor).toBeUndefined();
+  });
+
+  it('returns error for invalid cursor', async () => {
+    const paginatedOptions: MCPHandlerOptions = {
+      ...options,
+      resourcesListPageSize: 10,
+      resources: new Map([
+        ['r://a', { name: 'a', uri: 'r://a', mimeType: 'text/plain', size: 1, text: 'a' }],
+      ]),
+    };
+
+    for (const badCursor of ['garbage', '-1', '999']) {
+      const body = await callMCP(paginatedOptions, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'resources/list',
+        params: { cursor: badCursor },
+      });
+      expect(body.error.code).toBe(-32602);
+      expect(body.error.message).toContain('Invalid cursor');
+      expect(body.result).toBeUndefined();
+    }
+  });
+});
+
+describe('resources/read', () => {
+  const schema = buildSchema(`
+    type Query { hello(name: String!): String }
+  `);
+  const registry = new ToolRegistry(
+    [{ name: 'say_hello', query: 'query($name: String!) { hello(name: $name) }' }],
+    schema,
+  );
+  const options: MCPHandlerOptions = {
+    serverName: 'test-mcp',
+    serverVersion: '1.0.0',
+    registry,
+    execute: vi.fn(),
+  };
+
+  const resourceOptions: MCPHandlerOptions = {
+    ...options,
+    resources: new Map([
+      [
+        'docs://guide',
+        {
+          name: 'guide',
+          uri: 'docs://guide',
+          mimeType: 'text/markdown',
+          size: 13,
+          text: '# User Guide',
+        },
+      ],
+    ]),
+  };
+
+  it('returns resource contents by URI', async () => {
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://guide' },
+    });
+    expect(body.result.contents).toEqual([
+      {
+        uri: 'docs://guide',
+        mimeType: 'text/markdown',
+        text: '# User Guide',
+      },
+    ]);
+  });
+
+  it('returns error -32602 when uri parameter is missing', async () => {
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: {},
+    });
+    expect(body.error.code).toBe(-32602);
+    expect(body.error.message).toBe('Missing required parameter: uri');
+  });
+
+  it('returns error -32002 for unknown URI', async () => {
+    const body = await callMCP(resourceOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'docs://nonexistent' },
+    });
+    expect(body.error.code).toBe(-32002);
+    expect(body.error.message).toBe('Resource not found');
+    expect(body.error.data).toEqual({ uri: 'docs://nonexistent' });
+  });
+
+  it('returns blob for binary resources', async () => {
+    const b64 = Buffer.from('binary data').toString('base64');
+    const blobOptions: MCPHandlerOptions = {
+      ...options,
+      resources: new Map([
+        [
+          'files://icon.png',
+          {
+            name: 'icon',
+            uri: 'files://icon.png',
+            mimeType: 'image/png',
+            size: 11,
+            blob: b64,
+          },
+        ],
+      ]),
+    };
+    const body = await callMCP(blobOptions, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'resources/read',
+      params: { uri: 'files://icon.png' },
+    });
+    expect(body.result.contents).toEqual([
+      {
+        uri: 'files://icon.png',
+        mimeType: 'image/png',
+        blob: b64,
+      },
+    ]);
+    // Should NOT have text field
+    expect(body.result.contents[0].text).toBeUndefined();
   });
 });
