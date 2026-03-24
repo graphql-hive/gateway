@@ -3,7 +3,7 @@
   "private": true,
   "main": "./src/index.ts",
   "devDependencies": {
-    "@apollo/gateway": "^2.11.3",
+    "@apollo/gateway": "^2.13.3",
     "@types/dockerode": "^4.0.0",
     "@types/node": "^25.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",

@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^5.4.0",
-    "@apollo/subgraph": "^2.11.3",
+    "@apollo/subgraph": "^2.13.3",
     "fets": "^0.8.4"
   }
 }

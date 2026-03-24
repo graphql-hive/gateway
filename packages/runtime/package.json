@@ -83,7 +83,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@apollo/subgraph": "^2.11.3",
+    "@apollo/subgraph": "^2.13.3",
     "@graphql-mesh/fusion-composition": "^0.8.20",
     "@graphql-mesh/transport-rest": "^0.9.17",
     "@omnigraph/openapi": "^0.109.23",
