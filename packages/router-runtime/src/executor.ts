@@ -251,7 +251,7 @@ export function executeQueryPlan({
   });
   function handleResp() {
     const executionResult = {} as ExecutionResult;
-    if (Object.keys(executionContext.data).length > 0) {
+    if (hasOwnProperties(executionContext.data)) {
       executionResult.data = projectDataByOperation(executionContext);
     }
     if (executionContext.errors.length > 0) {
@@ -382,7 +382,8 @@ interface BatchAliasPreparedContext {
 
 interface BatchVariablePreparedContext {
   representations: EntityRepresentation[];
-  identityToEntityIndex: Map<number, number>;
+  // Maps hash → [[canonical, dedupIndex], ...] for collision-safe deduplication
+  identityToEntityIndex: Map<number, Array<[string, number]>>;
 }
 
 interface BatchPreparedContext {
@@ -427,6 +428,7 @@ function collectFlattenEntities(
   traverseFlattenPath(
     source,
     pathSegments,
+    0,
     supergraphSchema,
     activePath,
     (value: unknown, path) => {
@@ -457,7 +459,8 @@ function collectFlattenEntities(
 
 function traverseFlattenPath(
   current: unknown,
-  remainingPath: NormalizedFlattenNodePathSegment[],
+  pathSegments: NormalizedFlattenNodePathSegment[],
+  pathIndex: number,
   supergraphSchema: GraphQLSchema,
   path: (string | number)[],
   callback: (value: unknown, path: (string | number)[]) => void,
@@ -465,8 +468,8 @@ function traverseFlattenPath(
   if (current == null) {
     return;
   }
-  const [segment, ...rest] = remainingPath;
-  if (!segment /* same as remainingPath.length === 0 */) {
+  const segment = pathSegments[pathIndex];
+  if (!segment /* same as pathIndex >= pathSegments.length */) {
     callback(current, path);
     return;
   }
@@ -476,7 +479,8 @@ function traverseFlattenPath(
         for (const item of current) {
           traverseFlattenPath(
             item,
-            remainingPath,
+            pathSegments,
+            pathIndex,
             supergraphSchema,
             path,
             callback,
@@ -487,7 +491,14 @@ function traverseFlattenPath(
       if (typeof current === 'object') {
         path.push(segment.name);
         const next = (current as Record<string, any>)[segment.name];
-        traverseFlattenPath(next, rest, supergraphSchema, path, callback);
+        traverseFlattenPath(
+          next,
+          pathSegments,
+          pathIndex + 1,
+          supergraphSchema,
+          path,
+          callback,
+        );
         path.pop();
       }
       return;
@@ -498,7 +509,8 @@ function traverseFlattenPath(
           path.push(index);
           traverseFlattenPath(
             current[index],
-            rest,
+            pathSegments,
+            pathIndex + 1,
             supergraphSchema,
             path,
             callback,
@@ -513,7 +525,8 @@ function traverseFlattenPath(
         for (const item of current) {
           traverseFlattenPath(
             item,
-            remainingPath,
+            pathSegments,
+            pathIndex,
             supergraphSchema,
             path,
             callback,
@@ -536,7 +549,14 @@ function traverseFlattenPath(
             ),
           )
         ) {
-          traverseFlattenPath(current, rest, supergraphSchema, path, callback);
+          traverseFlattenPath(
+            current,
+            pathSegments,
+            pathIndex + 1,
+            supergraphSchema,
+            path,
+            callback,
+          );
         }
       }
     }
@@ -570,7 +590,8 @@ function prepareFlattenContext(
   const entityPaths: (string | number)[][] = [];
   const representationOrder: number[] = [];
   const dedupedRepresentations: EntityRepresentation[] = [];
-  const representationKeyToIndex = new Map<number, number>();
+  // Maps hash → [canonical, dedupIndex] for collision-safe deduplication
+  const hashToEntry = new Map<number, Array<[string, number]>>();
 
   for (const location of entityLocations) {
     const entityRef = location.entity;
@@ -596,12 +617,27 @@ function prepareFlattenContext(
       );
     }
 
-    const dedupeKey = stableStringify(representation);
-    let dedupIndex = representationKeyToIndex.get(dedupeKey);
-    if (dedupIndex === undefined) {
+    const hashKey = stableStringify(representation);
+    let bucket = hashToEntry.get(hashKey);
+    let dedupIndex: number;
+    if (!bucket) {
+      // New hash — definitely new entity
       dedupIndex = dedupedRepresentations.length;
-      representationKeyToIndex.set(dedupeKey, dedupIndex);
+      const canonical = canonicalEncodeEntity(representation);
+      hashToEntry.set(hashKey, [[canonical, dedupIndex]]);
       dedupedRepresentations.push(representation);
+    } else {
+      // Hash exists — verify against stored canonical strings to detect collisions
+      const canonical = canonicalEncodeEntity(representation);
+      const existing = findInBucket(bucket, canonical);
+      if (existing !== undefined) {
+        dedupIndex = existing;
+      } else {
+        // True hash collision — treat as separate entity
+        dedupIndex = dedupedRepresentations.length;
+        bucket.push([canonical, dedupIndex]);
+        dedupedRepresentations.push(representation);
+      }
     }
 
     entityRefs.push(entityRef);
@@ -613,23 +649,20 @@ function prepareFlattenContext(
     return null;
   }
 
-  const errorPath = pathSegments
-    .filter(
-      (
-        segment,
-      ): segment is Extract<
-        NormalizedFlattenNodePathSegment,
-        { kind: 'Field' }
-      > => segment.kind === 'Field',
-    )
-    .map((segment) => segment.name);
+  // Single-pass construction of errorPath (replaces filter+map chain)
+  let errorPath: string[] | undefined;
+  for (const segment of pathSegments) {
+    if (segment.kind === 'Field') {
+      (errorPath ??= []).push(segment.name);
+    }
+  }
 
   return {
     entityRefs,
     dedupedRepresentations,
     entityPaths,
     representationOrder,
-    errorPath: errorPath.length ? errorPath : undefined,
+    errorPath,
   };
 }
 
@@ -661,7 +694,7 @@ function prepareBatchFetchContext(
     if (!variableBatchState) {
       variableBatchState = {
         representations: [],
-        identityToEntityIndex: new Map<number, number>(),
+        identityToEntityIndex: new Map<number, Array<[string, number]>>(),
       };
       representationsByVariableName.set(
         representationsVariableName,
@@ -705,29 +738,46 @@ function prepareBatchFetchContext(
           );
         }
 
-        const identity = stableStringify(representation);
-        let dedupIndex =
-          ensuredVariableBatchState.identityToEntityIndex.get(identity);
-        if (dedupIndex == null) {
+        const hashKey = stableStringify(representation);
+        let bucket = ensuredVariableBatchState.identityToEntityIndex.get(hashKey);
+        let dedupIndex: number;
+        if (!bucket) {
+          // New hash — definitely new entity
           dedupIndex = ensuredVariableBatchState.representations.length;
-          ensuredVariableBatchState.identityToEntityIndex.set(
-            identity,
-            dedupIndex,
-          );
+          const canonical = canonicalEncodeEntity(representation);
+          ensuredVariableBatchState.identityToEntityIndex.set(hashKey, [
+            [canonical, dedupIndex],
+          ]);
           ensuredVariableBatchState.representations.push(representation);
+        } else {
+          // Hash exists — verify against stored canonical strings to detect collisions
+          const canonical = canonicalEncodeEntity(representation);
+          const existing = findInBucket(bucket, canonical);
+          if (existing !== undefined) {
+            dedupIndex = existing;
+          } else {
+            // True hash collision — treat as separate entity
+            dedupIndex = ensuredVariableBatchState.representations.length;
+            bucket.push([canonical, dedupIndex]);
+            ensuredVariableBatchState.representations.push(representation);
+          }
         }
 
         entityRefs.push(entityRef);
         entityPaths.push(location.path);
         representationIndexByTarget.push(dedupIndex);
 
-        const pathsForRepresentation =
-          entityPathsByRepresentationIndex.get(dedupIndex) ?? [];
+        // Create-once pattern: allocate the paths array on first access
+        let pathsForRepresentation =
+          entityPathsByRepresentationIndex.get(dedupIndex);
+        if (!pathsForRepresentation) {
+          pathsForRepresentation = [];
+          entityPathsByRepresentationIndex.set(
+            dedupIndex,
+            pathsForRepresentation,
+          );
+        }
         pathsForRepresentation.push(location.path);
-        entityPathsByRepresentationIndex.set(
-          dedupIndex,
-          pathsForRepresentation,
-        );
       }
 
       pathStates.push({
@@ -745,9 +795,13 @@ function prepareBatchFetchContext(
     });
   }
 
-  const hasRepresentations = Array.from(
-    representationsByVariableName.values(),
-  ).some((state) => state.representations.length > 0);
+  let hasRepresentations = false;
+  for (const state of representationsByVariableName.values()) {
+    if (state.representations.length > 0) {
+      hasRepresentations = true;
+      break;
+    }
+  }
   if (!hasRepresentations) {
     return null;
   }
@@ -845,9 +899,19 @@ function normalizeBatchFetchErrors(
       continue;
     }
 
-    const tail = errorPath.slice(2);
+    // Pre-sized array append: avoids slice() + spread allocations per error
+    const tailStart = 2;
+    const tailLen = errorPath.length - tailStart;
     for (const mappedPath of mappedPaths) {
-      relocated.push(relocatedError(error, [...mappedPath, ...tail]));
+      const newPath = new Array<string | number>(mappedPath.length + tailLen);
+      let i = 0;
+      for (let j = 0; j < mappedPath.length; j++) {
+        newPath[i++] = mappedPath[j]!;
+      }
+      for (let j = tailStart; j < errorPath.length; j++) {
+        newPath[i++] = errorPath[j]!;
+      }
+      relocated.push(relocatedError(error, newPath));
     }
   }
 
@@ -946,10 +1010,15 @@ function executeFetchPlanNode(
     preparedRepresentations = flattenState.dedupedRepresentations;
   } else if (representationTargets?.length) {
     const requires = fetchNode.requires;
-    if (requires && representationTargets.length) {
-      representationTargets = representationTargets.filter((entity) =>
-        requires.some(
-          (requiresNode) =>
+
+    const nextTargets: EntityRepresentation[] = [];
+    const payloads: EntityRepresentation[] = [];
+    for (const entity of representationTargets) {
+      // Single-pass: filter entities satisfying type conditions and build projections
+      if (requires) {
+        let satisfies = false;
+        for (const requiresNode of requires) {
+          if (
             entity &&
             entitySatisfiesTypeCondition(
               executionContext.supergraphSchema,
@@ -957,21 +1026,19 @@ function executeFetchPlanNode(
               requiresNode.kind === 'InlineFragment'
                 ? requiresNode.typeCondition
                 : undefined,
-            ),
-        ),
-      );
-    }
-
-    if (!representationTargets || representationTargets.length === 0) {
-      return;
-    }
-
-    const nextTargets: EntityRepresentation[] = [];
-    const payloads: EntityRepresentation[] = [];
-    for (const entity of representationTargets) {
-      let projection = fetchNode.requires
+            )
+          ) {
+            satisfies = true;
+            break;
+          }
+        }
+        if (!satisfies) {
+          continue;
+        }
+      }
+      let projection = requires
         ? projectRequires(
-            fetchNode.requires,
+            requires,
             entity,
             executionContext.supergraphSchema,
           )
@@ -1149,9 +1216,21 @@ function normalizeFetchErrors(
         if (typeof dedupIndex === 'number') {
           const mappedPaths = entityPathMap.get(dedupIndex);
           if (mappedPaths && mappedPaths.length) {
-            const tail = errorPath.slice(entityIndexPosition + 2);
+            // Pre-sized array append: avoids slice() + spread allocations per error
+            const tailStart = entityIndexPosition + 2;
+            const tailLen = errorPath.length - tailStart;
             for (const mappedPath of mappedPaths) {
-              relocated.push(relocatedError(error, [...mappedPath, ...tail]));
+              const newPath = new Array<string | number>(
+                mappedPath.length + tailLen,
+              );
+              let i = 0;
+              for (let j = 0; j < mappedPath.length; j++) {
+                newPath[i++] = mappedPath[j]!;
+              }
+              for (let j = tailStart; j < errorPath.length; j++) {
+                newPath[i++] = errorPath[j]!;
+              }
+              relocated.push(relocatedError(error, newPath));
             }
             continue;
           }
@@ -1303,6 +1382,106 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
 
 function stableStringify(value: unknown) {
   return hashValueOrderIndependent32Ultra(value);
+}
+
+/**
+ * Allocation-free emptiness check for plain objects.
+ * Avoids the `Object.keys(obj).length > 0` pattern which allocates an array.
+ */
+function hasOwnProperties(obj: Record<string, unknown>): boolean {
+  for (const _key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, _key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Linear search through a collision bucket for a canonical key.
+ * Buckets are expected to be tiny (collision is rare), so this is O(1) in practice.
+ */
+function findInBucket(
+  bucket: Array<[string, number]>,
+  canonical: string,
+): number | undefined {
+  for (let i = 0; i < bucket.length; i++) {
+    if (bucket[i]![0] === canonical) {
+      return bucket[i]![1];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Canonical encoder for entity representations used in deduplication.
+ *
+ * Encodes common GraphQL entity shapes with type tags so that semantically
+ * different values (e.g. string "1" vs number 1, or "true" vs boolean true)
+ * never produce the same encoded string. Object keys are sorted for
+ * order-independent comparison.
+ *
+ * A safe fallback handles unknown/future value types (functions, symbols, etc.)
+ * by delegating to JSON.stringify so the encoder remains forwards-compatible.
+ */
+function canonicalEncodeEntity(value: unknown): string {
+  if (value === null) {
+    return 'N';
+  }
+  const t = typeof value;
+  if (t === 'string') {
+    // s<length>:<value> — length prefix ensures "1:a,2:bc" ≠ "3:abc"
+    const v = value as string;
+    return `s${v.length}:${v}`;
+  }
+  if (t === 'number') {
+    const n = value as number;
+    // normalize -0 → 0; sentinel for non-finite values
+    if (!Number.isFinite(n)) {
+      return `n~${n}`;
+    }
+    return `n${Object.is(n, -0) ? 0 : n}`;
+  }
+  if (t === 'boolean') {
+    return (value as boolean) ? 'b1' : 'b0';
+  }
+  if (Array.isArray(value)) {
+    const arr = value as unknown[];
+    let result = `A${arr.length}[`;
+    for (let i = 0; i < arr.length; i++) {
+      if (i > 0) result += ',';
+      result += canonicalEncodeEntity(arr[i]);
+    }
+    return result + ']';
+  }
+  if (t === 'object') {
+    const obj = value as Record<string, unknown>;
+    // Sort keys and exclude undefined values before counting,
+    // so that {a: undefined, b: "2"} and {b: "2", c: undefined} don't
+    // produce the same canonical string.
+    const sortedKeys = Object.keys(obj).sort();
+    const definedKeys: string[] = [];
+    for (let i = 0; i < sortedKeys.length; i++) {
+      const k = sortedKeys[i]!;
+      if (obj[k] !== undefined) {
+        definedKeys.push(k);
+      }
+    }
+    let result = `O${definedKeys.length}{`;
+    for (let i = 0; i < definedKeys.length; i++) {
+      const k = definedKeys[i]!;
+      result += `k${k.length}:${k}=${canonicalEncodeEntity(obj[k])}`;
+    }
+    return result + '}';
+  }
+  // Fallback for unknown/future types (functions, symbols, bigint, etc.)
+  // Objects and arrays are handled above and will never reach this branch.
+  // Use JSON.stringify if possible, otherwise coerce to string.
+  try {
+    return `X${JSON.stringify(value)}`;
+  } catch {
+    return `X${String(value)}`;
+  }
 }
 
 /**
