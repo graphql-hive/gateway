@@ -409,7 +409,7 @@ describe('buildHTTPExecutor', () => {
     await using executor = buildHTTPExecutor({
       fetch(url, init) {
         requestCount++;
-        const req = new Request(url, init);
+        const req = new Request(new URL(url, 'http://localhost'), init);
         return req.text().then((body) => {
           requestCounts[body] = (requestCounts[body] || 0) + 1;
           const data = JSON.parse(body);
