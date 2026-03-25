@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 2.5.14
+### Patch Changes
+
+
+
+- [#2162](https://github.com/graphql-hive/gateway/pull/2162) [`c2ebe02`](https://github.com/graphql-hive/gateway/commit/c2ebe025d2905c2b517c19dbfee0e09f61cc2036) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Bundle the REST transport into the Docker image
+
 ## 2.5.13
 ### Patch Changes
 
