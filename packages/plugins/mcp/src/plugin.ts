@@ -1471,7 +1471,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
           // Check for GraphQL errors
           if (execResult.errors?.length) {
-            const messages = (execResult.errors as ReadonlyArray<{ message?: string }>)
+            const messages = (
+              execResult.errors as ReadonlyArray<{ message?: string }>
+            )
               .map((e) => e.message || 'Unknown error')
               .filter(Boolean);
             const errorMessage =
