@@ -2050,3 +2050,66 @@ describe('resources/templates/list description providers', () => {
     warnSpy.mockRestore();
   });
 });
+
+describe('JSON-RPC validation', () => {
+  const schema = buildSchema(`type Query { hello: String }`);
+  const registry = new ToolRegistry(
+    [{ name: 'hi', query: '{ hello }' }],
+    schema,
+  );
+  const opts: MCPHandlerOptions = {
+    serverName: 'test',
+    serverVersion: '1.0.0',
+    registry,
+    execute: vi.fn(),
+  };
+
+  it('rejects request with missing jsonrpc field', async () => {
+    const body = await handleMCPRequest(
+      { id: 1, method: 'initialize' } as any,
+      opts,
+    );
+    expect(body!.error!.code).toBe(-32600);
+    expect(body!.error!.message).toContain('jsonrpc');
+  });
+
+  it('rejects request with wrong jsonrpc version', async () => {
+    const body = await handleMCPRequest(
+      { jsonrpc: '1.0' as any, id: 1, method: 'initialize' },
+      opts,
+    );
+    expect(body!.error!.code).toBe(-32600);
+  });
+
+  it('rejects request with missing method', async () => {
+    const body = await handleMCPRequest({ jsonrpc: '2.0', id: 1 } as any, opts);
+    expect(body!.error!.code).toBe(-32600);
+    expect(body!.error!.message).toContain('method');
+  });
+
+  it('rejects non-notification request with missing id', async () => {
+    const body = await handleMCPRequest(
+      { jsonrpc: '2.0', method: 'tools/list' } as any,
+      opts,
+    );
+    expect(body!.error!.code).toBe(-32600);
+    expect(body!.error!.message).toContain('id');
+  });
+
+  it('allows notification without id', async () => {
+    const body = await handleMCPRequest(
+      { jsonrpc: '2.0', method: 'notifications/initialized' } as any,
+      opts,
+    );
+    expect(body).toBeNull();
+  });
+
+  it('returns error for unknown method', async () => {
+    const body = await handleMCPRequest(
+      { jsonrpc: '2.0', id: 1, method: 'unknown/method' },
+      opts,
+    );
+    expect(body!.error!.code).toBe(-32601);
+    expect(body!.error!.message).toContain('Method not found');
+  });
+});

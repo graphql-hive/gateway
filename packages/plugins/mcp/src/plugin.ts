@@ -675,6 +675,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
   // Resolved lazily on first use, then cached
   let resolvedProviders: ProviderRegistry | undefined;
+  let providersPromise: Promise<ProviderRegistry> | undefined;
+
+  function getProviders(): Promise<ProviderRegistry> {
+    if (resolvedProviders) return Promise.resolve(resolvedProviders);
+    if (!providersPromise) {
+      providersPromise = resolveProviders(config.providers || {}).then((p) => {
+        resolvedProviders = p;
+        return p;
+      });
+    }
+    return providersPromise;
+  }
 
   // Tools that use provider descriptions (provider wins over config)
   const providerToolConfigs = resolvedTools.filter(
@@ -691,7 +703,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
   let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
-  function buildHandlerOptions(): MCPHandlerOptions {
+  function buildHandlerOptions(reg: ToolRegistry): MCPHandlerOptions {
     return {
       serverName: config.name,
       serverVersion: config.version || '1.0.0',
@@ -702,15 +714,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       instructions: config.instructions,
       protocolVersion: config.protocolVersion,
       suppressOutputSchema: config.suppressOutputSchema,
-      registry: registry!,
+      registry: reg,
       resolveToolDescriptions:
         providerToolConfigs.length > 0
           ? async (ctx) => {
-              if (!resolvedProviders) {
-                resolvedProviders = await resolveProviders(
-                  config.providers || {},
-                );
-              }
+              resolvedProviders = await getProviders();
               const resolved = await resolveDescriptions(
                 providerToolConfigs,
                 resolvedProviders,
@@ -728,11 +736,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       resolveFieldDescriptions:
         fieldProviderToolConfigs.length > 0
           ? async (ctx) => {
-              if (!resolvedProviders) {
-                resolvedProviders = await resolveProviders(
-                  config.providers || {},
-                );
-              }
+              resolvedProviders = await getProviders();
               const fieldDescs = await resolveFieldDescriptions(
                 fieldProviderToolConfigs,
                 resolvedProviders,
@@ -758,11 +762,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       resolveResourceDescriptions:
         providerResourceConfigs.length > 0
           ? async (ctx) => {
-              if (!resolvedProviders) {
-                resolvedProviders = await resolveProviders(
-                  config.providers || {},
-                );
-              }
+              resolvedProviders = await getProviders();
               const map = new Map<string, string>();
               for (const resource of providerResourceConfigs) {
                 const providerType = resource.descriptionProvider!.type;
@@ -793,11 +793,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       resolveTemplateDescriptions:
         providerTemplateConfigs.length > 0
           ? async (ctx) => {
-              if (!resolvedProviders) {
-                resolvedProviders = await resolveProviders(
-                  config.providers || {},
-                );
-              }
+              resolvedProviders = await getProviders();
               const map = new Map<string, string>();
               for (const tmpl of providerTemplateConfigs) {
                 const providerType = tmpl.descriptionProvider!.type;
@@ -849,9 +845,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
   return {
     onSchemaChange({ schema: newSchema }) {
-      schema = newSchema;
-      registry = new ToolRegistry(resolvedTools, newSchema);
-      mcpHandlerOptions = buildHandlerOptions();
+      try {
+        const newRegistry = new ToolRegistry(resolvedTools, newSchema);
+        const newOptions = buildHandlerOptions(newRegistry);
+        schema = newSchema;
+        registry = newRegistry;
+        mcpHandlerOptions = newOptions;
+      } catch (err) {
+        console.error(
+          `[MCP] Failed to rebuild tool registry after schema change:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
     },
 
     onRequestParse({
@@ -902,7 +907,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       }
 
       // Schema bootstrap: one-time dispatch to trigger schema loading
-      if (!registry || !schema) {
+      if (!registry || !schema || !mcpHandlerOptions) {
         try {
           const bootstrapReq = new Request(`http://localhost${graphqlPath}`, {
             method: 'POST',
@@ -919,7 +924,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           );
         }
 
-        if (!registry || !schema) {
+        if (!registry || !schema || !mcpHandlerOptions) {
           endResponse(
             new Response(
               JSON.stringify({
@@ -945,7 +950,15 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       let body: JsonRpcRequest;
       try {
         bodyText = await request.text();
-        body = JSON.parse(bodyText);
+        const parsed = JSON.parse(bodyText);
+        if (
+          typeof parsed !== 'object' ||
+          parsed === null ||
+          Array.isArray(parsed)
+        ) {
+          throw new Error('Expected a JSON object');
+        }
+        body = parsed;
       } catch (parseError) {
         console.warn(
           `[MCP] Failed to parse JSON-RPC request body:`,
@@ -1002,6 +1015,27 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 error: {
                   code: -32602,
                   message: 'Invalid params: missing required "name" field',
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+          return;
+        }
+
+        if (
+          callParams.arguments != null &&
+          (typeof callParams.arguments !== 'object' ||
+            Array.isArray(callParams.arguments))
+        ) {
+          endResponse(
+            new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: body.id,
+                error: {
+                  code: -32602,
+                  message: 'Invalid params: "arguments" must be an object',
                 },
               }),
               { headers: { 'Content-Type': 'application/json' } },
@@ -1164,7 +1198,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
       const result = await handleMCPRequest(
         body,
-        mcpHandlerOptions!,
+        mcpHandlerOptions,
         providerContext,
       );
 

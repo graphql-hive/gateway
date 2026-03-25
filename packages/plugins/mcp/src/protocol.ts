@@ -464,7 +464,7 @@ export async function handleMCPRequest(
         if (
           Number.isNaN(startIndex) ||
           startIndex < 0 ||
-          startIndex >= allTools.length
+          (startIndex > 0 && startIndex >= allTools.length)
         ) {
           return {
             jsonrpc: '2.0',
@@ -543,7 +543,7 @@ export async function handleMCPRequest(
         if (
           Number.isNaN(startIndex) ||
           startIndex < 0 ||
-          startIndex >= resourceList.length
+          (startIndex > 0 && startIndex >= resourceList.length)
         ) {
           return {
             jsonrpc: '2.0',
