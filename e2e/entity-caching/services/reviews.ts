@@ -37,11 +37,22 @@ const reviews = [
 
 const schema = buildSubgraphSchema({
   typeDefs: parse(/* GraphQL */ `
+    enum CacheControlScope {
+      PUBLIC
+      PRIVATE
+    }
+
+    directive @cacheControl(
+      maxAge: Int
+      scope: CacheControlScope
+      inheritMaxAge: Boolean
+    ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+
     type Review {
       id: ID!
       author: String!
       body: String!
-      rating: Int!
+      rating: Int! @cacheControl(maxAge: 60)
       product: Product!
     }
 
@@ -56,7 +67,15 @@ const schema = buildSubgraphSchema({
     }
 
     extend schema
-      @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"]) {
+      @link(
+        url: "https://specs.apollo.dev/federation/v2.1"
+        import: ["@key", "@composeDirective"]
+      )
+      @link(
+        url: "https://the-guild.dev/mesh/v1.0"
+        import: ["@cacheControl"]
+      )
+      @composeDirective(name: "@cacheControl") {
       query: Query
     }
   `),

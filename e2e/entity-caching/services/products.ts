@@ -17,7 +17,18 @@ const products = [
 
 const schema = buildSubgraphSchema({
   typeDefs: parse(/* GraphQL */ `
-    type Product @key(fields: "id") {
+    enum CacheControlScope {
+      PUBLIC
+      PRIVATE
+    }
+
+    directive @cacheControl(
+      maxAge: Int
+      scope: CacheControlScope
+      inheritMaxAge: Boolean
+    ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+
+    type Product @key(fields: "id") @cacheControl(maxAge: 30) {
       id: ID!
       name: String!
       price: Float!
@@ -30,7 +41,15 @@ const schema = buildSubgraphSchema({
     }
 
     extend schema
-      @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"]) {
+      @link(
+        url: "https://specs.apollo.dev/federation/v2.1"
+        import: ["@key", "@composeDirective"]
+      )
+      @link(
+        url: "https://the-guild.dev/mesh/v1.0"
+        import: ["@cacheControl"]
+      )
+      @composeDirective(name: "@cacheControl") {
       query: Query
     }
   `),
