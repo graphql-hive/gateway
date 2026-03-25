@@ -598,8 +598,8 @@ __metadata:
   linkType: hard
 
 "@aws-sdk/client-sts@npm:^3.995.0":
-  version: 3.1015.0
-  resolution: "@aws-sdk/client-sts@npm:3.1015.0"
+  version: 3.1016.0
+  resolution: "@aws-sdk/client-sts@npm:3.1016.0"
   dependencies:
     "@aws-crypto/sha256-browser": "npm:5.2.0"
     "@aws-crypto/sha256-js": "npm:5.2.0"
@@ -640,7 +640,7 @@ __metadata:
     "@smithy/util-retry": "npm:^4.2.12"
     "@smithy/util-utf8": "npm:^4.2.2"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/9a0cf08d5f88c4098048d1be7756002e649664c581d3f7fc523de7f909d9f80ad0e2f58acea4bfb1f489be586145411025b6a3527da8511df5c1c21aa6c1eedb
+  checksum: 10c0/5819e2609287395de9c4dc5e167cb68006fdb201220bab26d095339215ee05618d1c7394f555b1cd4f3e6110bafac35bec76d42fb4646ec4e020a3c22bd441d8
   languageName: node
   linkType: hard
 
@@ -9483,6 +9483,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sinclair/typebox@npm:^0.34.48":
+  version: 0.34.48
+  resolution: "@sinclair/typebox@npm:0.34.48"
+  checksum: 10c0/e09f26d8ad471a07ee64004eea7c4ec185349a1f61c03e87e71ea33cbe98e97959940076c2e52968a955ffd4c215bf5ba7035e77079511aac7935f25e989e29d
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/is@npm:^4.0.0":
   version: 4.6.0
   resolution: "@sindresorhus/is@npm:4.6.0"
@@ -11285,7 +11292,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.6":
+"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.12, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.6":
   version: 0.10.13
   resolution: "@whatwg-node/fetch@npm:0.10.13"
   dependencies:
@@ -11327,7 +11334,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.17":
+"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.17, @whatwg-node/server@npm:^0.10.18":
   version: 0.10.18
   resolution: "@whatwg-node/server@npm:0.10.18"
   dependencies:
@@ -15223,19 +15230,19 @@ __metadata:
   linkType: hard
 
 "fets@npm:^0.8.4, fets@npm:^0.8.5":
-  version: 0.8.5
-  resolution: "fets@npm:0.8.5"
+  version: 0.8.6
+  resolution: "fets@npm:0.8.6"
   dependencies:
-    "@sinclair/typebox": "npm:^0.34.0"
+    "@sinclair/typebox": "npm:^0.34.48"
     "@whatwg-node/cookie-store": "npm:^0.2.0"
-    "@whatwg-node/fetch": "npm:^0.10.0"
-    "@whatwg-node/server": "npm:^0.10.0"
+    "@whatwg-node/fetch": "npm:^0.10.12"
+    "@whatwg-node/server": "npm:^0.10.18"
     hotscript: "npm:^1.0.11"
     json-schema-to-ts: "npm:^3.0.0"
-    qs: "npm:^6.13.1"
+    qs: "npm:^6.14.2"
     ts-toolbelt: "npm:^9.6.0"
     tslib: "npm:^2.3.1"
-  checksum: 10c0/c3c7100263845376c92b563ac1a123572b2a267744648e3deb1b0c688abfc674913aff534d13bd716df2e0b03406298777fab4741f86c1cf1670f8b9838c211d
+  checksum: 10c0/ae6bf941168ae188213f2c336b487167cc5583cd302a2aa3ab46d75438a2a05e75be8b80c645935e2a67a19ef51aea5861f9fd8d626d44032c8c0556218b46f0
   languageName: node
   linkType: hard
 
@@ -16086,9 +16093,9 @@ __metadata:
   linkType: hard
 
 "graphql@npm:^16.13.1":
-  version: 16.13.1
-  resolution: "graphql@npm:16.13.1"
-  checksum: 10c0/0c7a9aea59504fbf3e0674f13ddb82935780f2a388e1db0ef41c3711c0ff8cb0a871c50d30d2d5288f32b946af3570d6f9ba8d13b03a330336f27121f9ac7a6b
+  version: 16.13.2
+  resolution: "graphql@npm:16.13.2"
+  checksum: 10c0/64e822a0a0e4398781e4bc9765b88d370c08261498b517add4b878038ef7be2005b6b394a79a5102b9379d57052f60bc7f23fec8f39808d101984a74772ebd9d
   languageName: node
   linkType: hard
 
@@ -20323,7 +20330,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.13.1, qs@npm:^6.14.0, qs@npm:^6.14.1, qs@npm:^6.14.2":
+"qs@npm:^6.14.0, qs@npm:^6.14.1, qs@npm:^6.14.2":
   version: 6.15.0
   resolution: "qs@npm:6.15.0"
   dependencies:
