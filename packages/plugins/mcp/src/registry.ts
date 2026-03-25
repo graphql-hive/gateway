@@ -24,7 +24,7 @@ export interface MCPTool {
   title?: string;
   /** JSON Schema describing the tool's input parameters */
   inputSchema: JsonSchema;
-  /** JSON Schema describing the tool's output shape (omitted when hooks are present) */
+  /** JSON Schema describing the tool's output shape (omitted when hooks are present or suppressOutputSchema is configured) */
   outputSchema?: JsonSchema;
   /** Behavioral hints for clients (readOnly, destructive, idempotent, openWorld) */
   annotations?: MCPToolAnnotations;
@@ -272,8 +272,8 @@ export class ToolRegistry {
 
   getMCPTools(options?: { suppressOutputSchema?: boolean }): MCPTool[] {
     return Array.from(this.tools.values()).map((tool) => {
-      // Deep-clone inputSchema so description provider mutations in protocol.ts
-      // don't corrupt the canonical registry state across concurrent requests
+      // Shallow-clone inputSchema (one level into properties) so description provider
+      // mutations in protocol.ts don't corrupt the canonical registry state across concurrent requests
       const clonedInputSchema: JsonSchema = {
         ...tool.inputSchema,
         ...(tool.inputSchema.properties && {

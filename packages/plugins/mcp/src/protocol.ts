@@ -217,9 +217,11 @@ export function formatToolCallResult(
     return { isError: false, ...(result as Record<string, unknown>) };
   }
   let textValue: string;
+  let serializationFailed = false;
   try {
-    textValue = JSON.stringify(result, null, 2);
+    textValue = JSON.stringify(result ?? null, null, 2);
   } catch (err) {
+    serializationFailed = true;
     console.error(
       `[MCP] Failed to serialize tool result for "${tool.name}":`,
       err instanceof Error ? err.message : String(err),
@@ -236,7 +238,7 @@ export function formatToolCallResult(
   if (tool.contentAnnotations)
     textItem['annotations'] = tool.contentAnnotations;
   const textContent = { content: [textItem], isError: false };
-  return tool.outputSchema && !opts.hasHooks
+  return tool.outputSchema && !opts.hasHooks && !serializationFailed
     ? { structuredContent: result, ...textContent }
     : textContent;
 }
@@ -471,10 +473,20 @@ export async function handleMCPRequest(
         }
       }
 
-      const listParams = params as { cursor?: string } | undefined;
+      const listParams = params as { cursor?: unknown } | undefined;
       const cursor = listParams?.cursor;
       let startIndex = 0;
       if (cursor !== undefined && cursor !== '') {
+        if (typeof cursor !== 'string') {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32602,
+              message: 'Invalid cursor: expected a string',
+            },
+          };
+        }
         startIndex = parseInt(cursor, 10);
         if (
           Number.isNaN(startIndex) ||
@@ -550,10 +562,20 @@ export async function handleMCPRequest(
         }
       }
 
-      const listParams = params as { cursor?: string } | undefined;
+      const listParams = params as { cursor?: unknown } | undefined;
       const cursor = listParams?.cursor;
       let startIndex = 0;
       if (cursor !== undefined && cursor !== '') {
+        if (typeof cursor !== 'string') {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32602,
+              message: 'Invalid cursor: expected a string',
+            },
+          };
+        }
         startIndex = parseInt(cursor, 10);
         if (
           Number.isNaN(startIndex) ||

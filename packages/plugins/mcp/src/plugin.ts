@@ -65,7 +65,7 @@ export interface MCPToolAnnotations {
   destructiveHint?: boolean;
   /** If true, calling repeatedly with the same arguments has no additional effect. Only meaningful when readOnlyHint is false. Clients assume false when omitted */
   idempotentHint?: boolean;
-  /** If true, the tool may interact with an "open world" of external entities; if false, its domain of interaction is closed */
+  /** If true, the tool may interact with an "open world" of external entities; if false, its domain of interaction is closed. Clients assume true when omitted */
   openWorldHint?: boolean;
 }
 
@@ -366,7 +366,7 @@ export interface MCPToolHooks {
    *
    * To return a raw MCP result, return an object with a `content` array of MCP content items
    * (each with `type: "text" | "image" | "audio" | "resource" | "resource_link"`). This will be passed through directly
-   * as the MCP response, allowing custom fields like `_metadata` or `isError`.
+   * as the MCP response, allowing custom fields like `_meta` or `isError`.
    */
   preprocess?: (
     args: Record<string, unknown>,
@@ -380,7 +380,7 @@ export interface MCPToolHooks {
    *
    * To return a raw MCP result, return an object with a `content` array of MCP content items
    * (each with `type: "text" | "image" | "audio" | "resource" | "resource_link"`). This will be passed through directly
-   * as the MCP response, allowing custom fields like `_metadata` or `isError`.
+   * as the MCP response, allowing custom fields like `_meta` or `isError`.
    */
   postprocess?: (
     result: unknown,
@@ -1153,7 +1153,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         }
         body = parsed;
       } catch (parseError) {
-        console.warn(
+        console.error(
           `[MCP] Failed to parse JSON-RPC request body:`,
           parseError instanceof Error ? parseError.message : parseError,
         );
@@ -1469,7 +1469,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
           const execResult = executionResult as ExecutionResult;
 
-          // Check for GraphQL errors
+          // Check for GraphQL errors (only fail if there's no usable data)
           if (execResult.errors?.length) {
             const messages = (
               execResult.errors as ReadonlyArray<{ message?: string }>
@@ -1480,11 +1480,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               messages.length > 1
                 ? `${messages[0]} (and ${messages.length - 1} more error${messages.length - 1 > 1 ? 's' : ''})`
                 : messages[0] || 'GraphQL execution error';
-            console.error(
-              `[MCP] tools/call failed for tool "${ctx.toolName}":`,
+            if (execResult.data == null) {
+              console.error(
+                `[MCP] tools/call failed for tool "${ctx.toolName}":`,
+                messages.join('; '),
+              );
+              return mcpErrorResponse(ctx.jsonrpcId, errorMessage);
+            }
+            // Partial success: log warning but continue with available data
+            console.warn(
+              `[MCP] tools/call partial success for tool "${ctx.toolName}":`,
               messages.join('; '),
             );
-            return mcpErrorResponse(ctx.jsonrpcId, errorMessage);
           }
 
           // Post-execution: output.path, postprocess, format
