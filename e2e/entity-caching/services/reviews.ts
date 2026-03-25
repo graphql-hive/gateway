@@ -79,6 +79,7 @@ const schema = buildSubgraphSchema({
   resolvers: {
     Product: {
       __resolveReference(ref: { id: string }) {
+        console.log('resolving __resolveReference');
         return { id: ref.id };
       },
       reviews: (parent: { id: string }) =>
@@ -86,14 +87,15 @@ const schema = buildSubgraphSchema({
     },
     Review: {
       product: (review: { productId: string }) => ({ id: review.productId }),
+      rating: (review: { rating: number }) => {
+        console.log('resolving Review.rating');
+        return review.rating;
+      },
     },
     Query: {
       review: (_root, { id }: { id: string }) =>
         reviews.find((r) => r.id === id),
-      reviews: () => {
-        console.log('resolving reviews');
-        return reviews;
-      },
+      reviews: () => reviews,
     },
   },
 });

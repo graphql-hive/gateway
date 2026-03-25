@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 
 const { service, gateway } = createTenv(__dirname);
 
-it('caches Product type responses - second request is a cache hit', async () => {
+it('caches direct Product type responses', async () => {
   const products = await service('products');
   const reviews = await service('reviews');
   const gw = await gateway({
@@ -13,72 +13,104 @@ it('caches Product type responses - second request is a cache hit', async () => 
     },
   });
 
-  const query = /* GraphQL */ `
-    query {
-      products {
-        id
-        name
-        price
-        category
-        reviews {
-          id
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        product(id: "1") {
+          name
+          price
+        }
+      }
+    `,
+  });
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        product(id: "1") {
+          name
+          price
+        }
+      }
+    `,
+  });
+
+  const std = products.getStd('both');
+  expect(std.match(/resolving Query\.product/g)).toHaveLength(1);
+});
+
+it('caches nested Product type responses', async () => {
+  const products = await service('products');
+  const reviews = await service('reviews');
+  const gw = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [products, reviews],
+    },
+    env: {
+      DEBUG: 1,
+    },
+  });
+
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        review(id: "1") {
+          product {
+            name
+            price
+          }
+        }
+      }
+    `,
+  });
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        review(id: "1") {
+          product {
+            name
+            price
+          }
+        }
+      }
+    `,
+  });
+
+  const std = products.getStd('both');
+  expect(std.match(/resolving __resolveReference/g)).toHaveLength(1);
+});
+
+it('caches Review.rating field responses', async () => {
+  const products = await service('products');
+  const reviews = await service('reviews');
+  const gw = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [products, reviews],
+    },
+  });
+
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        review(id: "1") {
           author
-          body
           rating
         }
       }
-    }
-  `;
-  const first = await gw.execute({ query });
-  expect(first).toMatchObject({
-    data: { products: expect.any(Array) },
+    `,
   });
-  const second = await gw.execute({ query });
-  expect(second).toMatchObject({
-    data: { products: expect.any(Array) },
-  });
-
-  // resolver was only invoked once - the second request was served from cache
-  const std = products.getStd('both');
-  expect(std.match(/resolving products/g)).toHaveLength(1);
-});
-
-it('caches Review.rating field responses - second request is a cache hit with field-level TTL', async () => {
-  const products = await service('products');
-  const reviews = await service('reviews');
-  const gw = await gateway({
-    supergraph: {
-      with: 'apollo',
-      services: [products, reviews],
-    },
-  });
-
-  const query = /* GraphQL */ `
-    query {
-      reviews {
-        id
-        author
-        body
-        rating
-        product {
-          id
-          name
-          price
-          category
+  await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        review(id: "1") {
+          author
+          rating
         }
       }
-    }
-  `;
-  const first = await gw.execute({ query });
-  expect(first).toMatchObject({
-    data: { reviews: expect.any(Array) },
-  });
-  const second = await gw.execute({ query });
-  expect(second).toMatchObject({
-    data: { reviews: expect.any(Array) },
+    `,
   });
 
-  // resolver was only invoked once - the second request was served from cache
   const std = reviews.getStd('both');
-  expect(std.match(/resolving reviews/g)).toHaveLength(1);
+  expect(std.match(/resolving Review\.rating/g)).toHaveLength(1);
 });

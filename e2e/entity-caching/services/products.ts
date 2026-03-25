@@ -53,16 +53,16 @@ const schema = buildSubgraphSchema({
   resolvers: {
     Product: {
       __resolveReference(ref: { id: string }) {
+        console.log('resolving __resolveReference');
         return products.find((p) => p.id === ref.id);
       },
     },
     Query: {
-      product: (_root, { id }: { id: string }) =>
-        products.find((p) => p.id === id),
-      products: () => {
-        console.log('resolving products');
-        return products;
+      product: (_root, { id }: { id: string }) => {
+        console.log('resolving Query.product');
+        return products.find((p) => p.id === id);
       },
+      products: () => products,
     },
   },
 });
