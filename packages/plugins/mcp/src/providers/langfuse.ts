@@ -43,7 +43,14 @@ export function createLangfuseProvider(
         version,
         options as any,
       );
-      return prompt.compile();
+      const compiled = prompt.compile();
+      if (typeof compiled !== 'string') {
+        throw new Error(
+          `Langfuse prompt "${promptName}" returned ${typeof compiled} from compile(). ` +
+            `MCP description providers require a text prompt, not a chat prompt.`,
+        );
+      }
+      return compiled;
     },
   };
 }

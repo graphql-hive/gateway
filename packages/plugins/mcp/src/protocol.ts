@@ -221,9 +221,18 @@ export function formatToolCallResult(
   if (isMCPResult) {
     return { isError: false, ...(result as Record<string, unknown>) };
   }
+  let textValue: string;
+  try {
+    textValue = JSON.stringify(result, null, 2);
+  } catch (err) {
+    textValue = JSON.stringify({
+      error: 'Result could not be serialized to JSON',
+      detail: err instanceof Error ? err.message : String(err),
+    });
+  }
   const textItem: Record<string, unknown> = {
     type: 'text',
-    text: JSON.stringify(result, null, 2),
+    text: textValue,
   };
   if (tool.contentAnnotations)
     textItem['annotations'] = tool.contentAnnotations;

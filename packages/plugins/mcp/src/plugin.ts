@@ -680,10 +680,19 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   function getProviders(): Promise<ProviderRegistry> {
     if (resolvedProviders) return Promise.resolve(resolvedProviders);
     if (!providersPromise) {
-      providersPromise = resolveProviders(config.providers || {}).then((p) => {
-        resolvedProviders = p;
-        return p;
-      });
+      providersPromise = resolveProviders(config.providers || {}).then(
+        (p) => {
+          resolvedProviders = p;
+          return p;
+        },
+        (err) => {
+          // Reset so next request retries instead of caching the rejection
+          providersPromise = undefined;
+          throw new Error(
+            `Description provider initialization failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        },
+      );
     }
     return providersPromise;
   }
@@ -853,7 +862,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         mcpHandlerOptions = newOptions;
       } catch (err) {
         console.error(
-          `[MCP] Failed to rebuild tool registry after schema change:`,
+          `[MCP] Failed to rebuild tool registry after schema change. ` +
+            `MCP tools will continue using the previous schema.`,
           err instanceof Error ? err.message : err,
         );
       }
@@ -1196,11 +1206,33 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       const providerContext: DescriptionProviderContext | undefined =
         promptLabel ? { label: promptLabel } : undefined;
 
-      const result = await handleMCPRequest(
-        body,
-        mcpHandlerOptions,
-        providerContext,
-      );
+      let result;
+      try {
+        result = await handleMCPRequest(
+          body,
+          mcpHandlerOptions,
+          providerContext,
+        );
+      } catch (err) {
+        console.error(
+          `[MCP] Unhandled error processing method "${body.method}":`,
+          err instanceof Error ? err.message : err,
+        );
+        endResponse(
+          new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              id: body.id ?? null,
+              error: {
+                code: -32603,
+                message: `Internal error: ${err instanceof Error ? err.message : String(err)}`,
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } },
+          ),
+        );
+        return;
+      }
 
       if (result === null) {
         // notifications/initialized: no response
