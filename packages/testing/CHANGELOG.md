@@ -1,5 +1,14 @@
 # @graphql-hive/gateway-testing
 
+## 6.0.11
+### Patch Changes
+
+
+
+- [#2152](https://github.com/graphql-hive/gateway/pull/2152) [`3d318b4`](https://github.com/graphql-hive/gateway/commit/3d318b493bbd4c73544a1295da69a8b3e72ff188) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - dependencies updates:
+  
+  - Updated dependency [`@apollo/subgraph@^2.13.3` ↗︎](https://www.npmjs.com/package/@apollo/subgraph/v/2.13.3) (from `^2.11.3`, in `dependencies`)
+
 ## 6.0.10
 ### Patch Changes
 
