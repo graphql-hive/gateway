@@ -63,6 +63,8 @@ const deps = {
     '../transports/common/src/index.ts',
   'node_modules/@graphql-mesh/transport-http/index':
     '../transports/http/src/index.ts',
+  'node_modules/@graphql-mesh/transport-rest/index':
+    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js',
   'node_modules/@graphql-mesh/transport-ws/index':
     '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
@@ -140,8 +142,6 @@ if (
   console.warn('⚠️ Bundling extra modules for e2e tests!');
   deps['e2e/node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
-  deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
-    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
   deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }
