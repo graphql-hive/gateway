@@ -90,20 +90,19 @@ export function operationToInputSchema(
 
   // Look up field arguments for descriptions
   if (operationDef.selectionSet) {
-    const rootSelection = operationDef.selectionSet.selections[0];
-    if (rootSelection && rootSelection.kind === Kind.FIELD) {
-      const rootType =
-        operationDef.operation === 'query'
-          ? schema.getQueryType()
-          : schema.getMutationType();
-      if (rootType) {
-        const field = rootType.getFields()[rootSelection.name.value];
-        if (field) {
-          for (const arg of field.args) {
-            const prop = properties[arg.name];
-            if (prop && arg.description) {
-              prop.description = arg.description;
-            }
+    const rootType =
+      operationDef.operation === 'query'
+        ? schema.getQueryType()
+        : schema.getMutationType();
+    if (rootType) {
+      for (const selection of operationDef.selectionSet.selections) {
+        if (selection.kind !== Kind.FIELD) continue;
+        const field = rootType.getFields()[selection.name.value];
+        if (!field) continue;
+        for (const arg of field.args) {
+          const prop = properties[arg.name];
+          if (prop && arg.description && !prop.description) {
+            prop.description = arg.description;
           }
         }
       }

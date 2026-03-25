@@ -424,6 +424,34 @@ describe('operationToInputSchema with descriptions', () => {
     const result = operationToInputSchema(operation, schemaNoDesc);
     expect(result.properties!['location']!.description).toBeUndefined();
   });
+
+  it('collects argument descriptions from all root selections', () => {
+    const multiFieldSchema = buildSchema(`
+      type Query {
+        getWeather(
+          "City name"
+          location: String!
+        ): Weather
+        getAlerts(
+          "Severity filter"
+          severity: String!
+        ): [Alert!]!
+      }
+      type Weather { temperature: Float! }
+      type Alert { message: String! }
+    `);
+    const operation = `
+      query($location: String!, $severity: String!) {
+        getWeather(location: $location) { temperature }
+        getAlerts(severity: $severity) { message }
+      }
+    `;
+    const result = operationToInputSchema(operation, multiFieldSchema);
+    expect(result.properties!['location']!.description).toBe('City name');
+    expect(result.properties!['severity']!.description).toBe(
+      'Severity filter',
+    );
+  });
 });
 
 describe('getToolDescriptionFromSchema', () => {

@@ -158,8 +158,8 @@ export class ToolRegistry {
       try {
         outputSchema = selectionSetToOutputSchema(parse(query), schema);
       } catch (err) {
-        console.warn(
-          `[MCP] Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}`,
+        console.error(
+          `[MCP] Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}. Tool will be registered without output schema.`,
         );
       }
 

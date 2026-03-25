@@ -989,9 +989,27 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         }
 
         const callParams = body.params as {
-          name: string;
+          name?: string;
           arguments?: Record<string, unknown>;
         };
+
+        if (!callParams.name || typeof callParams.name !== 'string') {
+          endResponse(
+            new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: body.id,
+                error: {
+                  code: -32602,
+                  message: 'Invalid params: missing required "name" field',
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+          return;
+        }
+
         const tool = registry.getTool(callParams.name);
 
         if (!tool) {
