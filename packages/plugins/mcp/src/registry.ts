@@ -246,10 +246,26 @@ export class ToolRegistry {
 
   getMCPTools(options?: { suppressOutputSchema?: boolean }): MCPTool[] {
     return Array.from(this.tools.values()).map((tool) => {
+      // Deep-clone inputSchema so description provider mutations in protocol.ts
+      // don't corrupt the canonical registry state across concurrent requests
+      const clonedInputSchema: JsonSchema = {
+        ...tool.inputSchema,
+        ...(tool.inputSchema.properties && {
+          properties: Object.fromEntries(
+            Object.entries(tool.inputSchema.properties).map(([k, v]) => [
+              k,
+              { ...v },
+            ]),
+          ),
+        }),
+        ...(tool.inputSchema.required && {
+          required: [...tool.inputSchema.required],
+        }),
+      };
       const mcpTool: MCPTool = {
         name: tool.name,
         description: tool.description,
-        inputSchema: tool.inputSchema,
+        inputSchema: clonedInputSchema,
       };
       if (tool.title) mcpTool.title = tool.title;
       if (tool.annotations) mcpTool.annotations = tool.annotations;

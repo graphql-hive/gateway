@@ -33,12 +33,7 @@ export async function handleToolCall(options: {
     args: Record<string, unknown>,
   ) => Promise<unknown>;
   headers: Record<string, string>;
-}): Promise<{
-  jsonrpc: '2.0';
-  id: number | string;
-  result?: unknown;
-  error?: { code: number; message: string; data?: unknown };
-}> {
+}): Promise<JsonRpcResponse> {
   const tool = options.registry.getTool(options.toolName);
 
   if (!tool) {
@@ -79,7 +74,7 @@ export async function handleToolCall(options: {
       if (tool.outputPath) {
         const extracted = getByPath(result, tool.outputPath);
         if (extracted === undefined && result !== undefined) {
-          console.warn(
+          console.error(
             `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
               `Check your output.path configuration.`,
           );
@@ -154,7 +149,7 @@ export async function processExecutionResult(options: {
     if (tool.outputPath) {
       const extracted = getByPath(data, tool.outputPath);
       if (extracted === undefined && data !== undefined) {
-        console.warn(
+        console.error(
           `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
             `Check your output.path configuration.`,
         );
@@ -225,6 +220,10 @@ export function formatToolCallResult(
   try {
     textValue = JSON.stringify(result, null, 2);
   } catch (err) {
+    console.error(
+      `[MCP] Failed to serialize tool result for "${tool.name}":`,
+      err instanceof Error ? err.message : String(err),
+    );
     textValue = JSON.stringify({
       error: 'Result could not be serialized to JSON',
       detail: err instanceof Error ? err.message : String(err),
@@ -327,12 +326,19 @@ export interface JsonRpcRequest {
   params?: unknown;
 }
 
-interface JsonRpcResponse {
-  jsonrpc: '2.0';
-  id: number | string | null;
-  result?: unknown;
-  error?: { code: number; message: string; data?: unknown };
-}
+export type JsonRpcResponse =
+  | {
+      jsonrpc: '2.0';
+      id: number | string | null;
+      result: unknown;
+      error?: never;
+    }
+  | {
+      jsonrpc: '2.0';
+      id: number | string | null;
+      error: { code: number; message: string; data?: unknown };
+      result?: never;
+    };
 
 export async function handleMCPRequest(
   body: JsonRpcRequest,
@@ -421,7 +427,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.warn(
+          console.error(
             `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -448,7 +454,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.warn(
+          console.error(
             `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -527,7 +533,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.warn(
+          console.error(
             `[MCP] Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -605,7 +611,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.warn(
+          console.error(
             `[MCP] Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -738,14 +744,48 @@ export async function handleMCPRequest(
       return null;
 
     case 'tools/call': {
+      if (!params || typeof params !== 'object' || Array.isArray(params)) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: 'Invalid params: expected an object with "name" field',
+          },
+        };
+      }
       const callParams = params as {
-        name: string;
-        arguments?: Record<string, unknown>;
+        name?: unknown;
+        arguments?: unknown;
       };
+      if (!callParams.name || typeof callParams.name !== 'string') {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: 'Invalid params: missing required "name" field',
+          },
+        };
+      }
+      if (
+        callParams.arguments != null &&
+        (typeof callParams.arguments !== 'object' ||
+          Array.isArray(callParams.arguments))
+      ) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: 'Invalid params: "arguments" must be an object',
+          },
+        };
+      }
       return handleToolCall({
         id,
         toolName: callParams.name,
-        arguments: callParams.arguments || {},
+        arguments: (callParams.arguments as Record<string, unknown>) || {},
         registry,
         execute: options.execute,
         headers: options.requestContext?.headers ?? {},

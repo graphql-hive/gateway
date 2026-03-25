@@ -141,8 +141,8 @@ export async function resolveDescriptions(
         if (options.isStartup) {
           throw err;
         }
-        console.warn(
-          `Description provider failed for tool "${tool.name}": ${err instanceof Error ? err.message : String(err)}`,
+        console.error(
+          `[MCP] Description provider failed for tool "${tool.name}": ${err instanceof Error ? err.message : String(err)}`,
         );
         return tool;
       }
@@ -193,7 +193,7 @@ export async function resolveFieldDescriptions(
             if (options.isStartup) {
               throw err;
             }
-            console.warn(
+            console.error(
               `[MCP] Field description provider failed for tool "${tool.name}" field "${fieldName}": ${err instanceof Error ? err.message : String(err)}`,
             );
           }

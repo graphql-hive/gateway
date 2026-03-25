@@ -145,8 +145,11 @@ export function getToolDescriptionFromSchema(
   return field?.description || undefined;
 }
 
-// Generate a JSON Schema describing the output shape of a GraphQL operation,
-// walks the selection set against the schema to determine types
+/**
+ * Generate a JSON Schema describing the output shape of a GraphQL operation
+ * by walking the selection set against the schema type system.
+ * Only processes the first root field selection (each MCP tool maps to a single GraphQL field).
+ */
 export function selectionSetToOutputSchema(
   document: DocumentNode,
   schema: GraphQLSchema,

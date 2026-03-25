@@ -31,10 +31,19 @@ function extractMcpToolDirective(
   for (const arg of directive.arguments || []) {
     if (arg.value.kind === Kind.STRING) {
       args[arg.name.value] = arg.value.value;
+    } else {
+      console.warn(
+        `[MCP] @mcpTool directive argument "${arg.name.value}" has non-string value (kind: ${arg.value.kind}). Only string literals are supported.`,
+      );
     }
   }
 
-  if (!args['name']) return undefined;
+  if (!args['name']) {
+    console.warn(
+      `[MCP] @mcpTool directive found but missing required "name" argument. The directive will be ignored.`,
+    );
+    return undefined;
+  }
 
   const result: MCPDirectiveArgs = { name: args['name'] };
   if (args['description']) result.description = args['description'];

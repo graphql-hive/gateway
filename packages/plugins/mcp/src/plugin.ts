@@ -138,8 +138,8 @@ export interface ResolvedResource {
 }
 
 export type ResourceTemplateResult =
-  | { text: string; mimeType?: string }
-  | { blob: string; mimeType?: string };
+  | { text: string; blob?: never; mimeType?: string }
+  | { blob: string; text?: never; mimeType?: string };
 
 export interface MCPResourceTemplateConfig {
   uriTemplate: string;
@@ -175,6 +175,15 @@ export function compileUriTemplate(template: string): {
   pattern: RegExp;
   paramNames: string[];
 } {
+  // Validate balanced braces before processing
+  const openCount = (template.match(/\{/g) || []).length;
+  const closeCount = (template.match(/\}/g) || []).length;
+  if (openCount !== closeCount) {
+    throw new Error(
+      `Unbalanced braces in URI template "${template}". Found ${openCount} opening and ${closeCount} closing braces.`,
+    );
+  }
+
   const paramNames: string[] = [];
   const escaped = template.replace(
     /\{([^}]+)\}|([^{]+)/g,
@@ -790,7 +799,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   );
                   if (desc) map.set(resource.uri, desc);
                 } catch (err) {
-                  console.warn(
+                  console.error(
                     `[MCP] Resource description provider failed for "${resource.name}" (${resource.uri}): ${err instanceof Error ? err.message : String(err)}`,
                   );
                 }
@@ -821,7 +830,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   );
                   if (desc) map.set(tmpl.uriTemplate, desc);
                 } catch (err) {
-                  console.warn(
+                  console.error(
                     `[MCP] Template description provider failed for "${tmpl.name}" (${tmpl.uriTemplate}): ${err instanceof Error ? err.message : String(err)}`,
                   );
                 }
@@ -886,7 +895,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       const ctx = mcpToolCalls.get(request);
       if (!ctx) {
         if (url.pathname === mcpPath) {
-          console.warn(
+          console.error(
             '[MCP] onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
           );
         }
@@ -1288,12 +1297,16 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
           // Check for GraphQL errors
           if (execResult.errors?.length) {
+            const messages = (execResult.errors as ReadonlyArray<{ message?: string }>)
+              .map((e) => e.message || 'Unknown error')
+              .filter(Boolean);
             const errorMessage =
-              (execResult.errors[0] as { message?: string })?.message ||
-              'GraphQL execution error';
+              messages.length > 1
+                ? `${messages[0]} (and ${messages.length - 1} more error${messages.length - 1 > 1 ? 's' : ''})`
+                : messages[0] || 'GraphQL execution error';
             console.error(
               `[MCP] tools/call failed for tool "${ctx.toolName}":`,
-              errorMessage,
+              messages.join('; '),
             );
             return mcpErrorResponse(ctx.jsonrpcId, errorMessage);
           }

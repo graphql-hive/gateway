@@ -1360,7 +1360,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('tools/list succeeds when resolveFieldDescriptions throws', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const opts = {
       ...options,
       resolveFieldDescriptions: async () => {
@@ -1378,10 +1378,10 @@ describe('handleMCPRequest', () => {
     expect(body).not.toBeNull();
     expect(body.result.tools).toHaveLength(1);
     expect(body.result.tools[0].name).toBe('say_hello');
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('provider down'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
 
@@ -1471,7 +1471,7 @@ describe('resources/list', () => {
   });
 
   it('falls back to static description when resolveResourceDescriptions throws', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const failingOptions: MCPHandlerOptions = {
       ...resourceOptions,
       resolveResourceDescriptions: vi.fn(async () => {
@@ -1485,10 +1485,10 @@ describe('resources/list', () => {
     });
     expect(body.result.resources).toHaveLength(1);
     expect(body.result.resources[0].description).toBe('How to use the system');
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('provider down'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it('paginates with cursor and nextCursor', async () => {
@@ -2029,7 +2029,7 @@ describe('resources/templates/list description providers', () => {
   });
 
   it('falls back to static description when resolveTemplateDescriptions throws', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const opts: MCPHandlerOptions = {
       ...baseOptions,
       resolveTemplateDescriptions: vi.fn(async () => {
@@ -2044,10 +2044,10 @@ describe('resources/templates/list description providers', () => {
     expect(body.result.resourceTemplates[0].description).toBe(
       'Static description',
     );
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('provider down'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
 

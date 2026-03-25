@@ -98,7 +98,7 @@ describe('resolveDescriptions', () => {
       }),
     };
     const registry = createProviderRegistry({ failing: failingProvider });
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const tools: ResolvedToolConfig[] = [
       {
@@ -114,10 +114,10 @@ describe('resolveDescriptions', () => {
       isStartup: false,
     });
     expect(resolved[0]!.providerDescription).toBeUndefined();
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('get_weather'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it('throws when provider type is not registered', async () => {
@@ -286,7 +286,7 @@ describe('resolveFieldDescriptions', () => {
       }),
     };
     const registry = createProviderRegistry({ failing: failingProvider });
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const tools: ResolvedToolConfig[] = [
       {
@@ -308,9 +308,9 @@ describe('resolveFieldDescriptions', () => {
       isStartup: false,
     });
     expect(result.size).toBe(0);
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('search'));
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('q'));
-    warnSpy.mockRestore();
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('search'));
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('q'));
+    errorSpy.mockRestore();
   });
 
   it('throws for unknown provider type', async () => {
