@@ -37,6 +37,10 @@ it('caches Product type responses - second request is a cache hit', async () => 
       responseCache: { hit: true },
     },
   });
+
+  // resolver was only invoked once - the second request was served from cache
+  const std = products.getStd('both');
+  expect(std.match(/resolving products/g)).toHaveLength(1);
 });
 
 it('caches Review.rating field responses - second request is a cache hit with field-level TTL', async () => {
@@ -71,4 +75,8 @@ it('caches Review.rating field responses - second request is a cache hit with fi
       responseCache: { hit: true },
     },
   });
+
+  // resolver was only invoked once - the second request was served from cache
+  const std = reviews.getStd('both');
+  expect(std.match(/resolving reviews/g)).toHaveLength(1);
 });

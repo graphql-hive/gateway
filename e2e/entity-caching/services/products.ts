@@ -45,10 +45,7 @@ const schema = buildSubgraphSchema({
         url: "https://specs.apollo.dev/federation/v2.1"
         import: ["@key", "@composeDirective"]
       )
-      @link(
-        url: "https://the-guild.dev/mesh/v1.0"
-        import: ["@cacheControl"]
-      )
+      @link(url: "https://the-guild.dev/mesh/v1.0", import: ["@cacheControl"])
       @composeDirective(name: "@cacheControl") {
       query: Query
     }
@@ -62,7 +59,10 @@ const schema = buildSubgraphSchema({
     Query: {
       product: (_root, { id }: { id: string }) =>
         products.find((p) => p.id === id),
-      products: () => products,
+      products: () => {
+        console.log('resolving products');
+        return products;
+      },
     },
   },
 });
