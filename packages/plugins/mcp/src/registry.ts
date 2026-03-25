@@ -14,37 +14,63 @@ import {
   type JsonSchema,
 } from './schema-converter.js';
 
+/** Wire format for tools returned by `tools/list` responses per the MCP spec. */
 export interface MCPTool {
+  /** Unique tool identifier used in `tools/call` requests */
   name: string;
+  /** Human-readable description for LLM tool selection */
   description: string;
+  /** Optional display title (may differ from name) */
   title?: string;
+  /** JSON Schema describing the tool's input parameters */
   inputSchema: JsonSchema;
+  /** JSON Schema describing the tool's output shape (omitted when hooks are present) */
   outputSchema?: JsonSchema;
+  /** Behavioral hints for clients (readOnly, destructive, idempotent, openWorld) */
   annotations?: MCPToolAnnotations;
+  /** Icon URLs for client UIs */
   icons?: MCPIcon[];
+  /** Task support configuration (forbidden, optional, required) */
   execution?: MCPToolExecution;
+  /** Opaque metadata passed through to clients */
   _meta?: Record<string, unknown>;
 }
 
+/**
+ * Internal representation of a tool after registration.
+ * Includes all MCP-visible fields plus internal execution metadata
+ * (query, aliases, hooks, output path) that are not exposed to clients.
+ */
 export interface RegisteredTool {
+  /** Unique tool identifier used in `tools/call` requests */
   name: string;
+  /** Resolved description (from provider, config, directive, schema, or fallback) */
   description: string;
+  /** Optional display title (may differ from name) */
   title?: string;
+  /** The GraphQL operation source to execute when this tool is called */
   query: string;
+  /** JSON Schema describing the tool's input parameters (with aliases applied) */
   inputSchema: JsonSchema;
+  /** JSON Schema describing the tool's output shape, narrowed by output.path if configured */
   outputSchema?: JsonSchema;
+  /** Behavioral hints for clients (readOnly, destructive, idempotent, openWorld) */
   annotations?: MCPToolAnnotations;
+  /** Icon URLs for client UIs */
   icons?: MCPIcon[];
+  /** Task support configuration (forbidden, optional, required) */
   execution?: MCPToolExecution;
+  /** Opaque metadata passed through to clients */
   _meta?: Record<string, unknown>;
-  /** Maps alias name -> original GraphQL variable name */
+  /** Maps alias name -> original GraphQL variable name for argument de-aliasing */
   argumentAliases?: Record<string, string>;
-  /** Dot-notation path to extract from the GraphQL response data */
+  /** Dot-notation path to extract from the GraphQL response data (e.g. "search.items") */
   outputPath?: string;
   /** Explicitly suppress outputSchema in tools/list */
   suppressOutputSchema?: boolean;
   /** Annotations to attach to content items in tool responses */
   contentAnnotations?: MCPContentAnnotations;
+  /** Pre/post-process hooks for intercepting or transforming tool execution */
   hooks?: MCPToolHooks;
 }
 

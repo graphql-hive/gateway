@@ -1,15 +1,28 @@
 import type { ResolvedToolConfig } from './plugin.js';
 
+/** Configuration object for a description provider, identified by `type` with provider-specific fields. */
 export interface DescriptionProviderConfig {
+  /** Provider type identifier (e.g. "langfuse") */
   type: string & {};
+  /** Provider-specific configuration fields */
   [key: string]: unknown;
 }
 
+/** Request-scoped context passed to description providers (e.g. prompt label for A/B testing). */
 export interface DescriptionProviderContext {
+  /** Prompt label for selecting provider variants (e.g. "production", "staging") */
   label?: string;
 }
 
+/** Interface for custom description providers that dynamically resolve tool/resource descriptions. */
 export interface DescriptionProvider {
+  /**
+   * Fetch a description for a tool or resource.
+   * @param toolName - The name of the tool or resource
+   * @param config - Provider-specific configuration from the tool/resource definition
+   * @param context - Optional request-scoped context (e.g. prompt label)
+   * @returns The resolved description string
+   */
   fetchDescription(
     toolName: string,
     config: DescriptionProviderConfig,

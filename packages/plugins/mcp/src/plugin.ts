@@ -36,136 +36,261 @@ interface MCPToolCallContext {
   headers: Record<string, string>;
 }
 
+/** Defines how a tool's GraphQL operation is sourced, either inline or by reference to a named operation. */
 export type MCPToolSource =
-  | { type: 'inline'; query: string }
   | {
+      /** Source type: inline GraphQL query string */
+      type: 'inline';
+      /** The GraphQL operation source */
+      query: string;
+    }
+  | {
+      /** Source type: reference to a named operation from operationsPath/operationsStr */
       type: 'graphql';
+      /** Name of the operation to resolve */
       operationName: string;
+      /** Whether the operation is a query or mutation */
       operationType: 'query' | 'mutation';
+      /** Optional path to a .graphql file containing the operation (overrides operationsPath) */
       file?: string;
     };
 
+/** Behavioral hints for MCP clients about a tool's characteristics. */
 export interface MCPToolAnnotations {
+  /** Short human-readable name for the tool */
   title?: string;
+  /** If true, the tool does not modify its environment and is safe to call with any arguments. Clients assume false when omitted */
   readOnlyHint?: boolean;
+  /** If true, the tool may perform destructive updates; if false, only additive. Only meaningful when readOnlyHint is false. Clients assume true when omitted */
   destructiveHint?: boolean;
+  /** If true, calling repeatedly with the same arguments has no additional effect. Only meaningful when readOnlyHint is false. Clients assume false when omitted */
   idempotentHint?: boolean;
+  /** If true, the tool may interact with an "open world" of external entities; if false, its domain of interaction is closed */
   openWorldHint?: boolean;
 }
 
+/** Icon metadata for tools, resources, or the server itself. */
 export interface MCPIcon {
+  /** Standard URI pointing to the icon resource (HTTP/HTTPS URL or data: URI with base64-encoded image) */
   src: string;
+  /** MIME type override (e.g. "image/png", "image/svg+xml") */
   mimeType?: string;
+  /** Sizes at which the icon can be used in WxH format (e.g. ["48x48", "96x96"] or ["any"] for scalable) */
   sizes?: string[];
+  /** Design context: "light" or "dark" background. If omitted, icon works with any theme */
   theme?: string;
 }
 
+/** Tool execution capability flags per the MCP spec. */
 export interface MCPToolExecution {
+  /** Whether this tool supports task-augmented execution (default: "forbidden") */
   taskSupport?: 'forbidden' | 'optional' | 'required';
 }
 
+/** Optional metadata overrides for a tool (description, title, annotations, icons, provider). */
 export interface MCPToolOverrides {
+  /** Display title override */
   title?: string;
+  /** Description override (takes precedence over directive and schema descriptions) */
   description?: string;
+  /** Behavioral hints for clients */
   annotations?: MCPToolAnnotations;
+  /** Icon URLs for client UIs */
   icons?: MCPIcon[];
+  /** Task support configuration */
   execution?: MCPToolExecution;
+  /** Opaque metadata passed through to clients */
   _meta?: Record<string, unknown>;
+  /** Dynamic description provider config (e.g. Langfuse prompt). Takes highest precedence */
   descriptionProvider?:
     | {
+        /** Provider type identifier */
         type: 'langfuse';
+        /** Langfuse prompt name to fetch */
         prompt: string;
+        /** Specific prompt version to use (omit for latest) */
         version?: number;
+        /** Additional Langfuse getPrompt() options (e.g. label, cacheTtlSeconds) */
         options?: LangfuseGetPromptOptions;
       }
     | DescriptionProviderConfig;
 }
 
+/** Per-field overrides for a tool's input schema (descriptions, examples, defaults, aliases). */
 export interface MCPInputOverrides {
+  /** JSON Schema overrides keyed by GraphQL variable name */
   schema?: {
+    /** Per-variable overrides */
     properties?: Record<
       string,
       {
+        /** Override the variable's description in the input schema */
         description?: string;
+        /** Example values for the variable */
         examples?: unknown[];
+        /** Default value for the variable */
         default?: unknown;
+        /** Rename the variable in the MCP input schema (original name used internally for GraphQL) */
         alias?: string;
+        /** Dynamic description provider config for this specific field */
         descriptionProvider?: DescriptionProviderConfig;
       }
     >;
   };
 }
 
+/** MCP annotation fields shared by content items and resources. */
 export interface MCPAnnotations {
+  /** Intended audience: "user", "assistant", or both */
   audience?: Array<'user' | 'assistant'>;
+  /** Importance from 0.0 (least important, optional) to 1.0 (most important, effectively required) */
   priority?: number;
+  /** ISO 8601 timestamp of last modification (e.g. "2025-01-12T15:00:58Z") */
   lastModified?: string;
 }
 
+/** Annotations for content items in tool responses. */
 export type MCPContentAnnotations = MCPAnnotations;
+/** Annotations for resource entries. */
 export type MCPResourceAnnotations = MCPAnnotations;
 
 interface MCPResourceConfigBase {
+  /** Display name for the resource */
   name: string;
+  /** Unique URI identifying this resource */
   uri: string;
+  /** Optional display title */
   title?: string;
+  /** Human-readable description */
   description?: string;
+  /** MIME type (default: "text/plain") */
   mimeType?: string;
+  /** Icon URLs for client UIs */
   icons?: MCPIcon[];
+  /** Resource-level annotations (audience, priority) */
   annotations?: MCPResourceAnnotations;
+  /** Dynamic description provider config */
   descriptionProvider?: DescriptionProviderConfig;
 }
 
+/**
+ * Configuration for a static MCP resource. Exactly one content source must be provided:
+ * `text` (inline string), `file` (path to read at startup), or `blob` (inline base64).
+ */
 export type MCPResourceConfig = MCPResourceConfigBase &
   (
-    | { text: string; file?: never; blob?: never }
-    | { file: string; text?: never; blob?: never; binary?: boolean }
-    | { blob: string; text?: never; file?: never }
+    | {
+        /** Inline text content */
+        text: string;
+        file?: never;
+        blob?: never;
+      }
+    | {
+        /** Path to a file to read at startup */
+        file: string;
+        text?: never;
+        blob?: never;
+        /** If true, read as binary (base64). If false, read as UTF-8 text. Defaults to auto-detect from mimeType */
+        binary?: boolean;
+      }
+    | {
+        /** Inline base64-encoded binary content */
+        blob: string;
+        text?: never;
+        file?: never;
+      }
   );
 
+/** Immutable resolved form of a resource after startup processing (file reading, base64 validation). */
 export interface ResolvedResource {
+  /** Display name for the resource */
   readonly name: string;
+  /** Unique URI identifying this resource */
   readonly uri: string;
+  /** Optional display title */
   readonly title?: string;
+  /** Human-readable description */
   readonly description?: string;
+  /** Resolved MIME type */
   readonly mimeType: string;
+  /** Content size in bytes */
   readonly size: number;
+  /** Icon URLs for client UIs */
   readonly icons?: MCPIcon[];
+  /** Resource-level annotations */
   readonly annotations?: MCPResourceAnnotations;
+  /** Text content (mutually exclusive with blob) */
   readonly text?: string;
+  /** Base64-encoded binary content (mutually exclusive with text) */
   readonly blob?: string;
+  /** Dynamic description provider config */
   readonly descriptionProvider?: DescriptionProviderConfig;
 }
 
+/** Return type for resource template handlers. Must provide either `text` or `blob` content. */
 export type ResourceTemplateResult =
-  | { text: string; blob?: never; mimeType?: string }
-  | { blob: string; text?: never; mimeType?: string };
+  | {
+      /** Text content returned by the handler */
+      text: string;
+      blob?: never;
+      /** MIME type override for this response */
+      mimeType?: string;
+    }
+  | {
+      /** Base64-encoded binary content returned by the handler */
+      blob: string;
+      text?: never;
+      /** MIME type override for this response */
+      mimeType?: string;
+    };
 
+/** Configuration for a dynamic MCP resource template with a URI pattern and handler function. */
 export interface MCPResourceTemplateConfig {
+  /** URI template with `{param}` placeholders (e.g. "file://project/{path}") */
   uriTemplate: string;
+  /** Display name for the template */
   name: string;
+  /** Optional display title */
   title?: string;
+  /** Human-readable description */
   description?: string;
+  /** Default MIME type for resolved resources (default: "text/plain") */
   mimeType?: string;
+  /** Icon URLs for client UIs */
   icons?: MCPIcon[];
+  /** Resource-level annotations */
   annotations?: MCPResourceAnnotations;
+  /** Dynamic description provider config */
   descriptionProvider?: DescriptionProviderConfig;
+  /** Handler function called with extracted URI parameters to produce resource content */
   handler: (
     params: Record<string, string>,
   ) => ResourceTemplateResult | Promise<ResourceTemplateResult>;
 }
 
+/** Immutable resolved form of a resource template with compiled URI pattern. */
 export interface ResolvedResourceTemplate {
+  /** Original URI template string */
   readonly uriTemplate: string;
+  /** Display name for the template */
   readonly name: string;
+  /** Optional display title */
   readonly title?: string;
+  /** Human-readable description */
   readonly description?: string;
+  /** Default MIME type for resolved resources */
   readonly mimeType?: string;
+  /** Icon URLs for client UIs */
   readonly icons?: MCPIcon[];
+  /** Resource-level annotations */
   readonly annotations?: MCPResourceAnnotations;
+  /** Dynamic description provider config */
   readonly descriptionProvider?: DescriptionProviderConfig;
+  /** Handler function called with extracted URI parameters */
   readonly handler: MCPResourceTemplateConfig['handler'];
+  /** Compiled regex pattern from the URI template */
   readonly pattern: RegExp;
+  /** Parameter names extracted from the URI template (in order) */
   readonly paramNames: string[];
 }
 
@@ -210,6 +335,7 @@ export function compileUriTemplate(template: string): {
   return { pattern: new RegExp(`^${escaped}$`), paramNames };
 }
 
+/** Output extraction and schema configuration for a tool's GraphQL response. */
 export interface MCPOutputOverrides {
   /** Dot-notation path to extract from the GraphQL response data, e.g. "search.items" */
   path?: string;
@@ -219,12 +345,17 @@ export interface MCPOutputOverrides {
   contentAnnotations?: MCPContentAnnotations;
 }
 
+/** Context passed to preprocess/postprocess hooks with request metadata. */
 export interface ToolHookContext {
+  /** Name of the tool being executed */
   toolName: string;
+  /** All HTTP headers from the incoming MCP request */
   headers: Record<string, string>;
+  /** The GraphQL operation source for this tool */
   query: string;
 }
 
+/** Lifecycle hooks for intercepting or transforming tool execution. */
 export interface MCPToolHooks {
   /**
    * Called before GraphQL execution. Receives de-aliased arguments
@@ -258,49 +389,87 @@ export interface MCPToolHooks {
   ) => unknown | Promise<unknown>;
 }
 
+/** Configuration for a single MCP tool backed by a GraphQL operation. */
 export interface MCPToolConfig {
+  /** Unique tool name exposed to MCP clients */
   name: string;
+  /** How to resolve the GraphQL operation (inline query or reference to a named operation) */
   source: MCPToolSource;
-  tool?: MCPToolOverrides; // metadata overrides
-  input?: MCPInputOverrides; // field-level overrides
-  output?: MCPOutputOverrides; // output extraction
+  /** Metadata overrides (description, title, annotations, icons, description provider) */
+  tool?: MCPToolOverrides;
+  /** Per-field input schema overrides (descriptions, examples, defaults, aliases) */
+  input?: MCPInputOverrides;
+  /** Output extraction and schema configuration */
+  output?: MCPOutputOverrides;
+  /** Pre/post-process hooks for intercepting or transforming tool execution */
   hooks?: MCPToolHooks;
 }
 
+/** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
 export interface MCPConfig {
+  /** Server name reported in `initialize` responses */
   name: string;
+  /** Server version reported in `initialize` responses (default: "1.0.0") */
   version?: string;
+  /** Human-readable server title */
   title?: string;
+  /** Human-readable server description */
   description?: string;
+  /** Server icons for client UIs */
   icons?: MCPIcon[];
+  /** Server website URL */
   websiteUrl?: string;
+  /** Free-text instructions included in `initialize` responses for LLM context */
   instructions?: string;
+  /** MCP protocol version to advertise (default: "2025-11-25") */
   protocolVersion?: string;
+  /** HTTP path for the MCP endpoint (default: "/mcp") */
   path?: string;
+  /** HTTP path for the underlying GraphQL endpoint (default: "/graphql") */
   graphqlPath?: string;
+  /** Path to a .graphql file or directory of .graphql files containing operations */
   operationsPath?: string;
+  /** Raw GraphQL operations source string (alternative to operationsPath) */
   operationsStr?: string;
+  /** Tool definitions. Each maps a tool name to a GraphQL operation */
   tools: MCPToolConfig[];
+  /** Static resource definitions served via resources/list and resources/read */
   resources?: MCPResourceConfig[];
+  /** Dynamic resource templates with URI patterns and handler functions */
   resourceTemplates?: MCPResourceTemplateConfig[];
+  /** Description provider instances or configuration (e.g. Langfuse) */
   providers?: {
+    /** Built-in Langfuse provider. Accepts LangfuseOptions (publicKey, secretKey, baseUrl) plus optional defaults */
     langfuse?: LangfuseOptions & {
+      /** Default getPrompt() options applied to all Langfuse description lookups (e.g. { label: "production" }) */
       defaults?: Partial<LangfuseGetPromptOptions>;
     };
+    /** Custom providers: pass a DescriptionProvider instance or a config object for a built-in provider */
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
+  /** Suppress outputSchema from all tools in tools/list responses */
   suppressOutputSchema?: boolean;
+  /** Block direct access to the GraphQL endpoint (only MCP path is accessible) */
   disableGraphQLEndpoint?: boolean;
 }
 
+/** Internal resolved form of a tool config after merging directive and explicit config sources. */
 export interface ResolvedToolConfig {
+  /** Unique tool name */
   name: string;
+  /** Resolved GraphQL operation source */
   query: string;
+  /** Metadata overrides (merged from directive + config) */
   tool?: MCPToolOverrides;
+  /** Per-field input schema overrides */
   input?: MCPInputOverrides;
+  /** Output extraction and schema configuration */
   output?: MCPOutputOverrides;
+  /** Pre/post-process hooks */
   hooks?: MCPToolHooks;
+  /** Description from @mcpTool directive (lower priority than config/provider) */
   directiveDescription?: string;
+  /** Description from a provider (highest priority, resolved at request time) */
   providerDescription?: string;
 }
 
@@ -602,6 +771,11 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
   );
 }
 
+/**
+ * Create a Gateway plugin that exposes GraphQL operations as MCP tools.
+ * Handles the full MCP protocol (initialize, tools/list, tools/call, resources)
+ * by routing tool calls through the Yoga GraphQL pipeline.
+ */
 export function useMCP(config: MCPConfig): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';

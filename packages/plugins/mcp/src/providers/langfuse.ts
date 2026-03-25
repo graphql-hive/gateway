@@ -5,10 +5,12 @@ import type {
   DescriptionProviderContext,
 } from '../description-provider.js';
 
+/** Options type for `Langfuse.getPrompt()`, derived from the Langfuse SDK. */
 export type LangfuseGetPromptOptions = NonNullable<
   Parameters<Langfuse['getPrompt']>[2]
 >;
 
+/** Create a description provider backed by Langfuse prompt management. */
 export function createLangfuseProvider(
   client: Langfuse,
   defaults?: Partial<LangfuseGetPromptOptions>,
