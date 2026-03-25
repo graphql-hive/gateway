@@ -448,9 +448,7 @@ describe('operationToInputSchema with descriptions', () => {
     `;
     const result = operationToInputSchema(operation, multiFieldSchema);
     expect(result.properties!['location']!.description).toBe('City name');
-    expect(result.properties!['severity']!.description).toBe(
-      'Severity filter',
-    );
+    expect(result.properties!['severity']!.description).toBe('Severity filter');
   });
 });
 

@@ -344,14 +344,20 @@ export async function handleMCPRequest(
     return {
       jsonrpc: '2.0',
       id: id ?? null,
-      error: { code: -32600, message: 'Invalid Request: missing or invalid "jsonrpc" field' },
+      error: {
+        code: -32600,
+        message: 'Invalid Request: missing or invalid "jsonrpc" field',
+      },
     };
   }
   if (!method || typeof method !== 'string') {
     return {
       jsonrpc: '2.0',
       id: id ?? null,
-      error: { code: -32600, message: 'Invalid Request: missing or invalid "method" field' },
+      error: {
+        code: -32600,
+        message: 'Invalid Request: missing or invalid "method" field',
+      },
     };
   }
   if (id == null && !method.startsWith('notifications/')) {
