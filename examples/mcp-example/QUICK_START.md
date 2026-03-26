@@ -53,5 +53,4 @@ curl http://localhost:4000/mcp \
 
 ## Resources
 
-- Documentation (WIP): https://docs.google.com/document/d/14FeFPz40QMMbNE2w-9OPzwOe8GcSEjJJQoKSKkm5xdY
-- Examples and config reference: https://github.com/graphql-hive/gateway/blob/7356319c23b005c29a44efc06885e936fbcb8923/examples/mcp-example/README.md#diff-e382d6a0e278f4d8f7da4a3d96e106221517ecb1d9d141d7b9d15014f05569bb
+- Examples and config reference: https://github.com/graphql-hive/gateway/blob/main/examples/mcp-example/README.md

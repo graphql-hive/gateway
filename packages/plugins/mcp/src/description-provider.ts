@@ -3,7 +3,7 @@ import type { ResolvedToolConfig } from './plugin.js';
 /** Configuration object for a description provider, identified by `type` with provider-specific fields. */
 export interface DescriptionProviderConfig {
   /** Provider type identifier (e.g. "langfuse") */
-  type: string & {};
+  type: string;
   /** Provider-specific configuration fields */
   [key: string]: unknown;
 }

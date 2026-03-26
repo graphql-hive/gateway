@@ -64,12 +64,13 @@ describe('MCP E2E', () => {
     proxy: {
       endpoint: 'http://upstream:4000/graphql',
     },
-    plugins: () => [
+    plugins: (ctx) => [
       useCustomFetch(
         // @ts-expect-error MeshFetch type mismatch
         (url, init) => upstream.fetch(url, init),
       ),
       useMCP({
+        ...ctx,
         name: 'test-gateway',
         version: '0.1.0',
         tools: [
@@ -246,12 +247,13 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'fresh-gateway',
           tools: [
             {
@@ -303,12 +305,13 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'provider-gateway',
           tools: [
             {
@@ -385,12 +388,13 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'standalone-gateway',
           disableGraphQLEndpoint: true,
           tools: [
@@ -466,7 +470,7 @@ describe('MCP E2E', () => {
     const headerGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         {
           onRequestParse({ request }: { request: Request }) {
             capturedRequest = request;
@@ -477,6 +481,7 @@ describe('MCP E2E', () => {
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'header-gateway',
           tools: [
             {
@@ -537,12 +542,13 @@ describe('MCP E2E', () => {
     const aliasGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'alias-gateway',
           tools: [
             {
@@ -622,12 +628,13 @@ describe('MCP E2E', () => {
     const fieldGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'field-provider-gateway',
           providers: { mock: fieldProvider },
           tools: [
@@ -696,12 +703,13 @@ describe('MCP E2E', () => {
     const comboGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'combo-gateway',
           providers: { mock: fieldProvider },
           tools: [
@@ -786,12 +794,13 @@ describe('MCP E2E', () => {
     const pathGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'path-gateway',
           tools: [
             {
@@ -868,12 +877,13 @@ describe('MCP E2E', () => {
     const labelGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'label-gateway',
           providers: { mock: contextProvider },
           tools: [
@@ -941,12 +951,13 @@ describe('MCP E2E', () => {
     const hooksGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'hooks-gateway',
           tools: [
             {
@@ -1057,12 +1068,13 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'directive-gateway',
           operationsStr: `
             query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather data", title: "Weather") {
@@ -1123,7 +1135,7 @@ describe('MCP E2E', () => {
     const pathGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         {
           onRequestParse({ request }: { request: Request }) {
             capturedUrls.push(new URL(request.url).pathname);
@@ -1134,6 +1146,7 @@ describe('MCP E2E', () => {
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'path-gateway',
           tools: [
             {
@@ -1185,12 +1198,13 @@ describe('MCP E2E', () => {
     const resourceGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'resource-gateway',
           tools: [
             {
@@ -1226,7 +1240,7 @@ describe('MCP E2E', () => {
           ],
         }),
       ],
-    } as any);
+    });
 
     afterAll(() => resourceGateway[Symbol.asyncDispose]?.());
 
@@ -1320,12 +1334,13 @@ describe('MCP E2E', () => {
     const templateGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
         useMCP({
+          ...ctx,
           name: 'template-gateway',
           tools: [],
           resourceTemplates: [
@@ -1345,7 +1360,7 @@ describe('MCP E2E', () => {
           ],
         }),
       ],
-    } as any);
+    });
 
     afterAll(() => templateGateway[Symbol.asyncDispose]?.());
 

@@ -1,8 +1,10 @@
+import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { describe, expect, it } from 'vitest';
 import { useMCP } from '../src/plugin.js';
 
 describe('MCP Integration', () => {
   const mcpPlugin = useMCP({
+    log: createLoggerFromLogging(false),
     name: 'test-mcp',
     version: '1.0.0',
     path: '/mcp',

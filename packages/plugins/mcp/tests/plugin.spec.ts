@@ -1,6 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { describe, expect, it } from 'vitest';
 import {
   createProviderRegistry,
@@ -328,9 +329,10 @@ describe('resolveToolConfigs', () => {
 
 describe('resolveResources', () => {
   it('resolves inline text resource', () => {
-    const resources = resolveResources([
-      { name: 'guide', uri: 'docs://guide', text: '# Guide\nHello' },
-    ]);
+    const resources = resolveResources(
+      [{ name: 'guide', uri: 'docs://guide', text: '# Guide\nHello' }],
+      createLoggerFromLogging(false),
+    );
     expect(resources.size).toBe(1);
     const r = resources.get('docs://guide')!;
     expect(r.name).toBe('guide');
@@ -340,31 +342,36 @@ describe('resolveResources', () => {
   });
 
   it('defaults mimeType to text/plain', () => {
-    const resources = resolveResources([
-      { name: 'r', uri: 'test://r', text: 'hi' },
-    ]);
+    const resources = resolveResources(
+      [{ name: 'r', uri: 'test://r', text: 'hi' }],
+      createLoggerFromLogging(false),
+    );
     expect(resources.get('test://r')!.mimeType).toBe('text/plain');
   });
 
   it('preserves explicit mimeType', () => {
-    const resources = resolveResources([
-      { name: 'r', uri: 'test://r', text: '# hi', mimeType: 'text/markdown' },
-    ]);
+    const resources = resolveResources(
+      [{ name: 'r', uri: 'test://r', text: '# hi', mimeType: 'text/markdown' }],
+      createLoggerFromLogging(false),
+    );
     expect(resources.get('test://r')!.mimeType).toBe('text/markdown');
   });
 
   it('preserves optional fields (title, description, icons, annotations)', () => {
-    const resources = resolveResources([
-      {
-        name: 'r',
-        uri: 'test://r',
-        text: 'content',
-        title: 'My Resource',
-        description: 'A resource',
-        icons: [{ src: 'https://example.com/icon.png' }],
-        annotations: { audience: ['assistant'] as const, priority: 0.8 },
-      },
-    ]);
+    const resources = resolveResources(
+      [
+        {
+          name: 'r',
+          uri: 'test://r',
+          text: 'content',
+          title: 'My Resource',
+          description: 'A resource',
+          icons: [{ src: 'https://example.com/icon.png' }],
+          annotations: { audience: ['assistant'] as const, priority: 0.8 },
+        },
+      ],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('test://r')!;
     expect(r.title).toBe('My Resource');
     expect(r.description).toBe('A resource');
@@ -374,25 +381,34 @@ describe('resolveResources', () => {
 
   it('throws if both text and file are provided', () => {
     expect(() =>
-      resolveResources([
-        // Cast to simulate invalid JSON/YAML config that bypasses TS discriminated union
-        { name: 'r', uri: 'test://r', text: 'hi', file: './foo.md' } as any,
-      ]),
+      resolveResources(
+        [
+          // Cast to simulate invalid JSON/YAML config that bypasses TS discriminated union
+          { name: 'r', uri: 'test://r', text: 'hi', file: './foo.md' } as any,
+        ],
+        createLoggerFromLogging(false),
+      ),
     ).toThrow('specify exactly one of');
   });
 
   it('throws if no content source is provided', () => {
     expect(() =>
-      resolveResources([{ name: 'r', uri: 'test://r' } as any]),
+      resolveResources(
+        [{ name: 'r', uri: 'test://r' } as any],
+        createLoggerFromLogging(false),
+      ),
     ).toThrow('must specify either');
   });
 
   it('throws on duplicate URIs', () => {
     expect(() =>
-      resolveResources([
-        { name: 'a', uri: 'test://dup', text: 'a' },
-        { name: 'b', uri: 'test://dup', text: 'b' },
-      ]),
+      resolveResources(
+        [
+          { name: 'a', uri: 'test://dup', text: 'a' },
+          { name: 'b', uri: 'test://dup', text: 'b' },
+        ],
+        createLoggerFromLogging(false),
+      ),
     ).toThrow('Duplicate resource URI');
   });
 
@@ -400,9 +416,10 @@ describe('resolveResources', () => {
     const dir = mkdtempSync(join(tmpdir(), 'mcp-test-'));
     const filePath = join(dir, 'guide.md');
     writeFileSync(filePath, '# Guide from file');
-    const resources = resolveResources([
-      { name: 'guide', uri: 'docs://guide', file: filePath },
-    ]);
+    const resources = resolveResources(
+      [{ name: 'guide', uri: 'docs://guide', file: filePath }],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('docs://guide')!;
     expect(r.text).toBe('# Guide from file');
     expect(r.size).toBe(Buffer.byteLength('# Guide from file'));
@@ -411,26 +428,32 @@ describe('resolveResources', () => {
 
   it('throws with context when file does not exist', () => {
     expect(() =>
-      resolveResources([
-        {
-          name: 'missing',
-          uri: 'docs://missing',
-          file: '/nonexistent/path.md',
-        },
-      ]),
+      resolveResources(
+        [
+          {
+            name: 'missing',
+            uri: 'docs://missing',
+            file: '/nonexistent/path.md',
+          },
+        ],
+        createLoggerFromLogging(false),
+      ),
     ).toThrow(/Resource "missing" .* cannot read file/);
   });
 
   it('resolves inline blob resource', () => {
     const b64 = Buffer.from('binary data').toString('base64');
-    const resources = resolveResources([
-      {
-        name: 'img',
-        uri: 'files://icon.png',
-        blob: b64,
-        mimeType: 'image/png',
-      },
-    ]);
+    const resources = resolveResources(
+      [
+        {
+          name: 'img',
+          uri: 'files://icon.png',
+          blob: b64,
+          mimeType: 'image/png',
+        },
+      ],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('files://icon.png')!;
     expect(r.blob).toBe(b64);
     expect(r.text).toBeUndefined();
@@ -443,14 +466,17 @@ describe('resolveResources', () => {
     const filePath = join(dir, 'icon.png');
     const buf = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
     writeFileSync(filePath, buf);
-    const resources = resolveResources([
-      {
-        name: 'icon',
-        uri: 'files://icon',
-        file: filePath,
-        mimeType: 'image/png',
-      },
-    ]);
+    const resources = resolveResources(
+      [
+        {
+          name: 'icon',
+          uri: 'files://icon',
+          file: filePath,
+          mimeType: 'image/png',
+        },
+      ],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('files://icon')!;
     expect(r.blob).toBe(buf.toString('base64'));
     expect(r.text).toBeUndefined();
@@ -461,14 +487,17 @@ describe('resolveResources', () => {
     const dir = mkdtempSync(join(tmpdir(), 'mcp-test-'));
     const filePath = join(dir, 'data.json');
     writeFileSync(filePath, '{"key": "value"}');
-    const resources = resolveResources([
-      {
-        name: 'data',
-        uri: 'files://data',
-        file: filePath,
-        mimeType: 'application/json',
-      },
-    ]);
+    const resources = resolveResources(
+      [
+        {
+          name: 'data',
+          uri: 'files://data',
+          file: filePath,
+          mimeType: 'application/json',
+        },
+      ],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('files://data')!;
     expect(r.text).toBe('{"key": "value"}');
     expect(r.blob).toBeUndefined();
@@ -479,15 +508,18 @@ describe('resolveResources', () => {
     const filePath = join(dir, 'special.txt');
     const buf = Buffer.from([0x00, 0x01, 0x02]);
     writeFileSync(filePath, buf);
-    const resources = resolveResources([
-      {
-        name: 'special',
-        uri: 'files://special',
-        file: filePath,
-        mimeType: 'text/plain',
-        binary: true,
-      },
-    ]);
+    const resources = resolveResources(
+      [
+        {
+          name: 'special',
+          uri: 'files://special',
+          file: filePath,
+          mimeType: 'text/plain',
+          binary: true,
+        },
+      ],
+      createLoggerFromLogging(false),
+    );
     const r = resources.get('files://special')!;
     expect(r.blob).toBe(buf.toString('base64'));
     expect(r.text).toBeUndefined();
@@ -495,9 +527,10 @@ describe('resolveResources', () => {
 
   it('throws if multiple content sources are provided', () => {
     expect(() =>
-      resolveResources([
-        { name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any,
-      ]),
+      resolveResources(
+        [{ name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any],
+        createLoggerFromLogging(false),
+      ),
     ).toThrow('specify exactly one of');
   });
 });
@@ -580,6 +613,7 @@ describe('useMCP startup validation', () => {
   it('throws when field-level descriptionProvider references unknown provider', () => {
     expect(() =>
       useMCP({
+        log: createLoggerFromLogging(false),
         name: 'test',
         tools: [
           {
@@ -611,6 +645,7 @@ describe('useMCP startup validation', () => {
   it('throws when resource descriptionProvider references unknown provider', () => {
     expect(() =>
       useMCP({
+        log: createLoggerFromLogging(false),
         name: 'test',
         tools: [],
         resources: [
@@ -630,6 +665,7 @@ describe('useMCP startup validation', () => {
   it('throws when resource template descriptionProvider references unknown provider', () => {
     expect(() =>
       useMCP({
+        log: createLoggerFromLogging(false),
         name: 'test',
         tools: [],
         resourceTemplates: [
