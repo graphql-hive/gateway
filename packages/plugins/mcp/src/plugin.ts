@@ -1063,7 +1063,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       if (!ctx) {
         if (url.pathname === mcpPath) {
           logger.error(
-            '[MCP] onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
+            'onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
           );
         }
         return;
