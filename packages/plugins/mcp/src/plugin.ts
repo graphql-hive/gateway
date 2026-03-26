@@ -783,7 +783,7 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
 export function useMCP(config: MCPConfig): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
-  const logger = config.log.child('MCP');
+  const logger = config.log.child('[MCP] ');
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
 
