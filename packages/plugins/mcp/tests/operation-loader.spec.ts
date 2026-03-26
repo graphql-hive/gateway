@@ -289,14 +289,17 @@ describe('loadOperationsFromString', () => {
 });
 
 describe('resolveOperation', () => {
-  const ops = loadOperationsFromString(`
+  const ops = loadOperationsFromString(
+    `
     query GetWeather($location: String!) {
       getWeatherData(location: $location) { temperature }
     }
     query GetForecast($location: String!, $days: Int) {
       getForecast(location: $location, days: $days) { date high low }
     }
-  `, logger);
+  `,
+    logger,
+  );
 
   it('finds operation by name and type', () => {
     const op = resolveOperation(ops, 'GetWeather', 'query');

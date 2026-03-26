@@ -541,8 +541,13 @@ export function resolveToolConfigs(
       }
       let directiveInput: MCPInputOverrides | undefined;
       if (op.fieldDescriptionProviders) {
-        const properties: Record<string, { descriptionProvider: DescriptionProviderConfig }> = {};
-        for (const [varName, providerStr] of Object.entries(op.fieldDescriptionProviders)) {
+        const properties: Record<
+          string,
+          { descriptionProvider: DescriptionProviderConfig }
+        > = {};
+        for (const [varName, providerStr] of Object.entries(
+          op.fieldDescriptionProviders,
+        )) {
           properties[varName] = {
             descriptionProvider: parseDescriptionProviderDirective(providerStr),
           };
@@ -552,9 +557,13 @@ export function resolveToolConfigs(
 
       let directiveOutput: MCPOutputOverrides | undefined;
       if (op.selectionDescriptionProviders) {
-        const descriptionProviders: Record<string, DescriptionProviderConfig> = {};
-        for (const [path, providerStr] of Object.entries(op.selectionDescriptionProviders)) {
-          descriptionProviders[path] = parseDescriptionProviderDirective(providerStr);
+        const descriptionProviders: Record<string, DescriptionProviderConfig> =
+          {};
+        for (const [path, providerStr] of Object.entries(
+          op.selectionDescriptionProviders,
+        )) {
+          descriptionProviders[path] =
+            parseDescriptionProviderDirective(providerStr);
         }
         directiveOutput = { descriptionProviders };
       }
@@ -580,7 +589,10 @@ export function resolveToolConfigs(
       query = source.query;
     } else {
       const opsPool = source.file
-        ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'), logger)
+        ? loadOperationsFromString(
+            readFileSync(resolve(source.file), 'utf-8'),
+            logger,
+          )
         : parsedOps || [];
       const op = resolveOperation(
         opsPool,
@@ -814,10 +826,13 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
-  const resolvedTools = resolveToolConfigs({
-    tools: config.tools,
-    operationsSource,
-  }, logger);
+  const resolvedTools = resolveToolConfigs(
+    {
+      tools: config.tools,
+      operationsSource,
+    },
+    logger,
+  );
 
   // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
@@ -964,6 +979,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 providerToolConfigs,
                 resolvedProviders,
                 { isStartup: false, context: ctx },
+                logger,
               );
               const map = new Map<string, string>();
               for (const tool of resolved) {
@@ -982,6 +998,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 fieldProviderToolConfigs,
                 resolvedProviders,
                 { isStartup: false, context: ctx },
+                logger,
               );
               for (const tool of fieldProviderToolConfigs) {
                 const toolDescs = fieldDescs.get(tool.name);
@@ -1007,7 +1024,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               for (const tool of outputFieldProviderToolConfigs) {
                 const providers = tool.output!.descriptionProviders!;
                 const toolDescs = new Map<string, string>();
-                for (const [dotPath, providerConfig] of Object.entries(providers)) {
+                for (const [dotPath, providerConfig] of Object.entries(
+                  providers,
+                )) {
                   const provider = resolvedProviders[providerConfig.type];
                   if (!provider) {
                     logger.error(
@@ -1122,7 +1141,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   return {
     onSchemaChange({ schema: newSchema }) {
       try {
-        const newRegistry = new ToolRegistry(resolvedTools, newSchema);
+        const newRegistry = new ToolRegistry(resolvedTools, newSchema, logger);
         const newOptions = buildHandlerOptions(newRegistry);
         schema = newSchema;
         registry = newRegistry;
@@ -1331,10 +1350,15 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               hookContext,
             );
             if (preprocessResult !== undefined) {
-              const callResult = formatToolCallResult(preprocessResult, tool, {
-                hookProducedResult: true,
-                hasHooks: true,
-              });
+              const callResult = formatToolCallResult(
+                preprocessResult,
+                tool,
+                {
+                  hookProducedResult: true,
+                  hasHooks: true,
+                },
+                logger,
+              );
               return endResponse(
                 fetchAPI.Response.json({
                   jsonrpc: '2.0',
@@ -1437,6 +1461,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         result = await handleMCPRequest(
           body,
           mcpHandlerOptions,
+          logger,
           providerContext,
         );
       } catch (err) {
@@ -1524,6 +1549,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             tool: ctx.tool,
             data: executionResult.data,
             headers: ctx.headers,
+            logger,
           });
 
           return fetchAPI.Response.json(response);

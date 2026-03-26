@@ -1,3 +1,4 @@
+import type { Logger } from '@graphql-hive/gateway-runtime';
 import { parse, type GraphQLSchema } from 'graphql';
 import type {
   MCPContentAnnotations,
@@ -111,7 +112,11 @@ function getSchemaByPath(
 export class ToolRegistry {
   private tools: Map<string, RegisteredTool> = new Map();
 
-  constructor(configs: ResolvedToolConfig[], schema: GraphQLSchema) {
+  constructor(
+    configs: ResolvedToolConfig[],
+    schema: GraphQLSchema,
+    logger: Logger,
+  ) {
     for (const config of configs) {
       const query = config.query;
       let inputSchema = operationToInputSchema(query, schema);
@@ -184,8 +189,8 @@ export class ToolRegistry {
       try {
         outputSchema = selectionSetToOutputSchema(parse(query), schema);
       } catch (err) {
-        console.error(
-          `[MCP] Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}. Tool will be registered without output schema.`,
+        logger.error(
+          `Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}. Tool will be registered without output schema.`,
         );
       }
 

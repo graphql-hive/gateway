@@ -1,3 +1,4 @@
+import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createProviderRegistry,
@@ -9,6 +10,8 @@ import {
   type DescriptionProviderContext,
 } from '../src/description-provider.js';
 import type { ResolvedToolConfig } from '../src/plugin.js';
+
+const logger = createLoggerFromLogging(false);
 
 describe('resolveProviders', () => {
   it('passes through runtime DescriptionProvider objects', async () => {
@@ -49,7 +52,12 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    const resolved = await resolveDescriptions(tools, providerRegistry);
+    const resolved = await resolveDescriptions(
+      tools,
+      providerRegistry,
+      {},
+      logger,
+    );
     expect(resolved[0]!.providerDescription).toBe(
       'Description for weather_desc',
     );
@@ -64,7 +72,12 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    const resolved = await resolveDescriptions(tools, providerRegistry);
+    const resolved = await resolveDescriptions(
+      tools,
+      providerRegistry,
+      {},
+      logger,
+    );
     expect(resolved[0]!.providerDescription).toBeUndefined();
   });
 
@@ -87,7 +100,7 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions(tools, registry, { isStartup: true }),
+      resolveDescriptions(tools, registry, { isStartup: true }, logger),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -98,7 +111,7 @@ describe('resolveDescriptions', () => {
       }),
     };
     const registry = createProviderRegistry({ failing: failingProvider });
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     const tools: ResolvedToolConfig[] = [
       {
@@ -110,9 +123,14 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    const resolved = await resolveDescriptions(tools, registry, {
-      isStartup: false,
-    });
+    const resolved = await resolveDescriptions(
+      tools,
+      registry,
+      {
+        isStartup: false,
+      },
+      logger,
+    );
     expect(resolved[0]!.providerDescription).toBeUndefined();
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('get_weather'),
@@ -132,7 +150,7 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions(tools, providerRegistry, { isStartup: true }),
+      resolveDescriptions(tools, providerRegistry, { isStartup: true }, logger),
     ).rejects.toThrow('Unknown description provider type: "unknown"');
   });
 
@@ -162,9 +180,14 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await resolveDescriptions(tools, registry, {
-      context: { label: 'staging' },
-    });
+    await resolveDescriptions(
+      tools,
+      registry,
+      {
+        context: { label: 'staging' },
+      },
+      logger,
+    );
     expect(contextCapture[0]).toEqual({ label: 'staging' });
   });
 
@@ -194,7 +217,7 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await resolveDescriptions(tools, registry);
+    await resolveDescriptions(tools, registry, {}, logger);
     expect(contextCapture[0]).toBeUndefined();
   });
 });
@@ -227,7 +250,12 @@ describe('resolveFieldDescriptions', () => {
       },
     ];
 
-    const result = await resolveFieldDescriptions(tools, providerRegistry);
+    const result = await resolveFieldDescriptions(
+      tools,
+      providerRegistry,
+      {},
+      logger,
+    );
     expect(result.get('search')?.get('q')).toBe('Field desc for search_query');
   });
 
@@ -246,7 +274,12 @@ describe('resolveFieldDescriptions', () => {
       },
     ];
 
-    const result = await resolveFieldDescriptions(tools, providerRegistry);
+    const result = await resolveFieldDescriptions(
+      tools,
+      providerRegistry,
+      {},
+      logger,
+    );
     expect(result.size).toBe(0);
   });
 
@@ -275,7 +308,7 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await expect(
-      resolveFieldDescriptions(tools, registry, { isStartup: true }),
+      resolveFieldDescriptions(tools, registry, { isStartup: true }, logger),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -286,7 +319,7 @@ describe('resolveFieldDescriptions', () => {
       }),
     };
     const registry = createProviderRegistry({ failing: failingProvider });
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     const tools: ResolvedToolConfig[] = [
       {
@@ -304,9 +337,14 @@ describe('resolveFieldDescriptions', () => {
       },
     ];
 
-    const result = await resolveFieldDescriptions(tools, registry, {
-      isStartup: false,
-    });
+    const result = await resolveFieldDescriptions(
+      tools,
+      registry,
+      {
+        isStartup: false,
+      },
+      logger,
+    );
     expect(result.size).toBe(0);
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('search'));
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('q'));
@@ -331,7 +369,7 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await expect(
-      resolveFieldDescriptions(tools, providerRegistry),
+      resolveFieldDescriptions(tools, providerRegistry, {}, logger),
     ).rejects.toThrow('Unknown field description provider type: "unknown"');
   });
 
@@ -367,9 +405,14 @@ describe('resolveFieldDescriptions', () => {
       },
     ];
 
-    await resolveFieldDescriptions(tools, registry, {
-      context: { label: 'preproduction' },
-    });
+    await resolveFieldDescriptions(
+      tools,
+      registry,
+      {
+        context: { label: 'preproduction' },
+      },
+      logger,
+    );
     expect(contextCapture[0]).toEqual({ label: 'preproduction' });
   });
 });

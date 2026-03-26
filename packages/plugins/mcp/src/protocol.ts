@@ -1,3 +1,4 @@
+import type { Logger } from '@graphql-hive/gateway-runtime';
 import type { DescriptionProviderContext } from './description-provider.js';
 import type {
   MCPIcon,
@@ -34,7 +35,9 @@ export async function handleToolCall(options: {
     args: Record<string, unknown>,
   ) => Promise<unknown>;
   headers: Record<string, string>;
+  logger: Logger;
 }): Promise<JsonRpcResponse> {
+  const { logger } = options;
   const tool = options.registry.getTool(options.toolName);
 
   if (!tool) {
@@ -75,8 +78,8 @@ export async function handleToolCall(options: {
       if (tool.outputPath) {
         const extracted = getByPath(result, tool.outputPath);
         if (extracted === undefined && result !== undefined) {
-          console.error(
-            `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
+          logger.error(
+            `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
               `Check your output.path configuration.`,
           );
         }
@@ -101,14 +104,19 @@ export async function handleToolCall(options: {
     return {
       jsonrpc: '2.0',
       id: options.id,
-      result: formatToolCallResult(result, tool, {
-        hookProducedResult,
-        hasHooks,
-      }),
+      result: formatToolCallResult(
+        result,
+        tool,
+        {
+          hookProducedResult,
+          hasHooks,
+        },
+        logger,
+      ),
     };
   } catch (error) {
-    console.error(
-      `[MCP] tools/call failed for tool "${options.toolName}":`,
+    logger.error(
+      `tools/call failed for tool "${options.toolName}":`,
       error instanceof Error ? error.message : error,
     );
     return {
@@ -136,12 +144,13 @@ export async function processExecutionResult(options: {
   tool: RegisteredTool;
   data: unknown;
   headers: Record<string, string>;
+  logger: Logger;
 }): Promise<{
   jsonrpc: '2.0';
   id: number | string;
   result: Record<string, unknown>;
 }> {
-  const { tool } = options;
+  const { tool, logger } = options;
 
   try {
     let data = options.data;
@@ -150,8 +159,8 @@ export async function processExecutionResult(options: {
     if (tool.outputPath) {
       const extracted = getByPath(data, tool.outputPath);
       if (extracted === undefined && data !== undefined) {
-        console.error(
-          `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
+        logger.error(
+          `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
             `Check your output.path configuration.`,
         );
       }
@@ -180,14 +189,19 @@ export async function processExecutionResult(options: {
     return {
       jsonrpc: '2.0',
       id: options.id,
-      result: formatToolCallResult(data, tool, {
-        hookProducedResult,
-        hasHooks,
-      }),
+      result: formatToolCallResult(
+        data,
+        tool,
+        {
+          hookProducedResult,
+          hasHooks,
+        },
+        logger,
+      ),
     };
   } catch (error) {
-    console.error(
-      `[MCP] tools/call failed for tool "${options.toolName}":`,
+    logger.error(
+      `tools/call failed for tool "${options.toolName}":`,
       error instanceof Error ? error.message : error,
     );
     return {
@@ -212,6 +226,7 @@ export function formatToolCallResult(
   result: unknown,
   tool: RegisteredTool,
   opts: { hookProducedResult: boolean; hasHooks: boolean },
+  logger: Logger,
 ): Record<string, unknown> {
   const isMCPResult = opts.hookProducedResult && looksLikeMCPResult(result);
   if (isMCPResult) {
@@ -223,8 +238,8 @@ export function formatToolCallResult(
     textValue = JSON.stringify(result ?? null, null, 2);
   } catch (err) {
     serializationFailed = true;
-    console.error(
-      `[MCP] Failed to serialize tool result for "${tool.name}":`,
+    logger.error(
+      `Failed to serialize tool result for "${tool.name}":`,
       err instanceof Error ? err.message : String(err),
     );
     textValue = JSON.stringify({
@@ -350,6 +365,7 @@ export type JsonRpcResponse =
 export async function handleMCPRequest(
   body: JsonRpcRequest,
   options: MCPHandlerOptions,
+  logger: Logger,
   providerContext?: DescriptionProviderContext,
 ): Promise<JsonRpcResponse | null> {
   const {
@@ -434,8 +450,8 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.error(
-            `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          logger.error(
+            `Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -452,8 +468,8 @@ export async function handleMCPRequest(
                   tool.inputSchema.properties[fieldName].description =
                     description;
                 } else {
-                  console.warn(
-                    `[MCP] Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
+                  logger.warn(
+                    `Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
                       `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
                   );
                 }
@@ -461,8 +477,8 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.error(
-            `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          logger.error(
+            `Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -482,16 +498,16 @@ export async function handleMCPRequest(
                     description,
                   )
                 ) {
-                  console.warn(
-                    `[MCP] Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
+                  logger.warn(
+                    `Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
                   );
                 }
               }
             }
           }
         } catch (err) {
-          console.error(
-            `[MCP] Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          logger.error(
+            `Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -579,8 +595,8 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.error(
-            `[MCP] Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
+          logger.error(
+            `Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -667,8 +683,8 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          console.error(
-            `[MCP] Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
+          logger.error(
+            `Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -737,8 +753,8 @@ export async function handleMCPRequest(
           try {
             handlerResult = await tmpl.handler(extractedParams);
           } catch (err) {
-            console.error(
-              `[MCP] Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
+            logger.error(
+              `Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
               err instanceof Error ? err.message : err,
             );
             return {
@@ -845,6 +861,7 @@ export async function handleMCPRequest(
         registry,
         execute: options.execute,
         headers: options.requestContext?.headers ?? {},
+        logger,
       });
     }
 

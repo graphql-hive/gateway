@@ -20,11 +20,17 @@ const logger = createLoggerFromLogging(false);
 
 describe('resolveToolConfigs', () => {
   it('returns inline source tools with query extracted', () => {
-    const tools = resolveToolConfigs({
-      tools: [
-        { name: 'test', source: { type: 'inline', query: 'query { hello }' } },
-      ],
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'test',
+            source: { type: 'inline', query: 'query { hello }' },
+          },
+        ],
+      },
+      logger,
+    );
     expect(tools[0]!.query).toBe('query { hello }');
   });
 
@@ -34,53 +40,62 @@ describe('resolveToolConfigs', () => {
         getWeatherData(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'weather',
-          source: {
-            type: 'graphql',
-            operationName: 'GetWeather',
-            operationType: 'query',
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'weather',
+            source: {
+              type: 'graphql',
+              operationName: 'GetWeather',
+              operationType: 'query',
+            },
           },
-        },
-      ],
-      operationsSource,
-    }, logger);
+        ],
+        operationsSource,
+      },
+      logger,
+    );
     expect(tools[0]!.query).toContain('GetWeather');
   });
 
   it('throws when operation not found', () => {
     expect(() =>
-      resolveToolConfigs({
-        tools: [
-          {
-            name: 'missing',
-            source: {
-              type: 'graphql',
-              operationName: 'NotHere',
-              operationType: 'query',
+      resolveToolConfigs(
+        {
+          tools: [
+            {
+              name: 'missing',
+              source: {
+                type: 'graphql',
+                operationName: 'NotHere',
+                operationType: 'query',
+              },
             },
-          },
-        ],
-        operationsSource: 'query Other { hello }',
-      }, logger),
+          ],
+          operationsSource: 'query Other { hello }',
+        },
+        logger,
+      ),
     ).toThrow('NotHere');
   });
 
   it('preserves tool and input overrides', () => {
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'test',
-          source: { type: 'inline', query: 'query { hello }' },
-          tool: { title: 'Hello', description: 'Say hello' },
-          input: {
-            schema: { properties: { name: { description: 'Who to greet' } } },
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'test',
+            source: { type: 'inline', query: 'query { hello }' },
+            tool: { title: 'Hello', description: 'Say hello' },
+            input: {
+              schema: { properties: { name: { description: 'Who to greet' } } },
+            },
           },
-        },
-      ],
-    }, logger);
+        ],
+      },
+      logger,
+    );
     expect(tools[0]!.tool?.title).toBe('Hello');
     expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe(
       'Who to greet',
@@ -108,20 +123,23 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'get_weather',
-          source: {
-            type: 'graphql',
-            operationName: 'GetWeather',
-            operationType: 'query' as const,
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'get_weather',
+            source: {
+              type: 'graphql',
+              operationName: 'GetWeather',
+              operationType: 'query' as const,
+            },
+            tool: { description: 'Config desc' },
           },
-          tool: { description: 'Config desc' },
-        },
-      ],
-      operationsSource,
-    }, logger);
+        ],
+        operationsSource,
+      },
+      logger,
+    );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_weather');
     expect(tools[0]!.tool?.description).toBe('Config desc');
@@ -134,22 +152,27 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'get_weather',
-          source: {
-            type: 'graphql',
-            operationName: 'GetWeather',
-            operationType: 'query' as const,
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'get_weather',
+            source: {
+              type: 'graphql',
+              operationName: 'GetWeather',
+              operationType: 'query' as const,
+            },
+            input: {
+              schema: {
+                properties: { location: { description: 'City name' } },
+              },
+            },
           },
-          input: {
-            schema: { properties: { location: { description: 'City name' } } },
-          },
-        },
-      ],
-      operationsSource,
-    }, logger);
+        ],
+        operationsSource,
+      },
+      logger,
+    );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.directiveDescription).toBe('Get weather');
     expect(tools[0]!.input?.schema?.properties?.['location']?.description).toBe(
@@ -159,15 +182,18 @@ describe('resolveToolConfigs', () => {
 
   it('preserves hooks through resolveToolConfigs', () => {
     const hooks = { preprocess: () => undefined };
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'test',
-          source: { type: 'inline', query: 'query { hello }' },
-          hooks,
-        },
-      ],
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'test',
+            source: { type: 'inline', query: 'query { hello }' },
+            hooks,
+          },
+        ],
+      },
+      logger,
+    );
     expect(tools[0]!.hooks).toBe(hooks);
   });
 
@@ -205,9 +231,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Invalid descriptionProvider directive format',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on invalid version in descriptionProvider directive', () => {
@@ -216,9 +242,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Invalid version',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Invalid version');
   });
 
   it('throws on version 0 in descriptionProvider directive', () => {
@@ -227,9 +253,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Version must be a positive integer',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Version must be a positive integer');
   });
 
   it('throws on negative version in descriptionProvider directive', () => {
@@ -238,9 +264,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Version must be a positive integer',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Version must be a positive integer');
   });
 
   it('throws on trailing colon in descriptionProvider directive', () => {
@@ -249,9 +275,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Trailing colon with no version',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Trailing colon with no version');
   });
 
   it('throws on extra segments in descriptionProvider directive', () => {
@@ -260,9 +286,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Invalid descriptionProvider directive format',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on empty type in descriptionProvider directive', () => {
@@ -271,9 +297,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Invalid descriptionProvider directive format',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on empty prompt in descriptionProvider directive', () => {
@@ -282,9 +308,9 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    expect(() => resolveToolConfigs({ tools: [], operationsSource }, logger)).toThrow(
-      'Invalid descriptionProvider directive format',
-    );
+    expect(() =>
+      resolveToolConfigs({ tools: [], operationsSource }, logger),
+    ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('config descriptionProvider wins over directive descriptionProvider', () => {
@@ -293,25 +319,28 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'get_weather',
-          source: {
-            type: 'graphql',
-            operationName: 'GetWeather',
-            operationType: 'query' as const,
-          },
-          tool: {
-            descriptionProvider: {
-              type: 'langfuse',
-              prompt: 'config_prompt',
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'get_weather',
+            source: {
+              type: 'graphql',
+              operationName: 'GetWeather',
+              operationType: 'query' as const,
+            },
+            tool: {
+              descriptionProvider: {
+                type: 'langfuse',
+                prompt: 'config_prompt',
+              },
             },
           },
-        },
-      ],
-      operationsSource,
-    }, logger);
+        ],
+        operationsSource,
+      },
+      logger,
+    );
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
       prompt: 'config_prompt',
@@ -713,32 +742,50 @@ describe('resolveDescriptions integration', () => {
   const providerRegistry = createProviderRegistry({ mock: mockProvider });
 
   it('resolves provider descriptions into tool configs', async () => {
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'test',
-          source: { type: 'inline', query: 'query { hello }' },
-          tool: { descriptionProvider: { type: 'mock', prompt: 'hello_desc' } },
-        },
-      ],
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'test',
+            source: { type: 'inline', query: 'query { hello }' },
+            tool: {
+              descriptionProvider: { type: 'mock', prompt: 'hello_desc' },
+            },
+          },
+        ],
+      },
+      logger,
+    );
 
-    const resolved = await resolveDescriptions(tools, providerRegistry);
+    const resolved = await resolveDescriptions(
+      tools,
+      providerRegistry,
+      { isStartup: false },
+      logger,
+    );
     expect(resolved[0]!.providerDescription).toBe('Desc for hello_desc');
   });
 
   it('does not set providerDescription when tool has no descriptionProvider', async () => {
-    const tools = resolveToolConfigs({
-      tools: [
-        {
-          name: 'test',
-          source: { type: 'inline', query: 'query { hello }' },
-          tool: { description: 'Static' },
-        },
-      ],
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'test',
+            source: { type: 'inline', query: 'query { hello }' },
+            tool: { description: 'Static' },
+          },
+        ],
+      },
+      logger,
+    );
 
-    const resolved = await resolveDescriptions(tools, providerRegistry);
+    const resolved = await resolveDescriptions(
+      tools,
+      providerRegistry,
+      { isStartup: false },
+      logger,
+    );
     expect(resolved[0]!.providerDescription).toBeUndefined();
   });
 });
@@ -750,11 +797,18 @@ describe('@mcpDescription directive on variables', () => {
         search(q: $q) { title }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
 
     expect(tools).toHaveLength(1);
     expect(tools[0]!.input?.schema?.properties?.['q']).toEqual({
-      descriptionProvider: { type: 'langfuse', prompt: 'search.query', version: 3 },
+      descriptionProvider: {
+        type: 'langfuse',
+        prompt: 'search.query',
+        version: 3,
+      },
     });
   });
 
@@ -768,13 +822,20 @@ describe('@mcpDescription directive on variables', () => {
         search(q: $q, limit: $limit, offset: $offset) { title }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
 
     expect(tools[0]!.input?.schema?.properties?.['q']).toEqual({
       descriptionProvider: { type: 'langfuse', prompt: 'search.query' },
     });
     expect(tools[0]!.input?.schema?.properties?.['offset']).toEqual({
-      descriptionProvider: { type: 'langfuse', prompt: 'search.offset', version: 2 },
+      descriptionProvider: {
+        type: 'langfuse',
+        prompt: 'search.offset',
+        version: 2,
+      },
     });
     expect(tools[0]!.input?.schema?.properties?.['limit']).toBeUndefined();
   });
@@ -785,22 +846,38 @@ describe('@mcpDescription directive on variables', () => {
         search(q: $q) { title }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [{
-        name: 'search',
-        source: { type: 'graphql', operationName: 'Search', operationType: 'query' as const },
-        input: {
-          schema: {
-            properties: {
-              q: { descriptionProvider: { type: 'langfuse', prompt: 'from_config' } },
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'search',
+            source: {
+              type: 'graphql',
+              operationName: 'Search',
+              operationType: 'query' as const,
+            },
+            input: {
+              schema: {
+                properties: {
+                  q: {
+                    descriptionProvider: {
+                      type: 'langfuse',
+                      prompt: 'from_config',
+                    },
+                  },
+                },
+              },
             },
           },
-        },
-      }],
-      operationsSource: source,
-    }, logger);
+        ],
+        operationsSource: source,
+      },
+      logger,
+    );
 
-    expect(tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider).toEqual({
+    expect(
+      tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider,
+    ).toEqual({
       type: 'langfuse',
       prompt: 'from_config',
     });
@@ -812,16 +889,27 @@ describe('@mcpDescription directive on variables', () => {
         search(q: $q) { title }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [{
-        name: 'search',
-        source: { type: 'graphql', operationName: 'Search', operationType: 'query' as const },
-        tool: { description: 'Config description' },
-      }],
-      operationsSource: source,
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'search',
+            source: {
+              type: 'graphql',
+              operationName: 'Search',
+              operationType: 'query' as const,
+            },
+            tool: { description: 'Config description' },
+          },
+        ],
+        operationsSource: source,
+      },
+      logger,
+    );
 
-    expect(tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider).toEqual({
+    expect(
+      tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider,
+    ).toEqual({
       type: 'langfuse',
       prompt: 'search.query',
     });
@@ -833,7 +921,10 @@ describe('@mcpDescription directive on variables', () => {
         search(q: $q) { title }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
     expect(tools[0]!.input).toBeUndefined();
   });
 });
@@ -848,11 +939,18 @@ describe('@mcpDescription directive on selection fields', () => {
         }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
 
     expect(tools).toHaveLength(1);
     expect(tools[0]!.output?.descriptionProviders).toEqual({
-      'forecast.conditions': { type: 'langfuse', prompt: 'forecast.conditions', version: 3 },
+      'forecast.conditions': {
+        type: 'langfuse',
+        prompt: 'forecast.conditions',
+        version: 3,
+      },
     });
   });
 
@@ -866,7 +964,10 @@ describe('@mcpDescription directive on selection fields', () => {
         }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
 
     expect(tools[0]!.output?.descriptionProviders).toEqual({
       'user.profile.bio': { type: 'langfuse', prompt: 'user.profile.bio' },
@@ -881,14 +982,23 @@ describe('@mcpDescription directive on selection fields', () => {
         }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [{
-        name: 'forecast',
-        source: { type: 'graphql', operationName: 'GetForecast', operationType: 'query' as const },
-        output: { path: 'forecast' },
-      }],
-      operationsSource: source,
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'forecast',
+            source: {
+              type: 'graphql',
+              operationName: 'GetForecast',
+              operationType: 'query' as const,
+            },
+            output: { path: 'forecast' },
+          },
+        ],
+        operationsSource: source,
+      },
+      logger,
+    );
 
     expect(tools[0]!.output?.path).toBe('forecast');
     expect(tools[0]!.output?.descriptionProviders).toBeUndefined();
@@ -902,16 +1012,28 @@ describe('@mcpDescription directive on selection fields', () => {
         }
       }
     `;
-    const tools = resolveToolConfigs({
-      tools: [{
-        name: 'forecast',
-        source: { type: 'graphql', operationName: 'GetForecast', operationType: 'query' as const },
-      }],
-      operationsSource: source,
-    }, logger);
+    const tools = resolveToolConfigs(
+      {
+        tools: [
+          {
+            name: 'forecast',
+            source: {
+              type: 'graphql',
+              operationName: 'GetForecast',
+              operationType: 'query' as const,
+            },
+          },
+        ],
+        operationsSource: source,
+      },
+      logger,
+    );
 
     expect(tools[0]!.output?.descriptionProviders).toEqual({
-      'forecast.conditions': { type: 'langfuse', prompt: 'forecast.conditions' },
+      'forecast.conditions': {
+        type: 'langfuse',
+        prompt: 'forecast.conditions',
+      },
     });
   });
 
@@ -921,7 +1043,10 @@ describe('@mcpDescription directive on selection fields', () => {
         forecast(location: $location) { date conditions }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
     expect(tools[0]!.output).toBeUndefined();
   });
 
@@ -935,10 +1060,16 @@ describe('@mcpDescription directive on selection fields', () => {
         }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
 
-    expect(tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider).toEqual({
-      type: 'langfuse', prompt: 'search.query',
+    expect(
+      tools[0]!.input?.schema?.properties?.['q']?.descriptionProvider,
+    ).toEqual({
+      type: 'langfuse',
+      prompt: 'search.query',
     });
     expect(tools[0]!.output?.descriptionProviders).toEqual({
       'results.title': { type: 'langfuse', prompt: 'search.title' },
@@ -975,7 +1106,10 @@ describe('@mcpDescription directive on selection fields', () => {
         search(q: $q) { title }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource: source }, logger);
+    const tools = resolveToolConfigs(
+      { tools: [], operationsSource: source },
+      logger,
+    );
     expect(tools).toHaveLength(0);
   });
 });

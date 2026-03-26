@@ -1,3 +1,4 @@
+import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { buildSchema } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -7,11 +8,13 @@ import {
 } from '../src/protocol.js';
 import { ToolRegistry } from '../src/registry.js';
 
+const logger = createLoggerFromLogging(false);
+
 async function callMCP(
   opts: MCPHandlerOptions,
   body: JsonRpcRequest,
 ): Promise<any> {
-  const result = await handleMCPRequest(body, opts);
+  const result = await handleMCPRequest(body, opts, logger);
   return result;
 }
 
@@ -30,6 +33,7 @@ describe('handleMCPRequest', () => {
       },
     ],
     schema,
+    logger,
   );
 
   const mockExecute = vi.fn().mockResolvedValue({ data: { hello: 'world' } });
@@ -202,6 +206,7 @@ describe('handleMCPRequest', () => {
         { name: 'tool_c', query: 'query($x: String!) { c(x: $x) }' },
       ],
       paginationSchema,
+      logger,
     );
     const opts = {
       serverName: 'test',
@@ -242,6 +247,7 @@ describe('handleMCPRequest', () => {
     const paginationRegistry = new ToolRegistry(
       [{ name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' }],
       paginationSchema,
+      logger,
     );
     const opts = {
       serverName: 'test',
@@ -332,6 +338,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       schemaWithOutput,
+      logger,
     );
     const executeResult = { data: { getWeather: { temperature: 72 } } };
     const opts = {
@@ -370,6 +377,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       annotSchema,
+      logger,
     );
     const opts = {
       serverName: 'test',
@@ -416,6 +424,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       pathSchema,
+      logger,
     );
     const pathExecute = vi.fn().mockResolvedValue({
       search: { items: ['a', 'b', 'c'] },
@@ -473,6 +482,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       aliasSchema,
+      logger,
     );
     const aliasExecute = vi.fn().mockResolvedValue({ search: 'results' });
     const opts = {
@@ -512,6 +522,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       mixedSchema,
+      logger,
     );
     const mixedExecute = vi.fn().mockResolvedValue({ search: 'results' });
     const opts = {
@@ -561,7 +572,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('warns when resolveFieldDescriptions returns a field not in inputSchema', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const opts = {
       ...options,
       resolveFieldDescriptions: async () => {
@@ -611,6 +622,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -647,6 +659,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -695,6 +708,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
@@ -749,6 +763,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
@@ -800,6 +815,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -839,6 +855,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -875,6 +892,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       cmsSchema,
+      logger,
     );
     const cmsExecute = vi.fn().mockResolvedValue({
       getPage: {
@@ -918,6 +936,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -956,6 +975,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -999,6 +1019,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: ['hello', 'world'] },
@@ -1022,7 +1043,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('returns MCP error when preprocess hook throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const hookSchema = buildSchema(
       `type Query { hello(name: String!): String }`,
     );
@@ -1039,6 +1060,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1067,7 +1089,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('returns MCP error when postprocess hook throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const hookSchema = buildSchema(
       `type Query { hello(name: String!): String }`,
     );
@@ -1084,6 +1106,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1126,6 +1149,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1172,6 +1196,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1213,6 +1238,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1252,6 +1278,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1274,7 +1301,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('handles async postprocess hook rejection', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const hookSchema = buildSchema(
       `type Query { hello(name: String!): String }`,
     );
@@ -1290,6 +1317,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1333,6 +1361,7 @@ describe('handleMCPRequest', () => {
         },
       ],
       aliasSchema,
+      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ searchProducts: 'result' });
     const opts = {
@@ -1360,7 +1389,7 @@ describe('handleMCPRequest', () => {
   });
 
   it('tools/list succeeds when resolveFieldDescriptions throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const opts = {
       ...options,
       resolveFieldDescriptions: async () => {
@@ -1402,10 +1431,12 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
     [
       {
         name: 'get_forecast',
-        query: 'query($location: String!) { forecast(location: $location) { date high low conditions } }',
+        query:
+          'query($location: String!) { forecast(location: $location) { date high low conditions } }',
       },
     ],
     outputSchema,
+    logger,
   );
 
   const outputOptions: MCPHandlerOptions = {
@@ -1443,15 +1474,12 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
   });
 
   it('warns when output dot-path does not match outputSchema', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const opts = {
       ...outputOptions,
       resolveOutputFieldDescriptions: async () => {
         const map = new Map<string, Map<string, string>>();
-        map.set(
-          'get_forecast',
-          new Map([['forecast.nonexistent', 'desc']]),
-        );
+        map.set('get_forecast', new Map([['forecast.nonexistent', 'desc']]));
         return map;
       },
     };
@@ -1471,7 +1499,7 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
   });
 
   it('succeeds gracefully when resolveOutputFieldDescriptions throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const opts = {
       ...outputOptions,
       resolveOutputFieldDescriptions: async () => {
@@ -1504,10 +1532,12 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
       [
         {
           name: 'do_search',
-          query: 'query($q: String!) { search(q: $q) { items { title score } } }',
+          query:
+            'query($q: String!) { search(q: $q) { items { title score } } }',
         },
       ],
       arraySchema,
+      logger,
     );
     const opts: MCPHandlerOptions = {
       serverName: 'test',
@@ -1532,8 +1562,8 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
     });
 
     const titleSchema =
-      body.result.tools[0].outputSchema.properties.search.properties.items
-        .items.properties.title;
+      body.result.tools[0].outputSchema.properties.search.properties.items.items
+        .properties.title;
     expect(titleSchema.description).toBe('The result title');
   });
 
@@ -1546,9 +1576,7 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
         const map = new Map<string, Map<string, string>>();
         map.set(
           'get_forecast',
-          new Map([
-            ['forecast.conditions', `desc from call ${callCount}`],
-          ]),
+          new Map([['forecast.conditions', `desc from call ${callCount}`]]),
         );
         return map;
       },
@@ -1590,6 +1618,7 @@ describe('resources/list', () => {
       },
     ],
     schema,
+    logger,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -1664,7 +1693,7 @@ describe('resources/list', () => {
   });
 
   it('falls back to static description when resolveResourceDescriptions throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const failingOptions: MCPHandlerOptions = {
       ...resourceOptions,
       resolveResourceDescriptions: vi.fn(async () => {
@@ -1809,6 +1838,7 @@ describe('resources/read', () => {
       },
     ],
     schema,
+    logger,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -1919,6 +1949,7 @@ describe('resources/templates/list', () => {
       },
     ],
     schema,
+    logger,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -1980,6 +2011,7 @@ describe('resources/read with templates', () => {
       },
     ],
     schema,
+    logger,
   );
 
   it('falls back to template when static resource not found', async () => {
@@ -2153,6 +2185,7 @@ describe('resources/read with templates', () => {
           },
         ],
         buildSchema('type Query { hello(name: String!): String }'),
+        logger,
       ),
       execute: vi.fn(),
       resourceTemplates: [
@@ -2186,6 +2219,7 @@ describe('resources/templates/list description providers', () => {
       },
     ],
     schema,
+    logger,
   );
   const baseOptions: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -2222,7 +2256,7 @@ describe('resources/templates/list description providers', () => {
   });
 
   it('falls back to static description when resolveTemplateDescriptions throws', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const opts: MCPHandlerOptions = {
       ...baseOptions,
       resolveTemplateDescriptions: vi.fn(async () => {
@@ -2249,6 +2283,7 @@ describe('JSON-RPC validation', () => {
   const registry = new ToolRegistry(
     [{ name: 'hi', query: '{ hello }' }],
     schema,
+    logger,
   );
   const opts: MCPHandlerOptions = {
     serverName: 'test',
@@ -2261,6 +2296,7 @@ describe('JSON-RPC validation', () => {
     const body = await handleMCPRequest(
       { id: 1, method: 'initialize' } as any,
       opts,
+      logger,
     );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('jsonrpc');
@@ -2270,12 +2306,17 @@ describe('JSON-RPC validation', () => {
     const body = await handleMCPRequest(
       { jsonrpc: '1.0' as any, id: 1, method: 'initialize' },
       opts,
+      logger,
     );
     expect(body!.error!.code).toBe(-32600);
   });
 
   it('rejects request with missing method', async () => {
-    const body = await handleMCPRequest({ jsonrpc: '2.0', id: 1 } as any, opts);
+    const body = await handleMCPRequest(
+      { jsonrpc: '2.0', id: 1 } as any,
+      opts,
+      logger,
+    );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('method');
   });
@@ -2284,6 +2325,7 @@ describe('JSON-RPC validation', () => {
     const body = await handleMCPRequest(
       { jsonrpc: '2.0', method: 'tools/list' } as any,
       opts,
+      logger,
     );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('id');
@@ -2293,6 +2335,7 @@ describe('JSON-RPC validation', () => {
     const body = await handleMCPRequest(
       { jsonrpc: '2.0', method: 'notifications/initialized' } as any,
       opts,
+      logger,
     );
     expect(body).toBeNull();
   });
@@ -2301,6 +2344,7 @@ describe('JSON-RPC validation', () => {
     const body = await handleMCPRequest(
       { jsonrpc: '2.0', id: 1, method: 'unknown/method' },
       opts,
+      logger,
     );
     expect(body!.error!.code).toBe(-32601);
     expect(body!.error!.message).toContain('Method not found');
