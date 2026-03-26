@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
-import type { ExecutionResult, GraphQLSchema } from 'graphql';
+import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
+import type { GraphQLSchema } from 'graphql';
+import { FetchAPI, isAsyncIterable } from 'graphql-yoga';
 import type { LangfuseOptions } from 'langfuse';
 import {
   resolveDescriptions,
@@ -451,6 +452,8 @@ export interface MCPConfig {
   suppressOutputSchema?: boolean;
   /** Block direct access to the GraphQL endpoint (only MCP path is accessible) */
   disableGraphQLEndpoint?: boolean;
+  /* Logger instance */
+  log: Logger;
 }
 
 /** Internal resolved form of a tool config after merging directive and explicit config sources. */
@@ -623,6 +626,7 @@ export function isTextMimeType(mimeType: string): boolean {
 
 export function resolveResources(
   configs: MCPResourceConfig[],
+  logger: Logger,
 ): Map<string, ResolvedResource> {
   const map = new Map<string, ResolvedResource>();
 
@@ -690,8 +694,8 @@ export function resolveResources(
         );
       }
       if (size === 0) {
-        console.warn(
-          `[MCP] Resource "${cfg.name}" (${cfg.uri}): file "${cfg.file}" is empty (0 bytes)`,
+        logger.warn(
+          `Resource "${cfg.name}" (${cfg.uri}): file "${cfg.file}" is empty (0 bytes)`,
         );
       }
     } else {
@@ -779,6 +783,7 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
 export function useMCP(config: MCPConfig): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
+  const logger = config.log.child('MCP');
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
 
@@ -815,7 +820,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   // Resolve resources at startup
   const resolvedResources =
     config.resources && config.resources.length > 0
-      ? resolveResources(config.resources)
+      ? resolveResources(config.resources, logger)
       : undefined;
 
   if (resolvedResources) {
@@ -960,8 +965,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 const providerType = resource.descriptionProvider!.type;
                 const provider = resolvedProviders[providerType];
                 if (!provider) {
-                  console.error(
-                    `[MCP] Description provider "${providerType}" not found for resource "${resource.name}". This should not happen — provider was validated at startup.`,
+                  logger.error(
+                    `Description provider "${providerType}" not found for resource "${resource.name}". This should not happen — provider was validated at startup.`,
                   );
                   continue;
                 }
@@ -973,8 +978,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   );
                   if (desc) map.set(resource.uri, desc);
                 } catch (err) {
-                  console.error(
-                    `[MCP] Resource description provider failed for "${resource.name}" (${resource.uri}): ${err instanceof Error ? err.message : String(err)}`,
+                  logger.error(
+                    `Resource description provider failed for "${resource.name}" (${resource.uri}): ${err instanceof Error ? err.message : String(err)}`,
                   );
                 }
               }
@@ -991,8 +996,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 const providerType = tmpl.descriptionProvider!.type;
                 const provider = resolvedProviders[providerType];
                 if (!provider) {
-                  console.error(
-                    `[MCP] Description provider "${providerType}" not found for template "${tmpl.name}". This should not happen — provider was validated at startup.`,
+                  logger.error(
+                    `Description provider "${providerType}" not found for template "${tmpl.name}". This should not happen — provider was validated at startup.`,
                   );
                   continue;
                 }
@@ -1004,8 +1009,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   );
                   if (desc) map.set(tmpl.uriTemplate, desc);
                 } catch (err) {
-                  console.error(
-                    `[MCP] Template description provider failed for "${tmpl.name}" (${tmpl.uriTemplate}): ${err instanceof Error ? err.message : String(err)}`,
+                  logger.error(
+                    `Template description provider failed for "${tmpl.name}" (${tmpl.uriTemplate}): ${err instanceof Error ? err.message : String(err)}`,
                   );
                 }
               }
@@ -1021,18 +1026,19 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     };
   }
 
-  function mcpErrorResponse(id: number | string, message: string) {
-    return new Response(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        id,
-        result: {
-          content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
-          isError: true,
-        },
-      }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+  function mcpErrorResponse(
+    id: number | string,
+    message: string,
+    fetchAPI: FetchAPI,
+  ) {
+    return fetchAPI.Response.json({
+      jsonrpc: '2.0',
+      id,
+      result: {
+        content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
+        isError: true,
+      },
+    });
   }
 
   return {
@@ -1044,32 +1050,19 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         registry = newRegistry;
         mcpHandlerOptions = newOptions;
       } catch (err) {
-        console.error(
-          `[MCP] Failed to rebuild tool registry after schema change. ` +
+        logger.error(
+          `Failed to rebuild tool registry after schema change. ` +
             `MCP tools will continue using the previous schema.`,
           err instanceof Error ? err.message : err,
         );
       }
     },
 
-    onRequestParse({
-      request,
-      url,
-      setRequestParser,
-    }: {
-      request: Request;
-      url: URL;
-      setRequestParser: (
-        parser: (req: Request) => {
-          query: string;
-          variables?: Record<string, unknown>;
-        },
-      ) => void;
-    }) {
+    onRequestParse({ request, url, setRequestParser }) {
       const ctx = mcpToolCalls.get(request);
       if (!ctx) {
         if (url.pathname === mcpPath) {
-          console.error(
+          logger.error(
             '[MCP] onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
           );
         }
@@ -1088,11 +1081,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       endResponse,
       requestHandler,
       serverContext,
+      fetchAPI,
     }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
       if (config.disableGraphQLEndpoint && url.pathname === graphqlPath) {
-        endResponse(new Response(null, { status: 404 }));
-        return;
+        return endResponse(new fetchAPI.Response(null, { status: 404 }));
       }
 
       if (url.pathname !== mcpPath) {
@@ -1109,8 +1102,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           });
           await requestHandler(bootstrapReq, serverContext);
         } catch (bootstrapError) {
-          console.error(
-            `[MCP] Schema bootstrap failed:`,
+          logger.error(
+            `Schema bootstrap failed:`,
             bootstrapError instanceof Error
               ? bootstrapError.message
               : bootstrapError,
@@ -1118,23 +1111,21 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         }
 
         if (!registry || !schema || !mcpHandlerOptions) {
-          endResponse(
-            new Response(
-              JSON.stringify({
+          return endResponse(
+            fetchAPI.Response.json(
+              {
                 jsonrpc: '2.0',
                 id: null,
                 error: {
                   code: -32000,
                   message: 'MCP server not ready. Schema loading failed.',
                 },
-              }),
+              },
               {
                 status: 503,
-                headers: { 'Content-Type': 'application/json' },
               },
             ),
           );
-          return;
         }
       }
 
@@ -1153,21 +1144,22 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         }
         body = parsed;
       } catch (parseError) {
-        console.error(
-          `[MCP] Failed to parse JSON-RPC request body:`,
+        logger.error(
+          `Failed to parse JSON-RPC request body:`,
           parseError instanceof Error ? parseError.message : parseError,
         );
-        endResponse(
-          new Response(
-            JSON.stringify({
+        return endResponse(
+          fetchAPI.Response.json(
+            {
               jsonrpc: '2.0',
               id: null,
               error: { code: -32700, message: 'Parse error: Invalid JSON' },
-            }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } },
+            },
+            {
+              status: 400,
+            },
           ),
         );
-        return;
       }
 
       // tools/call: route through Yoga's pipeline via onRequestParse -> execute -> onResultProcess
@@ -1177,21 +1169,16 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           typeof body.params !== 'object' ||
           Array.isArray(body.params)
         ) {
-          endResponse(
-            new Response(
-              JSON.stringify({
-                jsonrpc: '2.0',
-                id: body.id,
-                error: {
-                  code: -32602,
-                  message:
-                    'Invalid params: expected an object with "name" field',
-                },
-              }),
-              { headers: { 'Content-Type': 'application/json' } },
-            ),
+          return endResponse(
+            fetchAPI.Response.json({
+              jsonrpc: '2.0',
+              id: body.id,
+              error: {
+                code: -32602,
+                message: 'Invalid params: expected an object with "name" field',
+              },
+            }),
           );
-          return;
         }
 
         const callParams = body.params as {
@@ -1200,20 +1187,16 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         };
 
         if (!callParams.name || typeof callParams.name !== 'string') {
-          endResponse(
-            new Response(
-              JSON.stringify({
-                jsonrpc: '2.0',
-                id: body.id,
-                error: {
-                  code: -32602,
-                  message: 'Invalid params: missing required "name" field',
-                },
-              }),
-              { headers: { 'Content-Type': 'application/json' } },
-            ),
+          return endResponse(
+            fetchAPI.Response.json({
+              jsonrpc: '2.0',
+              id: body.id,
+              error: {
+                code: -32602,
+                message: 'Invalid params: missing required "name" field',
+              },
+            }),
           );
-          return;
         }
 
         if (
@@ -1221,39 +1204,31 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           (typeof callParams.arguments !== 'object' ||
             Array.isArray(callParams.arguments))
         ) {
-          endResponse(
-            new Response(
-              JSON.stringify({
-                jsonrpc: '2.0',
-                id: body.id,
-                error: {
-                  code: -32602,
-                  message: 'Invalid params: "arguments" must be an object',
-                },
-              }),
-              { headers: { 'Content-Type': 'application/json' } },
-            ),
+          return endResponse(
+            fetchAPI.Response.json({
+              jsonrpc: '2.0',
+              id: body.id,
+              error: {
+                code: -32602,
+                message: 'Invalid params: "arguments" must be an object',
+              },
+            }),
           );
-          return;
         }
 
         const tool = registry.getTool(callParams.name);
 
         if (!tool) {
-          endResponse(
-            new Response(
-              JSON.stringify({
-                jsonrpc: '2.0',
-                id: body.id,
-                error: {
-                  code: -32602,
-                  message: `Unknown tool: ${callParams.name}`,
-                },
-              }),
-              { headers: { 'Content-Type': 'application/json' } },
-            ),
+          return endResponse(
+            fetchAPI.Response.json({
+              jsonrpc: '2.0',
+              id: body.id,
+              error: {
+                code: -32602,
+                message: `Unknown tool: ${callParams.name}`,
+              },
+            }),
           );
-          return;
         }
 
         const args = dealiasArgs(
@@ -1285,44 +1260,36 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 hookProducedResult: true,
                 hasHooks: true,
               });
-              endResponse(
-                new Response(
-                  JSON.stringify({
-                    jsonrpc: '2.0',
-                    id: body.id,
-                    result: callResult,
-                  }),
-                  { headers: { 'Content-Type': 'application/json' } },
-                ),
-              );
-              return;
-            }
-          } catch (hookError) {
-            console.error(
-              `[MCP] tools/call failed for tool "${callParams.name}":`,
-              `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-            );
-            endResponse(
-              new Response(
-                JSON.stringify({
+              return endResponse(
+                fetchAPI.Response.json({
                   jsonrpc: '2.0',
                   id: body.id,
-                  result: {
-                    content: [
-                      {
-                        type: 'text',
-                        text: JSON.stringify({
-                          error: `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-                        }),
-                      },
-                    ],
-                    isError: true,
-                  },
+                  result: callResult,
                 }),
-                { headers: { 'Content-Type': 'application/json' } },
-              ),
+              );
+            }
+          } catch (hookError) {
+            logger.error(
+              `tools/call failed for tool "${callParams.name}":`,
+              `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
             );
-            return;
+            return endResponse(
+              fetchAPI.Response.json({
+                jsonrpc: '2.0',
+                id: body.id,
+                result: {
+                  content: [
+                    {
+                      type: 'text',
+                      text: JSON.stringify({
+                        error: `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                },
+              }),
+            );
           }
         }
 
@@ -1344,22 +1311,22 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
         try {
           const response = await requestHandler(mcpExecRequest, serverContext);
-          endResponse(response);
+          return endResponse(response);
         } catch (execError) {
-          console.error(
-            `[MCP] tools/call execution failed for tool "${callParams.name}":`,
+          logger.error(
+            `tools/call execution failed for tool "${callParams.name}":`,
             execError instanceof Error ? execError.message : execError,
           );
-          endResponse(
+          return endResponse(
             mcpErrorResponse(
               body.id,
               execError instanceof Error
                 ? execError.message
                 : String(execError),
+              fetchAPI,
             ),
           );
         }
-        return;
       }
 
       // All other MCP methods (initialize, tools/list, etc.)
@@ -1371,8 +1338,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           ? rawPromptLabel
           : undefined;
       if (rawPromptLabel && !promptLabel) {
-        console.warn(
-          `[MCP] Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
+        logger.warn(
+          `Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
         );
       }
       if (
@@ -1382,8 +1349,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         providerResourceConfigs.length === 0 &&
         providerTemplateConfigs.length === 0
       ) {
-        console.warn(
-          `[MCP] "promptLabel" query parameter was provided but no tools or resources use description providers. The parameter has no effect.`,
+        logger.warn(
+          `"promptLabel" query parameter was provided but no tools or resources use description providers. The parameter has no effect.`,
         );
       }
       const providerContext: DescriptionProviderContext | undefined =
@@ -1397,82 +1364,61 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           providerContext,
         );
       } catch (err) {
-        console.error(
-          `[MCP] Unhandled error processing method "${body.method}":`,
+        logger.error(
+          `Unhandled error processing method "${body.method}":`,
           err instanceof Error ? err.message : err,
         );
-        endResponse(
-          new Response(
-            JSON.stringify({
-              jsonrpc: '2.0',
-              id: body.id ?? null,
-              error: {
-                code: -32603,
-                message: `Internal error: ${err instanceof Error ? err.message : String(err)}`,
-              },
-            }),
-            { headers: { 'Content-Type': 'application/json' } },
-          ),
+        return endResponse(
+          fetchAPI.Response.json({
+            jsonrpc: '2.0',
+            id: body.id ?? null,
+            error: {
+              code: -32603,
+              message: `Internal error: ${err instanceof Error ? err.message : String(err)}`,
+            },
+          }),
         );
-        return;
       }
 
       if (result === null) {
         // notifications/initialized: no response
-        endResponse(new Response(null, { status: 204 }));
+        return endResponse(new fetchAPI.Response(null, { status: 204 }));
       } else {
-        endResponse(
-          new Response(JSON.stringify(result), {
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        );
+        return endResponse(fetchAPI.Response.json(result));
       }
     },
 
     // Transform GraphQL execution result into MCP JSON-RPC response
-    onResultProcess({
-      request,
-      setResultProcessor,
-    }: {
-      request: Request;
-      setResultProcessor: (
-        processor: (
-          result: unknown,
-          fetchAPI: unknown,
-          mediaType: string,
-        ) => Response | Promise<Response>,
-        mediaType: string,
-      ) => void;
-    }) {
+    onResultProcess({ request, setResultProcessor }) {
       const ctx = mcpToolCalls.get(request);
       if (!ctx) return;
 
       mcpToolCalls.delete(request);
 
-      setResultProcessor(async (executionResult: unknown) => {
+      setResultProcessor(async (executionResult, fetchAPI) => {
         try {
           // Validate execution result shape
           if (
             executionResult == null ||
             typeof executionResult !== 'object' ||
-            Array.isArray(executionResult)
+            Array.isArray(executionResult) ||
+            isAsyncIterable(executionResult)
           ) {
-            console.error(
-              `[MCP] Unexpected execution result for tool "${ctx.toolName}":`,
+            logger.error(
+              `Unexpected execution result for tool "${ctx.toolName}":`,
               typeof executionResult,
             );
             return mcpErrorResponse(
               ctx.jsonrpcId,
               'Unexpected execution result format',
+              fetchAPI,
             );
           }
 
-          const execResult = executionResult as ExecutionResult;
-
           // Check for GraphQL errors (only fail if there's no usable data)
-          if (execResult.errors?.length) {
+          if (executionResult.errors?.length) {
             const messages = (
-              execResult.errors as ReadonlyArray<{ message?: string }>
+              executionResult.errors as ReadonlyArray<{ message?: string }>
             )
               .map((e) => e.message || 'Unknown error')
               .filter(Boolean);
@@ -1480,16 +1426,16 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               messages.length > 1
                 ? `${messages[0]} (and ${messages.length - 1} more error${messages.length - 1 > 1 ? 's' : ''})`
                 : messages[0] || 'GraphQL execution error';
-            if (execResult.data == null) {
-              console.error(
-                `[MCP] tools/call failed for tool "${ctx.toolName}":`,
+            if (executionResult.data == null) {
+              logger.error(
+                `tools/call failed for tool "${ctx.toolName}":`,
                 messages.join('; '),
               );
-              return mcpErrorResponse(ctx.jsonrpcId, errorMessage);
+              return mcpErrorResponse(ctx.jsonrpcId, errorMessage, fetchAPI);
             }
             // Partial success: log warning but continue with available data
-            console.warn(
-              `[MCP] tools/call partial success for tool "${ctx.toolName}":`,
+            logger.warn(
+              `tools/call partial success for tool "${ctx.toolName}":`,
               messages.join('; '),
             );
           }
@@ -1500,21 +1446,20 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             toolName: ctx.toolName,
             args: ctx.args,
             tool: ctx.tool,
-            data: execResult.data,
+            data: executionResult.data,
             headers: ctx.headers,
           });
 
-          return new Response(JSON.stringify(response), {
-            headers: { 'Content-Type': 'application/json' },
-          });
+          return fetchAPI.Response.json(response);
         } catch (error) {
-          console.error(
-            `[MCP] tools/call result processing failed for tool "${ctx.toolName}":`,
+          logger.error(
+            `tools/call result processing failed for tool "${ctx.toolName}":`,
             error instanceof Error ? error.message : error,
           );
           return mcpErrorResponse(
             ctx.jsonrpcId,
             error instanceof Error ? error.message : String(error),
+            fetchAPI,
           );
         }
       }, 'application/json');

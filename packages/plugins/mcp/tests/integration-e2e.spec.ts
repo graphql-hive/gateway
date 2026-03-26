@@ -64,7 +64,7 @@ describe('MCP E2E', () => {
     proxy: {
       endpoint: 'http://upstream:4000/graphql',
     },
-    plugins: () => [
+    plugins: (ctx) => [
       useCustomFetch(
         // @ts-expect-error MeshFetch type mismatch
         (url, init) => upstream.fetch(url, init),
@@ -102,6 +102,7 @@ describe('MCP E2E', () => {
             tool: { description: 'Search cities by name' },
           },
         ],
+        ...ctx,
       }),
     ],
   });
@@ -246,7 +247,7 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -265,6 +266,7 @@ describe('MCP E2E', () => {
               tool: { description: 'Get weather' },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -303,7 +305,7 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -344,6 +346,7 @@ describe('MCP E2E', () => {
             },
           ],
           providers: { mock: mockProvider },
+          ...ctx,
         }),
       ],
     });
@@ -385,7 +388,7 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -405,6 +408,7 @@ describe('MCP E2E', () => {
               tool: { description: 'Get weather' },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -466,7 +470,7 @@ describe('MCP E2E', () => {
     const headerGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         {
           onRequestParse({ request }: { request: Request }) {
             capturedRequest = request;
@@ -488,6 +492,7 @@ describe('MCP E2E', () => {
               tool: { description: 'Get weather' },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -537,7 +542,7 @@ describe('MCP E2E', () => {
     const aliasGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -563,6 +568,7 @@ describe('MCP E2E', () => {
               },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -622,7 +628,7 @@ describe('MCP E2E', () => {
     const fieldGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -654,6 +660,7 @@ describe('MCP E2E', () => {
               },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -696,7 +703,7 @@ describe('MCP E2E', () => {
     const comboGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -729,6 +736,7 @@ describe('MCP E2E', () => {
               },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -786,7 +794,7 @@ describe('MCP E2E', () => {
     const pathGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -806,6 +814,7 @@ describe('MCP E2E', () => {
               output: { path: 'cities' },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -868,7 +877,7 @@ describe('MCP E2E', () => {
     const labelGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -890,6 +899,7 @@ describe('MCP E2E', () => {
               },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -941,7 +951,7 @@ describe('MCP E2E', () => {
     const hooksGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -987,6 +997,7 @@ describe('MCP E2E', () => {
               },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -1057,7 +1068,7 @@ describe('MCP E2E', () => {
       proxy: {
         endpoint: 'http://upstream:4000/graphql',
       },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -1070,6 +1081,7 @@ describe('MCP E2E', () => {
             }
           `,
           tools: [],
+          ...ctx,
         }),
       ],
     });
@@ -1123,7 +1135,7 @@ describe('MCP E2E', () => {
     const pathGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         {
           onRequestParse({ request }: { request: Request }) {
             capturedUrls.push(new URL(request.url).pathname);
@@ -1145,6 +1157,7 @@ describe('MCP E2E', () => {
               tool: { description: 'Get weather' },
             },
           ],
+          ...ctx,
         }),
       ],
     });
@@ -1185,7 +1198,7 @@ describe('MCP E2E', () => {
     const resourceGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -1224,9 +1237,10 @@ describe('MCP E2E', () => {
               blob: Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString('base64'),
             },
           ],
+          ...ctx,
         }),
       ],
-    } as any);
+    });
 
     afterAll(() => resourceGateway[Symbol.asyncDispose]?.());
 
@@ -1320,7 +1334,7 @@ describe('MCP E2E', () => {
     const templateGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: () => [
+      plugins: (ctx) => [
         useCustomFetch(
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
@@ -1343,9 +1357,10 @@ describe('MCP E2E', () => {
               }),
             },
           ],
+          ...ctx,
         }),
       ],
-    } as any);
+    });
 
     afterAll(() => templateGateway[Symbol.asyncDispose]?.());
 

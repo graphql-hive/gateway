@@ -1,3 +1,4 @@
+import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { describe, expect, it } from 'vitest';
 import { useMCP } from '../src/plugin.js';
 
@@ -31,6 +32,7 @@ describe('MCP Integration', () => {
         tool: { description: 'Get weather for a location' },
       },
     ],
+    log: createLoggerFromLogging(false),
   });
 
   it('plugin exports correctly', () => {
