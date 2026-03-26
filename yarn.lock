@@ -598,8 +598,8 @@ __metadata:
   linkType: hard
 
 "@aws-sdk/client-sts@npm:^3.995.0":
-  version: 3.1016.0
-  resolution: "@aws-sdk/client-sts@npm:3.1016.0"
+  version: 3.1017.0
+  resolution: "@aws-sdk/client-sts@npm:3.1017.0"
   dependencies:
     "@aws-crypto/sha256-browser": "npm:5.2.0"
     "@aws-crypto/sha256-js": "npm:5.2.0"
@@ -640,7 +640,7 @@ __metadata:
     "@smithy/util-retry": "npm:^4.2.12"
     "@smithy/util-utf8": "npm:^4.2.2"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/5819e2609287395de9c4dc5e167cb68006fdb201220bab26d095339215ee05618d1c7394f555b1cd4f3e6110bafac35bec76d42fb4646ec4e020a3c22bd441d8
+  checksum: 10c0/102d2ff5f34c764b648ef3c1361dc192e7f7fe297d1f3ec64865ef48a85fa6249d0496b57ca08e7d67467472338a828abefa1b667e5ba55bc5c1fe280c0985ed
   languageName: node
   linkType: hard
 
@@ -10501,9 +10501,9 @@ __metadata:
   linkType: hard
 
 "@types/k6@npm:^1.4.0":
-  version: 1.6.0
-  resolution: "@types/k6@npm:1.6.0"
-  checksum: 10c0/9197dc7054c5c42e1f0a4e9b8ed3dc927339b869af8fbb18e99f0669e945abf1af8eea78b10d39a9cf5a751328c2c95810e9966c47272b354fc2e1090a8b9a16
+  version: 1.7.0
+  resolution: "@types/k6@npm:1.7.0"
+  checksum: 10c0/d8de78a7f90acf3906cf8414dc88eba181cea8768b6cb4096fad24f8efd3eb6def8f8d119f3416406cb0e7691c1ef8853abe26ffe6814bd331d3e048fa85d189
   languageName: node
   linkType: hard
 
@@ -15598,7 +15598,7 @@ __metadata:
     ts-node: "npm:10.9.2"
     typescript: "npm:6.0.2"
     typescript-eslint: "npm:8.57.2"
-    vite: "npm:8.0.2"
+    vite: "npm:8.0.3"
     vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:4.1.1"
   languageName: unknown
