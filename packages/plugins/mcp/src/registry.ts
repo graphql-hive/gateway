@@ -304,7 +304,7 @@ export class ToolRegistry {
         tool.hooks?.preprocess ||
         tool.hooks?.postprocess;
       if (tool.outputSchema && !omitSchema)
-        mcpTool.outputSchema = tool.outputSchema;
+        mcpTool.outputSchema = structuredClone(tool.outputSchema);
       return mcpTool;
     });
   }

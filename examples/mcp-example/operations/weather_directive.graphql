@@ -29,3 +29,15 @@ query QuickWeatherProvider($location: String!) @mcpTool(name: "quick_weather", d
     conditions
   }
 }
+
+query WeatherWithFieldProvider(
+  $location: String! @mcpDescription(provider: "langfuse:weather.location:3")
+  $days: Int
+) @mcpTool(name: "weather_field_provider", description: "Weather with Langfuse-managed field descriptions") {
+  forecast(location: $location, days: $days) {
+    date
+    high
+    low
+    conditions @mcpDescription(provider: "langfuse:forecast.conditions")
+  }
+}

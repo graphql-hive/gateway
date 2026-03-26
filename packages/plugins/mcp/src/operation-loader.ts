@@ -1,10 +1,18 @@
+import type { Logger } from '@graphql-hive/gateway-runtime';
 import {
   Kind,
   parse,
   print,
+  type DirectiveNode,
   type DocumentNode,
+  type FieldNode,
   type OperationDefinitionNode,
+  type SelectionSetNode,
+  type VariableDefinitionNode,
 } from 'graphql';
+
+const MCP_TOOL_DIRECTIVE = 'mcpTool';
+const MCP_DESCRIPTION_DIRECTIVE = 'mcpDescription';
 
 export interface MCPDirectiveArgs {
   name: string;
@@ -19,12 +27,15 @@ export interface ParsedOperation {
   node: OperationDefinitionNode;
   document: string; // printed operation source
   mcpDirective?: MCPDirectiveArgs;
+  fieldDescriptionProviders?: Record<string, string>;
+  selectionDescriptionProviders?: Record<string, string>;
 }
 
 function extractMcpToolDirective(
   node: OperationDefinitionNode,
+  logger: Logger,
 ): MCPDirectiveArgs | undefined {
-  const directive = node.directives?.find((d) => d.name.value === 'mcpTool');
+  const directive = node.directives?.find((d) => d.name.value === MCP_TOOL_DIRECTIVE);
   if (!directive) return undefined;
 
   const args: Record<string, string> = {};
@@ -32,15 +43,15 @@ function extractMcpToolDirective(
     if (arg.value.kind === Kind.STRING) {
       args[arg.name.value] = arg.value.value;
     } else {
-      console.warn(
-        `[MCP] @mcpTool directive argument "${arg.name.value}" has non-string value (kind: ${arg.value.kind}). Only string literals are supported.`,
+      logger.warn(
+        `@mcpTool directive argument "${arg.name.value}" has non-string value (kind: ${arg.value.kind}). Only string literals are supported.`,
       );
     }
   }
 
   if (!args['name']) {
-    console.warn(
-      `[MCP] @mcpTool directive found but missing required "name" argument. The directive will be ignored.`,
+    logger.warn(
+      `@mcpTool directive found but missing required "name" argument. The directive will be ignored.`,
     );
     return undefined;
   }
@@ -53,8 +64,135 @@ function extractMcpToolDirective(
   return result;
 }
 
-// parse a gql document string and extract all named operations
-export function loadOperationsFromString(source: string): ParsedOperation[] {
+function getMcpDescriptionProvider(
+  directives: readonly DirectiveNode[] | undefined,
+  logger: Logger,
+  label: string,
+): string | undefined {
+  const directive = directives?.find(
+    (d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE,
+  );
+  if (!directive) return undefined;
+
+  const providerArg = directive.arguments?.find(
+    (a) => a.name.value === 'provider',
+  );
+  if (!providerArg || providerArg.value.kind !== Kind.STRING || !providerArg.value.value) {
+    logger.warn(
+      `@mcpDescription on ${label} requires a "provider" string argument (e.g., @mcpDescription(provider: "langfuse:prompt_name")). Ignoring.`,
+    );
+    return undefined;
+  }
+  return providerArg.value.value;
+}
+
+function extractFieldDescriptionProviders(
+  variables: readonly VariableDefinitionNode[],
+  logger: Logger,
+): Record<string, string> | undefined {
+  let providers: Record<string, string> | undefined;
+  for (const variable of variables) {
+    const value = getMcpDescriptionProvider(
+      variable.directives,
+      logger,
+      `variable "$${variable.variable.name.value}"`,
+    );
+    if (value) {
+      providers ??= {};
+      providers[variable.variable.name.value] = value;
+    }
+  }
+  return providers;
+}
+
+function extractSelectionDescriptionProviders(
+  selectionSet: SelectionSetNode,
+  logger: Logger,
+  prefix = '',
+): Record<string, string> | undefined {
+  let providers: Record<string, string> | undefined;
+  for (const selection of selectionSet.selections) {
+    if (selection.kind !== Kind.FIELD) continue;
+    const fieldName = selection.name.value;
+    const path = prefix ? `${prefix}.${fieldName}` : fieldName;
+
+    const value = getMcpDescriptionProvider(
+      selection.directives,
+      logger,
+      `field "${path}"`,
+    );
+    if (value) {
+      providers ??= {};
+      providers[path] = value;
+    }
+
+    if (selection.selectionSet) {
+      const nested = extractSelectionDescriptionProviders(selection.selectionSet, logger, path);
+      if (nested) {
+        providers ??= {};
+        Object.assign(providers, nested);
+      }
+    }
+  }
+  return providers;
+}
+
+function stripSelectionDirectives(selectionSet: SelectionSetNode): SelectionSetNode {
+  return {
+    ...selectionSet,
+    selections: selectionSet.selections.map((selection) => {
+      if (selection.kind !== Kind.FIELD) return selection;
+      let field: FieldNode = selection;
+      if (field.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE)) {
+        field = {
+          ...field,
+          directives: field.directives!.filter((d) => d.name.value !== MCP_DESCRIPTION_DIRECTIVE),
+        };
+      }
+      if (field.selectionSet) {
+        field = { ...field, selectionSet: stripSelectionDirectives(field.selectionSet) };
+      }
+      return field;
+    }),
+  };
+}
+
+function hasSelectionDirectives(selectionSet?: SelectionSetNode): boolean {
+  if (!selectionSet) return false;
+  return selectionSet.selections.some((s) => {
+    if (s.kind !== Kind.FIELD) return false;
+    if (s.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE)) return true;
+    return s.selectionSet ? hasSelectionDirectives(s.selectionSet) : false;
+  });
+}
+
+function stripMcpDirectives(def: OperationDefinitionNode): OperationDefinitionNode {
+  const hasMcpTool = def.directives?.some((d) => d.name.value === MCP_TOOL_DIRECTIVE);
+  const hasVarDesc = def.variableDefinitions?.some((v) =>
+    v.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE),
+  );
+  const hasSelDesc = hasSelectionDirectives(def.selectionSet);
+  if (!hasMcpTool && !hasVarDesc && !hasSelDesc) return def;
+
+  return {
+    ...def,
+    directives: hasMcpTool
+      ? def.directives?.filter((d) => d.name.value !== MCP_TOOL_DIRECTIVE)
+      : def.directives,
+    variableDefinitions: hasVarDesc
+      ? def.variableDefinitions?.map((v) =>
+          v.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE)
+            ? { ...v, directives: v.directives!.filter((d) => d.name.value !== MCP_DESCRIPTION_DIRECTIVE) }
+            : v,
+        )
+      : def.variableDefinitions,
+    selectionSet: hasSelDesc
+      ? stripSelectionDirectives(def.selectionSet)
+      : def.selectionSet,
+  } as OperationDefinitionNode;
+}
+
+export function loadOperationsFromString(source: string, logger: Logger): ParsedOperation[] {
   const doc = parse(source);
   const operations = [];
 
@@ -67,19 +205,17 @@ export function loadOperationsFromString(source: string): ParsedOperation[] {
       );
     }
 
-    const mcpDirective = extractMcpToolDirective(def);
-
-    // Strip @mcpTool directive before printing
-    const strippedDef = def.directives?.some((d) => d.name.value === 'mcpTool')
-      ? {
-          ...def,
-          directives: def.directives.filter((d) => d.name.value !== 'mcpTool'),
-        }
-      : def;
+    const mcpDirective = extractMcpToolDirective(def, logger);
+    const fieldDescriptionProviders = def.variableDefinitions
+      ? extractFieldDescriptionProviders(def.variableDefinitions, logger)
+      : undefined;
+    const selectionDescriptionProviders = def.selectionSet
+      ? extractSelectionDescriptionProviders(def.selectionSet, logger)
+      : undefined;
 
     const singleDoc: DocumentNode = {
       kind: Kind.DOCUMENT,
-      definitions: [strippedDef],
+      definitions: [stripMcpDirectives(def)],
     };
 
     operations.push({
@@ -88,6 +224,8 @@ export function loadOperationsFromString(source: string): ParsedOperation[] {
       node: def,
       document: print(singleDoc),
       mcpDirective,
+      fieldDescriptionProviders,
+      selectionDescriptionProviders,
     });
   }
 

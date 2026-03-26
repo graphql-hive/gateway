@@ -344,6 +344,8 @@ export interface MCPOutputOverrides {
   schema?: false;
   /** Annotations to attach to content items in tool responses (audience, priority) */
   contentAnnotations?: MCPContentAnnotations;
+  /** Per-field description providers for output schema fields, keyed by dot-path (e.g. "forecast.conditions") */
+  descriptionProviders?: Record<string, DescriptionProviderConfig>;
 }
 
 /** Context passed to preprocess/postprocess hooks with request metadata. */
@@ -516,12 +518,13 @@ interface ResolveToolConfigsInput {
 
 export function resolveToolConfigs(
   input: ResolveToolConfigsInput,
+  logger: Logger,
 ): ResolvedToolConfig[] {
   const { tools, operationsSource } = input;
   let parsedOps: ParsedOperation[] | undefined;
 
   if (operationsSource) {
-    parsedOps = loadOperationsFromString(operationsSource);
+    parsedOps = loadOperationsFromString(operationsSource, logger);
   }
 
   // build base configs from @mcpTool directives
@@ -536,11 +539,33 @@ export function resolveToolConfigs(
           op.mcpDirective.descriptionProvider,
         );
       }
+      let directiveInput: MCPInputOverrides | undefined;
+      if (op.fieldDescriptionProviders) {
+        const properties: Record<string, { descriptionProvider: DescriptionProviderConfig }> = {};
+        for (const [varName, providerStr] of Object.entries(op.fieldDescriptionProviders)) {
+          properties[varName] = {
+            descriptionProvider: parseDescriptionProviderDirective(providerStr),
+          };
+        }
+        directiveInput = { schema: { properties } };
+      }
+
+      let directiveOutput: MCPOutputOverrides | undefined;
+      if (op.selectionDescriptionProviders) {
+        const descriptionProviders: Record<string, DescriptionProviderConfig> = {};
+        for (const [path, providerStr] of Object.entries(op.selectionDescriptionProviders)) {
+          descriptionProviders[path] = parseDescriptionProviderDirective(providerStr);
+        }
+        directiveOutput = { descriptionProviders };
+      }
+
       directiveTools.set(op.mcpDirective.name, {
         name: op.mcpDirective.name,
         query: op.document,
         directiveDescription: op.mcpDirective.description,
         tool: Object.keys(toolOverrides).length > 0 ? toolOverrides : undefined,
+        input: directiveInput,
+        output: directiveOutput,
       });
     }
   }
@@ -555,7 +580,7 @@ export function resolveToolConfigs(
       query = source.query;
     } else {
       const opsPool = source.file
-        ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'))
+        ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'), logger)
         : parsedOps || [];
       const op = resolveOperation(
         opsPool,
@@ -792,7 +817,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   const resolvedTools = resolveToolConfigs({
     tools: config.tools,
     operationsSource,
-  });
+  }, logger);
 
   // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
@@ -811,6 +836,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         if (fieldProviderType && !config.providers?.[fieldProviderType]) {
           throw new Error(
             `Unknown description provider type: "${fieldProviderType}" for tool "${tool.name}" field "${fieldName}"`,
+          );
+        }
+      }
+    }
+    // Validate output field providers
+    if (tool.output?.descriptionProviders) {
+      for (const [dotPath, providerConfig] of Object.entries(
+        tool.output.descriptionProviders,
+      )) {
+        if (providerConfig.type && !config.providers?.[providerConfig.type]) {
+          throw new Error(
+            `Unknown description provider type: "${providerConfig.type}" for tool "${tool.name}" output field "${dotPath}"`,
           );
         }
       }
@@ -897,6 +934,13 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     ),
   );
 
+  // Tools that have output field description providers
+  const outputFieldProviderToolConfigs = resolvedTools.filter(
+    (t) =>
+      t.output?.descriptionProviders &&
+      Object.keys(t.output.descriptionProviders).length > 0,
+  );
+
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
   let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
@@ -953,6 +997,40 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 }
               }
               return fieldDescs;
+            }
+          : undefined,
+      resolveOutputFieldDescriptions:
+        outputFieldProviderToolConfigs.length > 0
+          ? async (ctx) => {
+              resolvedProviders = await getProviders();
+              const map = new Map<string, Map<string, string>>();
+              for (const tool of outputFieldProviderToolConfigs) {
+                const providers = tool.output!.descriptionProviders!;
+                const toolDescs = new Map<string, string>();
+                for (const [dotPath, providerConfig] of Object.entries(providers)) {
+                  const provider = resolvedProviders[providerConfig.type];
+                  if (!provider) {
+                    logger.error(
+                      `Description provider "${providerConfig.type}" not found for output field "${dotPath}" on tool "${tool.name}". This should not happen — provider was validated at startup.`,
+                    );
+                    continue;
+                  }
+                  try {
+                    const desc = await provider.fetchDescription(
+                      `${tool.name}.output.${dotPath}`,
+                      providerConfig,
+                      ctx,
+                    );
+                    if (desc) toolDescs.set(dotPath, desc);
+                  } catch (err) {
+                    logger.error(
+                      `Output field description provider failed for "${tool.name}" field "${dotPath}": ${err instanceof Error ? err.message : String(err)}`,
+                    );
+                  }
+                }
+                if (toolDescs.size > 0) map.set(tool.name, toolDescs);
+              }
+              return map;
             }
           : undefined,
       resources: resolvedResources,
@@ -1343,6 +1421,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         promptLabel &&
         providerToolConfigs.length === 0 &&
         fieldProviderToolConfigs.length === 0 &&
+        outputFieldProviderToolConfigs.length === 0 &&
         providerResourceConfigs.length === 0 &&
         providerTemplateConfigs.length === 0
       ) {

@@ -156,7 +156,7 @@ const mcpPlugin = useMCP({
   path: '/mcp',                    // MCP JSON-RPC endpoint (default: '/mcp')
   // graphqlPath: '/graphql',      // GraphQL endpoint for internal dispatch (default: '/graphql')
 
-  // Path to .graphql file(s) with named operations (and optional @mcpTool directives).
+  // Path to .graphql file(s) with named operations (and optional @mcpTool / @mcpDescription directives).
   // Can be a single file or a directory (all .graphql files are loaded).
   operationsPath: join(__dirname, 'operations/weather_directive.graphql'),
   // operationsStr: '...',         // Alternative: pass operations as a string directly

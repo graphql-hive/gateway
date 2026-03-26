@@ -1385,6 +1385,199 @@ describe('handleMCPRequest', () => {
   });
 });
 
+describe('resolveOutputFieldDescriptions in tools/list', () => {
+  const outputSchema = buildSchema(`
+    type Forecast {
+      date: String
+      high: Int
+      low: Int
+      conditions: String
+    }
+    type Query {
+      forecast(location: String!): Forecast
+    }
+  `);
+
+  const outputRegistry = new ToolRegistry(
+    [
+      {
+        name: 'get_forecast',
+        query: 'query($location: String!) { forecast(location: $location) { date high low conditions } }',
+      },
+    ],
+    outputSchema,
+  );
+
+  const outputOptions: MCPHandlerOptions = {
+    serverName: 'test-mcp',
+    serverVersion: '1.0.0',
+    registry: outputRegistry,
+    execute: vi.fn(),
+  };
+
+  it('applies output field descriptions to outputSchema', async () => {
+    const opts = {
+      ...outputOptions,
+      resolveOutputFieldDescriptions: async () => {
+        const map = new Map<string, Map<string, string>>();
+        map.set(
+          'get_forecast',
+          new Map([['forecast.conditions', 'Current weather conditions']]),
+        );
+        return map;
+      },
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 50,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const tool = body.result.tools[0];
+    expect(tool.outputSchema).toBeDefined();
+    const conditionsSchema =
+      tool.outputSchema.properties?.forecast?.properties?.conditions;
+    expect(conditionsSchema?.description).toBe('Current weather conditions');
+  });
+
+  it('warns when output dot-path does not match outputSchema', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const opts = {
+      ...outputOptions,
+      resolveOutputFieldDescriptions: async () => {
+        const map = new Map<string, Map<string, string>>();
+        map.set(
+          'get_forecast',
+          new Map([['forecast.nonexistent', 'desc']]),
+        );
+        return map;
+      },
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 51,
+      method: 'tools/list',
+      params: {},
+    });
+
+    expect(body.result.tools).toHaveLength(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('nonexistent'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('succeeds gracefully when resolveOutputFieldDescriptions throws', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const opts = {
+      ...outputOptions,
+      resolveOutputFieldDescriptions: async () => {
+        throw new Error('output provider down');
+      },
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 52,
+      method: 'tools/list',
+      params: {},
+    });
+
+    expect(body.result.tools).toHaveLength(1);
+    expect(body.result.tools[0].name).toBe('get_forecast');
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('output provider down'),
+    );
+    errorSpy.mockRestore();
+  });
+
+  it('applies description through array items in outputSchema', async () => {
+    const arraySchema = buildSchema(`
+      type Item { title: String, score: Int }
+      type SearchResult { items: [Item] }
+      type Query { search(q: String!): SearchResult }
+    `);
+    const arrayRegistry = new ToolRegistry(
+      [
+        {
+          name: 'do_search',
+          query: 'query($q: String!) { search(q: $q) { items { title score } } }',
+        },
+      ],
+      arraySchema,
+    );
+    const opts: MCPHandlerOptions = {
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: arrayRegistry,
+      execute: vi.fn(),
+      resolveOutputFieldDescriptions: async () => {
+        const map = new Map<string, Map<string, string>>();
+        map.set(
+          'do_search',
+          new Map([['search.items.title', 'The result title']]),
+        );
+        return map;
+      },
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 55,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const titleSchema =
+      body.result.tools[0].outputSchema.properties.search.properties.items
+        .items.properties.title;
+    expect(titleSchema.description).toBe('The result title');
+  });
+
+  it('does not mutate the registry outputSchema across requests', async () => {
+    let callCount = 0;
+    const opts = {
+      ...outputOptions,
+      resolveOutputFieldDescriptions: async () => {
+        callCount++;
+        const map = new Map<string, Map<string, string>>();
+        map.set(
+          'get_forecast',
+          new Map([
+            ['forecast.conditions', `desc from call ${callCount}`],
+          ]),
+        );
+        return map;
+      },
+    };
+
+    const body1 = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 53,
+      method: 'tools/list',
+      params: {},
+    });
+    expect(
+      body1.result.tools[0].outputSchema.properties.forecast.properties
+        .conditions.description,
+    ).toBe('desc from call 1');
+
+    const body2 = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 54,
+      method: 'tools/list',
+      params: {},
+    });
+    expect(
+      body2.result.tools[0].outputSchema.properties.forecast.properties
+        .conditions.description,
+    ).toBe('desc from call 2');
+  });
+});
+
 describe('resources/list', () => {
   const schema = buildSchema(`
     type Query { hello(name: String!): String }

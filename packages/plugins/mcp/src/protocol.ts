@@ -10,6 +10,7 @@ import {
   type RegisteredTool,
   type ToolRegistry,
 } from './registry.js';
+import type { JsonSchema } from './schema-converter.js';
 
 export function dealiasArgs(
   args: Record<string, unknown>,
@@ -306,6 +307,10 @@ export interface MCPHandlerOptions {
   resolveFieldDescriptions?: (
     context?: DescriptionProviderContext,
   ) => Promise<Map<string, Map<string, string>>>;
+  /** Resolve per-output-field descriptions from providers. Returns toolName -> dotPath -> description. */
+  resolveOutputFieldDescriptions?: (
+    context?: DescriptionProviderContext,
+  ) => Promise<Map<string, Map<string, string>>>;
   /** Page size for resources/list pagination. Defaults to returning all resources (no pagination). */
   resourcesListPageSize?: number;
   resources?: Map<string, ResolvedResource>;
@@ -458,6 +463,35 @@ export async function handleMCPRequest(
         } catch (err) {
           console.error(
             `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      if (options.resolveOutputFieldDescriptions) {
+        try {
+          const outputDescs =
+            await options.resolveOutputFieldDescriptions(providerContext);
+          for (const tool of allTools) {
+            const fields = outputDescs.get(tool.name);
+            if (fields && tool.outputSchema) {
+              for (const [dotPath, description] of fields) {
+                if (
+                  !setSchemaDescriptionByPath(
+                    tool.outputSchema,
+                    dotPath,
+                    description,
+                  )
+                ) {
+                  console.warn(
+                    `[MCP] Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
+                  );
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error(
+            `[MCP] Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -821,4 +855,29 @@ export async function handleMCPRequest(
         error: { code: -32601, message: `Method not found: ${method}` },
       };
   }
+}
+
+function setSchemaDescriptionByPath(
+  schema: JsonSchema,
+  path: string,
+  description: string,
+): boolean {
+  const keys = path.split('.');
+  let current = schema;
+  for (const key of keys) {
+    if (current.type === 'object' && current.properties?.[key]) {
+      current = current.properties[key];
+    } else if (current.type === 'array' && current.items) {
+      const items = current.items;
+      if (items.type === 'object' && items.properties?.[key]) {
+        current = items.properties[key];
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  current.description = description;
+  return true;
 }
