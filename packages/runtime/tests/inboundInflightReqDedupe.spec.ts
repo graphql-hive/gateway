@@ -1,6 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
 import { envelop, useEngine, useSchema } from '@envelop/core';
-import { HTTPTransportOptions } from '@graphql-mesh/transport-http';
 import { DeferredPromise } from '@whatwg-node/promise-helpers';
 import { createDeferredPromise } from '@whatwg-node/server';
 import { execute as graphqlExecute, parse } from 'graphql';
