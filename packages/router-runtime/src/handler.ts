@@ -5,32 +5,40 @@ import {
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import { getTypeInfo } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
-  filterInternalFieldsAndTypes,
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import {
   ExecutionRequest,
   ExecutionResult,
+  getDirectiveExtensions,
   isAsyncIterable,
+  memoize2,
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
   mapAsyncIterator,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, visit } from 'graphql';
+import {
+  BREAK,
+  buildSchema,
+  DocumentNode,
+  GraphQLSchema,
+  visit,
+  visitWithTypeInfo,
+} from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, queryPlanForExecutionRequestContext } from './utils';
+import { queryPlanForExecutionRequestContext } from './utils';
 
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
-  const getSubschema = getLazyFactory(
-    () => handleFederationSupergraph(opts).getSubschema,
-  );
+  const { unifiedGraph, getSubschema, inContextSDK } =
+    handleFederationSupergraph(opts);
 
   const moduleName = '@graphql-hive/router-query-planner';
   const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
@@ -48,10 +56,7 @@ export async function unifiedGraphHandler(
     return activePercentLabels;
   }
 
-  const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
-  const defaultExecutor = getLazyFactory(() =>
-    createDefaultExecutor(supergraphSchema),
-  );
+  const defaultExecutor = createDefaultExecutor(unifiedGraph);
 
   function calculateCacheKeyForDocument(
     activeLabels: Set<string>,
@@ -122,12 +127,12 @@ export async function unifiedGraphHandler(
   }
 
   return {
-    unifiedGraph: supergraphSchema,
+    unifiedGraph,
     getSubgraphSchema(subgraphName: string) {
       return getSubschema(subgraphName).schema;
     },
     executor(executionRequest) {
-      if (isIntrospection(executionRequest.document)) {
+      if (isDefaultExecute(unifiedGraph, executionRequest.document)) {
         return defaultExecutor(executionRequest);
       }
       return handleMaybePromise(
@@ -139,7 +144,7 @@ export async function unifiedGraphHandler(
             queryPlan,
           );
           return executeQueryPlan({
-            supergraphSchema,
+            supergraphSchema: unifiedGraph,
             executionRequest,
             onSubgraphExecute(subgraphName, executionRequest) {
               const subschema = getSubschema(subgraphName);
@@ -187,34 +192,62 @@ export async function unifiedGraphHandler(
       );
     },
     overrideLabels: queryPlanner.overrideLabels,
+    inContextSDK,
   };
 }
+
+const directivesForDefaultExecute = new Set([
+  'resolveTo',
+  'additionalField',
+  'pubsubOperation',
+  'pubsubPublish',
+]);
 
 /**
  * Decides if the query is an introspection query by:
  * - checking if it contains __schema or __type fields or;
  * - checking if it only queries for __typename fields on the Query type.
  */
-function isIntrospection(document: DocumentNode): boolean {
+const isDefaultExecute = memoize2(function isDefaultExecute(
+  supergraphSchema: GraphQLSchema,
+  document: DocumentNode,
+): boolean {
   let onlyQueryTypenameFields = false;
   let containsIntrospectionField = false;
-  visit(document, {
-    OperationDefinition(node) {
-      for (const sel of node.selectionSet.selections) {
-        if (sel.kind !== 'Field') return BREAK;
-        if (sel.name.value === '__schema' || sel.name.value === '__type') {
+  let containsDefaultExecuteDirective = false;
+  const typeInfo = getTypeInfo(supergraphSchema);
+  visit(
+    document,
+    visitWithTypeInfo(typeInfo, {
+      Field(node) {
+        const fieldName = node.name.value;
+        if (fieldName === '__schema' || fieldName === '__type') {
           containsIntrospectionField = true;
           return BREAK;
         }
-        if (sel.name.value === '__typename') {
+        if (fieldName === '__typename') {
           onlyQueryTypenameFields = true;
+          return node;
         } else {
           onlyQueryTypenameFields = false;
-          return BREAK;
         }
-      }
-      return;
-    },
-  });
-  return containsIntrospectionField || onlyQueryTypenameFields;
-}
+        const fieldDef = typeInfo.getFieldDef();
+        if (fieldDef) {
+          const directives = getDirectiveExtensions(fieldDef, supergraphSchema);
+          for (const directiveName of directivesForDefaultExecute) {
+            if (directives[directiveName]?.length) {
+              containsDefaultExecuteDirective = true;
+              return BREAK;
+            }
+          }
+        }
+        return;
+      },
+    }),
+  );
+  return (
+    containsIntrospectionField ||
+    onlyQueryTypenameFields ||
+    containsDefaultExecuteDirective
+  );
+});

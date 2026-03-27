@@ -14,7 +14,7 @@ it('should execute', async () => {
   expect(supergraph).toContain('Test_Weather');
   expect(supergraph).toContain('chanceOfRain');
 
-  const { execute } = await gateway({ supergraph: output });
+  const { execute } = await gateway({ supergraph: output, pipeLogs: true });
   await expect(
     execute({
       query: /* GraphQL */ `
