@@ -62,7 +62,7 @@ export function useInboundInflightReqDedupeEnvelop<
         if (existingExecution) {
           // If the cached result is an async iterable (e.g. from @defer/@stream),
           // we cannot share a single iterable across callers — execute fresh instead.
-          return existingExecution.then(result => {
+          return existingExecution.then((result) => {
             if (isAsyncIterable(result)) {
               return executeFn(args) as MaybeAsyncIterable<ExecutionResult>;
             }
