@@ -34,7 +34,7 @@ import { defineConfig } from '@graphql-hive/gateway';
 export const gatewayConfig = defineConfig({
   inboundInflightRequestDeduplication: {
     // Only include the "authorization" header in the deduplication key calculation
-    includeHeader: headerName => headerName === 'authorization'
+    shouldIncludeHeader: headerName => headerName === 'authorization'
   },
 });
 ```
