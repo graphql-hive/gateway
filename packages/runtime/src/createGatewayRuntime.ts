@@ -944,14 +944,6 @@ export function createGatewayRuntime<
     );
   }
 
-  if (config.inboundInflightRequestDeduplication) {
-    const opts =
-      typeof config.inboundInflightRequestDeduplication === 'object'
-        ? config.inboundInflightRequestDeduplication
-        : undefined;
-    extraPlugins.push(useInboundInflightReqDedupeForYoga(opts));
-  }
-
   // we load the debug plugins, but they wont log unless the log level is set to debug
   // this allows for dynamic log level switching without needing a server restart
   extraPlugins.push(
@@ -960,6 +952,16 @@ export function createGatewayRuntime<
     useMaybeDelegationPlanDebug({ log: configContext.log }),
     useCacheDebug({ log: configContext.log }),
   );
+
+  const appendPlugins = [];
+
+  if (config.inboundInflightRequestDeduplication) {
+    const opts =
+      typeof config.inboundInflightRequestDeduplication === 'object'
+        ? config.inboundInflightRequestDeduplication
+        : undefined;
+    appendPlugins.push(useInboundInflightReqDedupeForYoga(opts));
+  }
 
   const yoga = createYoga({
     // @ts-expect-error Types???
@@ -971,6 +973,7 @@ export function createGatewayRuntime<
       ...basePlugins,
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
+      ...appendPlugins,
     ],
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
