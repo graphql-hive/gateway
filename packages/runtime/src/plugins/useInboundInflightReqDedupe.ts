@@ -3,7 +3,6 @@ import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   ExecutionResult,
   getOperationASTFromDocument,
-  isAsyncIterable,
   isPromise,
   MaybeAsyncIterable,
   memoize1,
