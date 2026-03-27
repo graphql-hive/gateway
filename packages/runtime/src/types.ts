@@ -892,7 +892,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * export const gatewayConfig = defineConfig({
    *   inboundInflightRequestDeduplication: {
    *     // Only include the "authorization" header in the deduplication key calculation
-   *     includeHeader: headerName => headerName === 'authorization'
+   *     shouldIncludeHeader: headerName => headerName === 'authorization'
    *   },
    * });
    * ```
