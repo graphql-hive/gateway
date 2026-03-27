@@ -30,7 +30,12 @@ import type {
 } from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
-import type { DocumentNode, GraphQLSchema, TypeInfo } from 'graphql';
+import type {
+  DocumentNode,
+  GraphQLSchema,
+  ExecutionArgs as OriginalExecutionArgs,
+  TypeInfo,
+} from 'graphql';
 import type {
   BatchingOptions,
   FetchAPI,
@@ -46,6 +51,7 @@ import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
 import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
+import { InboundInflightRequestDeduplicationYogaPluginOptions } from './plugins/useInboundInflightReqDedupe';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
@@ -860,6 +866,41 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * You can learn more about the underlying GraphQL Yoga plugin [here](https://the-guild.dev/graphql/yoga-server/docs/features/cookies)
    */
   cookies?: boolean;
+
+  /**
+   * Enable inflight request deduplication for incoming requests to the gateway.
+   *
+   * When enabled, if multiple identical requests are received by the gateway while the first one is still being processed,
+   * only the first request will be executed and the rest will wait for its result,
+   * which will then be shared among all identical requests.
+   *
+   * This can be useful to reduce the load on the gateway and the subgraphs in case of high traffic and identical requests.
+   *
+   * By default it includes;
+   * - HTTP Request Method (e.g. GET, POST)
+   * - Request URL
+   * - Selected Request Headers (e.g. Authorization, Client-Name, etc...)
+   * - GraphQL Operation AST
+   * - GraphQL Operation Name
+   * - GraphQL Operation Variables
+   *
+   * By default it takes all headers into account, but you can provide a list of headers to include or exclude from the deduplication key calculation.
+   *
+   * ```ts
+   * import { defineConfig } from '@graphql-hive/gateway';
+   *
+   * export const gatewayConfig = defineConfig({
+   *   inboundInflightRequestDeduplication: {
+   *     // Only include the "authorization" header in the deduplication key calculation
+   *     includeHeader: headerName => headerName === 'authorization'
+   *   },
+   * });
+   * ```
+   * @default false
+   */
+  inboundInflightRequestDeduplication?:
+    | boolean
+    | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
 }
 
 interface DisableIntrospectionOptions<TContext extends Record<string, any>> {
@@ -891,3 +932,10 @@ interface ValidateFunctionParameters {
     maxErrors?: number;
   };
 }
+
+export type ExecutionArgs<TContext> = Omit<
+  OriginalExecutionArgs,
+  'contextValue'
+> & {
+  contextValue?: TContext;
+};

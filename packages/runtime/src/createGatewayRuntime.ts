@@ -77,6 +77,7 @@ import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
+import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
@@ -941,6 +942,14 @@ export function createGatewayRuntime<
         ...config.responseCaching,
       }),
     );
+  }
+
+  if (config.inboundInflightRequestDeduplication) {
+    const opts =
+      typeof config.inboundInflightRequestDeduplication === 'object'
+        ? config.inboundInflightRequestDeduplication
+        : undefined;
+    extraPlugins.push(useInboundInflightReqDedupeForYoga(opts));
   }
 
   // we load the debug plugins, but they wont log unless the log level is set to debug
