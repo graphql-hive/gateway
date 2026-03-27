@@ -43,6 +43,10 @@ export const hasDeferStream = memoize1(function hasDeferStream(
   return hasDeferOrStream;
 });
 
+function defaultJSONStringify(value: any) {
+  return JSON.stringify(value);
+}
+
 export function useInboundInflightReqDedupeEnvelop<
   TContext extends Record<string, any>,
 >(
@@ -84,14 +88,21 @@ export function useInboundInflightReqDedupeEnvelop<
         if (existingExecution) {
           return existingExecution;
         }
-        const execResult$ = executeFn(args);
+        let execResult$ = executeFn(args);
         if (!isPromise(execResult$)) {
           return execResult$;
         }
+        execResult$ = execResult$
+          .then((result) => {
+            const defaultStringify = result.stringify || defaultJSONStringify;
+            result.stringify = memoize1(defaultStringify);
+            return result;
+          })
+          .finally(() => {
+            inflightExecutions.delete(deduplicationKey);
+          });
         inflightExecutions.set(deduplicationKey, execResult$);
-        return execResult$.finally(() => {
-          inflightExecutions.delete(deduplicationKey);
-        });
+        return execResult$;
       });
     },
   };

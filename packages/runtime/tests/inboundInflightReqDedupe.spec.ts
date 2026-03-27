@@ -8,7 +8,7 @@ import { createDeferredPromise } from '@whatwg-node/server';
 import { execute as graphqlExecute, parse } from 'graphql';
 import { ExecutionResult } from 'graphql-ws';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   useInboundInflightReqDedupeEnvelop,
   useInboundInflightReqDedupeForYoga,
@@ -108,8 +108,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute({ schema, document }),
     ]);
 
-    expect(result1).toEqual({ data: { hello: 'world' } });
-    expect(result2).toEqual({ data: { hello: 'world' } });
+    expect(result1).toMatchObject({ data: { hello: 'world' } });
+    expect(result2).toMatchObject({ data: { hello: 'world' } });
 
     // Should only execute once due to deduplication
     expect(helloCnt).toBe(1);
@@ -141,8 +141,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute({ schema, document }),
     ]);
 
-    expect(result1).toEqual({ data: { updateMessage: 'updated' } });
-    expect(result2).toEqual({ data: { updateMessage: 'updated' } });
+    expect(result1).toMatchObject({ data: { updateMessage: 'updated' } });
+    expect(result2).toMatchObject({ data: { updateMessage: 'updated' } });
 
     // Should execute twice - mutations are not deduplicated
     expect(updateMessageCnt).toBe(2);
@@ -176,8 +176,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute({ schema, document }),
     ]);
 
-    expect(result1).toEqual({ data: { hello: 'world' } });
-    expect(result2).toEqual({ data: { hello: 'world' } });
+    expect(result1).toMatchObject({ data: { hello: 'world' } });
+    expect(result2).toMatchObject({ data: { hello: 'world' } });
 
     // Should execute twice - deduplication is disabled
     expect(helloCnt).toBe(2);
@@ -219,8 +219,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       }),
     ]);
 
-    expect(result1).toEqual({ data: { greet: 'Hello, Alice' } });
-    expect(result2).toEqual({ data: { greet: 'Hello, Bob' } });
+    expect(result1).toMatchObject({ data: { greet: 'Hello, Alice' } });
+    expect(result2).toMatchObject({ data: { greet: 'Hello, Bob' } });
 
     // Should execute twice - different variables
     expect(greetCnt).toBe(2);
@@ -256,8 +256,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute2({ schema, document, contextValue: { userId: 'user2' } }),
     ]);
 
-    expect(result1).toEqual({ data: { hello: 'world' } });
-    expect(result2).toEqual({ data: { hello: 'world' } });
+    expect(result1).toMatchObject({ data: { hello: 'world' } });
+    expect(result2).toMatchObject({ data: { hello: 'world' } });
 
     // Should execute twice - different custom keys (userId)
     expect(helloCnt).toBe(2);
@@ -293,7 +293,7 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
     helloDeferred.resolve('world');
 
     const results = await Promise.all([query1, query2]);
-    expect(results).toEqual([
+    expect(results).toMatchObject([
       { data: { helloDeferred: 'world' } },
       { data: { helloDeferred: 'world' } },
     ]);
@@ -306,7 +306,7 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
     helloDeferred.resolve('Mars');
 
     const results2 = await Promise.all([query3, query4]);
-    expect(results2).toEqual([
+    expect(results2).toMatchObject([
       { data: { helloDeferred: 'Mars' } },
       { data: { helloDeferred: 'Mars' } },
     ]);
@@ -342,8 +342,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute({ schema, document, operationName: 'Hello' }),
     ]);
 
-    expect(result1).toEqual({ data: { hello: 'world' } });
-    expect(result2).toEqual({ data: { hello: 'world' } });
+    expect(result1).toMatchObject({ data: { hello: 'world' } });
+    expect(result2).toMatchObject({ data: { hello: 'world' } });
 
     // Should only execute once due to deduplication
     expect(helloCnt).toBe(1);
@@ -378,8 +378,8 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
       execute({ schema, document, operationName: 'Goodbye' }),
     ]);
 
-    expect(result1).toEqual({ data: { hello: 'world' } });
-    expect(result2).toEqual({ data: { goodbye: 'farewell' } });
+    expect(result1).toMatchObject({ data: { hello: 'world' } });
+    expect(result2).toMatchObject({ data: { goodbye: 'farewell' } });
 
     // Should execute twice - different operations
     expect(helloCnt).toBe(1);
@@ -479,8 +479,8 @@ describe('useInboundInflightReqDedupeForYoga', () => {
       response2.json(),
     ]);
 
-    expect(json1).toEqual({ data: { hello: 'world' } });
-    expect(json2).toEqual({ data: { hello: 'world' } });
+    expect(json1).toMatchObject({ data: { hello: 'world' } });
+    expect(json2).toMatchObject({ data: { hello: 'world' } });
 
     // Should execute only once due to deduplication
     expect(helloCnt).toBe(1);
@@ -523,8 +523,8 @@ describe('useInboundInflightReqDedupeForYoga', () => {
       response2.json(),
     ]);
 
-    expect(json1).toEqual({ data: { hello: 'world' } });
-    expect(json2).toEqual({ data: { hello: 'world' } });
+    expect(json1).toMatchObject({ data: { hello: 'world' } });
+    expect(json2).toMatchObject({ data: { hello: 'world' } });
 
     // Should execute twice due to different headers
     expect(helloCnt).toBe(2);
@@ -574,8 +574,8 @@ describe('useInboundInflightReqDedupeForYoga', () => {
       response2.json(),
     ]);
 
-    expect(json1).toEqual({ data: { hello: 'world' } });
-    expect(json2).toEqual({ data: { hello: 'world' } });
+    expect(json1).toMatchObject({ data: { hello: 'world' } });
+    expect(json2).toMatchObject({ data: { hello: 'world' } });
 
     // Should execute only once since auth headers are ignored for deduplication
     expect(helloCnt).toBe(1);
@@ -736,10 +736,66 @@ describe('useInboundInflightReqDedupeForYoga', () => {
       response2.json(),
     ]);
 
-    expect(json1).toEqual({ data: { updateMessage: 'updated' } });
-    expect(json2).toEqual({ data: { updateMessage: 'updated' } });
+    expect(json1).toMatchObject({ data: { updateMessage: 'updated' } });
+    expect(json2).toMatchObject({ data: { updateMessage: 'updated' } });
 
     // Should execute twice - mutations are not deduplicated
     expect(updateMessageCnt).toBe(2);
+  });
+  const stringifySpy = vi.spyOn(JSON, 'stringify');
+
+  afterEach(() => {
+    stringifySpy.mockReset();
+  });
+
+  it('does not serialize multiple times for the same inflight request', async () => {
+    await using yoga = createYoga({
+      schema,
+      plugins: [useInboundInflightReqDedupeForYoga()],
+    });
+
+    const query = /* GraphQL */ `
+      query {
+        hello
+      }
+    `;
+
+    const requestBody = JSON.stringify({ query });
+
+    // Make two identical requests in parallel
+    const [response1, response2] = await Promise.all([
+      yoga.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: requestBody,
+      }),
+      yoga.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: requestBody,
+      }),
+    ]);
+
+    const [json1, json2] = await Promise.all([
+      response1.json(),
+      response2.json(),
+    ]);
+
+    expect(json1).toMatchObject({ data: { hello: 'world' } });
+    expect(json2).toMatchObject({ data: { hello: 'world' } });
+
+    // Should execute only once due to deduplication
+    expect(helloCnt).toBe(1);
+
+    // JSON.stringify should only be called once for the response of the inflight request
+    const stringifyCalls = stringifySpy.mock.calls.filter(
+      (call) => call[0] && call[0].data && call[0].data.hello === 'world',
+    );
+    console.log('Stringify calls for response:', stringifyCalls);
+    expect(stringifyCalls.length).toBe(1);
   });
 });
