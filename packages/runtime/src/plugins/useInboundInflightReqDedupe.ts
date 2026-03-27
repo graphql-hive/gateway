@@ -3,6 +3,7 @@ import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   ExecutionResult,
   getOperationASTFromDocument,
+  isAsyncIterable,
   isPromise,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
@@ -48,7 +49,7 @@ export function useInboundInflightReqDedupeEnvelop<
         return;
       }
       setExecuteFn((args: ExecutionArgs<TContext>) => {
-        const deduplicationKeys = opts.getDeduplicationKeys(args);
+        const deduplicationKeys = [...opts.getDeduplicationKeys(args)];
         deduplicationKeys.push(defaultPrintFn(args.document));
         if (args.operationName) {
           deduplicationKeys.push(args.operationName);
@@ -59,7 +60,14 @@ export function useInboundInflightReqDedupeEnvelop<
         const deduplicationKey = deduplicationKeys.join('|');
         const existingExecution = inflightExecutions.get(deduplicationKey);
         if (existingExecution) {
-          return existingExecution;
+          // If the cached result is an async iterable (e.g. from @defer/@stream),
+          // we cannot share a single iterable across callers — execute fresh instead.
+          return existingExecution.then(result => {
+            if (isAsyncIterable(result)) {
+              return executeFn(args) as MaybeAsyncIterable<ExecutionResult>;
+            }
+            return result;
+          });
         }
         const execResult$ = executeFn(args);
         if (!isPromise(execResult$)) {
@@ -118,7 +126,7 @@ export function useInboundInflightReqDedupeForYoga<
     getDeduplicationKeys: (args) => {
       const request = args.contextValue?.request;
       const keys: string[] = opts?.getDeduplicationKeys
-        ? opts.getDeduplicationKeys(args, request!)
+        ? [...opts.getDeduplicationKeys(args, request!)]
         : [];
       if (request) {
         keys.push(request.method);

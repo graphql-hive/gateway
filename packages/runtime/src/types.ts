@@ -884,7 +884,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * - GraphQL Operation Name
    * - GraphQL Operation Variables
    *
-   * By default it takes all headers into account, but you can provide a list of headers to include or exclude from the deduplication key calculation.
+   * By default it takes all headers into account, but you can provide a `shouldIncludeHeader` function to control which headers are included in the deduplication key calculation.
    *
    * ```ts
    * import { defineConfig } from '@graphql-hive/gateway';
