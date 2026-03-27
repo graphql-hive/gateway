@@ -6,7 +6,9 @@ import {
   isAsyncIterable,
   isPromise,
   MaybeAsyncIterable,
+  memoize1,
 } from '@graphql-tools/utils';
+import { BREAK, DocumentNode, visit } from 'graphql';
 import { Plugin as YogaPlugin } from 'graphql-yoga';
 import { ExecutionArgs } from '../types';
 
@@ -25,6 +27,22 @@ export interface InboundInflightRequestDeduplicationEnvelopPluginOptions<
    */
   getDeduplicationKeys(args: ExecutionArgs<TContext>): string[];
 }
+
+export const hasDeferStream = memoize1(function hasDeferStream(
+  document: DocumentNode,
+): boolean {
+  let hasDeferOrStream = false;
+  visit(document, {
+    Directive(node) {
+      if (node.name.value === 'defer' || node.name.value === 'stream') {
+        hasDeferOrStream = true;
+        return BREAK; // Stop visiting further nodes since we found a defer or stream directive
+      }
+      return node;
+    },
+  });
+  return hasDeferOrStream;
+});
 
 export function useInboundInflightReqDedupeEnvelop<
   TContext extends Record<string, any>,
@@ -48,6 +66,11 @@ export function useInboundInflightReqDedupeEnvelop<
       if (operationAST?.operation !== 'query') {
         return;
       }
+      if (hasDeferStream(args.document)) {
+        // If the query has defer or stream directives, we should not deduplicate it, since it can have multiple responses and we want to ensure that all responses are sent to the client.
+        return;
+      }
+      // Check if defer/stream
       setExecuteFn((args: ExecutionArgs<TContext>) => {
         const deduplicationKeys = [...opts.getDeduplicationKeys(args)];
         deduplicationKeys.push(defaultPrintFn(args.document));
@@ -60,14 +83,7 @@ export function useInboundInflightReqDedupeEnvelop<
         const deduplicationKey = deduplicationKeys.join('|');
         const existingExecution = inflightExecutions.get(deduplicationKey);
         if (existingExecution) {
-          // If the cached result is an async iterable (e.g. from @defer/@stream),
-          // we cannot share a single iterable across callers — execute fresh instead.
-          return existingExecution.then((result) => {
-            if (isAsyncIterable(result)) {
-              return executeFn(args) as MaybeAsyncIterable<ExecutionResult>;
-            }
-            return result;
-          });
+          return existingExecution;
         }
         const execResult$ = executeFn(args);
         if (!isPromise(execResult$)) {

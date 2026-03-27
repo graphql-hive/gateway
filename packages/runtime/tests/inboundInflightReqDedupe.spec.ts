@@ -1,8 +1,12 @@
 import { setTimeout } from 'node:timers/promises';
 import { envelop, useEngine, useSchema } from '@envelop/core';
+import { normalizedExecutor } from '@graphql-tools/executor';
+import { mergeIncrementalResult } from '@graphql-tools/utils';
+import { assertAsyncIterable } from '@internal/testing';
 import { DeferredPromise } from '@whatwg-node/promise-helpers';
 import { createDeferredPromise } from '@whatwg-node/server';
 import { execute as graphqlExecute, parse } from 'graphql';
+import { ExecutionResult } from 'graphql-ws';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -23,6 +27,7 @@ const schema = createSchema({
       greet(name: String!): String
       helloDeferred: String
       goodbye: String
+      alphabet: [String]
     }
 
     type Mutation {
@@ -49,6 +54,13 @@ const schema = createSchema({
         goodbyeCnt++;
         await setTimeout(100); // Simulate some async work
         return 'farewell';
+      },
+      async *alphabet() {
+        // Iterate over character codes for A-Z
+        for (let i = 65; i <= 90; i++) {
+          await setTimeout(50); // Simulate delay for each item
+          yield String.fromCharCode(i);
+        }
       },
     },
     Mutation: {
@@ -373,7 +385,63 @@ describe('useInboundInflightReqDedupeEnvelop', () => {
     expect(helloCnt).toBe(1);
     expect(goodbyeCnt).toBe(1);
   });
+
+  it('does not deduplicate queries with defer or stream directives', async () => {
+    const getEnveloped = envelop({
+      plugins: [
+        useEngine({ parse, execute: normalizedExecutor }),
+        useSchema(schema),
+        useInboundInflightReqDedupeEnvelop({
+          enabled: () => true,
+          getDeduplicationKeys: () => [],
+        }),
+      ],
+    });
+    const document = parse(/* GraphQL */ `
+      query {
+        hello @defer
+        alphabet @stream
+      }
+    `);
+
+    const { execute } = getEnveloped();
+
+    // Execute the same query twice in parallel
+    const [result1, result2] = (await Promise.all([
+      execute({ schema, document }),
+      execute({ schema, document }),
+    ])) as [AsyncIterable<ExecutionResult>, AsyncIterable<ExecutionResult>];
+
+    assertAsyncIterable(result1);
+    assertAsyncIterable(result2);
+
+    const finalResult1 = await getFinalResult(result1);
+    const finalResult2 = await getFinalResult(result2);
+    expect(finalResult1).toEqual(finalResult2);
+
+    expect(helloCnt).toBe(2);
+  });
 });
+
+async function getFinalResult(
+  result: AsyncIterable<ExecutionResult>,
+): Promise<ExecutionResult> {
+  let finalResult: ExecutionResult | undefined;
+  for await (const incrementalResult of result) {
+    if (!finalResult) {
+      finalResult = incrementalResult;
+    } else {
+      mergeIncrementalResult({
+        incrementalResult,
+        executionResult: finalResult,
+      });
+    }
+  }
+  if (!finalResult) {
+    throw new Error('No execution result received');
+  }
+  return finalResult;
+}
 
 describe('useInboundInflightReqDedupeForYoga', () => {
   it('deduplicates identical requests from Yoga', async () => {
