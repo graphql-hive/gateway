@@ -4584,7 +4584,7 @@ __metadata:
     "@types/supertest": "npm:7.2.0"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     fastify: "npm:5.8.4"
-    file-type: "npm:^21.1.0"
+    file-type: "npm:^22.0.0"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.0"
     reflect-metadata: "npm:0.2.2"
