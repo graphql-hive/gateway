@@ -127,11 +127,10 @@ export function useInboundInflightReqDedupeForYoga<
           ([a], [b]) => a.localeCompare(b),
         );
         for (const [headerName, headerValue] of sortedHeaders) {
-          if (opts?.shouldIncludeHeader) {
-            if (opts.shouldIncludeHeader(headerName, headerValue)) {
-              keys.push(`${headerName}:${headerValue}`);
-            }
-          } else {
+          if (
+            !opts?.shouldIncludeHeader ||
+            opts.shouldIncludeHeader(headerName, headerValue)
+          ) {
             keys.push(`${headerName}:${headerValue}`);
           }
         }
