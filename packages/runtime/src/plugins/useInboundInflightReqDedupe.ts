@@ -2,7 +2,6 @@ import { Plugin as EnvelopPlugin } from '@envelop/core';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   ExecutionResult,
-  fakePromise,
   getOperationASTFromDocument,
   isPromise,
   MaybeAsyncIterable,
