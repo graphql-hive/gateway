@@ -278,11 +278,14 @@ data:
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    const { value, done } = await iterator.next();
-    expect(done).toBe(false);
-    expect(value).toEqual({
+    const firstResult = await iterator.next();
+    expect(firstResult.done).toBe(false);
+    expect(firstResult.value).toEqual({
       scopes: ['file_content:read', 'file_metadata:read', 'projects:read'],
     });
+
+    const secondResult = await iterator.next();
+    expect(secondResult.done).toBe(true);
   });
 
   it.todo('should consume messages on an immediately closed stream', () => {
