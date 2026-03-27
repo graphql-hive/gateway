@@ -742,10 +742,21 @@ describe('useInboundInflightReqDedupeForYoga', () => {
     // Should execute twice - mutations are not deduplicated
     expect(updateMessageCnt).toBe(2);
   });
-  const stringifySpy = vi.spyOn(JSON, 'stringify');
 
-  afterEach(() => {
-    stringifySpy.mockReset();
+  const originalJSONStringify = JSON.stringify;
+  let JSONstringifyCalls: unknown[] = [];
+  function spyJSONStringify() {
+    JSON.stringify = (...args) => {
+      JSONstringifyCalls.push(args[0]);
+      return originalJSONStringify(
+        ...(args as Parameters<typeof JSON.stringify>),
+      );
+    };
+    JSONstringifyCalls = [];
+  }
+
+  beforeEach(() => {
+    spyJSONStringify();
   });
 
   it('does not serialize multiple times for the same inflight request', async () => {
@@ -792,10 +803,18 @@ describe('useInboundInflightReqDedupeForYoga', () => {
     expect(helloCnt).toBe(1);
 
     // JSON.stringify should only be called once for the response of the inflight request
-    const stringifyCalls = stringifySpy.mock.calls.filter(
-      (call) => call[0] && call[0].data && call[0].data.hello === 'world',
-    );
-    console.log('Stringify calls for response:', stringifyCalls);
-    expect(stringifyCalls.length).toBe(1);
+    const stringifyCallsForHello = JSONstringifyCalls.filter((arg) => {
+      if (
+        typeof arg === 'object' &&
+        arg !== null &&
+        'data' in arg &&
+        typeof arg.data === 'object' &&
+        arg.data !== null
+      ) {
+        return 'hello' in arg.data;
+      }
+      return false;
+    });
+    expect(stringifyCallsForHello.length).toBe(1);
   });
 });
