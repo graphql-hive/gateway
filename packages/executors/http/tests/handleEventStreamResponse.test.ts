@@ -262,6 +262,29 @@ data:
     `);
   });
 
+  it('should handle JSON values containing literal "data:" substrings', async () => {
+    const readableStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: next\ndata: {"scopes":["file_content:read","file_metadata:read","projects:read"]}\n\n',
+          ),
+        );
+        controller.enqueue(encoder.encode('event: complete\ndata:\n\n'));
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    const { value, done } = await iterator.next();
+    expect(done).toBe(false);
+    expect(value).toEqual({
+      scopes: ['file_content:read', 'file_metadata:read', 'projects:read'],
+    });
+  });
+
   it.todo('should consume messages on an immediately closed stream', () => {
     // the order of execution in handleEventStreamResponse should be:
     // 1. start waiting for `reader.read()`

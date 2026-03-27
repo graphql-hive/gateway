@@ -89,7 +89,8 @@ export function handleEventStreamResponse(
         currChunk = currChunk.slice(delimIndex + DELIM.length); // remainder
 
         // data
-        const dataStr = msg.split('data:')[1]?.trim();
+        const dataLine = msg.split('\n').find((l) => l.startsWith('data:'));
+        const dataStr = dataLine?.slice(5)?.trim();
         if (dataStr) {
           const data = JSON.parse(dataStr);
           await push(data.payload || data);
