@@ -5,7 +5,7 @@ import { DeferredPromise } from '@whatwg-node/promise-helpers';
 import { createDeferredPromise } from '@whatwg-node/server';
 import { execute as graphqlExecute, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   useInboundInflightReqDedupeEnvelop,
   useInboundInflightReqDedupeForYoga,
