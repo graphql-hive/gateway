@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createYoga, createSchema } from 'graphql-yoga'
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
-import { useMCP } from '@graphql-hive/plugin-mcp'
+import { type MCPConfig, useMCP } from '@graphql-hive/plugin-mcp'
 
 config({ path: new URL('.env', import.meta.url).pathname })
 
@@ -148,7 +148,7 @@ subgraphServer.listen(4001, () => {
   console.log('Subgraph running at http://localhost:4001/graphql')
 })
 
-const mcpPlugin = useMCP({
+const mcpOptions: MCPConfig = {
   name: 'weather-api',             // MCP server name (returned in initialize)
   version: '1.0.0',                // MCP server version
   protocolVersion: '2025-11-25',   // MCP protocol version (default: '2025-11-25')
@@ -473,13 +473,13 @@ const mcpPlugin = useMCP({
       },
     },
   ],
-})
+}
 
 const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
-  plugins: () => [mcpPlugin],
+  plugins: (ctx) => [useMCP(ctx, mcpOptions)],
 })
 
 const gatewayServer = createServer(gateway)

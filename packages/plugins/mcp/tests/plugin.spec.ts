@@ -640,11 +640,12 @@ describe('resolveResourceTemplates', () => {
   });
 });
 
+const testCtx = { log: createLoggerFromLogging(false) };
+
 describe('useMCP startup validation', () => {
   it('throws when field-level descriptionProvider references unknown provider', () => {
     expect(() =>
-      useMCP({
-        log: createLoggerFromLogging(false),
+      useMCP(testCtx, {
         name: 'test',
         tools: [
           {
@@ -675,8 +676,7 @@ describe('useMCP startup validation', () => {
 
   it('throws when resource descriptionProvider references unknown provider', () => {
     expect(() =>
-      useMCP({
-        log: createLoggerFromLogging(false),
+      useMCP(testCtx, {
         name: 'test',
         tools: [],
         resources: [
@@ -702,8 +702,7 @@ describe('useMCP startup validation', () => {
       }
     `;
     expect(() =>
-      useMCP({
-        log: createLoggerFromLogging(false),
+      useMCP(testCtx, {
         name: 'test',
         tools: [],
         operationsStr: source,
@@ -715,8 +714,7 @@ describe('useMCP startup validation', () => {
 
   it('throws when resource template descriptionProvider references unknown provider', () => {
     expect(() =>
-      useMCP({
-        log: createLoggerFromLogging(false),
+      useMCP(testCtx, {
         name: 'test',
         tools: [],
         resourceTemplates: [

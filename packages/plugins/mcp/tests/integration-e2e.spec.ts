@@ -88,8 +88,7 @@ describe('MCP E2E', () => {
         // @ts-expect-error MeshFetch type mismatch
         (url, init) => upstream.fetch(url, init),
       ),
-      useMCP({
-        ...ctx,
+      useMCP(ctx, {
         name: 'test-gateway',
         version: '0.1.0',
         tools: [
@@ -271,8 +270,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'fresh-gateway',
           tools: [
             {
@@ -329,8 +327,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'provider-gateway',
           tools: [
             {
@@ -412,8 +409,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'standalone-gateway',
           disableGraphQLEndpoint: true,
           tools: [
@@ -499,8 +495,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'header-gateway',
           tools: [
             {
@@ -566,8 +561,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'alias-gateway',
           tools: [
             {
@@ -652,8 +646,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'field-provider-gateway',
           providers: { mock: fieldProvider },
           tools: [
@@ -727,8 +720,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'combo-gateway',
           providers: { mock: fieldProvider },
           tools: [
@@ -818,8 +810,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'path-gateway',
           tools: [
             {
@@ -901,8 +892,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'label-gateway',
           providers: { mock: contextProvider },
           tools: [
@@ -975,8 +965,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'hooks-gateway',
           tools: [
             {
@@ -1092,8 +1081,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'directive-gateway',
           operationsStr: `
             query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather data", title: "Weather") {
@@ -1164,8 +1152,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'path-gateway',
           tools: [
             {
@@ -1222,8 +1209,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'resource-gateway',
           tools: [
             {
@@ -1358,8 +1344,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'template-gateway',
           tools: [],
           resourceTemplates: [
@@ -1443,8 +1428,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'file-desc-gateway',
           operationsPath: require('node:path').resolve(
             __dirname,
@@ -1562,8 +1546,7 @@ describe('MCP E2E', () => {
           // @ts-expect-error MeshFetch type mismatch
           (url: string, init: RequestInit) => upstream.fetch(url, init),
         ),
-        useMCP({
-          ...ctx,
+        useMCP(ctx, {
           name: 'desc-directive-gateway',
           operationsStr: `
             query GetWeather(

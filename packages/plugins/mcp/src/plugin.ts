@@ -411,7 +411,7 @@ export interface MCPToolConfig {
 /** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
 export interface MCPConfig {
   /** Logger instance */
-  log: Logger;
+  log?: Logger;
   /** Server name reported in `initialize` responses */
   name: string;
   /** Server version reported in `initialize` responses (default: "1.0.0") */
@@ -817,10 +817,13 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
  * Handles the full MCP protocol (initialize, tools/list, tools/call, resources)
  * by routing tool calls through the Yoga GraphQL pipeline.
  */
-export function useMCP(config: MCPConfig): GatewayPlugin {
+export function useMCP(
+  ctx: { log: Logger },
+  config: MCPConfig,
+): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
-  const logger = config.log.child('[MCP] ');
+  const logger = (config.log ?? ctx.log).child('[MCP] ');
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
 
