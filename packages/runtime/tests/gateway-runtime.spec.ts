@@ -554,6 +554,137 @@ describe('Gateway Runtime', () => {
       },
     });
   });
+  describe('inboundInflightRequestDeduplication', () => {
+    it('deduplicates identical concurrent requests when enabled', async () => {
+      let pingCnt = 0;
+      const pingDeferred = createDeferred<string>();
+      const upstream = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              ping: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              ping: async () => {
+                pingCnt++;
+                return pingDeferred.promise;
+              },
+            },
+          },
+        }),
+        logging: false,
+      });
+
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        inboundInflightRequestDeduplication: true,
+        proxy: {
+          endpoint: 'http://upstream/graphql',
+        },
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+        ],
+      });
+
+      // Start two identical requests before the upstream resolves
+      const req1 = gw.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: '{ ping }' }),
+      });
+      const req2 = gw.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: '{ ping }' }),
+      });
+
+      await fakePromise(undefined); // yield to let both requests reach the execute phase
+      pingDeferred.resolve('pong');
+
+      const [res1, res2] = await Promise.all([req1, req2]);
+      const [json1, json2] = await Promise.all([res1.json(), res2.json()]);
+
+      expect(json1).toMatchObject({ data: { ping: 'pong' } });
+      expect(json2).toMatchObject({ data: { ping: 'pong' } });
+      // With deduplication enabled, the upstream should only be called once
+      expect(pingCnt).toBe(1);
+    });
+
+    it('passes shouldIncludeHeader option through to the plugin', async () => {
+      let pingCnt = 0;
+      const pingDeferred = createDeferred<string>();
+      const upstream = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              ping: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              ping: async () => {
+                pingCnt++;
+                return pingDeferred.promise;
+              },
+            },
+          },
+        }),
+        logging: false,
+      });
+
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        inboundInflightRequestDeduplication: {
+          // Ignore the authorization header so requests differing only in auth are still deduplicated
+          shouldIncludeHeader: (name) => name !== 'authorization',
+        },
+        proxy: {
+          endpoint: 'http://upstream/graphql',
+        },
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+        ],
+      });
+
+      // Two requests with different authorization headers
+      const req1 = gw.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer token1',
+        },
+        body: JSON.stringify({ query: '{ ping }' }),
+      });
+      const req2 = gw.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer token2',
+        },
+        body: JSON.stringify({ query: '{ ping }' }),
+      });
+
+      await fakePromise(undefined);
+      pingDeferred.resolve('pong');
+
+      const [res1, res2] = await Promise.all([req1, req2]);
+      const [json1, json2] = await Promise.all([res1.json(), res2.json()]);
+
+      expect(json1).toMatchObject({ data: { ping: 'pong' } });
+      expect(json2).toMatchObject({ data: { ping: 'pong' } });
+      // Authorization header is excluded from the dedupe key, so only one upstream call
+      expect(pingCnt).toBe(1);
+    });
+  });
+
   it('defer/stream flag does not trigger onSchemaChange', async () => {
     let onSchemaChangeCalls = 0;
     let schemaFetcherCalls = 0;

@@ -77,6 +77,7 @@ import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
+import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
@@ -952,6 +953,16 @@ export function createGatewayRuntime<
     useCacheDebug({ log: configContext.log }),
   );
 
+  const appendPlugins = [];
+
+  if (config.inboundInflightRequestDeduplication) {
+    const opts =
+      typeof config.inboundInflightRequestDeduplication === 'object'
+        ? config.inboundInflightRequestDeduplication
+        : undefined;
+    appendPlugins.push(useInboundInflightReqDedupeForYoga(opts));
+  }
+
   const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
@@ -962,6 +973,7 @@ export function createGatewayRuntime<
       ...basePlugins,
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
+      ...appendPlugins,
     ],
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
