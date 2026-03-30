@@ -1,4 +1,3 @@
-import type { Logger } from '@graphql-hive/gateway-runtime';
 import {
   Kind,
   parse,
@@ -10,6 +9,7 @@ import {
   type SelectionSetNode,
   type VariableDefinitionNode,
 } from 'graphql';
+import type { PluginContext } from './types.js';
 
 const MCP_TOOL_DIRECTIVE = 'mcpTool';
 const MCP_DESCRIPTION_DIRECTIVE = 'mcpDescription';
@@ -32,8 +32,8 @@ export interface ParsedOperation {
 }
 
 function extractMcpToolDirective(
+  ctx: PluginContext,
   node: OperationDefinitionNode,
-  logger: Logger,
 ): MCPDirectiveArgs | undefined {
   const directive = node.directives?.find(
     (d) => d.name.value === MCP_TOOL_DIRECTIVE,
@@ -45,14 +45,14 @@ function extractMcpToolDirective(
     if (arg.value.kind === Kind.STRING) {
       args[arg.name.value] = arg.value.value;
     } else {
-      logger.warn(
+      ctx.log.warn(
         `@mcpTool directive argument "${arg.name.value}" has non-string value (kind: ${arg.value.kind}). Only string literals are supported.`,
       );
     }
   }
 
   if (!args['name']) {
-    logger.warn(
+    ctx.log.warn(
       `@mcpTool directive found but missing required "name" argument. The directive will be ignored.`,
     );
     return undefined;
@@ -67,8 +67,8 @@ function extractMcpToolDirective(
 }
 
 function getMcpDescriptionProvider(
+  ctx: PluginContext,
   directives: readonly DirectiveNode[] | undefined,
-  logger: Logger,
   label: string,
 ): string | undefined {
   const directive = directives?.find(
@@ -84,7 +84,7 @@ function getMcpDescriptionProvider(
     providerArg.value.kind !== Kind.STRING ||
     !providerArg.value.value
   ) {
-    logger.warn(
+    ctx.log.warn(
       `@mcpDescription on ${label} requires a "provider" string argument (e.g., @mcpDescription(provider: "langfuse:prompt_name")). Ignoring.`,
     );
     return undefined;
@@ -93,14 +93,14 @@ function getMcpDescriptionProvider(
 }
 
 function extractFieldDescriptionProviders(
+  ctx: PluginContext,
   variables: readonly VariableDefinitionNode[],
-  logger: Logger,
 ): Record<string, string> | undefined {
   let providers: Record<string, string> | undefined;
   for (const variable of variables) {
     const value = getMcpDescriptionProvider(
+      ctx,
       variable.directives,
-      logger,
       `variable "$${variable.variable.name.value}"`,
     );
     if (value) {
@@ -112,8 +112,8 @@ function extractFieldDescriptionProviders(
 }
 
 function extractSelectionDescriptionProviders(
+  ctx: PluginContext,
   selectionSet: SelectionSetNode,
-  logger: Logger,
   prefix = '',
 ): Record<string, string> | undefined {
   let providers: Record<string, string> | undefined;
@@ -123,8 +123,8 @@ function extractSelectionDescriptionProviders(
     const path = prefix ? `${prefix}.${fieldName}` : fieldName;
 
     const value = getMcpDescriptionProvider(
+      ctx,
       selection.directives,
-      logger,
       `field "${path}"`,
     );
     if (value) {
@@ -134,8 +134,8 @@ function extractSelectionDescriptionProviders(
 
     if (selection.selectionSet) {
       const nested = extractSelectionDescriptionProviders(
+        ctx,
         selection.selectionSet,
-        logger,
         path,
       );
       if (nested) {
@@ -224,8 +224,8 @@ function stripMcpDirectives(
 }
 
 export function loadOperationsFromString(
+  ctx: PluginContext,
   source: string,
-  logger: Logger,
 ): ParsedOperation[] {
   const doc = parse(source);
   const operations = [];
@@ -239,12 +239,12 @@ export function loadOperationsFromString(
       );
     }
 
-    const mcpDirective = extractMcpToolDirective(def, logger);
+    const mcpDirective = extractMcpToolDirective(ctx, def);
     const fieldDescriptionProviders = def.variableDefinitions
-      ? extractFieldDescriptionProviders(def.variableDefinitions, logger)
+      ? extractFieldDescriptionProviders(ctx, def.variableDefinitions)
       : undefined;
     const selectionDescriptionProviders = def.selectionSet
-      ? extractSelectionDescriptionProviders(def.selectionSet, logger)
+      ? extractSelectionDescriptionProviders(ctx, def.selectionSet)
       : undefined;
 
     const singleDoc: DocumentNode = {

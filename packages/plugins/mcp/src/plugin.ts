@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
+import type { PluginContext } from './types.js';
 import type { GraphQLSchema } from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
 import type { LangfuseOptions } from 'langfuse';
@@ -13,6 +14,7 @@ import {
   type DescriptionProviderContext,
   type ProviderRegistry,
 } from './description-provider.js';
+import { createHiveLoader, type HiveLoader } from './hive-loader.js';
 import {
   loadOperationsFromString,
   resolveOperation,
@@ -408,6 +410,22 @@ export interface MCPToolConfig {
   hooks?: MCPToolHooks;
 }
 
+/** Configuration for loading operations from a Hive App Deployment. */
+export interface MCPHiveConfig {
+  /** Hive registry access token */
+  token: string;
+  /** Target selector as "organizationSlug/projectSlug/targetSlug" */
+  target: string;
+  /** App deployment name to fetch operations from */
+  appName: string;
+  /** Specific app version (omit for latest active deployment) */
+  appVersion?: string;
+  /** Poll interval in ms (default: 60000) */
+  pollIntervalMs?: number;
+  /** Hive API endpoint override (default: "https://app.graphql-hive.com/graphql") */
+  endpoint?: string;
+}
+
 /** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
 export interface MCPConfig {
   /** Logger instance */
@@ -456,6 +474,8 @@ export interface MCPConfig {
   suppressOutputSchema?: boolean;
   /** Block direct access to the GraphQL endpoint (only MCP path is accessible) */
   disableGraphQLEndpoint?: boolean;
+  /** Hive App Deployment as an operation source. Fetches persisted documents; those with @mcpTool directives are auto-registered as tools, and all documents are available as named operations for tools with source.type: 'graphql'. */
+  hive?: MCPHiveConfig;
 }
 
 /** Internal resolved form of a tool config after merging directive and explicit config sources. */
@@ -517,14 +537,14 @@ interface ResolveToolConfigsInput {
 }
 
 export function resolveToolConfigs(
+  ctx: PluginContext,
   input: ResolveToolConfigsInput,
-  logger: Logger,
 ): ResolvedToolConfig[] {
   const { tools, operationsSource } = input;
   let parsedOps: ParsedOperation[] | undefined;
 
   if (operationsSource) {
-    parsedOps = loadOperationsFromString(operationsSource, logger);
+    parsedOps = loadOperationsFromString(ctx, operationsSource);
   }
 
   // build base configs from @mcpTool directives
@@ -590,8 +610,8 @@ export function resolveToolConfigs(
     } else {
       const opsPool = source.file
         ? loadOperationsFromString(
+            ctx,
             readFileSync(resolve(source.file), 'utf-8'),
-            logger,
           )
         : parsedOps || [];
       const op = resolveOperation(
@@ -662,8 +682,8 @@ export function isTextMimeType(mimeType: string): boolean {
 }
 
 export function resolveResources(
+  ctx: PluginContext,
   configs: MCPResourceConfig[],
-  logger: Logger,
 ): Map<string, ResolvedResource> {
   const map = new Map<string, ResolvedResource>();
 
@@ -731,7 +751,7 @@ export function resolveResources(
         );
       }
       if (size === 0) {
-        logger.warn(
+        ctx.log.warn(
           `Resource "${cfg.name}" (${cfg.uri}): file "${cfg.file}" is empty (0 bytes)`,
         );
       }
@@ -817,22 +837,134 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
  * Handles the full MCP protocol (initialize, tools/list, tools/call, resources)
  * by routing tool calls through the Yoga GraphQL pipeline.
  */
-export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
+export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
-  const logger = (config.log ?? ctx.log).child('[MCP] ');
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
 
+  ctx = { ...ctx, log: (config.log ?? ctx.log).child('[MCP] ') };
+  const logger = ctx.log;
+
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
-  const resolvedTools = resolveToolConfigs(
+  let resolvedTools = resolveToolConfigs(
+    ctx,
     {
       tools: config.tools,
       operationsSource,
     },
-    logger,
   );
+
+  // Hive App Deployment loader: async init + polling
+  let hiveLoader: HiveLoader | null = null;
+  let hiveInitPromise: Promise<void> | null = null;
+
+  function rebuildToolsWithHiveSource(hiveSource: string) {
+    const mergedSource = [hiveSource, operationsSource]
+      .filter(Boolean)
+      .join('\n');
+
+    let newResolvedTools: ResolvedToolConfig[];
+    try {
+      newResolvedTools = resolveToolConfigs(
+        ctx,
+        {
+          tools: config.tools,
+          operationsSource: mergedSource || undefined,
+        },
+      );
+    } catch (err) {
+      logger.error(
+        `Failed to parse Hive operations. Keeping previous tools.`,
+        err instanceof Error ? err.message : err,
+      );
+      return;
+    }
+
+    if (schema) {
+      const previousTools = resolvedTools;
+      try {
+        const newRegistry = new ToolRegistry(ctx, newResolvedTools, schema);
+        resolvedTools = newResolvedTools;
+        const newOptions = buildHandlerOptions(newRegistry);
+        registry = newRegistry;
+        mcpHandlerOptions = newOptions;
+        logger.info(
+          `Tool registry rebuilt: ${newResolvedTools.length} tools registered`,
+        );
+      } catch (err) {
+        resolvedTools = previousTools;
+        logger.error(
+          `Failed to rebuild tool registry after Hive update. Keeping previous tools.`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+    } else {
+      // Schema not yet available; update resolvedTools for when onSchemaChange fires
+      resolvedTools = newResolvedTools;
+    }
+  }
+
+  let disposed = false;
+  let hiveInitFailed = false;
+  let hiveInitFailedAt = 0;
+  const HIVE_RETRY_COOLDOWN_MS = 30_000;
+
+  function docsToSource(docs: { body: string }[]): string {
+    return docs.map((d) => d.body).join('\n');
+  }
+
+  function startHiveInit() {
+    if (!hiveInitFailed && hiveInitPromise) return;
+    hiveInitFailed = false;
+    hiveInitPromise = hiveLoader!
+      .fetchDocuments()
+      .then((docs) => {
+        if (disposed) return;
+        const toolCount = docs.filter((d) => d.body.includes('@mcpTool')).length;
+        logger.info(
+          `Loaded ${docs.length} documents from Hive (${toolCount} with @mcpTool)`,
+        );
+        rebuildToolsWithHiveSource(docsToSource(docs));
+
+        hiveLoader!.startPolling((newDocs) => {
+          const newToolCount = newDocs.filter((d) => d.body.includes('@mcpTool')).length;
+          logger.info(
+            `Hive app deployment updated: ${newDocs.length} documents (${newToolCount} with @mcpTool)`,
+          );
+          rebuildToolsWithHiveSource(docsToSource(newDocs));
+        }, docs);
+
+        hiveInitPromise = null;
+      })
+      .catch((err) => {
+        // Log but don't re-throw: avoids unhandled rejection.
+        // onRequest will retry on next MCP request.
+        hiveInitFailed = true;
+        hiveInitFailedAt = Date.now();
+        hiveInitPromise = null;
+        logger.error(
+          `Failed to fetch operations from Hive: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
+  }
+
+  if (config.hive) {
+    hiveLoader = createHiveLoader(
+      ctx,
+      {
+        token: config.hive.token,
+        target: config.hive.target,
+        appName: config.hive.appName,
+        appVersion: config.hive.appVersion,
+        endpoint: config.hive.endpoint || 'https://app.graphql-hive.com/graphql',
+        pollIntervalMs: config.hive.pollIntervalMs ?? 60_000,
+      },
+    );
+
+    startHiveInit();
+  }
 
   // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
@@ -872,7 +1004,7 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
   // Resolve resources at startup
   const resolvedResources =
     config.resources && config.resources.length > 0
-      ? resolveResources(config.resources, logger)
+      ? resolveResources(ctx, config.resources)
       : undefined;
 
   if (resolvedResources) {
@@ -937,29 +1069,29 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
     return providersPromise;
   }
 
-  // Tools that use provider descriptions (provider wins over config)
-  const providerToolConfigs = resolvedTools.filter(
-    (t) => t.tool?.descriptionProvider,
-  );
-
-  // Tools that have per-field description providers
-  const fieldProviderToolConfigs = resolvedTools.filter((t) =>
-    Object.values(t.input?.schema?.properties || {}).some(
-      (p) => p.descriptionProvider,
-    ),
-  );
-
-  // Tools that have output field description providers
-  const outputFieldProviderToolConfigs = resolvedTools.filter(
-    (t) =>
-      t.output?.descriptionProviders &&
-      Object.keys(t.output.descriptionProviders).length > 0,
-  );
+  // Recomputed each time buildHandlerOptions is called so hive rebuilds are reflected
+  let providerToolConfigs: ResolvedToolConfig[] = [];
+  let fieldProviderToolConfigs: ResolvedToolConfig[] = [];
+  let outputFieldProviderToolConfigs: ResolvedToolConfig[] = [];
 
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
   let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
   function buildHandlerOptions(reg: ToolRegistry): MCPHandlerOptions {
+    providerToolConfigs = resolvedTools.filter(
+      (t) => t.tool?.descriptionProvider,
+    );
+    fieldProviderToolConfigs = resolvedTools.filter((t) =>
+      Object.values(t.input?.schema?.properties || {}).some(
+        (p) => p.descriptionProvider,
+      ),
+    );
+    outputFieldProviderToolConfigs = resolvedTools.filter(
+      (t) =>
+        t.output?.descriptionProviders &&
+        Object.keys(t.output.descriptionProviders).length > 0,
+    );
+
     return {
       serverName: config.name,
       serverVersion: config.version || '1.0.0',
@@ -973,13 +1105,13 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
       registry: reg,
       resolveToolDescriptions:
         providerToolConfigs.length > 0
-          ? async (ctx) => {
+          ? async (resolverCtx) => {
               resolvedProviders = await getProviders();
               const resolved = await resolveDescriptions(
+                ctx,
                 providerToolConfigs,
                 resolvedProviders,
-                { isStartup: false, context: ctx },
-                logger,
+                { isStartup: false, context: resolverCtx },
               );
               const map = new Map<string, string>();
               for (const tool of resolved) {
@@ -992,13 +1124,13 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
           : undefined,
       resolveFieldDescriptions:
         fieldProviderToolConfigs.length > 0
-          ? async (ctx) => {
+          ? async (resolverCtx) => {
               resolvedProviders = await getProviders();
               const fieldDescs = await resolveFieldDescriptions(
+                ctx,
                 fieldProviderToolConfigs,
                 resolvedProviders,
-                { isStartup: false, context: ctx },
-                logger,
+                { isStartup: false, context: resolverCtx },
               );
               for (const tool of fieldProviderToolConfigs) {
                 const toolDescs = fieldDescs.get(tool.name);
@@ -1139,9 +1271,14 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
   }
 
   return {
+    onDispose() {
+      disposed = true;
+      hiveLoader?.stopPolling();
+    },
+
     onSchemaChange({ schema: newSchema }) {
       try {
-        const newRegistry = new ToolRegistry(resolvedTools, newSchema, logger);
+        const newRegistry = new ToolRegistry(ctx, resolvedTools, newSchema);
         const newOptions = buildHandlerOptions(newRegistry);
         schema = newSchema;
         registry = newRegistry;
@@ -1188,6 +1325,18 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
 
       if (url.pathname !== mcpPath) {
         return;
+      }
+
+      // Wait for in-progress Hive init, or retry if previous init failed and cooldown elapsed
+      if (hiveInitPromise) {
+        await hiveInitPromise;
+      } else if (
+        hiveInitFailed &&
+        hiveLoader &&
+        Date.now() - hiveInitFailedAt > HIVE_RETRY_COOLDOWN_MS
+      ) {
+        startHiveInit();
+        await hiveInitPromise;
       }
 
       // Schema bootstrap: one-time dispatch to trigger schema loading
@@ -1351,13 +1500,13 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
             );
             if (preprocessResult !== undefined) {
               const callResult = formatToolCallResult(
+                ctx,
                 preprocessResult,
                 tool,
                 {
                   hookProducedResult: true,
                   hasHooks: true,
                 },
-                logger,
               );
               return endResponse(
                 fetchAPI.Response.json({
@@ -1459,9 +1608,9 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
       let result;
       try {
         result = await handleMCPRequest(
+          ctx,
           body,
           mcpHandlerOptions,
-          logger,
           providerContext,
         );
       } catch (err) {
@@ -1491,8 +1640,8 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
 
     // Transform GraphQL execution result into MCP JSON-RPC response
     onResultProcess({ request, setResultProcessor }) {
-      const ctx = mcpToolCalls.get(request);
-      if (!ctx) return;
+      const reqCall = mcpToolCalls.get(request);
+      if (!reqCall) return;
 
       mcpToolCalls.delete(request);
 
@@ -1506,11 +1655,11 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
             isAsyncIterable(executionResult)
           ) {
             logger.error(
-              `Unexpected execution result for tool "${ctx.toolName}":`,
+              `Unexpected execution result for tool "${reqCall.toolName}":`,
               typeof executionResult,
             );
             return mcpErrorResponse(
-              ctx.jsonrpcId,
+              reqCall.jsonrpcId,
               'Unexpected execution result format',
               fetchAPI,
             );
@@ -1529,37 +1678,36 @@ export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
                 : messages[0] || 'GraphQL execution error';
             if (executionResult.data == null) {
               logger.error(
-                `tools/call failed for tool "${ctx.toolName}":`,
+                `tools/call failed for tool "${reqCall.toolName}":`,
                 messages.join('; '),
               );
-              return mcpErrorResponse(ctx.jsonrpcId, errorMessage, fetchAPI);
+              return mcpErrorResponse(reqCall.jsonrpcId, errorMessage, fetchAPI);
             }
             // Partial success: log warning but continue with available data
             logger.warn(
-              `tools/call partial success for tool "${ctx.toolName}":`,
+              `tools/call partial success for tool "${reqCall.toolName}":`,
               messages.join('; '),
             );
           }
 
           // Post-execution: output.path, postprocess, format
-          const response = await processExecutionResult({
-            id: ctx.jsonrpcId,
-            toolName: ctx.toolName,
-            args: ctx.args,
-            tool: ctx.tool,
+          const response = await processExecutionResult(ctx, {
+            id: reqCall.jsonrpcId,
+            toolName: reqCall.toolName,
+            args: reqCall.args,
+            tool: reqCall.tool,
             data: executionResult.data,
-            headers: ctx.headers,
-            logger,
+            headers: reqCall.headers,
           });
 
           return fetchAPI.Response.json(response);
         } catch (error) {
           logger.error(
-            `tools/call result processing failed for tool "${ctx.toolName}":`,
+            `tools/call result processing failed for tool "${reqCall.toolName}":`,
             error instanceof Error ? error.message : error,
           );
           return mcpErrorResponse(
-            ctx.jsonrpcId,
+            reqCall.jsonrpcId,
             error instanceof Error ? error.message : String(error),
             fetchAPI,
           );

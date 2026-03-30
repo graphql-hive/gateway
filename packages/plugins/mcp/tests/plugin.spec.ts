@@ -21,6 +21,7 @@ const logger = createLoggerFromLogging(false);
 describe('resolveToolConfigs', () => {
   it('returns inline source tools with query extracted', () => {
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -29,7 +30,6 @@ describe('resolveToolConfigs', () => {
           },
         ],
       },
-      logger,
     );
     expect(tools[0]!.query).toBe('query { hello }');
   });
@@ -41,6 +41,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -54,7 +55,6 @@ describe('resolveToolConfigs', () => {
         ],
         operationsSource,
       },
-      logger,
     );
     expect(tools[0]!.query).toContain('GetWeather');
   });
@@ -62,6 +62,7 @@ describe('resolveToolConfigs', () => {
   it('throws when operation not found', () => {
     expect(() =>
       resolveToolConfigs(
+        { log: logger },
         {
           tools: [
             {
@@ -75,13 +76,13 @@ describe('resolveToolConfigs', () => {
           ],
           operationsSource: 'query Other { hello }',
         },
-        logger,
       ),
     ).toThrow('NotHere');
   });
 
   it('preserves tool and input overrides', () => {
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -94,7 +95,6 @@ describe('resolveToolConfigs', () => {
           },
         ],
       },
-      logger,
     );
     expect(tools[0]!.tool?.title).toBe('Hello');
     expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe(
@@ -108,7 +108,7 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource }, logger);
+    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_weather');
     expect(tools[0]!.query).toContain('GetWeather');
@@ -124,6 +124,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -138,7 +139,6 @@ describe('resolveToolConfigs', () => {
         ],
         operationsSource,
       },
-      logger,
     );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_weather');
@@ -153,6 +153,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -171,7 +172,6 @@ describe('resolveToolConfigs', () => {
         ],
         operationsSource,
       },
-      logger,
     );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.directiveDescription).toBe('Get weather');
@@ -183,6 +183,7 @@ describe('resolveToolConfigs', () => {
   it('preserves hooks through resolveToolConfigs', () => {
     const hooks = { preprocess: () => undefined };
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -192,7 +193,6 @@ describe('resolveToolConfigs', () => {
           },
         ],
       },
-      logger,
     );
     expect(tools[0]!.hooks).toBe(hooks);
   });
@@ -203,7 +203,7 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource }, logger);
+    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
     expect(tools).toHaveLength(1);
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
@@ -217,7 +217,7 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource }, logger);
+    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
       prompt: 'weather_prompt',
@@ -232,7 +232,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -243,7 +243,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid version');
   });
 
@@ -254,7 +254,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Version must be a positive integer');
   });
 
@@ -265,7 +265,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Version must be a positive integer');
   });
 
@@ -276,7 +276,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Trailing colon with no version');
   });
 
@@ -287,7 +287,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -298,7 +298,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -309,7 +309,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -320,6 +320,7 @@ describe('resolveToolConfigs', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -339,7 +340,6 @@ describe('resolveToolConfigs', () => {
         ],
         operationsSource,
       },
-      logger,
     );
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
@@ -353,7 +353,7 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ tools: [], operationsSource }, logger);
+    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
     expect(tools).toHaveLength(0);
   });
 });
@@ -361,8 +361,8 @@ describe('resolveToolConfigs', () => {
 describe('resolveResources', () => {
   it('resolves inline text resource', () => {
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [{ name: 'guide', uri: 'docs://guide', text: '# Guide\nHello' }],
-      createLoggerFromLogging(false),
     );
     expect(resources.size).toBe(1);
     const r = resources.get('docs://guide')!;
@@ -374,22 +374,23 @@ describe('resolveResources', () => {
 
   it('defaults mimeType to text/plain', () => {
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [{ name: 'r', uri: 'test://r', text: 'hi' }],
-      createLoggerFromLogging(false),
     );
     expect(resources.get('test://r')!.mimeType).toBe('text/plain');
   });
 
   it('preserves explicit mimeType', () => {
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [{ name: 'r', uri: 'test://r', text: '# hi', mimeType: 'text/markdown' }],
-      createLoggerFromLogging(false),
     );
     expect(resources.get('test://r')!.mimeType).toBe('text/markdown');
   });
 
   it('preserves optional fields (title, description, icons, annotations)', () => {
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [
         {
           name: 'r',
@@ -401,7 +402,6 @@ describe('resolveResources', () => {
           annotations: { audience: ['assistant'] as const, priority: 0.8 },
         },
       ],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('test://r')!;
     expect(r.title).toBe('My Resource');
@@ -413,11 +413,11 @@ describe('resolveResources', () => {
   it('throws if both text and file are provided', () => {
     expect(() =>
       resolveResources(
+        { log: createLoggerFromLogging(false) },
         [
           // Cast to simulate invalid JSON/YAML config that bypasses TS discriminated union
           { name: 'r', uri: 'test://r', text: 'hi', file: './foo.md' } as any,
         ],
-        createLoggerFromLogging(false),
       ),
     ).toThrow('specify exactly one of');
   });
@@ -425,8 +425,8 @@ describe('resolveResources', () => {
   it('throws if no content source is provided', () => {
     expect(() =>
       resolveResources(
+        { log: createLoggerFromLogging(false) },
         [{ name: 'r', uri: 'test://r' } as any],
-        createLoggerFromLogging(false),
       ),
     ).toThrow('must specify either');
   });
@@ -434,11 +434,11 @@ describe('resolveResources', () => {
   it('throws on duplicate URIs', () => {
     expect(() =>
       resolveResources(
+        { log: createLoggerFromLogging(false) },
         [
           { name: 'a', uri: 'test://dup', text: 'a' },
           { name: 'b', uri: 'test://dup', text: 'b' },
         ],
-        createLoggerFromLogging(false),
       ),
     ).toThrow('Duplicate resource URI');
   });
@@ -448,8 +448,8 @@ describe('resolveResources', () => {
     const filePath = join(dir, 'guide.md');
     writeFileSync(filePath, '# Guide from file');
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [{ name: 'guide', uri: 'docs://guide', file: filePath }],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('docs://guide')!;
     expect(r.text).toBe('# Guide from file');
@@ -460,6 +460,7 @@ describe('resolveResources', () => {
   it('throws with context when file does not exist', () => {
     expect(() =>
       resolveResources(
+        { log: createLoggerFromLogging(false) },
         [
           {
             name: 'missing',
@@ -467,7 +468,6 @@ describe('resolveResources', () => {
             file: '/nonexistent/path.md',
           },
         ],
-        createLoggerFromLogging(false),
       ),
     ).toThrow(/Resource "missing" .* cannot read file/);
   });
@@ -475,6 +475,7 @@ describe('resolveResources', () => {
   it('resolves inline blob resource', () => {
     const b64 = Buffer.from('binary data').toString('base64');
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [
         {
           name: 'img',
@@ -483,7 +484,6 @@ describe('resolveResources', () => {
           mimeType: 'image/png',
         },
       ],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('files://icon.png')!;
     expect(r.blob).toBe(b64);
@@ -498,6 +498,7 @@ describe('resolveResources', () => {
     const buf = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
     writeFileSync(filePath, buf);
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [
         {
           name: 'icon',
@@ -506,7 +507,6 @@ describe('resolveResources', () => {
           mimeType: 'image/png',
         },
       ],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('files://icon')!;
     expect(r.blob).toBe(buf.toString('base64'));
@@ -519,6 +519,7 @@ describe('resolveResources', () => {
     const filePath = join(dir, 'data.json');
     writeFileSync(filePath, '{"key": "value"}');
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [
         {
           name: 'data',
@@ -527,7 +528,6 @@ describe('resolveResources', () => {
           mimeType: 'application/json',
         },
       ],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('files://data')!;
     expect(r.text).toBe('{"key": "value"}');
@@ -540,6 +540,7 @@ describe('resolveResources', () => {
     const buf = Buffer.from([0x00, 0x01, 0x02]);
     writeFileSync(filePath, buf);
     const resources = resolveResources(
+      { log: createLoggerFromLogging(false) },
       [
         {
           name: 'special',
@@ -549,7 +550,6 @@ describe('resolveResources', () => {
           binary: true,
         },
       ],
-      createLoggerFromLogging(false),
     );
     const r = resources.get('files://special')!;
     expect(r.blob).toBe(buf.toString('base64'));
@@ -559,8 +559,8 @@ describe('resolveResources', () => {
   it('throws if multiple content sources are provided', () => {
     expect(() =>
       resolveResources(
+        { log: createLoggerFromLogging(false) },
         [{ name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any],
-        createLoggerFromLogging(false),
       ),
     ).toThrow('specify exactly one of');
   });
@@ -640,7 +640,7 @@ describe('resolveResourceTemplates', () => {
   });
 });
 
-const testCtx = { log: createLoggerFromLogging(false) };
+const testCtx = { log: createLoggerFromLogging(false), fetch: globalThis.fetch };
 
 describe('useMCP startup validation', () => {
   it('throws when field-level descriptionProvider references unknown provider', () => {
@@ -741,6 +741,7 @@ describe('resolveDescriptions integration', () => {
 
   it('resolves provider descriptions into tool configs', async () => {
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -752,20 +753,20 @@ describe('resolveDescriptions integration', () => {
           },
         ],
       },
-      logger,
     );
 
     const resolved = await resolveDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       { isStartup: false },
-      logger,
     );
     expect(resolved[0]!.providerDescription).toBe('Desc for hello_desc');
   });
 
   it('does not set providerDescription when tool has no descriptionProvider', async () => {
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -775,14 +776,13 @@ describe('resolveDescriptions integration', () => {
           },
         ],
       },
-      logger,
     );
 
     const resolved = await resolveDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       { isStartup: false },
-      logger,
     );
     expect(resolved[0]!.providerDescription).toBeUndefined();
   });
@@ -796,8 +796,8 @@ describe('@mcpDescription directive on variables', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
 
     expect(tools).toHaveLength(1);
@@ -821,8 +821,8 @@ describe('@mcpDescription directive on variables', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
 
     expect(tools[0]!.input?.schema?.properties?.['q']).toEqual({
@@ -845,6 +845,7 @@ describe('@mcpDescription directive on variables', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -870,7 +871,6 @@ describe('@mcpDescription directive on variables', () => {
         ],
         operationsSource: source,
       },
-      logger,
     );
 
     expect(
@@ -888,6 +888,7 @@ describe('@mcpDescription directive on variables', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -902,7 +903,6 @@ describe('@mcpDescription directive on variables', () => {
         ],
         operationsSource: source,
       },
-      logger,
     );
 
     expect(
@@ -920,8 +920,8 @@ describe('@mcpDescription directive on variables', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
     expect(tools[0]!.input).toBeUndefined();
   });
@@ -938,8 +938,8 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
 
     expect(tools).toHaveLength(1);
@@ -963,8 +963,8 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
 
     expect(tools[0]!.output?.descriptionProviders).toEqual({
@@ -981,6 +981,7 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -995,7 +996,6 @@ describe('@mcpDescription directive on selection fields', () => {
         ],
         operationsSource: source,
       },
-      logger,
     );
 
     expect(tools[0]!.output?.path).toBe('forecast');
@@ -1011,6 +1011,7 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       {
         tools: [
           {
@@ -1024,7 +1025,6 @@ describe('@mcpDescription directive on selection fields', () => {
         ],
         operationsSource: source,
       },
-      logger,
     );
 
     expect(tools[0]!.output?.descriptionProviders).toEqual({
@@ -1042,8 +1042,8 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
     expect(tools[0]!.output).toBeUndefined();
   });
@@ -1059,8 +1059,8 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
 
     expect(
@@ -1081,7 +1081,7 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource: source }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource: source }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -1094,7 +1094,7 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ tools: [], operationsSource: source }, logger),
+      resolveToolConfigs({ log: logger }, { tools: [], operationsSource: source }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -1105,9 +1105,53 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     const tools = resolveToolConfigs(
+      { log: logger },
       { tools: [], operationsSource: source },
-      logger,
     );
     expect(tools).toHaveLength(0);
+  });
+});
+
+describe('useMCP with hive config', () => {
+  it('throws if hive config is present but token is missing', () => {
+    expect(() =>
+      useMCP(testCtx, {
+        name: 'test',
+        tools: [],
+        hive: {
+          token: '',
+          target: 'org/proj/dev',
+          appName: 'my-app',
+        },
+      }),
+    ).toThrow('token');
+  });
+
+  it('throws if hive config is present but target is missing', () => {
+    expect(() =>
+      useMCP(testCtx, {
+        name: 'test',
+        tools: [],
+        hive: {
+          token: 'valid-token',
+          target: '',
+          appName: 'my-app',
+        },
+      }),
+    ).toThrow('target');
+  });
+
+  it('throws if hive config is present but appName is missing', () => {
+    expect(() =>
+      useMCP(testCtx, {
+        name: 'test',
+        tools: [],
+        hive: {
+          token: 'valid-token',
+          target: 'org/proj/dev',
+          appName: '',
+        },
+      }),
+    ).toThrow('appName');
   });
 });

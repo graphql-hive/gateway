@@ -1,5 +1,5 @@
-import type { Logger } from '@graphql-hive/gateway-runtime';
 import type { ResolvedToolConfig } from './plugin.js';
+import type { PluginContext } from './types.js';
 
 /** Configuration object for a description provider, identified by `type` with provider-specific fields. */
 export interface DescriptionProviderConfig {
@@ -128,10 +128,10 @@ interface ResolveDescriptionsOptions {
 }
 
 export async function resolveDescriptions(
+  ctx: PluginContext,
   tools: ResolvedToolConfig[],
   providers: ProviderRegistry,
   options: ResolveDescriptionsOptions = { isStartup: false },
-  logger: Logger,
 ): Promise<ResolvedToolConfig[]> {
   const resolved = await Promise.all(
     tools.map(async (tool) => {
@@ -156,7 +156,7 @@ export async function resolveDescriptions(
         if (options.isStartup) {
           throw err;
         }
-        logger.error(
+        ctx.log.error(
           `Description provider failed for tool "${tool.name}": ${err instanceof Error ? err.message : String(err)}`,
         );
         return tool;
@@ -169,10 +169,10 @@ export async function resolveDescriptions(
 
 /** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
 export async function resolveFieldDescriptions(
+  ctx: PluginContext,
   tools: ResolvedToolConfig[],
   providers: ProviderRegistry,
   options: ResolveDescriptionsOptions,
-  logger: Logger,
 ): Promise<Map<string, Map<string, string>>> {
   const result = new Map<string, Map<string, string>>();
 
@@ -209,7 +209,7 @@ export async function resolveFieldDescriptions(
             if (options.isStartup) {
               throw err;
             }
-            logger.error(
+            ctx.log.error(
               `Field description provider failed for tool "${tool.name}" field "${fieldName}": ${err instanceof Error ? err.message : String(err)}`,
             );
           }

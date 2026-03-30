@@ -1,4 +1,4 @@
-import type { Logger } from '@graphql-hive/gateway-runtime';
+import type { PluginContext } from './types.js';
 import { parse, type GraphQLSchema } from 'graphql';
 import type {
   MCPContentAnnotations,
@@ -113,9 +113,9 @@ export class ToolRegistry {
   private tools: Map<string, RegisteredTool> = new Map();
 
   constructor(
+    ctx: PluginContext,
     configs: ResolvedToolConfig[],
     schema: GraphQLSchema,
-    logger: Logger,
   ) {
     for (const config of configs) {
       const query = config.query;
@@ -189,7 +189,7 @@ export class ToolRegistry {
       try {
         outputSchema = selectionSetToOutputSchema(parse(query), schema);
       } catch (err) {
-        logger.error(
+        ctx.log.error(
           `Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}. Tool will be registered without output schema.`,
         );
       }

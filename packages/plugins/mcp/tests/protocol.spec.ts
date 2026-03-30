@@ -14,7 +14,7 @@ async function callMCP(
   opts: MCPHandlerOptions,
   body: JsonRpcRequest,
 ): Promise<any> {
-  const result = await handleMCPRequest(body, opts, logger);
+  const result = await handleMCPRequest({ log: logger }, body, opts);
   return result;
 }
 
@@ -26,6 +26,7 @@ describe('handleMCPRequest', () => {
   `);
 
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
@@ -33,7 +34,6 @@ describe('handleMCPRequest', () => {
       },
     ],
     schema,
-    logger,
   );
 
   const mockExecute = vi.fn().mockResolvedValue({ data: { hello: 'world' } });
@@ -200,13 +200,14 @@ describe('handleMCPRequest', () => {
       }
     `);
     const paginationRegistry = new ToolRegistry(
+      { log: logger },
       [
         { name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' },
         { name: 'tool_b', query: 'query($x: String!) { b(x: $x) }' },
         { name: 'tool_c', query: 'query($x: String!) { c(x: $x) }' },
       ],
       paginationSchema,
-      logger,
+      
     );
     const opts = {
       serverName: 'test',
@@ -245,9 +246,10 @@ describe('handleMCPRequest', () => {
       `type Query { a(x: String!): String }`,
     );
     const paginationRegistry = new ToolRegistry(
+      { log: logger },
       [{ name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' }],
       paginationSchema,
-      logger,
+      
     );
     const opts = {
       serverName: 'test',
@@ -330,6 +332,7 @@ describe('handleMCPRequest', () => {
       type Weather { temperature: Float! }
     `);
     const registryWithOutput = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'get_weather',
@@ -338,7 +341,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       schemaWithOutput,
-      logger,
     );
     const executeResult = { data: { getWeather: { temperature: 72 } } };
     const opts = {
@@ -364,6 +366,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const annotRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'say_hello',
@@ -377,7 +380,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       annotSchema,
-      logger,
     );
     const opts = {
       serverName: 'test',
@@ -416,6 +418,7 @@ describe('handleMCPRequest', () => {
       type SearchResult { items: [String!]! }
     `);
     const pathRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -424,7 +427,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       pathSchema,
-      logger,
     );
     const pathExecute = vi.fn().mockResolvedValue({
       search: { items: ['a', 'b', 'c'] },
@@ -468,6 +470,7 @@ describe('handleMCPRequest', () => {
       type Query { search(q: String!): String }
     `);
     const aliasRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -482,7 +485,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       aliasSchema,
-      logger,
     );
     const aliasExecute = vi.fn().mockResolvedValue({ search: 'results' });
     const opts = {
@@ -507,6 +509,7 @@ describe('handleMCPRequest', () => {
       type Query { search(q: String!, limit: Int): String }
     `);
     const mixedRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -522,7 +525,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       mixedSchema,
-      logger,
     );
     const mixedExecute = vi.fn().mockResolvedValue({ search: 'results' });
     const opts = {
@@ -604,6 +606,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'gated_tool',
@@ -622,7 +625,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -649,6 +651,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'passthrough_tool',
@@ -659,7 +662,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -691,6 +693,7 @@ describe('handleMCPRequest', () => {
       type Item { title: String! url: String! }
     `);
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -708,7 +711,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
@@ -739,6 +741,7 @@ describe('handleMCPRequest', () => {
       type Item { title: String! url: String! }
     `);
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search_mcp',
@@ -763,7 +766,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
@@ -797,6 +799,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'mcp_gate',
@@ -815,7 +818,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -842,6 +844,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'error_hook',
@@ -855,7 +858,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -883,6 +885,7 @@ describe('handleMCPRequest', () => {
       type Block { type: String! text: String }
     `);
     const cmsRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'get_page',
@@ -892,7 +895,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       cmsSchema,
-      logger,
     );
     const cmsExecute = vi.fn().mockResolvedValue({
       getPage: {
@@ -926,6 +928,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'empty_content',
@@ -936,7 +939,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -963,6 +965,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'bad_content_type',
@@ -975,7 +978,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1005,6 +1007,7 @@ describe('handleMCPRequest', () => {
       type SearchResult { items: [String!]! }
     `);
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search_extract',
@@ -1019,7 +1022,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({
       search: { items: ['hello', 'world'] },
@@ -1048,6 +1050,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'error_tool',
@@ -1060,7 +1063,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1094,6 +1096,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'post_error_tool',
@@ -1106,7 +1109,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1141,6 +1143,7 @@ describe('handleMCPRequest', () => {
     );
     const hookQuery = 'query($name: String!) { hello(name: $name) }';
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'context_tool',
@@ -1149,7 +1152,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1185,6 +1187,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'both_hooks_tool',
@@ -1196,7 +1199,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1224,6 +1226,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'both_hooks_passthrough',
@@ -1238,7 +1241,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1266,6 +1268,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'async_preprocess',
@@ -1278,7 +1281,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn();
     const opts = {
@@ -1306,6 +1308,7 @@ describe('handleMCPRequest', () => {
       `type Query { hello(name: String!): String }`,
     );
     const hookRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'async_post_error',
@@ -1317,7 +1320,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       hookSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
     const opts = {
@@ -1345,6 +1347,7 @@ describe('handleMCPRequest', () => {
       type Query { searchProducts(query: String!, category: String): String }
     `);
     const aliasRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'alias_hook_tool',
@@ -1361,7 +1364,6 @@ describe('handleMCPRequest', () => {
         },
       ],
       aliasSchema,
-      logger,
     );
     const hookExecute = vi.fn().mockResolvedValue({ searchProducts: 'result' });
     const opts = {
@@ -1428,6 +1430,7 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
   `);
 
   const outputRegistry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'get_forecast',
@@ -1436,7 +1439,6 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
       },
     ],
     outputSchema,
-    logger,
   );
 
   const outputOptions: MCPHandlerOptions = {
@@ -1529,6 +1531,7 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
       type Query { search(q: String!): SearchResult }
     `);
     const arrayRegistry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'do_search',
@@ -1537,7 +1540,6 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
         },
       ],
       arraySchema,
-      logger,
     );
     const opts: MCPHandlerOptions = {
       serverName: 'test',
@@ -1611,14 +1613,14 @@ describe('resources/list', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
         query: 'query($name: String!) { hello(name: $name) }',
       },
     ],
-    schema,
-    logger,
+      schema,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -1831,6 +1833,7 @@ describe('resources/read', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
@@ -1838,7 +1841,6 @@ describe('resources/read', () => {
       },
     ],
     schema,
-    logger,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -1942,6 +1944,7 @@ describe('resources/templates/list', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
@@ -1949,7 +1952,6 @@ describe('resources/templates/list', () => {
       },
     ],
     schema,
-    logger,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -2004,6 +2006,7 @@ describe('resources/read with templates', () => {
     type Query { hello(name: String!): String }
   `);
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
@@ -2011,7 +2014,6 @@ describe('resources/read with templates', () => {
       },
     ],
     schema,
-    logger,
   );
 
   it('falls back to template when static resource not found', async () => {
@@ -2178,6 +2180,7 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry: new ToolRegistry(
+        { log: logger },
         [
           {
             name: 'say_hello',
@@ -2185,7 +2188,6 @@ describe('resources/read with templates', () => {
           },
         ],
         buildSchema('type Query { hello(name: String!): String }'),
-        logger,
       ),
       execute: vi.fn(),
       resourceTemplates: [
@@ -2212,14 +2214,14 @@ describe('resources/read with templates', () => {
 describe('resources/templates/list description providers', () => {
   const schema = buildSchema('type Query { hello(name: String!): String }');
   const registry = new ToolRegistry(
+    { log: logger },
     [
       {
         name: 'say_hello',
         query: 'query($name: String!) { hello(name: $name) }',
       },
     ],
-    schema,
-    logger,
+        schema,
   );
   const baseOptions: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -2281,9 +2283,9 @@ describe('resources/templates/list description providers', () => {
 describe('JSON-RPC validation', () => {
   const schema = buildSchema(`type Query { hello: String }`);
   const registry = new ToolRegistry(
+    { log: logger },
     [{ name: 'hi', query: '{ hello }' }],
     schema,
-    logger,
   );
   const opts: MCPHandlerOptions = {
     serverName: 'test',
@@ -2294,9 +2296,9 @@ describe('JSON-RPC validation', () => {
 
   it('rejects request with missing jsonrpc field', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { id: 1, method: 'initialize' } as any,
       opts,
-      logger,
     );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('jsonrpc');
@@ -2304,18 +2306,18 @@ describe('JSON-RPC validation', () => {
 
   it('rejects request with wrong jsonrpc version', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { jsonrpc: '1.0' as any, id: 1, method: 'initialize' },
       opts,
-      logger,
     );
     expect(body!.error!.code).toBe(-32600);
   });
 
   it('rejects request with missing method', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { jsonrpc: '2.0', id: 1 } as any,
       opts,
-      logger,
     );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('method');
@@ -2323,9 +2325,9 @@ describe('JSON-RPC validation', () => {
 
   it('rejects non-notification request with missing id', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { jsonrpc: '2.0', method: 'tools/list' } as any,
       opts,
-      logger,
     );
     expect(body!.error!.code).toBe(-32600);
     expect(body!.error!.message).toContain('id');
@@ -2333,18 +2335,18 @@ describe('JSON-RPC validation', () => {
 
   it('allows notification without id', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { jsonrpc: '2.0', method: 'notifications/initialized' } as any,
       opts,
-      logger,
     );
     expect(body).toBeNull();
   });
 
   it('returns error for unknown method', async () => {
     const body = await handleMCPRequest(
+      { log: logger },
       { jsonrpc: '2.0', id: 1, method: 'unknown/method' },
       opts,
-      logger,
     );
     expect(body!.error!.code).toBe(-32601);
     expect(body!.error!.message).toContain('Method not found');

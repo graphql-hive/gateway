@@ -71,12 +71,12 @@ describe('ToolRegistry', () => {
   ];
 
   it('registers tools from config', () => {
-    const registry = new ToolRegistry(toolConfigs, schema, logger);
+    const registry = new ToolRegistry({ log: logger }, toolConfigs, schema);
     expect(registry.getToolNames()).toEqual(['get_weather']);
   });
 
   it('returns tool by name', () => {
-    const registry = new ToolRegistry(toolConfigs, schema, logger);
+    const registry = new ToolRegistry({ log: logger }, toolConfigs, schema);
     const tool = registry.getTool('get_weather');
     expect(tool).toBeDefined();
     expect(tool!.name).toBe('get_weather');
@@ -84,12 +84,12 @@ describe('ToolRegistry', () => {
   });
 
   it('returns undefined for unknown tool', () => {
-    const registry = new ToolRegistry(toolConfigs, schema, logger);
+    const registry = new ToolRegistry({ log: logger }, toolConfigs, schema);
     expect(registry.getTool('unknown')).toBeUndefined();
   });
 
   it('generates MCP tool definitions with input schema', () => {
-    const registry = new ToolRegistry(toolConfigs, schema, logger);
+    const registry = new ToolRegistry({ log: logger }, toolConfigs, schema);
     const mcpTools = registry.getMCPTools();
 
     expect(mcpTools).toHaveLength(1);
@@ -119,6 +119,7 @@ describe('ToolRegistry', () => {
 
   it('includes annotations, icons, and execution in MCP tool definitions', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'get_weather',
@@ -141,7 +142,6 @@ describe('ToolRegistry', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
 
@@ -160,7 +160,7 @@ describe('ToolRegistry', () => {
   });
 
   it('omits annotations, icons, and execution when not provided', () => {
-    const registry = new ToolRegistry(toolConfigs, schema, logger);
+    const registry = new ToolRegistry({ log: logger }, toolConfigs, schema);
     const tools = registry.getMCPTools();
 
     expect(tools[0]!.annotations).toBeUndefined();
@@ -183,6 +183,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('includes title in MCP tool definition when provided', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -192,7 +193,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.title).toBe('Product Search');
@@ -200,6 +200,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('omits title when not provided', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -207,7 +208,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.title).toBeUndefined();
@@ -215,6 +215,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('applies field-level input schema overrides', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -230,7 +231,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     // Override should win over schema description
@@ -245,6 +245,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('renames input properties when alias is set', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -260,7 +261,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     // Alias replaces original name
@@ -279,6 +279,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('stores argumentAliases on registered tool', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -293,7 +294,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tool = registry.getTool('search');
     expect(tool!.argumentAliases).toEqual({ searchQuery: 'query' });
@@ -301,6 +301,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('config description wins over schema description', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -309,7 +310,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('Custom description');
@@ -322,6 +322,7 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -330,7 +331,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       noDescSchema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('Custom description');
@@ -338,6 +338,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('directive description wins over schema description', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -346,7 +347,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('From directive');
@@ -354,6 +354,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('falls back to schema description when no config description', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -361,7 +362,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('Search products by keyword');
@@ -371,6 +371,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'search',
@@ -386,7 +387,6 @@ describe('ToolRegistry with overrides', () => {
             },
           ],
           schema,
-          logger,
         ),
     ).toThrow(
       'Alias "category" for field "query" in tool "search" collides with existing field "category"',
@@ -397,6 +397,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'search',
@@ -411,7 +412,6 @@ describe('ToolRegistry with overrides', () => {
             },
           ],
           schema,
-          logger,
         ),
     ).toThrow('nonExistent');
   });
@@ -420,6 +420,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'search',
@@ -434,7 +435,6 @@ describe('ToolRegistry with overrides', () => {
             },
           ],
           schema,
-          logger,
         ),
     ).toThrow('must be a non-empty string');
   });
@@ -448,6 +448,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'search',
@@ -463,14 +464,14 @@ describe('ToolRegistry with overrides', () => {
               },
             },
           ],
-          multiFieldSchema,
-          logger,
+      multiFieldSchema,
         ),
     ).toThrow('Alias "term"');
   });
 
   it('does not leak descriptionProvider into inputSchema', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -487,8 +488,7 @@ describe('ToolRegistry with overrides', () => {
           },
         },
       ],
-      schema,
-      logger,
+          schema,
     );
     const tools = registry.getMCPTools();
     const prop = tools[0]!.inputSchema.properties!['query']!;
@@ -511,6 +511,7 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -520,7 +521,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       nestedSchema,
-      logger,
     );
     const tools = registry.getMCPTools();
     // Output schema should be narrowed to the items array schema
@@ -546,6 +546,7 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'weather',
@@ -555,7 +556,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schemaWithOutput,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.outputSchema).toEqual({
@@ -568,6 +568,7 @@ describe('ToolRegistry with overrides', () => {
 
   it('stores outputPath on registered tool', () => {
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'search',
@@ -576,7 +577,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schema,
-      logger,
     );
     const tool = registry.getTool('search');
     expect(tool!.outputPath).toBe('searchProducts');
@@ -586,6 +586,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'bad_hooks',
@@ -595,7 +596,6 @@ describe('ToolRegistry with overrides', () => {
             },
           ],
           schema,
-          logger,
         ),
     ).toThrow('hooks.preprocess must be a function');
   });
@@ -604,6 +604,7 @@ describe('ToolRegistry with overrides', () => {
     expect(
       () =>
         new ToolRegistry(
+          { log: logger },
           [
             {
               name: 'bad_hooks',
@@ -613,7 +614,6 @@ describe('ToolRegistry with overrides', () => {
             },
           ],
           schema,
-          logger,
         ),
     ).toThrow('hooks.postprocess must be a function');
   });
@@ -624,6 +624,7 @@ describe('ToolRegistry with overrides', () => {
       type Weather { temperature: Float! }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'with_postprocess',
@@ -644,7 +645,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       weatherSchema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(
@@ -664,6 +664,7 @@ describe('ToolRegistry with overrides', () => {
       type Weather { temperature: Float! }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'suppressed',
@@ -678,7 +679,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       weatherSchema,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(
@@ -693,6 +693,7 @@ describe('ToolRegistry with overrides', () => {
       type Weather { temperature: Float! }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'weather',
@@ -701,7 +702,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       weatherSchema,
-      logger,
     );
     expect(registry.getMCPTools()[0]!.outputSchema).toBeDefined();
     expect(
@@ -719,6 +719,7 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
+      { log: logger },
       [
         {
           name: 'weather',
@@ -727,7 +728,6 @@ describe('ToolRegistry with overrides', () => {
         },
       ],
       schemaWithOutput,
-      logger,
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.outputSchema).toEqual({

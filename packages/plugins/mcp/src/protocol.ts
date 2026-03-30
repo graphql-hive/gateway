@@ -1,4 +1,3 @@
-import type { Logger } from '@graphql-hive/gateway-runtime';
 import type { DescriptionProviderContext } from './description-provider.js';
 import type {
   MCPIcon,
@@ -12,6 +11,7 @@ import {
   type ToolRegistry,
 } from './registry.js';
 import type { JsonSchema } from './schema-converter.js';
+import type { PluginContext } from './types.js';
 
 export function dealiasArgs(
   args: Record<string, unknown>,
@@ -25,7 +25,7 @@ export function dealiasArgs(
   return dealiased;
 }
 
-export async function handleToolCall(options: {
+export async function handleToolCall(ctx: PluginContext, options: {
   id: number | string;
   toolName: string;
   arguments: Record<string, unknown>;
@@ -35,9 +35,7 @@ export async function handleToolCall(options: {
     args: Record<string, unknown>,
   ) => Promise<unknown>;
   headers: Record<string, string>;
-  logger: Logger;
 }): Promise<JsonRpcResponse> {
-  const { logger } = options;
   const tool = options.registry.getTool(options.toolName);
 
   if (!tool) {
@@ -78,7 +76,7 @@ export async function handleToolCall(options: {
       if (tool.outputPath) {
         const extracted = getByPath(result, tool.outputPath);
         if (extracted === undefined && result !== undefined) {
-          logger.error(
+          ctx.log.error(
             `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
               `Check your output.path configuration.`,
           );
@@ -105,17 +103,17 @@ export async function handleToolCall(options: {
       jsonrpc: '2.0',
       id: options.id,
       result: formatToolCallResult(
+        ctx,
         result,
         tool,
         {
           hookProducedResult,
           hasHooks,
         },
-        logger,
       ),
     };
   } catch (error) {
-    logger.error(
+    ctx.log.error(
       `tools/call failed for tool "${options.toolName}":`,
       error instanceof Error ? error.message : error,
     );
@@ -137,20 +135,21 @@ export async function handleToolCall(options: {
   }
 }
 
-export async function processExecutionResult(options: {
+export async function processExecutionResult(
+  ctx: PluginContext,
+  options: {
   id: number | string;
   toolName: string;
   args: Record<string, unknown>;
   tool: RegisteredTool;
   data: unknown;
   headers: Record<string, string>;
-  logger: Logger;
 }): Promise<{
   jsonrpc: '2.0';
   id: number | string;
   result: Record<string, unknown>;
 }> {
-  const { tool, logger } = options;
+  const { tool } = options;
 
   try {
     let data = options.data;
@@ -159,7 +158,7 @@ export async function processExecutionResult(options: {
     if (tool.outputPath) {
       const extracted = getByPath(data, tool.outputPath);
       if (extracted === undefined && data !== undefined) {
-        logger.error(
+        ctx.log.error(
           `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
             `Check your output.path configuration.`,
         );
@@ -190,17 +189,17 @@ export async function processExecutionResult(options: {
       jsonrpc: '2.0',
       id: options.id,
       result: formatToolCallResult(
+        ctx,
         data,
         tool,
         {
           hookProducedResult,
           hasHooks,
         },
-        logger,
       ),
     };
   } catch (error) {
-    logger.error(
+    ctx.log.error(
       `tools/call failed for tool "${options.toolName}":`,
       error instanceof Error ? error.message : error,
     );
@@ -223,10 +222,10 @@ export async function processExecutionResult(options: {
 }
 
 export function formatToolCallResult(
+  ctx: PluginContext,
   result: unknown,
   tool: RegisteredTool,
   opts: { hookProducedResult: boolean; hasHooks: boolean },
-  logger: Logger,
 ): Record<string, unknown> {
   const isMCPResult = opts.hookProducedResult && looksLikeMCPResult(result);
   if (isMCPResult) {
@@ -238,7 +237,7 @@ export function formatToolCallResult(
     textValue = JSON.stringify(result ?? null, null, 2);
   } catch (err) {
     serializationFailed = true;
-    logger.error(
+    ctx.log.error(
       `Failed to serialize tool result for "${tool.name}":`,
       err instanceof Error ? err.message : String(err),
     );
@@ -363,9 +362,9 @@ export type JsonRpcResponse =
     };
 
 export async function handleMCPRequest(
+  ctx: PluginContext,
   body: JsonRpcRequest,
   options: MCPHandlerOptions,
-  logger: Logger,
   providerContext?: DescriptionProviderContext,
 ): Promise<JsonRpcResponse | null> {
   const {
@@ -450,7 +449,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          logger.error(
+          ctx.log.error(
             `Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -468,7 +467,7 @@ export async function handleMCPRequest(
                   tool.inputSchema.properties[fieldName].description =
                     description;
                 } else {
-                  logger.warn(
+                  ctx.log.warn(
                     `Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
                       `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
                   );
@@ -477,7 +476,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          logger.error(
+          ctx.log.error(
             `Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -498,7 +497,7 @@ export async function handleMCPRequest(
                     description,
                   )
                 ) {
-                  logger.warn(
+                  ctx.log.warn(
                     `Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
                   );
                 }
@@ -506,7 +505,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          logger.error(
+          ctx.log.error(
             `Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -595,7 +594,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          logger.error(
+          ctx.log.error(
             `Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -683,7 +682,7 @@ export async function handleMCPRequest(
             }
           }
         } catch (err) {
-          logger.error(
+          ctx.log.error(
             `Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -753,7 +752,7 @@ export async function handleMCPRequest(
           try {
             handlerResult = await tmpl.handler(extractedParams);
           } catch (err) {
-            logger.error(
+            ctx.log.error(
               `Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
               err instanceof Error ? err.message : err,
             );
@@ -854,14 +853,13 @@ export async function handleMCPRequest(
           },
         };
       }
-      return handleToolCall({
+      return handleToolCall(ctx, {
         id,
         toolName: callParams.name,
         arguments: (callParams.arguments as Record<string, unknown>) || {},
         registry,
         execute: options.execute,
         headers: options.requestContext?.headers ?? {},
-        logger,
       });
     }
 

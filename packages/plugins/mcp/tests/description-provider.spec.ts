@@ -53,10 +53,10 @@ describe('resolveDescriptions', () => {
     ];
 
     const resolved = await resolveDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       {},
-      logger,
     );
     expect(resolved[0]!.providerDescription).toBe(
       'Description for weather_desc',
@@ -73,10 +73,10 @@ describe('resolveDescriptions', () => {
     ];
 
     const resolved = await resolveDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       {},
-      logger,
     );
     expect(resolved[0]!.providerDescription).toBeUndefined();
   });
@@ -100,7 +100,7 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions(tools, registry, { isStartup: true }, logger),
+      resolveDescriptions({ log: logger }, tools, registry, { isStartup: true }),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -124,12 +124,12 @@ describe('resolveDescriptions', () => {
     ];
 
     const resolved = await resolveDescriptions(
+      { log: logger },
       tools,
       registry,
       {
         isStartup: false,
       },
-      logger,
     );
     expect(resolved[0]!.providerDescription).toBeUndefined();
     expect(errorSpy).toHaveBeenCalledWith(
@@ -150,7 +150,7 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions(tools, providerRegistry, { isStartup: true }, logger),
+      resolveDescriptions({ log: logger }, tools, providerRegistry, { isStartup: true }),
     ).rejects.toThrow('Unknown description provider type: "unknown"');
   });
 
@@ -181,12 +181,12 @@ describe('resolveDescriptions', () => {
     ];
 
     await resolveDescriptions(
+      { log: logger },
       tools,
       registry,
       {
         context: { label: 'staging' },
       },
-      logger,
     );
     expect(contextCapture[0]).toEqual({ label: 'staging' });
   });
@@ -217,7 +217,7 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await resolveDescriptions(tools, registry, {}, logger);
+    await resolveDescriptions({ log: logger }, tools, registry, {});
     expect(contextCapture[0]).toBeUndefined();
   });
 });
@@ -251,10 +251,10 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     const result = await resolveFieldDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       {},
-      logger,
     );
     expect(result.get('search')?.get('q')).toBe('Field desc for search_query');
   });
@@ -275,10 +275,10 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     const result = await resolveFieldDescriptions(
+      { log: logger },
       tools,
       providerRegistry,
       {},
-      logger,
     );
     expect(result.size).toBe(0);
   });
@@ -308,7 +308,7 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await expect(
-      resolveFieldDescriptions(tools, registry, { isStartup: true }, logger),
+      resolveFieldDescriptions({ log: logger }, tools, registry, { isStartup: true }),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -338,12 +338,12 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     const result = await resolveFieldDescriptions(
+      { log: logger },
       tools,
       registry,
       {
         isStartup: false,
       },
-      logger,
     );
     expect(result.size).toBe(0);
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('search'));
@@ -369,7 +369,7 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await expect(
-      resolveFieldDescriptions(tools, providerRegistry, {}, logger),
+      resolveFieldDescriptions({ log: logger }, tools, providerRegistry, {}),
     ).rejects.toThrow('Unknown field description provider type: "unknown"');
   });
 
@@ -406,12 +406,12 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await resolveFieldDescriptions(
+      { log: logger },
       tools,
       registry,
       {
         context: { label: 'preproduction' },
       },
-      logger,
     );
     expect(contextCapture[0]).toEqual({ label: 'preproduction' });
   });
