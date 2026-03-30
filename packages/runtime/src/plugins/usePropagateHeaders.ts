@@ -81,7 +81,15 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
     onFetch({ executionRequest, options }) {
       if (executionRequest?.extensions?.['headers']) {
         options.headers ||= {};
-        Object.assign(options.headers, executionRequest.extensions['headers']);
+        const extensionHeaders = executionRequest.extensions['headers'] as Record<string, string | null | undefined>;
+        for (const [key, value] of Object.entries(extensionHeaders)) {
+          if (value == null) {
+            continue;
+          }
+          if (!Object.prototype.hasOwnProperty.call(options.headers as Record<string, unknown>, key)) {
+            (options.headers as Record<string, string>)[key] = value;
+          }
+        }
       }
       if (opts.fromSubgraphsToClient) {
         return function onFetchDone({ response }) {
