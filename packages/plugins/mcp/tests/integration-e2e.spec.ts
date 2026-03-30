@@ -1605,9 +1605,7 @@ describe('MCP E2E', () => {
 
       const res = await descRequest('tools/list');
       const body = await res.json();
-      const tool = body.result.tools.find(
-        (t: any) => t.name === 'get_weather',
-      );
+      const tool = body.result.tools.find((t: any) => t.name === 'get_weather');
 
       expect(tool).toBeDefined();
       // Variable @mcpDescription should resolve to provider description
@@ -1625,16 +1623,14 @@ describe('MCP E2E', () => {
 
       const res = await descRequest('tools/list');
       const body = await res.json();
-      const tool = body.result.tools.find(
-        (t: any) => t.name === 'get_weather',
-      );
+      const tool = body.result.tools.find((t: any) => t.name === 'get_weather');
 
       expect(tool).toBeDefined();
       expect(tool.outputSchema).toBeDefined();
       // Selection @mcpDescription should resolve conditions field description
-      expect(tool.outputSchema.properties.weather.properties.conditions.description).toBe(
-        'Desc: weather.conditions',
-      );
+      expect(
+        tool.outputSchema.properties.weather.properties.conditions.description,
+      ).toBe('Desc: weather.conditions');
     });
 
     it('@mcpDescription directives are stripped from the executed query', async () => {
