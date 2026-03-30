@@ -149,7 +149,7 @@ export async function getBuiltinPluginsFromConfig(
 
   if (config.mcp) {
     const { useMCP } = await import('@graphql-hive/plugin-mcp');
-    plugins.push(useMCP(config.mcp));
+    plugins.push(useMCP(ctx, config.mcp));
   }
 
   if (config.awsSigv4) {
