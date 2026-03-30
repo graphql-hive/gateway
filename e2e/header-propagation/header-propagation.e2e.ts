@@ -15,7 +15,7 @@ const combinations = [
 ] as const;
 
 for (const { subgraphName, composeWith } of combinations) {
-  describe(`Header propgation with ${subgraphName}`, () => {
+  describe(`Header propagation with ${subgraphName}`, () => {
     it('propagates headers to subgraphs', async () => {
       const gw = await gateway({
         supergraph: {
