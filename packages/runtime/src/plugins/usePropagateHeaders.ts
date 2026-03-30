@@ -81,7 +81,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
     onFetch({ executionRequest, options }) {
       const extensionHeaders = executionRequest?.extensions?.['headers'];
       if (extensionHeaders != null) {
-        for (const headerName of extensionHeaders) {
+        for (const headerName in extensionHeaders) {
           if (options.headers?.[headerName] != null) {
             continue;
           }
