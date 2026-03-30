@@ -29,6 +29,11 @@ describe('MCP E2E', () => {
           Search for cities by name
           """
           cities(query: String!): [City!]!
+
+          """
+          Get weather forecast for upcoming days
+          """
+          forecast(location: String!, days: Int = 3): [ForecastDay!]!
         }
 
         type Weather {
@@ -42,6 +47,13 @@ describe('MCP E2E', () => {
           country: String
           population: Int
         }
+
+        type ForecastDay {
+          date: String
+          high: Float
+          low: Float
+          conditions: String
+        }
       `,
       resolvers: {
         Query: {
@@ -53,6 +65,13 @@ describe('MCP E2E', () => {
           cities: (_root, { query }) => [
             { name: `${query} City`, country: 'US', population: 100000 },
           ],
+          forecast: (_root, { location, days = 3 }) =>
+            Array.from({ length: days }, (_, i) => ({
+              date: `2026-01-0${i + 1}`,
+              high: location === 'London' ? 10 + i : 25 + i,
+              low: location === 'London' ? 5 + i : 18 + i,
+              conditions: i % 2 === 0 ? 'Sunny' : 'Cloudy',
+            })),
         },
       },
     }),
@@ -1406,6 +1425,232 @@ describe('MCP E2E', () => {
       });
       const body = await res.json();
       expect(body.error.code).toBe(-32002);
+    });
+  });
+
+  describe('@mcpDescription directive via operationsPath', () => {
+    const fileMockProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_name, config) => {
+        return `Resolved: ${config['prompt']}`;
+      }),
+    };
+
+    const fileGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          ...ctx,
+          name: 'file-desc-gateway',
+          operationsPath: require('node:path').resolve(
+            __dirname,
+            '../../../../examples/mcp-example/operations/weather_directive.graphql',
+          ),
+          tools: [],
+          providers: { langfuse: fileMockProvider as any },
+        }),
+      ],
+    });
+
+    afterAll(() => fileGateway[Symbol.asyncDispose]?.());
+
+    function fileRequest(
+      method: string,
+      params: unknown = {},
+      id: number | string = 1,
+    ) {
+      return fileGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+      });
+    }
+
+    it('registers @mcpTool operations from file and resolves @mcpDescription', async () => {
+      await fileGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await fileRequest('tools/list');
+      const body = await res.json();
+      const tools = body.result.tools;
+      const toolNames = tools.map((t: any) => t.name).sort();
+
+      // Should register all @mcpTool operations from the file
+      expect(toolNames).toContain('quick_weather');
+      expect(toolNames).toContain('weather_field_provider');
+    });
+
+    it('@mcpDescription on variable resolves description from provider (langfuse mock)', async () => {
+      await fileGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await fileRequest('tools/list');
+      const body = await res.json();
+      const tool = body.result.tools.find(
+        (t: any) => t.name === 'weather_field_provider',
+      );
+
+      expect(tool).toBeDefined();
+      // $location @mcpDescription(provider: "langfuse:weather.location:3")
+      expect(tool.inputSchema.properties.location.description).toBe(
+        'Resolved: weather.location',
+      );
+    });
+
+    it('@mcpDescription on selection field resolves description from provider', async () => {
+      await fileGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await fileRequest('tools/list');
+      const body = await res.json();
+      const tool = body.result.tools.find(
+        (t: any) => t.name === 'weather_field_provider',
+      );
+
+      expect(tool).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      // conditions @mcpDescription(provider: "langfuse:forecast.conditions")
+      expect(
+        tool.outputSchema.properties.forecast.items.properties.conditions
+          .description,
+      ).toBe('Resolved: forecast.conditions');
+    });
+
+    it('tools/call works with @mcpDescription directives stripped', async () => {
+      await fileGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await fileRequest('tools/call', {
+        name: 'weather_field_provider',
+        arguments: { location: 'London', days: 3 },
+      });
+      const body = await res.json();
+      expect(body.result.isError).toBeFalsy();
+      // Should return forecast data
+      expect(body.result.content[0].text).toBeDefined();
+    });
+  });
+
+  describe('@mcpDescription directive', () => {
+    const descMockProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_name, config) => {
+        return `Desc: ${config['prompt']}`;
+      }),
+    };
+
+    const descGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          ...ctx,
+          name: 'desc-directive-gateway',
+          operationsStr: `
+            query GetWeather(
+              $location: String! @mcpDescription(provider: "mock:weather.location")
+            ) @mcpTool(name: "get_weather", description: "Get weather") {
+              weather(location: $location) {
+                temperature
+                conditions @mcpDescription(provider: "mock:weather.conditions")
+                humidity
+              }
+            }
+          `,
+          tools: [],
+          providers: { mock: descMockProvider },
+        }),
+      ],
+    });
+
+    afterAll(() => descGateway[Symbol.asyncDispose]?.());
+
+    function descRequest(
+      method: string,
+      params: unknown = {},
+      id: number | string = 1,
+    ) {
+      return descGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+      });
+    }
+
+    it('@mcpDescription on variable populates input field description via provider', async () => {
+      await descGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await descRequest('tools/list');
+      const body = await res.json();
+      const tool = body.result.tools.find(
+        (t: any) => t.name === 'get_weather',
+      );
+
+      expect(tool).toBeDefined();
+      // Variable @mcpDescription should resolve to provider description
+      expect(tool.inputSchema.properties.location.description).toBe(
+        'Desc: weather.location',
+      );
+    });
+
+    it('@mcpDescription on selection field populates output field description via provider', async () => {
+      await descGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await descRequest('tools/list');
+      const body = await res.json();
+      const tool = body.result.tools.find(
+        (t: any) => t.name === 'get_weather',
+      );
+
+      expect(tool).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      // Selection @mcpDescription should resolve conditions field description
+      expect(tool.outputSchema.properties.weather.properties.conditions.description).toBe(
+        'Desc: weather.conditions',
+      );
+    });
+
+    it('@mcpDescription directives are stripped from the executed query', async () => {
+      await descGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await descRequest('tools/call', {
+        name: 'get_weather',
+        arguments: { location: 'London' },
+      });
+      const body = await res.json();
+      expect(body.result.isError).toBeFalsy();
+      expect(body.result.content[0].text).toContain('12.5'); // London temperature
     });
   });
 });
