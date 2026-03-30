@@ -2,4 +2,4 @@
 '@graphql-hive/gateway-runtime': patch
 ---
 
-Fix header propagation for non GraphQL sources
+Fix header propagation for non-GraphQL sources
