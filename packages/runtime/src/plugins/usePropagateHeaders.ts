@@ -78,7 +78,21 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
         }
       }
     },
-    onFetch({ executionRequest }) {
+    onFetch({ executionRequest, options }) {
+      const extensionHeaders = executionRequest?.extensions?.['headers'];
+      if (extensionHeaders != null) {
+        for (const headerName in extensionHeaders) {
+          if (options.headers?.[headerName] != null) {
+            continue;
+          }
+          const headerValue = extensionHeaders[headerName];
+          if (headerValue == null) {
+            continue;
+          }
+          options.headers ||= {};
+          options.headers[headerName] = headerValue;
+        }
+      }
       if (opts.fromSubgraphsToClient) {
         return function onFetchDone({ response }) {
           const request = executionRequest?.context?.request;

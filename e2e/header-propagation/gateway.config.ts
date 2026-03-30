@@ -3,7 +3,7 @@ import { defineConfig } from '@graphql-hive/gateway';
 export const gatewayConfig = defineConfig({
   propagateHeaders: {
     fromClientToSubgraphs({ request, subgraphName }) {
-      if (subgraphName !== 'upstream') {
+      if (subgraphName !== 'upstream' && subgraphName !== 'rest') {
         return;
       }
 
