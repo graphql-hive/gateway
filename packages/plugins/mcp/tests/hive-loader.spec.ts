@@ -1,8 +1,13 @@
 import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createHiveLoader, type HiveLoaderConfig } from '../src/hive-loader.js';
 
 const logger = createLoggerFromLogging(false);
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 function testCtx(fetchFn?: typeof fetch) {
   return { log: logger, fetch: fetchFn ?? globalThis.fetch };
@@ -84,8 +89,8 @@ describe('createHiveLoader', () => {
         operationName: 'Bar',
       });
 
-      expect(fetchFn).toHaveBeenCalledOnce();
-      const [url, opts] = vi.mocked(fetchFn).mock.calls[0]!;
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      const [url, opts] = (fetchFn as any).mock.calls[0]!;
       expect(url).toBe('https://app.graphql-hive.com/graphql');
       expect((opts as RequestInit).headers).toEqual(
         expect.objectContaining({
@@ -94,7 +99,7 @@ describe('createHiveLoader', () => {
       );
 
       const body = JSON.parse(
-        vi.mocked(fetchFn).mock.calls[0]![1]!.body as string,
+        (fetchFn as any).mock.calls[0]![1]!.body as string,
       );
       expect(body.variables.reference).toEqual({
         bySelector: {
@@ -311,7 +316,7 @@ describe('createHiveLoader', () => {
       expect(fetchFn).toHaveBeenCalledTimes(3);
 
       // Verify the third call uses correct cursor
-      const thirdCall = vi.mocked(fetchFn).mock.calls[2]!;
+      const thirdCall = (fetchFn as any).mock.calls[2]!;
       const thirdBody = JSON.parse(thirdCall[1]!.body as string);
       expect(thirdBody.variables.appVersion).toBe('3.0.0');
       expect(thirdBody.variables.after).toBe('cursor-page1');
@@ -398,7 +403,7 @@ describe('createHiveLoader', () => {
       expect(docs[0]!.hash).toBe('v3doc');
 
       // Verify the docs query used version 3.0.0
-      const docsCall = vi.mocked(fetchFn).mock.calls[1]!;
+      const docsCall = (fetchFn as any).mock.calls[1]!;
       const docsBody = JSON.parse(docsCall[1]!.body as string);
       expect(docsBody.variables.appVersion).toBe('3.0.0');
     });
@@ -444,7 +449,7 @@ describe('createHiveLoader', () => {
 
       // Should not throw, falls back to first edge
       expect(docs).toHaveLength(1);
-      const docsCall = vi.mocked(fetchFn).mock.calls[1]!;
+      const docsCall = (fetchFn as any).mock.calls[1]!;
       const docsBody = JSON.parse(docsCall[1]!.body as string);
       expect(docsBody.variables.appVersion).toBe('1.0.0');
     });
@@ -729,6 +734,15 @@ describe('createHiveLoader', () => {
   });
 
   describe('polling', () => {
+    async function advanceTimers(ms: number) {
+      if (vi.advanceTimersByTimeAsync) {
+        await vi.advanceTimersByTimeAsync(ms);
+      } else {
+        vi.advanceTimersByTime(ms);
+        for (let i = 0; i < 10; i++) await Promise.resolve();
+      }
+    }
+
     const initialDocs = [
       { hash: 'a', body: 'query A { a }', operationName: 'A' as string | null },
     ];
@@ -810,12 +824,12 @@ describe('createHiveLoader', () => {
       loader.startPolling(onChange, initialDocs);
 
       // First poll — no change
-      await vi.advanceTimersByTimeAsync(1000);
+      await advanceTimers(1000);
       expect(onChange).not.toHaveBeenCalled();
 
       // Second poll — docs changed
-      await vi.advanceTimersByTimeAsync(1000);
-      expect(onChange).toHaveBeenCalledOnce();
+      await advanceTimers(1000);
+      expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange.mock.calls[0]![0]).toHaveLength(2);
 
       loader.stopPolling();
@@ -861,7 +875,7 @@ describe('createHiveLoader', () => {
 
       vi.useFakeTimers();
       loader.startPolling(onChange, initialDocs);
-      await vi.advanceTimersByTimeAsync(3000); // 3 poll intervals
+      await advanceTimers(3000); // 3 poll intervals
 
       expect(onChange).not.toHaveBeenCalled();
 
@@ -897,14 +911,14 @@ describe('createHiveLoader', () => {
 
       vi.useFakeTimers();
       loader.startPolling(vi.fn(), []);
-      await vi.advanceTimersByTimeAsync(1000);
-      const callsBeforeStop = vi.mocked(fetchFn).mock.calls.length;
+      await advanceTimers(1000);
+      const callsBeforeStop = (fetchFn as any).mock.calls.length;
 
       loader.stopPolling();
-      await vi.advanceTimersByTimeAsync(3000);
+      await advanceTimers(3000);
 
       // No new calls after stopping
-      expect(vi.mocked(fetchFn).mock.calls.length).toBe(callsBeforeStop);
+      expect((fetchFn as any).mock.calls.length).toBe(callsBeforeStop);
       vi.useRealTimers();
     });
 
@@ -928,13 +942,13 @@ describe('createHiveLoader', () => {
 
       vi.useFakeTimers();
       loader.startPolling(onChange, initialDocs);
-      await vi.advanceTimersByTimeAsync(1000);
+      await advanceTimers(1000);
 
       expect(onChange).not.toHaveBeenCalled();
-      expect(mockLogger.error).toHaveBeenCalledOnce();
+      expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
       // Polling continues after error — second tick fires another attempt
-      await vi.advanceTimersByTimeAsync(1000);
+      await advanceTimers(1000);
       expect(fetchFn).toHaveBeenCalledTimes(2);
       expect(mockLogger.error).toHaveBeenCalledTimes(2);
 
@@ -1032,14 +1046,14 @@ describe('createHiveLoader', () => {
       loader.startPolling(onChange, initialDocs);
 
       // First poll: onChange throws
-      await vi.advanceTimersByTimeAsync(1000);
-      expect(onChange).toHaveBeenCalledOnce();
+      await advanceTimers(1000);
+      expect(onChange).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('onChange handler failed'),
       );
 
       // Second poll: same docs, onChange retried and succeeds
-      await vi.advanceTimersByTimeAsync(1000);
+      await advanceTimers(1000);
       expect(onChange).toHaveBeenCalledTimes(2);
 
       loader.stopPolling();
