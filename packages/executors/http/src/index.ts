@@ -365,7 +365,10 @@ export function buildHTTPExecutor(
       context?: any,
       info?: GraphQLResolveInfo,
     ): MaybePromise<ExecutionResult> {
-      if (options?.deduplicateInflightRequests === false) {
+      if (
+        options?.deduplicateInflightRequests === false ||
+        operationType !== 'query'
+      ) {
         return runInflightRequest();
       }
       function runInflightRequest() {
