@@ -108,7 +108,10 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_weather');
     expect(tools[0]!.query).toContain('GetWeather');
@@ -203,7 +206,10 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
     expect(tools).toHaveLength(1);
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
@@ -217,7 +223,10 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
     expect(tools[0]!.tool?.descriptionProvider).toEqual({
       type: 'langfuse',
       prompt: 'weather_prompt',
@@ -353,7 +362,10 @@ describe('resolveToolConfigs', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
     expect(tools).toHaveLength(0);
   });
 });
@@ -412,34 +424,27 @@ describe('resolveResources', () => {
 
   it('throws if both text and file are provided', () => {
     expect(() =>
-      resolveResources(
-        { log: createLoggerFromLogging(false) },
-        [
-          // Cast to simulate invalid JSON/YAML config that bypasses TS discriminated union
-          { name: 'r', uri: 'test://r', text: 'hi', file: './foo.md' } as any,
-        ],
-      ),
+      resolveResources({ log: createLoggerFromLogging(false) }, [
+        // Cast to simulate invalid JSON/YAML config that bypasses TS discriminated union
+        { name: 'r', uri: 'test://r', text: 'hi', file: './foo.md' } as any,
+      ]),
     ).toThrow('specify exactly one of');
   });
 
   it('throws if no content source is provided', () => {
     expect(() =>
-      resolveResources(
-        { log: createLoggerFromLogging(false) },
-        [{ name: 'r', uri: 'test://r' } as any],
-      ),
+      resolveResources({ log: createLoggerFromLogging(false) }, [
+        { name: 'r', uri: 'test://r' } as any,
+      ]),
     ).toThrow('must specify either');
   });
 
   it('throws on duplicate URIs', () => {
     expect(() =>
-      resolveResources(
-        { log: createLoggerFromLogging(false) },
-        [
-          { name: 'a', uri: 'test://dup', text: 'a' },
-          { name: 'b', uri: 'test://dup', text: 'b' },
-        ],
-      ),
+      resolveResources({ log: createLoggerFromLogging(false) }, [
+        { name: 'a', uri: 'test://dup', text: 'a' },
+        { name: 'b', uri: 'test://dup', text: 'b' },
+      ]),
     ).toThrow('Duplicate resource URI');
   });
 
@@ -459,16 +464,13 @@ describe('resolveResources', () => {
 
   it('throws with context when file does not exist', () => {
     expect(() =>
-      resolveResources(
-        { log: createLoggerFromLogging(false) },
-        [
-          {
-            name: 'missing',
-            uri: 'docs://missing',
-            file: '/nonexistent/path.md',
-          },
-        ],
-      ),
+      resolveResources({ log: createLoggerFromLogging(false) }, [
+        {
+          name: 'missing',
+          uri: 'docs://missing',
+          file: '/nonexistent/path.md',
+        },
+      ]),
     ).toThrow(/Resource "missing" .* cannot read file/);
   });
 
@@ -558,10 +560,9 @@ describe('resolveResources', () => {
 
   it('throws if multiple content sources are provided', () => {
     expect(() =>
-      resolveResources(
-        { log: createLoggerFromLogging(false) },
-        [{ name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any],
-      ),
+      resolveResources({ log: createLoggerFromLogging(false) }, [
+        { name: 'r', uri: 'test://r', text: 'hi', blob: 'aGk=' } as any,
+      ]),
     ).toThrow('specify exactly one of');
   });
 });
@@ -640,7 +641,10 @@ describe('resolveResourceTemplates', () => {
   });
 });
 
-const testCtx = { log: createLoggerFromLogging(false), fetch: globalThis.fetch };
+const testCtx = {
+  log: createLoggerFromLogging(false),
+  fetch: globalThis.fetch,
+};
 
 describe('useMCP startup validation', () => {
   it('throws when field-level descriptionProvider references unknown provider', () => {
@@ -1081,7 +1085,10 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ log: logger }, { tools: [], operationsSource: source }),
+      resolveToolConfigs(
+        { log: logger },
+        { tools: [], operationsSource: source },
+      ),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
@@ -1094,7 +1101,10 @@ describe('@mcpDescription directive on selection fields', () => {
       }
     `;
     expect(() =>
-      resolveToolConfigs({ log: logger }, { tools: [], operationsSource: source }),
+      resolveToolConfigs(
+        { log: logger },
+        { tools: [], operationsSource: source },
+      ),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 

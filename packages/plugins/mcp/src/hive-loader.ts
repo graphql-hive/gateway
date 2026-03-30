@@ -269,7 +269,9 @@ export function createHiveLoader(
   config: HiveLoaderConfig,
 ): HiveLoader {
   if (!ctx.fetch) {
-    throw new Error('createHiveLoader requires a fetch function on the context');
+    throw new Error(
+      'createHiveLoader requires a fetch function on the context',
+    );
   }
   const fetchFn = ctx.fetch as typeof fetch;
   if (!config.token?.trim()) {
@@ -313,8 +315,9 @@ export function createHiveLoader(
   }
 
   async function fetchDocuments(): Promise<HiveDocument[]> {
-    const version = config.appVersion
-      ?? await resolveLatestVersion(config, targetSelector, fetchFn);
+    const version =
+      config.appVersion ??
+      (await resolveLatestVersion(config, targetSelector, fetchFn));
     return fetchDocs(config, version, targetSelector, fetchFn);
   }
 
@@ -333,7 +336,9 @@ export function createHiveLoader(
         try {
           docs = await fetchDocuments();
         } catch (err) {
-          ctx.log.error(`Hive poll failed: ${errorMessage(err)}. Keeping previous tools.`);
+          ctx.log.error(
+            `Hive poll failed: ${errorMessage(err)}. Keeping previous tools.`,
+          );
           scheduleNextPoll(poll);
           return;
         }
@@ -344,7 +349,9 @@ export function createHiveLoader(
             onChange(docs);
             lastHashKey = newHashKey;
           } catch (err) {
-            ctx.log.error(`Hive onChange handler failed: ${errorMessage(err)}. Keeping previous tools.`);
+            ctx.log.error(
+              `Hive onChange handler failed: ${errorMessage(err)}. Keeping previous tools.`,
+            );
             // Don't update lastHashKey so next poll retries with the same docs
           }
         }

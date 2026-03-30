@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
-import type { PluginContext } from './types.js';
 import type { GraphQLSchema } from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
 import type { LangfuseOptions } from 'langfuse';
@@ -30,6 +29,7 @@ import {
 } from './protocol.js';
 import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { ToolRegistry, type RegisteredTool } from './registry.js';
+import type { PluginContext } from './types.js';
 
 interface MCPToolCallContext {
   jsonrpcId: number | string;
@@ -848,13 +848,10 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
-  let resolvedTools = resolveToolConfigs(
-    ctx,
-    {
-      tools: config.tools,
-      operationsSource,
-    },
-  );
+  let resolvedTools = resolveToolConfigs(ctx, {
+    tools: config.tools,
+    operationsSource,
+  });
 
   // Hive App Deployment loader: async init + polling
   let hiveLoader: HiveLoader | null = null;
@@ -867,13 +864,10 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
     let newResolvedTools: ResolvedToolConfig[];
     try {
-      newResolvedTools = resolveToolConfigs(
-        ctx,
-        {
-          tools: config.tools,
-          operationsSource: mergedSource || undefined,
-        },
-      );
+      newResolvedTools = resolveToolConfigs(ctx, {
+        tools: config.tools,
+        operationsSource: mergedSource || undefined,
+      });
     } catch (err) {
       logger.error(
         `Failed to parse Hive operations. Keeping previous tools.`,
@@ -922,14 +916,18 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       .fetchDocuments()
       .then((docs) => {
         if (disposed) return;
-        const toolCount = docs.filter((d) => d.body.includes('@mcpTool')).length;
+        const toolCount = docs.filter((d) =>
+          d.body.includes('@mcpTool'),
+        ).length;
         logger.info(
           `Loaded ${docs.length} documents from Hive (${toolCount} with @mcpTool)`,
         );
         rebuildToolsWithHiveSource(docsToSource(docs));
 
         hiveLoader!.startPolling((newDocs) => {
-          const newToolCount = newDocs.filter((d) => d.body.includes('@mcpTool')).length;
+          const newToolCount = newDocs.filter((d) =>
+            d.body.includes('@mcpTool'),
+          ).length;
           logger.info(
             `Hive app deployment updated: ${newDocs.length} documents (${newToolCount} with @mcpTool)`,
           );
@@ -951,17 +949,14 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   }
 
   if (config.hive) {
-    hiveLoader = createHiveLoader(
-      ctx,
-      {
-        token: config.hive.token,
-        target: config.hive.target,
-        appName: config.hive.appName,
-        appVersion: config.hive.appVersion,
-        endpoint: config.hive.endpoint || 'https://app.graphql-hive.com/graphql',
-        pollIntervalMs: config.hive.pollIntervalMs ?? 60_000,
-      },
-    );
+    hiveLoader = createHiveLoader(ctx, {
+      token: config.hive.token,
+      target: config.hive.target,
+      appName: config.hive.appName,
+      appVersion: config.hive.appVersion,
+      endpoint: config.hive.endpoint || 'https://app.graphql-hive.com/graphql',
+      pollIntervalMs: config.hive.pollIntervalMs ?? 60_000,
+    });
 
     startHiveInit();
   }
@@ -1681,7 +1676,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                 `tools/call failed for tool "${reqCall.toolName}":`,
                 messages.join('; '),
               );
-              return mcpErrorResponse(reqCall.jsonrpcId, errorMessage, fetchAPI);
+              return mcpErrorResponse(
+                reqCall.jsonrpcId,
+                errorMessage,
+                fetchAPI,
+              );
             }
             // Partial success: log warning but continue with available data
             logger.warn(

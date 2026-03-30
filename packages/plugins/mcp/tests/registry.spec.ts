@@ -464,7 +464,7 @@ describe('ToolRegistry with overrides', () => {
               },
             },
           ],
-      multiFieldSchema,
+          multiFieldSchema,
         ),
     ).toThrow('Alias "term"');
   });
@@ -488,7 +488,7 @@ describe('ToolRegistry with overrides', () => {
           },
         },
       ],
-          schema,
+      schema,
     );
     const tools = registry.getMCPTools();
     const prop = tools[0]!.inputSchema.properties!['query']!;

@@ -93,7 +93,9 @@ describe('createHiveLoader', () => {
         }),
       );
 
-      const body = JSON.parse(vi.mocked(fetchFn).mock.calls[0]![1]!.body as string);
+      const body = JSON.parse(
+        vi.mocked(fetchFn).mock.calls[0]![1]!.body as string,
+      );
       expect(body.variables.reference).toEqual({
         bySelector: {
           organizationSlug: 'my-org',
@@ -191,7 +193,14 @@ describe('createHiveLoader', () => {
           data: {
             target: {
               activeAppDeployments: {
-                edges: [{ node: { version: '2.0.0', activatedAt: '2026-03-30T00:00:00Z' } }],
+                edges: [
+                  {
+                    node: {
+                      version: '2.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
+                ],
               },
             },
           },
@@ -234,7 +243,14 @@ describe('createHiveLoader', () => {
           data: {
             target: {
               activeAppDeployments: {
-                edges: [{ node: { version: '3.0.0', activatedAt: '2026-03-30T00:00:00Z' } }],
+                edges: [
+                  {
+                    node: {
+                      version: '3.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
+                ],
               },
             },
           },
@@ -329,9 +345,24 @@ describe('createHiveLoader', () => {
             target: {
               activeAppDeployments: {
                 edges: [
-                  { node: { version: '1.0.0', activatedAt: '2026-03-28T00:00:00Z' } },
-                  { node: { version: '3.0.0', activatedAt: '2026-03-30T00:00:00Z' } },
-                  { node: { version: '2.0.0', activatedAt: '2026-03-29T00:00:00Z' } },
+                  {
+                    node: {
+                      version: '1.0.0',
+                      activatedAt: '2026-03-28T00:00:00Z',
+                    },
+                  },
+                  {
+                    node: {
+                      version: '3.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
+                  {
+                    node: {
+                      version: '2.0.0',
+                      activatedAt: '2026-03-29T00:00:00Z',
+                    },
+                  },
                 ],
               },
             },
@@ -344,7 +375,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'v3doc', body: 'query V3 { v3 }', operationName: 'V3' } },
+                    {
+                      node: {
+                        hash: 'v3doc',
+                        body: 'query V3 { v3 }',
+                        operationName: 'V3',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -386,7 +423,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'h1', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'h1',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -407,9 +450,7 @@ describe('createHiveLoader', () => {
     });
 
     it('throws actionable error when target is not found', async () => {
-      const fetchFn = mockFetch([
-        { data: { target: null } },
-      ]);
+      const fetchFn = mockFetch([{ data: { target: null } }]);
 
       const loader = createHiveLoader(testCtx(fetchFn), makeConfig());
       await expect(loader.fetchDocuments()).rejects.toThrow(
@@ -424,7 +465,14 @@ describe('createHiveLoader', () => {
           data: {
             target: {
               activeAppDeployments: {
-                edges: [{ node: { version: '1.0.0', activatedAt: '2026-03-30T00:00:00Z' } }],
+                edges: [
+                  {
+                    node: {
+                      version: '1.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
+                ],
               },
             },
           },
@@ -577,25 +625,27 @@ describe('createHiveLoader', () => {
 
   describe('config validation', () => {
     it('throws on empty token', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ token: '' }))).toThrow(
-        'non-empty token',
-      );
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ token: '' })),
+      ).toThrow('non-empty token');
     });
 
     it('throws on whitespace-only token', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ token: '  ' }))).toThrow(
-        'non-empty token',
-      );
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ token: '  ' })),
+      ).toThrow('non-empty token');
     });
 
     it('throws on empty target', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ target: '' }))).toThrow('target');
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ target: '' })),
+      ).toThrow('target');
     });
 
     it('throws on target with wrong number of segments', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ target: 'org/project' }))).toThrow(
-        'org/project/target',
-      );
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ target: 'org/project' })),
+      ).toThrow('org/project/target');
     });
 
     it('throws on target with empty segments', () => {
@@ -605,15 +655,15 @@ describe('createHiveLoader', () => {
     });
 
     it('throws on empty appName', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ appName: '' }))).toThrow(
-        'non-empty appName',
-      );
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ appName: '' })),
+      ).toThrow('non-empty appName');
     });
 
     it('throws on empty endpoint', () => {
-      expect(() => createHiveLoader(testCtx(), makeConfig({ endpoint: '' }))).toThrow(
-        'non-empty endpoint',
-      );
+      expect(() =>
+        createHiveLoader(testCtx(), makeConfig({ endpoint: '' })),
+      ).toThrow('non-empty endpoint');
     });
 
     it('throws on invalid URL endpoint', () => {
@@ -750,10 +800,10 @@ describe('createHiveLoader', () => {
         json: async () => responses[callIndex++],
       })) as unknown as typeof fetch;
 
-      const loader = createHiveLoader(
-        testCtx(fetchFn),
-        { ...makeConfig({ appVersion: '1.0.0' }), pollIntervalMs: 1000 },
-      );
+      const loader = createHiveLoader(testCtx(fetchFn), {
+        ...makeConfig({ appVersion: '1.0.0' }),
+        pollIntervalMs: 1000,
+      });
       const onChange = vi.fn();
 
       vi.useFakeTimers();
@@ -803,10 +853,10 @@ describe('createHiveLoader', () => {
         json: async () => sameResponse,
       })) as unknown as typeof fetch;
 
-      const loader = createHiveLoader(
-        testCtx(fetchFn),
-        { ...makeConfig({ appVersion: '1.0.0' }), pollIntervalMs: 1000 },
-      );
+      const loader = createHiveLoader(testCtx(fetchFn), {
+        ...makeConfig({ appVersion: '1.0.0' }),
+        pollIntervalMs: 1000,
+      });
       const onChange = vi.fn();
 
       vi.useFakeTimers();
@@ -840,10 +890,10 @@ describe('createHiveLoader', () => {
         }),
       })) as unknown as typeof fetch;
 
-      const loader = createHiveLoader(
-        testCtx(fetchFn),
-        { ...makeConfig({ appVersion: '1.0.0' }), pollIntervalMs: 1000 },
-      );
+      const loader = createHiveLoader(testCtx(fetchFn), {
+        ...makeConfig({ appVersion: '1.0.0' }),
+        pollIntervalMs: 1000,
+      });
 
       vi.useFakeTimers();
       loader.startPolling(vi.fn(), []);
@@ -863,7 +913,13 @@ describe('createHiveLoader', () => {
         throw new Error('Network timeout');
       }) as unknown as typeof fetch;
 
-      const mockLogger = { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), child: () => mockLogger } as any;
+      const mockLogger = {
+        error: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        debug: vi.fn(),
+        child: () => mockLogger,
+      } as any;
       const loader = createHiveLoader(
         { log: mockLogger, fetch: fetchFn },
         { ...makeConfig({ appVersion: '1.0.0' }), pollIntervalMs: 1000 },
@@ -896,8 +952,20 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'abc123', body: initialDocs[0]!.body, operationName: 'A' } },
-                    { node: { hash: 'newDoc', body: 'query New { new }', operationName: 'New' } },
+                    {
+                      node: {
+                        hash: 'abc123',
+                        body: initialDocs[0]!.body,
+                        operationName: 'A',
+                      },
+                    },
+                    {
+                      node: {
+                        hash: 'newDoc',
+                        body: 'query New { new }',
+                        operationName: 'New',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -912,8 +980,20 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'abc123', body: initialDocs[0]!.body, operationName: 'A' } },
-                    { node: { hash: 'newDoc', body: 'query New { new }', operationName: 'New' } },
+                    {
+                      node: {
+                        hash: 'abc123',
+                        body: initialDocs[0]!.body,
+                        operationName: 'A',
+                      },
+                    },
+                    {
+                      node: {
+                        hash: 'newDoc',
+                        body: 'query New { new }',
+                        operationName: 'New',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -936,7 +1016,13 @@ describe('createHiveLoader', () => {
         }
       });
 
-      const mockLogger = { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), child: () => mockLogger } as any;
+      const mockLogger = {
+        error: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        debug: vi.fn(),
+        child: () => mockLogger,
+      } as any;
       const loader = createHiveLoader(
         { log: mockLogger, fetch: fetchFn },
         { ...makeConfig({ appVersion: '1.0.0' }), pollIntervalMs: 1000 },

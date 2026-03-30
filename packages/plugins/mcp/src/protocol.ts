@@ -25,17 +25,20 @@ export function dealiasArgs(
   return dealiased;
 }
 
-export async function handleToolCall(ctx: PluginContext, options: {
-  id: number | string;
-  toolName: string;
-  arguments: Record<string, unknown>;
-  registry: ToolRegistry;
-  execute: (
-    toolName: string,
-    args: Record<string, unknown>,
-  ) => Promise<unknown>;
-  headers: Record<string, string>;
-}): Promise<JsonRpcResponse> {
+export async function handleToolCall(
+  ctx: PluginContext,
+  options: {
+    id: number | string;
+    toolName: string;
+    arguments: Record<string, unknown>;
+    registry: ToolRegistry;
+    execute: (
+      toolName: string,
+      args: Record<string, unknown>,
+    ) => Promise<unknown>;
+    headers: Record<string, string>;
+  },
+): Promise<JsonRpcResponse> {
   const tool = options.registry.getTool(options.toolName);
 
   if (!tool) {
@@ -102,15 +105,10 @@ export async function handleToolCall(ctx: PluginContext, options: {
     return {
       jsonrpc: '2.0',
       id: options.id,
-      result: formatToolCallResult(
-        ctx,
-        result,
-        tool,
-        {
-          hookProducedResult,
-          hasHooks,
-        },
-      ),
+      result: formatToolCallResult(ctx, result, tool, {
+        hookProducedResult,
+        hasHooks,
+      }),
     };
   } catch (error) {
     ctx.log.error(
@@ -138,13 +136,14 @@ export async function handleToolCall(ctx: PluginContext, options: {
 export async function processExecutionResult(
   ctx: PluginContext,
   options: {
-  id: number | string;
-  toolName: string;
-  args: Record<string, unknown>;
-  tool: RegisteredTool;
-  data: unknown;
-  headers: Record<string, string>;
-}): Promise<{
+    id: number | string;
+    toolName: string;
+    args: Record<string, unknown>;
+    tool: RegisteredTool;
+    data: unknown;
+    headers: Record<string, string>;
+  },
+): Promise<{
   jsonrpc: '2.0';
   id: number | string;
   result: Record<string, unknown>;
@@ -188,15 +187,10 @@ export async function processExecutionResult(
     return {
       jsonrpc: '2.0',
       id: options.id,
-      result: formatToolCallResult(
-        ctx,
-        data,
-        tool,
-        {
-          hookProducedResult,
-          hasHooks,
-        },
-      ),
+      result: formatToolCallResult(ctx, data, tool, {
+        hookProducedResult,
+        hasHooks,
+      }),
     };
   } catch (error) {
     ctx.log.error(

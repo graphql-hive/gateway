@@ -4,7 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { HiveDocument, HiveLoader } from '../src/hive-loader.js';
 import { useMCP } from '../src/plugin.js';
 
-const testCtx = { log: createLoggerFromLogging(false), fetch: globalThis.fetch };
+const testCtx = {
+  log: createLoggerFromLogging(false),
+  fetch: globalThis.fetch,
+};
 
 const mockCreateHiveLoader = vi.fn<(...args: unknown[]) => HiveLoader>();
 vi.mock('../src/hive-loader.js', () => ({

@@ -1,4 +1,3 @@
-import type { PluginContext } from './types.js';
 import { parse, type GraphQLSchema } from 'graphql';
 import type {
   MCPContentAnnotations,
@@ -14,6 +13,7 @@ import {
   selectionSetToOutputSchema,
   type JsonSchema,
 } from './schema-converter.js';
+import type { PluginContext } from './types.js';
 
 /** Wire format for tools returned by `tools/list` responses per the MCP spec. */
 export interface MCPTool {

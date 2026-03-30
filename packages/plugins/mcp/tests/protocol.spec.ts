@@ -207,7 +207,6 @@ describe('handleMCPRequest', () => {
         { name: 'tool_c', query: 'query($x: String!) { c(x: $x) }' },
       ],
       paginationSchema,
-      
     );
     const opts = {
       serverName: 'test',
@@ -249,7 +248,6 @@ describe('handleMCPRequest', () => {
       { log: logger },
       [{ name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' }],
       paginationSchema,
-      
     );
     const opts = {
       serverName: 'test',
@@ -1620,7 +1618,7 @@ describe('resources/list', () => {
         query: 'query($name: String!) { hello(name: $name) }',
       },
     ],
-      schema,
+    schema,
   );
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
@@ -2221,7 +2219,7 @@ describe('resources/templates/list description providers', () => {
         query: 'query($name: String!) { hello(name: $name) }',
       },
     ],
-        schema,
+    schema,
   );
   const baseOptions: MCPHandlerOptions = {
     serverName: 'test-mcp',

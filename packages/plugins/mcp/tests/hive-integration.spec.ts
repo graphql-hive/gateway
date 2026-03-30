@@ -26,7 +26,10 @@ describe('hive integration', () => {
     ];
 
     const operationsSource = hiveDocs.map((d) => d.body).join('\n');
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
 
     // Only operations with @mcpTool directive become tools
     expect(tools).toHaveLength(2);
@@ -44,7 +47,10 @@ describe('hive integration', () => {
     const hiveOps = 'query HiveOp @mcpTool(name: "hive_tool") { world }';
     const merged = [localOps, hiveOps].join('\n');
 
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource: merged });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource: merged },
+    );
 
     expect(tools).toHaveLength(2);
     expect(tools.map((t) => t.name).sort()).toEqual([
@@ -57,20 +63,23 @@ describe('hive integration', () => {
     const hiveOps =
       'query GetUser($id: ID!) @mcpTool(name: "get_user", description: "From directive") { user(id: $id) { name } }';
 
-    const tools = resolveToolConfigs({ log: logger }, {
-      tools: [
-        {
-          name: 'get_user',
-          source: {
-            type: 'graphql',
-            operationName: 'GetUser',
-            operationType: 'query' as const,
+    const tools = resolveToolConfigs(
+      { log: logger },
+      {
+        tools: [
+          {
+            name: 'get_user',
+            source: {
+              type: 'graphql',
+              operationName: 'GetUser',
+              operationType: 'query' as const,
+            },
+            tool: { description: 'From config' },
           },
-          tool: { description: 'From config' },
-        },
-      ],
-      operationsSource: hiveOps,
-    });
+        ],
+        operationsSource: hiveOps,
+      },
+    );
 
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_user');
@@ -83,19 +92,22 @@ describe('hive integration', () => {
   it('operations without @mcpTool are still available as source for explicit tools', () => {
     const hiveOps = 'query GetUser($id: ID!) { user(id: $id) { name } }';
 
-    const tools = resolveToolConfigs({ log: logger }, {
-      tools: [
-        {
-          name: 'get_user',
-          source: {
-            type: 'graphql',
-            operationName: 'GetUser',
-            operationType: 'query' as const,
+    const tools = resolveToolConfigs(
+      { log: logger },
+      {
+        tools: [
+          {
+            name: 'get_user',
+            source: {
+              type: 'graphql',
+              operationName: 'GetUser',
+              operationType: 'query' as const,
+            },
           },
-        },
-      ],
-      operationsSource: hiveOps,
-    });
+        ],
+        operationsSource: hiveOps,
+      },
+    );
 
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('get_user');
@@ -109,7 +121,10 @@ describe('hive integration', () => {
       'query LocalVersion @mcpTool(name: "my_tool", description: "From local") { local }';
 
     const merged = [hiveOps, localOps].join('\n');
-    const tools = resolveToolConfigs({ log: logger }, { tools: [], operationsSource: merged });
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource: merged },
+    );
 
     expect(tools).toHaveLength(1);
     expect(tools[0]!.name).toBe('my_tool');
@@ -127,10 +142,13 @@ describe('hive integration', () => {
         .filter(Boolean)
         .join('\n');
 
-      const tools = resolveToolConfigs({ log: logger }, {
-        tools: [],
-        operationsSource: mergedSource,
-      });
+      const tools = resolveToolConfigs(
+        { log: logger },
+        {
+          tools: [],
+          operationsSource: mergedSource,
+        },
+      );
 
       expect(tools).toHaveLength(2);
       expect(tools.map((t) => t.name).sort()).toEqual(['from_hive', 'local']);
@@ -143,20 +161,23 @@ describe('hive integration', () => {
         'query GetData @mcpTool(name: "get_data", description: "Local desc") { data }';
       const mergedSource = [hiveSource, localSource].filter(Boolean).join('\n');
 
-      const tools = resolveToolConfigs({ log: logger }, {
-        tools: [
-          {
-            name: 'get_data',
-            source: {
-              type: 'graphql',
-              operationName: 'GetData',
-              operationType: 'query' as const,
+      const tools = resolveToolConfigs(
+        { log: logger },
+        {
+          tools: [
+            {
+              name: 'get_data',
+              source: {
+                type: 'graphql',
+                operationName: 'GetData',
+                operationType: 'query' as const,
+              },
+              tool: { description: 'Config wins' },
             },
-            tool: { description: 'Config wins' },
-          },
-        ],
-        operationsSource: mergedSource,
-      });
+          ],
+          operationsSource: mergedSource,
+        },
+      );
 
       expect(tools).toHaveLength(1);
       expect(tools[0]!.tool?.description).toBe('Config wins');
@@ -216,10 +237,13 @@ describe('hive integration', () => {
 
       const docs = await loader.fetchDocuments();
       const hiveSource = docs.map((d) => d.body).join('\n');
-      const tools = resolveToolConfigs({ log: logger }, {
-        tools: [],
-        operationsSource: hiveSource,
-      });
+      const tools = resolveToolConfigs(
+        { log: logger },
+        {
+          tools: [],
+          operationsSource: hiveSource,
+        },
+      );
 
       // Only @mcpTool operations become tools
       expect(tools).toHaveLength(1);

@@ -100,7 +100,9 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions({ log: logger }, tools, registry, { isStartup: true }),
+      resolveDescriptions({ log: logger }, tools, registry, {
+        isStartup: true,
+      }),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -150,7 +152,9 @@ describe('resolveDescriptions', () => {
     ];
 
     await expect(
-      resolveDescriptions({ log: logger }, tools, providerRegistry, { isStartup: true }),
+      resolveDescriptions({ log: logger }, tools, providerRegistry, {
+        isStartup: true,
+      }),
     ).rejects.toThrow('Unknown description provider type: "unknown"');
   });
 
@@ -180,14 +184,9 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await resolveDescriptions(
-      { log: logger },
-      tools,
-      registry,
-      {
-        context: { label: 'staging' },
-      },
-    );
+    await resolveDescriptions({ log: logger }, tools, registry, {
+      context: { label: 'staging' },
+    });
     expect(contextCapture[0]).toEqual({ label: 'staging' });
   });
 
@@ -308,7 +307,9 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     await expect(
-      resolveFieldDescriptions({ log: logger }, tools, registry, { isStartup: true }),
+      resolveFieldDescriptions({ log: logger }, tools, registry, {
+        isStartup: true,
+      }),
     ).rejects.toThrow('Langfuse unreachable');
   });
 
@@ -405,14 +406,9 @@ describe('resolveFieldDescriptions', () => {
       },
     ];
 
-    await resolveFieldDescriptions(
-      { log: logger },
-      tools,
-      registry,
-      {
-        context: { label: 'preproduction' },
-      },
-    );
+    await resolveFieldDescriptions({ log: logger }, tools, registry, {
+      context: { label: 'preproduction' },
+    });
     expect(contextCapture[0]).toEqual({ label: 'preproduction' });
   });
 });
