@@ -1,5 +1,59 @@
 # @graphql-hive/gateway-runtime
 
+## 2.8.0
+### Minor Changes
+
+
+
+- [#2179](https://github.com/graphql-hive/gateway/pull/2179) [`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d) Thanks [@ardatan](https://github.com/ardatan)! - # Gateway-level Inflight Request Deduplication
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    inboundInflightRequestDeduplication: true,
+  });
+  ```
+  
+  When enabled, if multiple identical requests are received by the gateway while the first one is still being processed,
+  only the first request will be executed and the rest will wait for its result,
+  which will then be shared among all identical requests.
+  
+  This can be useful to reduce the load on the gateway and the subgraphs in case of high traffic and identical requests.
+  
+  By default it includes;
+  - HTTP Request Method (e.g. GET, POST)
+  - Request URL
+  - Selected Request Headers (e.g. Authorization, Client-Name, etc...)
+  - GraphQL Operation AST
+  - GraphQL Operation Name
+  - GraphQL Operation Variables
+  
+  By default it takes all headers into account, but you can provide a list of headers to include or exclude from the deduplication key calculation.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    inboundInflightRequestDeduplication: {
+      // Only include the "authorization" header in the deduplication key calculation
+      shouldIncludeHeader: headerName => headerName === 'authorization'
+    },
+  });
+  ```
+
+### Patch Changes
+
+
+
+- [#2187](https://github.com/graphql-hive/gateway/pull/2187) [`04caeff`](https://github.com/graphql-hive/gateway/commit/04caeff1d6a6df68720d4ab0b87d20a486ed115a) Thanks [@ardatan](https://github.com/ardatan)! - Fix header propagation for non-GraphQL sources
+
+- Updated dependencies [[`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d)]:
+  - @graphql-tools/executor-http@3.1.3
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-tools/federation@4.3.3
+  - @graphql-mesh/fusion-runtime@1.8.3
+
 ## 2.7.11
 ### Patch Changes
 
