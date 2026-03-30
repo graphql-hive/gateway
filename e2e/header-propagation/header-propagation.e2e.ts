@@ -11,7 +11,7 @@ const combinations = [
   {
     composeWith: 'mesh',
     subgraphName: 'rest',
-  }
+  },
 ] as const;
 
 for (const { subgraphName, composeWith } of combinations) {
@@ -25,13 +25,13 @@ for (const { subgraphName, composeWith } of combinations) {
       });
       const result = await gw.execute({
         query: /* GraphQL */ `
-      query {
-        headers {
-          authorization
-          sessionCookieId
-        }
-      }
-    `,
+          query {
+            headers {
+              authorization
+              sessionCookieId
+            }
+          }
+        `,
         headers: {
           authorization: 'Bearer token',
           'session-cookie-id': 'session-cookie',
@@ -56,15 +56,15 @@ for (const { subgraphName, composeWith } of combinations) {
       });
       const result = await gw.execute({
         query: /* GraphQL */ `
-      query {
-        h1: headers {
-          sessionCookieId
-        }
-        h2: headers {
-          authorization
-        }
-      }
-    `,
+          query {
+            h1: headers {
+              sessionCookieId
+            }
+            h2: headers {
+              authorization
+            }
+          }
+        `,
         headers: {
           authorization: 'Bearer token',
           'session-cookie-id': 'session-cookie',
@@ -91,13 +91,13 @@ for (const { subgraphName, composeWith } of combinations) {
       });
       const result = await gw.execute({
         query: /* GraphQL */ `
-      query {
-        headers {
-          authorization
-          sessionCookieId
-        }
-      }
-    `,
+          query {
+            headers {
+              authorization
+              sessionCookieId
+            }
+          }
+        `,
       });
       expect(result).toEqual({
         data: {
@@ -108,6 +108,5 @@ for (const { subgraphName, composeWith } of combinations) {
         },
       });
     });
-  })
-
+  });
 }

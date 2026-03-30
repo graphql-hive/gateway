@@ -3040,6 +3040,8 @@ __metadata:
     "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.13.3"
     "@as-integrations/express5": "npm:^1.1.2"
+    "@graphql-mesh/compose-cli": "npm:^1.5.24"
+    "@omnigraph/openapi": "npm:^0.109.44"
     "@types/cors": "npm:^2.8.19"
     "@types/express": "npm:^5.0.5"
     cors: "npm:^2.8.5"
@@ -4824,7 +4826,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/compose-cli@npm:^1.5.3":
+"@graphql-mesh/compose-cli@npm:^1.5.24, @graphql-mesh/compose-cli@npm:^1.5.3":
   version: 1.5.24
   resolution: "@graphql-mesh/compose-cli@npm:1.5.24"
   dependencies:
@@ -7552,7 +7554,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@omnigraph/openapi@npm:^0.109.23":
+"@omnigraph/openapi@npm:^0.109.23, @omnigraph/openapi@npm:^0.109.44":
   version: 0.109.44
   resolution: "@omnigraph/openapi@npm:0.109.44"
   dependencies:
@@ -19873,14 +19875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"picomatch@npm:^4.0.2, picomatch@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "picomatch@npm:4.0.3"
-  checksum: 10c0/9582c951e95eebee5434f59e426cddd228a7b97a0161a375aed4be244bd3fe8e3a31b846808ea14ef2c8a2527a6eeab7b3946a67d5979e81694654f939473ae2
-  languageName: node
-  linkType: hard
-
-"picomatch@npm:^4.0.4":
+"picomatch@npm:^4.0.2, picomatch@npm:^4.0.3, picomatch@npm:^4.0.4":
   version: 4.0.4
   resolution: "picomatch@npm:4.0.4"
   checksum: 10c0/e2c6023372cc7b5764719a5ffb9da0f8e781212fa7ca4bd0562db929df8e117460f00dff3cb7509dacfc06b86de924b247f504d0ce1806a37fac4633081466b0
@@ -22410,14 +22405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyrainbow@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "tinyrainbow@npm:3.0.3"
-  checksum: 10c0/1e799d35cd23cabe02e22550985a3051dc88814a979be02dc632a159c393a998628eacfc558e4c746b3006606d54b00bcdea0c39301133956d10a27aa27e988c
-  languageName: node
-  linkType: hard
-
-"tinyrainbow@npm:^3.1.0":
+"tinyrainbow@npm:^3.0.3, tinyrainbow@npm:^3.1.0":
   version: 3.1.0
   resolution: "tinyrainbow@npm:3.1.0"
   checksum: 10c0/f11cf387a26c5c9255bec141a90ac511b26172981b10c3e50053bc6700ea7d2336edcc4a3a21dbb8412fe7c013477d2ba4d7e4877800f3f8107be5105aad6511
