@@ -1,5 +1,20 @@
 # @graphql-tools/executor-http
 
+## 3.1.2
+### Patch Changes
+
+
+
+- [#2185](https://github.com/graphql-hive/gateway/pull/2185) [`f85a9fe`](https://github.com/graphql-hive/gateway/commit/f85a9fe11dc88a7fa8397c5372ef24f9e91b638e) Thanks [@elliotvilhelm](https://github.com/elliotvilhelm)! - Fix SSE data parsing when JSON payload contains literal "data:" substrings
+  
+  The SSE event parser used `msg.split('data:')` to extract the data field, which
+  incorrectly splits on `data:` substrings inside the JSON payload (e.g., OAuth
+  scopes like `file_metadata:read`, data URIs like `data:image/png`). This caused
+  `JSON.parse` to fail with "Unterminated string in JSON" errors.
+  
+  The fix uses line-based parsing per the SSE spec: split on newlines first, then
+  find the line starting with `data:`.
+
 ## 3.1.1
 ### Patch Changes
 
