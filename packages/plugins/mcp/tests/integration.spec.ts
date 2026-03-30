@@ -3,24 +3,26 @@ import { describe, expect, it } from 'vitest';
 import { useMCP } from '../src/plugin.js';
 
 describe('MCP Integration', () => {
-  const mcpPlugin = useMCP({ log: createLoggerFromLogging(false) }, {
-    name: 'test-mcp',
-    version: '1.0.0',
-    path: '/mcp',
-    tools: [
-      {
-        name: 'greet',
-        source: {
-          type: 'inline',
-          query: 'query Greet($name: String!) { hello(name: $name) }',
+  const mcpPlugin = useMCP(
+    { log: createLoggerFromLogging(false) },
+    {
+      name: 'test-mcp',
+      version: '1.0.0',
+      path: '/mcp',
+      tools: [
+        {
+          name: 'greet',
+          source: {
+            type: 'inline',
+            query: 'query Greet($name: String!) { hello(name: $name) }',
+          },
+          tool: { description: 'Greet someone by name' },
         },
-        tool: { description: 'Greet someone by name' },
-      },
-      {
-        name: 'get_weather',
-        source: {
-          type: 'inline',
-          query: `
+        {
+          name: 'get_weather',
+          source: {
+            type: 'inline',
+            query: `
             query GetWeather($location: String!) {
               weather(location: $location) {
                 temperature
@@ -28,11 +30,12 @@ describe('MCP Integration', () => {
               }
             }
           `,
+          },
+          tool: { description: 'Get weather for a location' },
         },
-        tool: { description: 'Get weather for a location' },
-      },
-    ],
-  });
+      ],
+    },
+  );
 
   it('plugin exports correctly', () => {
     expect(mcpPlugin).toBeDefined();

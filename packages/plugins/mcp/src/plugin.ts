@@ -817,10 +817,7 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
  * Handles the full MCP protocol (initialize, tools/list, tools/call, resources)
  * by routing tool calls through the Yoga GraphQL pipeline.
  */
-export function useMCP(
-  ctx: { log: Logger },
-  config: MCPConfig,
-): GatewayPlugin {
+export function useMCP(ctx: { log: Logger }, config: MCPConfig): GatewayPlugin {
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
   const logger = (config.log ?? ctx.log).child('[MCP] ');
