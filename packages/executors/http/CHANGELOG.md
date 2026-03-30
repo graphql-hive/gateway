@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 3.1.3
+### Patch Changes
+
+
+
+- [#2179](https://github.com/graphql-hive/gateway/pull/2179) [`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d) Thanks [@ardatan](https://github.com/ardatan)! - Exclude mutations for deduplication
+
 ## 3.1.2
 ### Patch Changes
 
