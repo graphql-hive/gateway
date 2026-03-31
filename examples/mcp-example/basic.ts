@@ -67,7 +67,7 @@ const schema = createSchema({
         const data = weatherData[loc] || { temperature: 70, conditions: 'Unknown', humidity: 50 }
         return { ...data, location }
       },
-      forecast: (_, { location, days = 5 }: { location: string; days?: number }) => {
+      forecast: (_, { days = 5 }: { location: string; days?: number }) => {
         const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Clear']
         const result = []
         const today = new Date()
@@ -93,7 +93,7 @@ subgraphServer.listen(4001, () => {
   console.log('Subgraph running at http://localhost:4001/graphql')
 })
 
-const mcpPlugin = useMCP({
+const mcpOptions = {
   name: 'weather-api',
   version: '1.0.0',
   path: '/mcp',
@@ -103,9 +103,9 @@ const mcpPlugin = useMCP({
     // File-based source: references a named operation from operationsPath
     {
       name: 'get_weather',
-      source: { 
-        type: 'graphql', 
-        operationName: 'GetWeather', 
+      source: {
+        type: 'graphql',
+        operationName: 'GetWeather',
         operationType: 'query',
       },
       tool: {
@@ -124,10 +124,10 @@ const mcpPlugin = useMCP({
     // File-based source: no overrides, description auto-derived from GraphQL schema
     {
       name: 'get_forecast',
-      source: { 
-        type: 'graphql', 
-        operationName: 'GetForecast', 
-        operationType: 'query', 
+      source: {
+        type: 'graphql',
+        operationName: 'GetForecast',
+        operationType: 'query',
       },
     },
     // Inline source: query defined directly in config (no operations file needed)
@@ -136,8 +136,8 @@ const mcpPlugin = useMCP({
       source: {
         type: 'inline',
         query: `query GetConditions($location: String!) {
-          weather(location: $location) { 
-            conditions 
+          weather(location: $location) {
+            conditions
           }
         }`,
       },
@@ -147,13 +147,13 @@ const mcpPlugin = useMCP({
       },
     },
   ],
-})
+}
 
 const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
-  plugins: () => [mcpPlugin],
+  plugins: (ctx) => [useMCP(ctx, mcpOptions)],
 })
 
 const gatewayServer = createServer(gateway)

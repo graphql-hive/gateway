@@ -19,7 +19,7 @@ import { useMCP } from '@graphql-hive/plugin-mcp'
 config({ path: new URL('.env', import.meta.url).pathname })
 const exampleDir = dirname(dirname(fileURLToPath(import.meta.url)))
 
-const mcpPlugin = useMCP({
+const mcpOptions = {
   name: 'weather-api',
   version: '1.0.0',
   operationsPath: join(exampleDir, 'operations/weather.graphql'),
@@ -78,7 +78,7 @@ const mcpPlugin = useMCP({
       },
     },
   ],
-})
+}
 
 const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
@@ -172,7 +172,7 @@ const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
-  plugins: () => [mcpPlugin],
+  plugins: (ctx) => [useMCP(ctx, mcpOptions)],
 })
 
 const gatewayServer = createServer(gateway)

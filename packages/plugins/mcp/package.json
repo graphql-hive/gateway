@@ -48,8 +48,6 @@
     }
   },
   "dependencies": {
-    "@graphql-hive/logger": "workspace:^",
-    "@graphql-mesh/fusion-runtime": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

@@ -174,6 +174,7 @@ interface ActiveVersionsResponse {
 const MAX_PAGES = 1000;
 
 async function resolveLatestVersion(
+  ctx: PluginContext,
   config: HiveLoaderConfig,
   targetSelector: TargetSelector,
   fetchFn: typeof fetch,
@@ -204,9 +205,22 @@ async function resolveLatestVersion(
   // TODO: activeAppDeployments orders by created_at, not activated_at.
   // Once the Hive API supports ORDER BY activated_at, use first:1 instead of fetching all.
   let latest = edges[0]!.node;
-  let latestTime = new Date(latest.activatedAt).getTime() || 0;
+  let parsedTime = new Date(latest.activatedAt).getTime();
+  if (Number.isNaN(parsedTime)) {
+    ctx.log.warn(
+      `Active deployment version "${latest.version}" has unparseable activatedAt: "${latest.activatedAt}". Version selection may be unreliable.`,
+    );
+    parsedTime = 0;
+  }
+  let latestTime = parsedTime;
   for (let i = 1; i < edges.length; i++) {
-    const edgeTime = new Date(edges[i]!.node.activatedAt).getTime() || 0;
+    let edgeTime = new Date(edges[i]!.node.activatedAt).getTime();
+    if (Number.isNaN(edgeTime)) {
+      ctx.log.warn(
+        `Active deployment version "${edges[i]!.node.version}" has unparseable activatedAt: "${edges[i]!.node.activatedAt}". Version selection may be unreliable.`,
+      );
+      edgeTime = 0;
+    }
     if (edgeTime > latestTime) {
       latest = edges[i]!.node;
       latestTime = edgeTime;
@@ -300,6 +314,7 @@ export function createHiveLoader(
 
   let pollTimer: ReturnType<typeof setTimeout> | null = null;
   let lastHashKey: string | null = null;
+  let pollGeneration = 0;
 
   function computeHashKey(docs: HiveDocument[]): string {
     return docs
@@ -308,8 +323,11 @@ export function createHiveLoader(
       .join(',');
   }
 
-  function scheduleNextPoll(poll: () => Promise<void>): void {
-    if (pollTimer !== null) {
+  function scheduleNextPoll(
+    poll: () => Promise<void>,
+    generation: number,
+  ): void {
+    if (pollTimer !== null && generation === pollGeneration) {
       pollTimer = setTimeout(poll, config.pollIntervalMs);
     }
   }
@@ -317,7 +335,7 @@ export function createHiveLoader(
   async function fetchDocuments(): Promise<HiveDocument[]> {
     const version =
       config.appVersion ??
-      (await resolveLatestVersion(config, targetSelector, fetchFn));
+      (await resolveLatestVersion(ctx, config, targetSelector, fetchFn));
     return fetchDocs(config, version, targetSelector, fetchFn);
   }
 
@@ -329,9 +347,12 @@ export function createHiveLoader(
         clearTimeout(pollTimer);
       }
 
+      const myGeneration = ++pollGeneration;
       lastHashKey = computeHashKey(initialDocs);
 
       async function poll() {
+        if (myGeneration !== pollGeneration) return;
+
         let docs: HiveDocument[];
         try {
           docs = await fetchDocuments();
@@ -339,9 +360,11 @@ export function createHiveLoader(
           ctx.log.error(
             `Hive poll failed: ${errorMessage(err)}. Keeping previous tools.`,
           );
-          scheduleNextPoll(poll);
+          scheduleNextPoll(poll, myGeneration);
           return;
         }
+
+        if (myGeneration !== pollGeneration) return;
 
         const newHashKey = computeHashKey(docs);
         if (newHashKey !== lastHashKey) {
@@ -356,7 +379,7 @@ export function createHiveLoader(
           }
         }
 
-        scheduleNextPoll(poll);
+        scheduleNextPoll(poll, myGeneration);
       }
 
       pollTimer = setTimeout(poll, config.pollIntervalMs);

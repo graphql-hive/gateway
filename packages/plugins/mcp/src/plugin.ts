@@ -40,28 +40,21 @@ interface MCPToolCallContext {
 }
 
 /** Defines how a tool's GraphQL operation is sourced, either inline or by reference to a named operation. */
-export type MCPToolSource =
-  | {
-      /** Source type: inline GraphQL query string */
-      type: 'inline';
-      /** The GraphQL operation source */
-      query: string;
-    }
-  | {
-      /** Source type: reference to a named operation from operationsPath/operationsStr */
-      type: 'graphql';
-      /** Name of the operation to resolve */
-      operationName: string;
-      /** Whether the operation is a query or mutation */
-      operationType: 'query' | 'mutation';
-      /** Optional path to a .graphql file containing the operation (overrides operationsPath) */
-      file?: string;
-    };
+export interface MCPToolSource {
+  /** Source type: 'inline' for a query string, 'graphql' for a named operation reference */
+  type: string;
+  /** The GraphQL operation source (required when type is 'inline') */
+  query?: string;
+  /** Name of the operation to resolve (required when type is 'graphql') */
+  operationName?: string;
+  /** Whether the operation is a query or mutation (required when type is 'graphql') */
+  operationType?: string;
+  /** Optional path to a .graphql file containing the operation (overrides operationsPath) */
+  file?: string;
+}
 
 /** Behavioral hints for MCP clients about a tool's characteristics. */
 export interface MCPToolAnnotations {
-  /** Short human-readable name for the tool */
-  title?: string;
   /** If true, the tool does not modify its environment and is safe to call with any arguments. Clients assume false when omitted */
   readOnlyHint?: boolean;
   /** If true, the tool may perform destructive updates; if false, only additive. Only meaningful when readOnlyHint is false. Clients assume true when omitted */
@@ -455,7 +448,7 @@ export interface MCPConfig {
   /** Raw GraphQL operations source string (alternative to operationsPath) */
   operationsStr?: string;
   /** Tool definitions. Each maps a tool name to a GraphQL operation */
-  tools: MCPToolConfig[];
+  tools?: MCPToolConfig[];
   /** Static resource definitions served via resources/list and resources/read */
   resources?: MCPResourceConfig[];
   /** Dynamic resource templates with URI patterns and handler functions */
@@ -606,18 +599,26 @@ export function resolveToolConfigs(
     let query: string;
 
     if (source.type === 'inline') {
-      query = source.query;
+      query = source.query!;
     } else {
-      const opsPool = source.file
-        ? loadOperationsFromString(
-            ctx,
-            readFileSync(resolve(source.file), 'utf-8'),
-          )
-        : parsedOps || [];
+      let opsPool: ParsedOperation[];
+      if (source.file) {
+        let fileSource: string;
+        try {
+          fileSource = readFileSync(resolve(source.file), 'utf-8');
+        } catch (err) {
+          throw new Error(
+            `Tool "${tool.name}": cannot read operations file "${source.file}": ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+        opsPool = loadOperationsFromString(ctx, fileSource);
+      } else {
+        opsPool = parsedOps || [];
+      }
       const op = resolveOperation(
         opsPool,
-        source.operationName,
-        source.operationType,
+        source.operationName!,
+        source.operationType as 'query' | 'mutation',
       );
       if (!op) {
         throw new Error(
@@ -838,6 +839,12 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
  * by routing tool calls through the Yoga GraphQL pipeline.
  */
 export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
+  if (!config.name?.trim()) {
+    throw new Error('[MCP] config.name is required and must be a non-empty string');
+  }
+  if (config.tools != null && !Array.isArray(config.tools)) {
+    throw new Error('[MCP] config.tools must be an array of tool configurations');
+  }
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
   let registry: ToolRegistry | null = null;
@@ -849,7 +856,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
   let resolvedTools = resolveToolConfigs(ctx, {
-    tools: config.tools,
+    tools: config.tools || [],
     operationsSource,
   });
 
@@ -865,7 +872,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     let newResolvedTools: ResolvedToolConfig[];
     try {
       newResolvedTools = resolveToolConfigs(ctx, {
-        tools: config.tools,
+        tools: config.tools || [],
         operationsSource: mergedSource || undefined,
       });
     } catch (err) {
@@ -904,6 +911,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   let hiveInitFailed = false;
   let hiveInitFailedAt = 0;
   const HIVE_RETRY_COOLDOWN_MS = 30_000;
+  let bootstrapFailedAt = 0;
+  const BOOTSTRAP_RETRY_COOLDOWN_MS = 10_000;
+  const internalRequests = new WeakSet<Request>();
 
   function docsToSource(docs: { body: string }[]): string {
     return docs.map((d) => d.body).join('\n');
@@ -1145,7 +1155,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           : undefined,
       resolveOutputFieldDescriptions:
         outputFieldProviderToolConfigs.length > 0
-          ? async (ctx) => {
+          ? async (resolverCtx) => {
               resolvedProviders = await getProviders();
               const map = new Map<string, Map<string, string>>();
               for (const tool of outputFieldProviderToolConfigs) {
@@ -1165,7 +1175,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                     const desc = await provider.fetchDescription(
                       `${tool.name}.output.${dotPath}`,
                       providerConfig,
-                      ctx,
+                      resolverCtx,
                     );
                     if (desc) toolDescs.set(dotPath, desc);
                   } catch (err) {
@@ -1182,7 +1192,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       resources: resolvedResources,
       resolveResourceDescriptions:
         providerResourceConfigs.length > 0
-          ? async (ctx) => {
+          ? async (resolverCtx) => {
               resolvedProviders = await getProviders();
               const map = new Map<string, string>();
               for (const resource of providerResourceConfigs) {
@@ -1198,7 +1208,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                   const desc = await provider.fetchDescription(
                     resource.name,
                     resource.descriptionProvider!,
-                    ctx,
+                    resolverCtx,
                   );
                   if (desc) map.set(resource.uri, desc);
                 } catch (err) {
@@ -1213,7 +1223,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       resourceTemplates: resolvedTemplates,
       resolveTemplateDescriptions:
         providerTemplateConfigs.length > 0
-          ? async (ctx) => {
+          ? async (resolverCtx) => {
               resolvedProviders = await getProviders();
               const map = new Map<string, string>();
               for (const tmpl of providerTemplateConfigs) {
@@ -1229,7 +1239,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                   const desc = await provider.fetchDescription(
                     tmpl.name,
                     tmpl.descriptionProvider!,
-                    ctx,
+                    resolverCtx,
                   );
                   if (desc) map.set(tmpl.uriTemplate, desc);
                 } catch (err) {
@@ -1279,6 +1289,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         registry = newRegistry;
         mcpHandlerOptions = newOptions;
       } catch (err) {
+        schema = newSchema;
         logger.error(
           `Failed to rebuild tool registry after schema change. ` +
             `MCP tools will continue using the previous schema.`,
@@ -1313,7 +1324,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       fetchAPI,
     }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
-      if (config.disableGraphQLEndpoint && url.pathname === graphqlPath) {
+      if (
+        config.disableGraphQLEndpoint &&
+        url.pathname === graphqlPath &&
+        !internalRequests.has(request)
+      ) {
         endResponse(new Response(null, { status: 404 }));
         return;
       }
@@ -1325,25 +1340,44 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       // Wait for in-progress Hive init, or retry if previous init failed and cooldown elapsed
       if (hiveInitPromise) {
         await hiveInitPromise;
-      } else if (
-        hiveInitFailed &&
-        hiveLoader &&
-        Date.now() - hiveInitFailedAt > HIVE_RETRY_COOLDOWN_MS
-      ) {
-        startHiveInit();
-        await hiveInitPromise;
+      } else if (hiveInitFailed && hiveLoader) {
+        if (Date.now() - hiveInitFailedAt > HIVE_RETRY_COOLDOWN_MS) {
+          startHiveInit();
+          await hiveInitPromise;
+        } else {
+          logger.warn(
+            `Serving MCP request with potentially stale tools: Hive init failed ${Math.round((Date.now() - hiveInitFailedAt) / 1000)}s ago. Will retry after ${Math.round(HIVE_RETRY_COOLDOWN_MS / 1000)}s cooldown.`,
+          );
+        }
       }
 
       // Schema bootstrap: one-time dispatch to trigger schema loading
       if (!registry || !schema || !mcpHandlerOptions) {
+        if (Date.now() - bootstrapFailedAt < BOOTSTRAP_RETRY_COOLDOWN_MS) {
+          return endResponse(
+            fetchAPI.Response.json(
+              {
+                jsonrpc: '2.0',
+                id: null,
+                error: {
+                  code: -32000,
+                  message: 'MCP server not ready. Schema loading failed.',
+                },
+              },
+              { status: 503 },
+            ),
+          );
+        }
         try {
           const bootstrapReq = new Request(`http://localhost${graphqlPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: '{ __typename }' }),
           });
+          internalRequests.add(bootstrapReq);
           await requestHandler(bootstrapReq, serverContext);
         } catch (bootstrapError) {
+          bootstrapFailedAt = Date.now();
           logger.error(
             `Schema bootstrap failed:`,
             bootstrapError instanceof Error

@@ -114,7 +114,7 @@ const schema = createSchema({
           score: +(1 - i * 0.1).toFixed(2),
         })),
       }),
-      forecast: (_, { location, days = 5 }: { location: string; days?: number }) => {
+      forecast: (_, { days = 5 }: { location: string; days?: number }) => {
         const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Clear']
         const result = []
         const today = new Date()
@@ -183,7 +183,7 @@ const mcpOptions: MCPConfig = {
       // `defaults` — default options for all getPrompt() calls.
       // Use this to set a global label per environment instead of repeating it per tool.
       // Precedence: per-request (?promptLabel= query param) -> per-tool options -> defaults
-      defaults: { label: process.env.LANGFUSE_PROMPT_LABEL || 'production' },
+      defaults: { label: process.env['LANGFUSE_PROMPT_LABEL'] || 'production' },
     },
   },
 
@@ -383,11 +383,11 @@ const mcpOptions: MCPConfig = {
       hooks: {
         // Gate destructive mutations: require a confirmation round-trip before executing.
         preprocess: (args) => {
-          if (!args.confirmationId) {
+          if (!args['confirmationId']) {
             return {
               needsConfirmation: true,
-              message: `Are you sure you want to cancel order "${args.orderId}"? This cannot be undone. Call again with confirmationId: "confirm-${args.orderId}" to proceed.`,
-              confirmationId: `confirm-${args.orderId}`,
+              message: `Are you sure you want to cancel order "${args['orderId']}"? This cannot be undone. Call again with confirmationId: "confirm-${args['orderId']}" to proceed.`,
+              confirmationId: `confirm-${args['orderId']}`,
             }
           }
           // Has confirmationId — continue to GraphQL execution
@@ -460,13 +460,13 @@ const mcpOptions: MCPConfig = {
       description: 'Current weather data for any city, served as JSON',
       mimeType: 'application/json',
       handler: async (params) => {
-        // params.location is extracted from the URI, e.g. "weather://London": { location: "London" }
-        const data = weatherData[params.location.toLowerCase()] || {
+        const location = params['location'] ?? 'unknown'
+        const data = weatherData[location.toLowerCase()] || {
           temperature: 70,
           conditions: 'Unknown',
           humidity: 50,
         }
-        return { text: JSON.stringify({ location: params.location, ...data }, null, 2) }
+        return { text: JSON.stringify({ location, ...data }, null, 2) }
       },
     },
 
@@ -476,8 +476,9 @@ const mcpOptions: MCPConfig = {
       name: 'Forecast',
       description: 'Multi-day forecast as markdown',
       handler: async (params) => {
-        const days = parseInt(params.days, 10) || 5
-        const lines = [`# ${days}-Day Forecast for ${params.location}`, '']
+        const days = parseInt(params['days'] ?? '5', 10) || 5
+        const location = params['location'] ?? 'unknown'
+        const lines = [`# ${days}-Day Forecast for ${location}`, '']
         for (let i = 0; i < days; i++) {
           lines.push(`- Day ${i + 1}: ${Math.round(60 + Math.random() * 20)}°F`)
         }

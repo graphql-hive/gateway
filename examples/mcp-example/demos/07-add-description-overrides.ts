@@ -14,7 +14,7 @@ import { createYoga, createSchema } from 'graphql-yoga'
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
 import { useMCP } from '@graphql-hive/plugin-mcp'
 
-const mcpPlugin = useMCP({
+const mcpOptions = {
   name: 'weather-api',
   version: '1.0.0',
   operationsPath: join(dirname(dirname(fileURLToPath(import.meta.url))), 'operations/weather.graphql'),
@@ -56,7 +56,7 @@ const mcpPlugin = useMCP({
       // No overrides, description comes from GraphQL schema
     },
   ],
-})
+}
 
 const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
@@ -150,7 +150,7 @@ const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
-  plugins: () => [mcpPlugin],
+  plugins: (ctx) => [useMCP(ctx, mcpOptions)],
 })
 
 const gatewayServer = createServer(gateway)

@@ -27,58 +27,60 @@ This example demonstrates:
 - Field-level input schema overrides
 
 ```typescript
-const mcpPlugin = useMCP({
-  name: 'weather-api',
-  version: '1.0.0',
-  path: '/mcp',
-  // .graphql files containing named operations and @mcpTool directives
-  operationsPath: './operations/weather.graphql',
-  tools: [
-    // File-based source: references a named operation from operationsPath
-    {
-      name: 'get_weather',
-      source: {
-        type: 'graphql',
-        operationName: 'GetWeather',
-        operationType: 'query',
-      },
-      tool: {
-        title: 'Current Weather',
-        description: 'Get the current weather for a city',
-      },
-      input: {
-        // Field-level input schema overrides (merged with auto-derived schema)
-        schema: {
-          properties: {
-            location: { description: 'City name, e.g. "New York", "London", "Tokyo"' },
+const gateway = createGatewayRuntime({
+  proxy: { endpoint: 'http://localhost:4001/graphql' },
+  plugins: (ctx) => [useMCP(ctx, {
+    name: 'weather-api',
+    version: '1.0.0',
+    path: '/mcp',
+    // .graphql files containing named operations and @mcpTool directives
+    operationsPath: './operations/weather.graphql',
+    tools: [
+      // File-based source: references a named operation from operationsPath
+      {
+        name: 'get_weather',
+        source: {
+          type: 'graphql',
+          operationName: 'GetWeather',
+          operationType: 'query',
+        },
+        tool: {
+          title: 'Current Weather',
+          description: 'Get the current weather for a city',
+        },
+        input: {
+          schema: {
+            properties: {
+              location: { description: 'City name, e.g. "New York", "London", "Tokyo"' },
+            },
           },
         },
       },
-    },
-    // File-based source: no overrides, description auto-derived from GraphQL schema
-    {
-      name: 'get_forecast',
-      source: {
-        type: 'graphql',
-        operationName: 'GetForecast',
-        operationType: 'query',
+      // File-based source: no overrides, description auto-derived from GraphQL schema
+      {
+        name: 'get_forecast',
+        source: {
+          type: 'graphql',
+          operationName: 'GetForecast',
+          operationType: 'query',
+        },
       },
-    },
-    // Inline source: query defined directly in config (no operations file needed)
-    {
-      name: 'get_conditions',
-      source: {
-        type: 'inline',
-        query: `query GetConditions($location: String!) {
-          weather(location: $location) { conditions }
-        }`,
+      // Inline source: query defined directly in config (no operations file needed)
+      {
+        name: 'get_conditions',
+        source: {
+          type: 'inline',
+          query: `query GetConditions($location: String!) {
+            weather(location: $location) { conditions }
+          }`,
+        },
+        tool: {
+          title: 'Weather Conditions',
+          description: 'Get just the weather conditions for a city',
+        },
       },
-      tool: {
-        title: 'Weather Conditions',
-        description: 'Get just the weather conditions for a city',
-      },
-    },
-  ],
+    ],
+  })],
 })
 ```
 
@@ -204,7 +206,7 @@ const myProvider: DescriptionProvider = {
   },
 }
 
-useMCP({
+useMCP(ctx, {
   ...yamlConfig,
   providers: { ...yamlConfig.providers, custom: myProvider },
 })

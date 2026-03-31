@@ -17,15 +17,15 @@ import { useMCP } from '@graphql-hive/plugin-mcp'
 
 export const gatewayConfig = defineConfig({
   // your existing supergraph/proxy config
-  plugins: () => [
-    useMCP({
+  plugins: (ctx) => [
+    useMCP(ctx, {
       name: 'my-api',
       path: '/mcp',
       tools: [
         {
           name: 'get_users',
           source: {
-            type: 'inline',
+            type: 'inline' as const,
             query: `query GetUsers($limit: Int) {
               users(limit: $limit) { id name email }
             }`,
