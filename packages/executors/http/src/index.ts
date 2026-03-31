@@ -531,7 +531,7 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
-          if (result == null) {
+          if (result == null || !result.data) {
             return result;
           }
           const clonedResult: ExecutionResult = {
