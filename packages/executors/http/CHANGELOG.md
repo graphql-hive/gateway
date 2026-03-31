@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 3.1.4
+### Patch Changes
+
+
+
+- [#2194](https://github.com/graphql-hive/gateway/pull/2194) [`f9d2f0e`](https://github.com/graphql-hive/gateway/commit/f9d2f0ea9e7f172b8270c17961a98bc52a7ba49d) Thanks [@ManrajSingh6](https://github.com/ManrajSingh6)! - Prevent reusing the cached inflight requests
+
 ## 3.1.3
 ### Patch Changes
 
