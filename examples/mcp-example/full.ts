@@ -492,6 +492,15 @@ const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
+  // When using persisted documents, MCP internal dispatches need to bypass the check.
+  // The MCP plugin preserves the original /mcp pathname on internal requests,
+  // so you can use allowArbitraryDocuments to let them through:
+  //
+  // persistedDocuments: {
+  //   ...yourPersistedDocsConfig,
+  //   allowArbitraryDocuments: (request: Request) =>
+  //     request.url.includes('/mcp'),
+  // },
   plugins: (ctx) => [useMCP(ctx, mcpOptions)],
 })
 
