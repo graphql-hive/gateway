@@ -1,4 +1,4 @@
-// Step 9: Connect Gemini CLI as an MCP client.
+// Step 14: Connect Gemini CLI as an MCP client.
 //
 // Add to ~/.gemini/settings.json: { "mcpServers": { "weather": { "httpUrl": "http://localhost:4000/mcp" } } }
 //
@@ -142,7 +142,7 @@ const schema = createSchema({
         const data = weatherData[loc] || { temperature: 70, conditions: 'Unknown', humidity: 50 }
         return { ...data, location }
       },
-      forecast: (_, { location, days = 5 }: { location: string; days?: number }) => {
+      forecast: (_, { days = 5 }: { location: string; days?: number }) => {
         const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Clear']
         const result = []
         const today = new Date()
