@@ -1632,4 +1632,228 @@ describe('MCP E2E', () => {
       expect(body.result.content[0].text).toContain('12.5'); // London temperature
     });
   });
+
+  it('custom plugin can detect MCP requests via pathname and skip logic', async () => {
+    const skippedRequests: string[] = [];
+
+    const customGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        // Custom plugin that skips persisted operation checks for MCP requests
+        {
+          onRequest({ url }: { url: URL }) {
+            if (url.pathname === '/mcp') {
+              skippedRequests.push(url.pathname);
+            }
+          },
+        } as any,
+        useMCP(ctx, {
+          name: 'pathname-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Bootstrap schema
+      await customGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // MCP request custom plugin should detect via pathname
+      await customGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+
+      expect(skippedRequests).toContain('/mcp');
+
+      // GraphQL request — should NOT be in skipped list
+      await customGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // Only the /mcp request was detected, not /graphql
+      expect(skippedRequests.every((p) => p === '/mcp')).toBe(true);
+    } finally {
+      await customGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('internal MCP dispatch keeps /mcp pathname, not /graphql', async () => {
+    const capturedUrls: string[] = [];
+
+    const pqsGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        {
+          onRequestParse({ request }: { request: Request }) {
+            capturedUrls.push(new URL(request.url).pathname);
+          },
+        } as any,
+        useMCP(ctx, {
+          name: 'pqs-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Bootstrap schema
+      await pqsGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      capturedUrls.length = 0;
+
+      // MCP tools/call internal dispatch should keep /mcp URL
+      await pqsGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+
+      // The internal dispatch request should have /mcp, NOT /graphql
+      expect(capturedUrls).toContain('/mcp');
+      expect(capturedUrls).not.toContain('/graphql');
+    } finally {
+      await pqsGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('allowArbitraryDocuments bypasses persisted ops check for MCP requests', async () => {
+    const allowCalls: { url: string; allowed: boolean }[] = [];
+
+    const pdsGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      persistedDocuments: {
+        getPersistedOperation(key: string) {
+          // Only allow a known persisted operation
+          if (key === 'known-hash') return '{ __typename }';
+          return null;
+        },
+        allowArbitraryDocuments: (request: Request) => {
+          const url = new URL(request.url);
+          const isMcp = url.pathname.includes('/mcp');
+          allowCalls.push({ url: url.pathname, allowed: isMcp });
+          return isMcp;
+        },
+      },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP(ctx, {
+          name: 'pds-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Bootstrap schema via persisted op hash
+      await pdsGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ extensions: { persistedQuery: { sha256Hash: 'known-hash' } } }),
+      });
+
+      allowCalls.length = 0;
+
+      // MCP tools/call allowArbitraryDocuments should see /mcp and return true
+      const mcpRes = await pdsGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+      const mcpBody = await mcpRes.json();
+
+      expect(mcpBody.result.isError).toBe(false);
+      expect(mcpBody.result.structuredContent.weather.temperature).toBe(12.5);
+
+      // Verify allowArbitraryDocuments was called with /mcp and allowed it
+      const mcpCall = allowCalls.find((c) => c.url === '/mcp');
+      expect(mcpCall).toBeDefined();
+      expect(mcpCall!.allowed).toBe(true);
+
+      // Direct GraphQL without persisted hash should be rejected
+      const gqlRes = await pdsGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+      const gqlBody = await gqlRes.json();
+
+      expect(gqlBody.errors).toBeDefined();
+      expect(gqlBody.errors[0].message).toMatch(/persisted/i);
+
+      // Verify allowArbitraryDocuments was called with /graphql and denied it
+      const gqlCall = allowCalls.find((c) => c.url === '/graphql');
+      expect(gqlCall).toBeDefined();
+      expect(gqlCall!.allowed).toBe(false);
+    } finally {
+      await pdsGateway[Symbol.asyncDispose]?.();
+    }
+  });
 });
