@@ -133,6 +133,7 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion
 # fix picomatch  vulnerability by updating it to the latest version ^4.0.4
 RUN npm install picomatch@^4.0.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch 
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
