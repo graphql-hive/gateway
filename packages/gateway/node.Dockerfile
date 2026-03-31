@@ -127,11 +127,11 @@ RUN npm install minimatch@^10.2.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 # fix brace-expansion vulnerability by updating it to the latest version ^5.0.4
-RUN npm install brace-expansion@^5.0.4
+RUN npm install brace-expansion@^5.0.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion 
 
 # fix picomatch  vulnerability by updating it to the latest version ^4.0.4
-RUN npm install picomatch@^4.0.4
+RUN npm install picomatch@^4.0.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch 
 
 USER node
