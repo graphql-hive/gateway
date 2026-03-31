@@ -1,5 +1,20 @@
 # @graphql-hive/gateway
 
+## 2.5.17
+### Patch Changes
+
+
+
+- [#2197](https://github.com/graphql-hive/gateway/pull/2197) [`e28a4f7`](https://github.com/graphql-hive/gateway/commit/e28a4f727791bf2fb32a3d9f3343068d67214cf9) Thanks [@ardatan](https://github.com/ardatan)! - Bump internal dependencies of NPM to fix Docker image vulnerability alerts
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.1
+  - @graphql-mesh/transport-http@1.0.21
+  - @graphql-hive/plugin-aws-sigv4@2.0.36
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.12
+  - @graphql-mesh/plugin-prometheus@2.1.31
+
 ## 2.5.16
 ### Patch Changes
 
