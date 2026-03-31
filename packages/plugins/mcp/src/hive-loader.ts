@@ -386,6 +386,7 @@ export function createHiveLoader(
     },
 
     stopPolling() {
+      ++pollGeneration; // invalidate any in-flight poll
       if (pollTimer) {
         clearTimeout(pollTimer);
         pollTimer = null;

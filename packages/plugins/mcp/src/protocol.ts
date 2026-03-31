@@ -83,6 +83,21 @@ export async function handleToolCall(
             `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
               `Check your output.path configuration.`,
           );
+          return {
+            jsonrpc: '2.0',
+            id: options.id,
+            result: {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    error: `output.path "${tool.outputPath}" could not extract data from the result`,
+                  }),
+                },
+              ],
+              isError: true,
+            },
+          };
         }
         result = extracted ?? null;
       }
@@ -161,6 +176,21 @@ export async function processExecutionResult(
           `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
             `Check your output.path configuration.`,
         );
+        return {
+          jsonrpc: '2.0',
+          id: options.id,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: `output.path "${tool.outputPath}" could not extract data from the result`,
+                }),
+              },
+            ],
+            isError: true,
+          },
+        };
       }
       data = extracted ?? null;
     }
