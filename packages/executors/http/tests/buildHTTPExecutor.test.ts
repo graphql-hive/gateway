@@ -403,6 +403,79 @@ describe('buildHTTPExecutor', () => {
     expect(requestCount).toBe(1);
   });
 
+  it('deduplicates inflight requests only with the same variables', async () => {
+    const requestCounts: Record<string, number> = {};
+    let requestCount = 0;
+    await using executor = buildHTTPExecutor({
+      fetch(url, init) {
+        requestCount++;
+        const req = new Request(new URL(url, 'http://localhost'), init);
+        return req.text().then((body) => {
+          requestCounts[body] = (requestCounts[body] || 0) + 1;
+          const data = JSON.parse(body);
+          const name = data.variables?.name || 'unknown';
+          return new Promise<Response>((resolve) => {
+            // resolve after a short delay to simulate network latency
+            setTimeout(50).then(() =>
+              resolve(
+                Response.json({
+                  data: { hello: name },
+                }),
+              ),
+            );
+          });
+        });
+      },
+    });
+
+    const promises = [
+      executor({
+        document: parse(/* GraphQL */ `
+          query Greetings($name: String!) {
+            hello(name: $name)
+          }
+        `),
+        variables: { name: 'Alice' },
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query Greetings($name: String!) {
+            hello(name: $name)
+          }
+        `),
+        variables: { name: 'Alice' },
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query Greetings($name: String!) {
+            hello(name: $name)
+          }
+        `),
+        variables: { name: 'Bob' },
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query Greetings($name: String!) {
+            hello(name: $name)
+          }
+        `),
+        variables: { name: 'Alice' },
+      }),
+    ];
+    const results = await Promise.all(promises);
+    expect(results).toEqual([
+      { data: { hello: 'Alice' } },
+      { data: { hello: 'Alice' } },
+      { data: { hello: 'Bob' } },
+      { data: { hello: 'Alice' } },
+    ]);
+    expect(requestCounts).toEqual({
+      '{"query":"query Greetings($name:String!){hello(name:$name)}","variables":{"name":"Alice"}}': 1,
+      '{"query":"query Greetings($name:String!){hello(name:$name)}","variables":{"name":"Bob"}}': 1,
+    });
+    expect(requestCount).toBe(2);
+  });
+
   it('should allow for custom timeout factory function', async () => {
     let hasAborted = false;
     await using executor = buildHTTPExecutor({

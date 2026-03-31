@@ -527,7 +527,22 @@ export function buildHTTPExecutor(
           });
         }
       }
-      return inflightRequest;
+      // TODO: Find a way better than cloning
+      return handleMaybePromise(
+        () => inflightRequest,
+        (result) => {
+          if (result == null || !result.data) {
+            return result;
+          }
+          const clonedResult: ExecutionResult = {
+            ...result,
+          };
+          if (result.data) {
+            clonedResult.data = structuredClone(result.data);
+          }
+          return clonedResult;
+        },
+      );
     }
 
     return handleMaybePromise(
