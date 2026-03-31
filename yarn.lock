@@ -4666,8 +4666,6 @@ __metadata:
   resolution: "@graphql-hive/plugin-mcp@workspace:packages/plugins/mcp"
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:*"
-    "@graphql-hive/logger": "workspace:^"
-    "@graphql-mesh/fusion-runtime": "workspace:^"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.2"
     pkgroll: "npm:2.23.0"

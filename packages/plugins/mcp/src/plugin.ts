@@ -840,10 +840,14 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
  */
 export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   if (!config.name?.trim()) {
-    throw new Error('[MCP] config.name is required and must be a non-empty string');
+    throw new Error(
+      '[MCP] config.name is required and must be a non-empty string',
+    );
   }
   if (config.tools != null && !Array.isArray(config.tools)) {
-    throw new Error('[MCP] config.tools must be an array of tool configurations');
+    throw new Error(
+      '[MCP] config.tools must be an array of tool configurations',
+    );
   }
   const mcpPath = config.path || '/mcp';
   const graphqlPath = config.graphqlPath || '/graphql';
