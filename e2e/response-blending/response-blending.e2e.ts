@@ -19,7 +19,6 @@ const { service, gateway } = createTenv(__dirname);
 
 it('test query response blending', async () => {
   const gw = await gateway({
-    pipeLogs: true,
     supergraph: {
       with: 'apollo',
       services: [await service('thing'), await service('metrics')],
