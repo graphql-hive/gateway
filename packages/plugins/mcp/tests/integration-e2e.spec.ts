@@ -1811,7 +1811,9 @@ describe('MCP E2E', () => {
       await pdsGateway.fetch('http://localhost/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ extensions: { persistedQuery: { sha256Hash: 'known-hash' } } }),
+        body: JSON.stringify({
+          extensions: { persistedQuery: { sha256Hash: 'known-hash' } },
+        }),
       });
 
       allowCalls.length = 0;
