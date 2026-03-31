@@ -21,11 +21,8 @@ it('test query response blending', async () => {
   const gw = await gateway({
     pipeLogs: true,
     supergraph: {
-      with: 'mesh',
-      services: [
-        await service('thing', { pipeLogs: true }),
-        await service('metrics', { pipeLogs: true }),
-      ],
+      with: 'apollo',
+      services: [await service('thing'), await service('metrics')],
     },
   });
 

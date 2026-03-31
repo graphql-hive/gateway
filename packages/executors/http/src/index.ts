@@ -528,7 +528,10 @@ export function buildHTTPExecutor(
         }
       }
       // TODO: Find a way better than cloning
-      return handleMaybePromise(() => inflightRequest, structuredClone<ExecutionResult>);
+      return handleMaybePromise(
+        () => inflightRequest,
+        structuredClone<ExecutionResult>,
+      );
     }
 
     return handleMaybePromise(
