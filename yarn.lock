@@ -4713,10 +4713,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/router-query-planner@npm:^0.0.16":
-  version: 0.0.16
-  resolution: "@graphql-hive/router-query-planner@npm:0.0.16"
-  checksum: 10c0/ed159564696ef6a34bafafc4cc3792b6d6392b3b916621d7ee08e0bd54e1ec9c2cb4fa52056692f5921e640c5bd86fc9f96e4b715569ef3bf475a7c45fb60aea
+"@graphql-hive/router-query-planner@npm:^0.0.17":
+  version: 0.0.17
+  resolution: "@graphql-hive/router-query-planner@npm:0.0.17"
+  checksum: 10c0/b1921cc9df2f38a30739abf73e14f8be353b8433016702a20492eaf75246e65d6074caa99147c6c097c36a29ea85ef3e925ccda846314061c83bd928e63353f2
   languageName: node
   linkType: hard
 
@@ -4725,7 +4725,7 @@ __metadata:
   resolution: "@graphql-hive/router-runtime@workspace:packages/router-runtime"
   dependencies:
     "@envelop/core": "npm:^5.4.0"
-    "@graphql-hive/router-query-planner": "npm:^0.0.16"
+    "@graphql-hive/router-query-planner": "npm:^0.0.17"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.13"
