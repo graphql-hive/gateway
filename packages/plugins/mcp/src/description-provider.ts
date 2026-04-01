@@ -52,10 +52,10 @@ async function resolveBuiltinProvider(
   options: Record<string, unknown>,
 ): Promise<DescriptionProvider> {
   if (name === 'langfuse') {
-    let Langfuse: any;
+    let LangfuseClient: any;
     try {
-      const mod = await import('langfuse');
-      Langfuse = mod.default || mod.Langfuse;
+      const mod = await import('@langfuse/client');
+      LangfuseClient = mod.LangfuseClient;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (
@@ -63,14 +63,16 @@ async function resolveBuiltinProvider(
         message.includes('ERR_MODULE_NOT_FOUND')
       ) {
         throw new Error(
-          `The "langfuse" provider requires the "langfuse" package. Install it with: npm install langfuse`,
+          `The "langfuse" provider requires the "@langfuse/client" package. Install it with: npm install @langfuse/client`,
         );
       }
-      throw new Error(`Failed to load the "langfuse" package: ${message}`);
-    }
-    if (typeof Langfuse !== 'function') {
       throw new Error(
-        `Failed to resolve the Langfuse constructor. Ensure you have a compatible version installed (langfuse ^3.0.0).`,
+        `Failed to load the "@langfuse/client" package: ${message}`,
+      );
+    }
+    if (typeof LangfuseClient !== 'function') {
+      throw new Error(
+        `Failed to resolve the LangfuseClient constructor. Ensure you have a compatible version installed (@langfuse/client ^5.0.0).`,
       );
     }
     const { createLangfuseProvider } = await import('./providers/langfuse.js');
@@ -87,12 +89,12 @@ async function resolveBuiltinProvider(
     }
     try {
       return createLangfuseProvider(
-        new Langfuse(langfuseOptions),
+        new LangfuseClient(langfuseOptions),
         defaults as Parameters<typeof createLangfuseProvider>[1],
       );
     } catch (err) {
       throw new Error(
-        `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASEURL env vars are set. ` +
+        `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASE_URL env vars are set. ` +
           `Original error: ${err instanceof Error ? err.message : String(err)}`,
       );
     }

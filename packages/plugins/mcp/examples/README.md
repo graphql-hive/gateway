@@ -131,7 +131,7 @@ This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https:/
 1. **Install the Langfuse package:**
 
    ```bash
-   npm install langfuse
+   npm install @langfuse/client
    ```
 
 2. **Set environment variables:**
@@ -139,7 +139,7 @@ This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https:/
    ```bash
    export LANGFUSE_SECRET_KEY=sk-lf-...
    export LANGFUSE_PUBLIC_KEY=pk-lf-...
-   export LANGFUSE_BASEURL=https://cloud.langfuse.com
+   export LANGFUSE_BASE_URL=https://cloud.langfuse.com
    ```
 
 3. **Create two text prompts in your Langfuse dashboard:**

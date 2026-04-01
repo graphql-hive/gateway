@@ -356,7 +356,7 @@ This means you can manage your MCP tools from Hive's UI and deploy new operation
 The plugin has built-in support for [Langfuse](https://langfuse.com/) as a description provider. Tool and field descriptions are fetched from Langfuse prompts at startup and can be refreshed at runtime.
 
 ```bash
-npm install langfuse
+npm install @langfuse/client
 ```
 
 Set your Langfuse credentials:
@@ -364,7 +364,7 @@ Set your Langfuse credentials:
 ```bash
 export LANGFUSE_SECRET_KEY=sk-lf-...
 export LANGFUSE_PUBLIC_KEY=pk-lf-...
-export LANGFUSE_BASEURL=https://cloud.langfuse.com
+export LANGFUSE_BASE_URL=https://cloud.langfuse.com
 ```
 
 Register the provider and reference it from tools:
@@ -414,6 +414,8 @@ curl http://localhost:4000/mcp?promptLabel=staging \
 ```
 
 Label precedence: per-request `?promptLabel=` > per-tool `options.label` > provider `defaults.label`.
+
+> **Version vs label:** Langfuse treats `version` and `label` as mutually exclusive. When a tool specifies an explicit `version`, the plugin strips any label before calling Langfuse. A pinned version is an intentional contract ("use exactly this prompt version"), while a label is environment-level routing ("use whatever is tagged `production`"). Specificity wins.
 
 To use a custom provider instead of Langfuse, pass any object with a `fetchDescription` method:
 

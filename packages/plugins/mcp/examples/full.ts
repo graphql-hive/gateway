@@ -195,9 +195,9 @@ const mcpOptions: MCPConfig = {
   providers: {
     langfuse: {
       // Langfuse SDK constructor options (secretKey, publicKey, baseUrl)
-      // are read from LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASEURL env vars.
+      // are read from LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASE_URL env vars.
 
-      // `defaults` — default options for all getPrompt() calls.
+      // `defaults` — default options for all prompt.get() calls.
       // Use this to set a global label per environment instead of repeating it per tool.
       // Precedence: per-request (?promptLabel= query param) -> per-tool options -> defaults
       defaults: { label: process.env['LANGFUSE_PROMPT_LABEL'] || 'production' },

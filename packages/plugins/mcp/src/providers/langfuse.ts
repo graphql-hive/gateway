@@ -1,18 +1,30 @@
-import type { Langfuse } from 'langfuse';
+import type { LangfuseClient, PromptManager } from '@langfuse/client';
 import type {
   DescriptionProvider,
   DescriptionProviderConfig,
   DescriptionProviderContext,
 } from '../description-provider.js';
 
-/** Options type for `Langfuse.getPrompt()`, derived from the Langfuse SDK. */
+/** Options type for text prompt retrieval via `PromptManager.get()`, derived from the Langfuse SDK. */
 export type LangfuseGetPromptOptions = NonNullable<
-  Parameters<Langfuse['getPrompt']>[2]
+  Parameters<
+    {
+      get(
+        name: string,
+        options?: PromptManager extends {
+          get(name: string, options?: infer TextOpts): Promise<any>;
+          get(...args: any[]): any;
+        }
+          ? TextOpts
+          : never,
+      ): any;
+    }['get']
+  >[1]
 >;
 
 /** Create a description provider backed by Langfuse prompt management. */
 export function createLangfuseProvider(
-  client: Langfuse,
+  client: LangfuseClient,
   defaults?: Partial<LangfuseGetPromptOptions>,
 ): DescriptionProvider {
   return {
@@ -33,18 +45,25 @@ export function createLangfuseProvider(
         | undefined;
       const hasDefaults = defaults && Object.keys(defaults).length > 0;
       const hasOverrides = hasDefaults || perToolOptions || context?.label;
-      const options = hasOverrides
-        ? {
-            ...defaults,
-            ...perToolOptions,
-            ...(context?.label ? { label: context.label } : undefined),
-          }
-        : perToolOptions;
-      const prompt = await client.getPrompt(
-        promptName,
-        version,
-        options as any,
-      );
+      const options: LangfuseGetPromptOptions = {
+        ...(hasOverrides
+          ? {
+              ...defaults,
+              ...perToolOptions,
+              ...(context?.label ? { label: context.label } : undefined),
+            }
+          : perToolOptions),
+      };
+
+      if (version != null) {
+        options.version = version;
+        delete options.label; // Langfuse rejects version + label together
+      }
+
+      const prompt = await client.prompt.get(promptName, {
+        ...options,
+        type: 'text',
+      });
       const compiled = prompt.compile();
       if (typeof compiled !== 'string') {
         throw new Error(

@@ -4689,16 +4689,18 @@ __metadata:
   resolution: "@graphql-hive/plugin-mcp@workspace:packages/plugins/mcp"
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:*"
+    "@graphql-hive/logger": "workspace:^"
+    "@langfuse/client": "npm:^5.0.2"
     graphql: "npm:^16.13.2"
     graphql-yoga: "npm:^5.19.0"
     pkgroll: "npm:2.27.0"
     sofa-api: "npm:0.18.10"
     tslib: "npm:^2.8.1"
   peerDependencies:
+    "@langfuse/client": ^5.0.2
     graphql: ^15.9.0 || ^16.9.0
-    langfuse: ^3.38.20
   peerDependenciesMeta:
-    langfuse:
+    "@langfuse/client":
       optional: true
   languageName: unknown
   linkType: soft
@@ -7343,6 +7345,39 @@ __metadata:
   version: 0.3.4
   resolution: "@kurkle/color@npm:0.3.4"
   checksum: 10c0/0e9fd55c614b005c5f0c4c755bca19ec0293bc7513b4ea3ec1725234f9c2fa81afbc78156baf555c8b9cb0d305619253c3f5bca016067daeebb3d00ebb4ea683
+  languageName: node
+  linkType: hard
+
+"@langfuse/client@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@langfuse/client@npm:5.0.2"
+  dependencies:
+    "@langfuse/core": "npm:^5.0.2"
+    "@langfuse/tracing": "npm:^5.0.2"
+    mustache: "npm:^4.2.0"
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+  checksum: 10c0/4966940820cb5987b0cc28650f557fbe5bdcb9dfac62f05ef27ae2003d9d069b5c4a112a20c63bc44c65dda019817babdae4d7971a2c2ac90966b4dd57d891b9
+  languageName: node
+  linkType: hard
+
+"@langfuse/core@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@langfuse/core@npm:5.0.2"
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+  checksum: 10c0/84afd300560e868a258742d61b1eaae7d7b42dd26fa60c53141145bcb9e469b56843cde10ca53838bab60897b3f0e8769a5eb7d7fcfc10d6b50220631173bb35
+  languageName: node
+  linkType: hard
+
+"@langfuse/tracing@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@langfuse/tracing@npm:5.0.2"
+  dependencies:
+    "@langfuse/core": "npm:^5.0.2"
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+  checksum: 10c0/8f9acb98660b513bae4a7455f7920030e763fe9023c58c562c36c785369e51dcb7577f5fe13f1cc06e6a3c8b340c6aa525b5eddff7e9534a65a509f56f48b6d1
   languageName: node
   linkType: hard
 
@@ -16240,6 +16275,7 @@ __metadata:
     "@changesets/changelog-github": "npm:^0.6.0"
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.7.1"
+    "@langfuse/client": "npm:^5.0.2"
     "@tsconfig/strictest": "npm:2.0.8"
     "@types/node": "npm:25.5.0"
     "@yarnpkg/cli": "npm:4.13.0"
@@ -16252,7 +16288,6 @@ __metadata:
     eslint-plugin-n: "npm:17.24.0"
     graphql: "npm:16.13.2"
     jest: "npm:30.3.0"
-    langfuse: "npm:^3.38.6"
     node-gyp: "npm:12.2.0"
     prettier: "npm:3.8.1"
     prettier-plugin-pkg: "npm:0.22.1"
@@ -18773,24 +18808,6 @@ __metadata:
   version: 2.0.0
   resolution: "kuler@npm:2.0.0"
   checksum: 10c0/0a4e99d92ca373f8f74d1dc37931909c4d0d82aebc94cf2ba265771160fc12c8df34eaaac80805efbda367e2795cb1f1dd4c3d404b6b1cf38aec94035b503d2d
-  languageName: node
-  linkType: hard
-
-"langfuse-core@npm:^3.38.6":
-  version: 3.38.6
-  resolution: "langfuse-core@npm:3.38.6"
-  dependencies:
-    mustache: "npm:^4.2.0"
-  checksum: 10c0/d101c6f05a98b7dcdc865b32e67803b538b60ff95a1e96e947b584c88f53a4e019450ba5609dcf30a9a5d80e9afd3eec28cae093157e5003bca9c3c595e63073
-  languageName: node
-  linkType: hard
-
-"langfuse@npm:^3.38.6":
-  version: 3.38.6
-  resolution: "langfuse@npm:3.38.6"
-  dependencies:
-    langfuse-core: "npm:^3.38.6"
-  checksum: 10c0/3605e30e3de486fd268cd09e6bd9ca879d483aa78837786762760093ecc43c7f4d93491064f86716e939479e67609cf212baf64c6101188db0947a71edbbdea4
   languageName: node
   linkType: hard
 

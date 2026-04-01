@@ -1,99 +1,95 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createLangfuseProvider } from '../../src/providers/langfuse.js';
 
+function mockLangfuse(compileFn: () => string = () => 'description') {
+  return {
+    prompt: {
+      get: vi.fn(async () => ({ compile: compileFn })),
+    },
+  };
+}
+
 describe('Langfuse provider', () => {
   it('fetches description from Langfuse prompt', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => ({
-        compile: () => 'Get weather data for a city',
-      })),
-    };
+    const client = mockLangfuse(() => 'Get weather data for a city');
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     const description = await provider.fetchDescription('get_weather', {
       type: 'langfuse',
       prompt: 'weather_tool_description',
     });
 
     expect(description).toBe('Get weather data for a city');
-    expect(mockClient.getPrompt).toHaveBeenCalledWith(
-      'weather_tool_description',
-      undefined,
-      undefined,
-    );
+    expect(client.prompt.get).toHaveBeenCalledWith('weather_tool_description', {
+      version: undefined,
+      type: 'text',
+    });
   });
 
-  it('passes version as positional arg', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => ({
-        compile: () => 'versioned description',
-      })),
-    };
+  it('passes version in options', async () => {
+    const client = mockLangfuse(() => 'versioned description');
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     await provider.fetchDescription('tool', {
       type: 'langfuse',
       prompt: 'my_prompt',
       version: 2,
     });
 
-    expect(mockClient.getPrompt).toHaveBeenCalledWith(
+    expect(client.prompt.get).toHaveBeenCalledWith(
       'my_prompt',
-      2,
-      undefined,
+      expect.objectContaining({ version: 2, type: 'text' }),
     );
   });
 
-  it('passes options to getPrompt', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => ({
-        compile: () => 'labeled description',
-      })),
-    };
+  it('passes options to prompt.get', async () => {
+    const client = mockLangfuse(() => 'labeled description');
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     await provider.fetchDescription('tool', {
       type: 'langfuse',
       prompt: 'my_prompt',
       options: { label: 'production', cacheTtlSeconds: 5 },
     });
 
-    expect(mockClient.getPrompt).toHaveBeenCalledWith('my_prompt', undefined, {
-      label: 'production',
-      cacheTtlSeconds: 5,
-    });
+    expect(client.prompt.get).toHaveBeenCalledWith(
+      'my_prompt',
+      expect.objectContaining({
+        label: 'production',
+        cacheTtlSeconds: 5,
+        type: 'text',
+      }),
+    );
   });
 
   it('throws when prompt field is missing', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => ({ compile: () => '' })),
-    };
+    const client = mockLangfuse();
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     await expect(
       provider.fetchDescription('tool', { type: 'langfuse' }),
     ).rejects.toThrow('requires a non-empty "prompt" field');
   });
 
   it('throws when prompt field is empty string', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => ({ compile: () => '' })),
-    };
+    const client = mockLangfuse();
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     await expect(
       provider.fetchDescription('tool', { type: 'langfuse', prompt: '' }),
     ).rejects.toThrow('requires a non-empty "prompt" field');
   });
 
   it('throws when Langfuse client fails', async () => {
-    const mockClient = {
-      getPrompt: vi.fn(async () => {
-        throw new Error('Langfuse API error');
-      }),
+    const client = {
+      prompt: {
+        get: vi.fn(async () => {
+          throw new Error('Langfuse API error');
+        }),
+      },
     };
 
-    const provider = createLangfuseProvider(mockClient as any);
+    const provider = createLangfuseProvider(client as any);
     await expect(
       provider.fetchDescription('tool', {
         type: 'langfuse',
@@ -105,11 +101,11 @@ describe('Langfuse provider', () => {
   describe('defaults and context', () => {
     function createMockClient() {
       return {
-        getPrompt: vi.fn(
-          async (_name: string, _version?: number, options?: any) => ({
+        prompt: {
+          get: vi.fn(async (_name: string, options?: any) => ({
             compile: () => `compiled with label=${options?.label ?? 'none'}`,
-          }),
-        ),
+          })),
+        },
       };
     }
 
@@ -124,9 +120,8 @@ describe('Langfuse provider', () => {
         prompt: 'my_prompt',
       });
 
-      expect(client.getPrompt).toHaveBeenCalledWith(
+      expect(client.prompt.get).toHaveBeenCalledWith(
         'my_prompt',
-        undefined,
         expect.objectContaining({ label: 'preproduction' }),
       );
     });
@@ -143,9 +138,8 @@ describe('Langfuse provider', () => {
         options: { label: 'production' },
       });
 
-      expect(client.getPrompt).toHaveBeenCalledWith(
+      expect(client.prompt.get).toHaveBeenCalledWith(
         'my_prompt',
-        undefined,
         expect.objectContaining({ label: 'production' }),
       );
     });
@@ -166,11 +160,28 @@ describe('Langfuse provider', () => {
         { label: 'staging' },
       );
 
-      expect(client.getPrompt).toHaveBeenCalledWith(
+      expect(client.prompt.get).toHaveBeenCalledWith(
         'my_prompt',
-        undefined,
         expect.objectContaining({ label: 'staging' }),
       );
+    });
+
+    it('version takes precedence and strips label', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any, {
+        label: 'preproduction',
+      });
+
+      await provider.fetchDescription('tool', {
+        type: 'langfuse',
+        prompt: 'my_prompt',
+        version: 5,
+        options: { label: 'production' },
+      });
+
+      const calledOptions = client.prompt.get.mock.calls[0]![1];
+      expect(calledOptions).toMatchObject({ version: 5, type: 'text' });
+      expect(calledOptions).not.toHaveProperty('label');
     });
 
     it('context without label does not override defaults', async () => {
@@ -185,9 +196,8 @@ describe('Langfuse provider', () => {
         {},
       );
 
-      expect(client.getPrompt).toHaveBeenCalledWith(
+      expect(client.prompt.get).toHaveBeenCalledWith(
         'my_prompt',
-        undefined,
         expect.objectContaining({ label: 'preproduction' }),
       );
     });
@@ -201,11 +211,10 @@ describe('Langfuse provider', () => {
         prompt: 'my_prompt',
       });
 
-      expect(client.getPrompt).toHaveBeenCalledWith(
-        'my_prompt',
-        undefined,
-        undefined,
-      );
+      expect(client.prompt.get).toHaveBeenCalledWith('my_prompt', {
+        version: undefined,
+        type: 'text',
+      });
     });
   });
 });

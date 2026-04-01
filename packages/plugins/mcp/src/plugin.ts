@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
+import type { LangfuseClientParams } from '@langfuse/client';
 import type { GraphQLSchema } from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
-import type { LangfuseOptions } from 'langfuse';
 import {
   resolveDescriptions,
   resolveFieldDescriptions,
@@ -30,6 +30,8 @@ import {
 import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { ToolRegistry, type RegisteredTool } from './registry.js';
 import type { PluginContext } from './types.js';
+
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 interface MCPToolCallContext {
   jsonrpcId: number | string;
@@ -453,14 +455,20 @@ export interface MCPConfig {
   resources?: MCPResourceConfig[];
   /** Dynamic resource templates with URI patterns and handler functions */
   resourceTemplates?: MCPResourceTemplateConfig[];
-  /** Description provider instances or configuration (e.g. Langfuse) */
+  /** 
+   * Description provider instances or configuration (e.g. Langfuse or custom providers) 
+   * 
+   * Custom providers: pass a DescriptionProvider instance containing fetchDescription or a config object for a built-in provider 
+  */
   providers?: {
-    /** Built-in Langfuse provider. Accepts LangfuseOptions (publicKey, secretKey, baseUrl) plus optional defaults */
-    langfuse?: LangfuseOptions & {
-      /** Default getPrompt() options applied to all Langfuse description lookups (e.g. { label: "production" }) */
-      defaults?: Partial<LangfuseGetPromptOptions>;
-    };
-    /** Custom providers: pass a DescriptionProvider instance or a config object for a built-in provider */
+    /** Built-in Langfuse provider. Accepts LangfuseClientParams (publicKey, secretKey, baseUrl) plus optional defaults */
+    langfuse?: Prettify<
+      LangfuseClientParams & {
+        /** Default prompt.get() options applied to all Langfuse description lookups (e.g. { label: "production" }) */
+        defaults?: Prettify<Partial<LangfuseGetPromptOptions>>;
+      }
+    >;
+  } & {
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
   /** Suppress outputSchema from all tools in tools/list responses */
