@@ -45,9 +45,6 @@ export async function unifiedGraphHandler(
   const getHandledFederationSupergraph = getLazyValue(() =>
     handleFederationSupergraph(opts),
   );
-  const getSubgraphSchema = getLazyFactory(
-    () => getHandledFederationSupergraph().getSubgraphSchema,
-  );
 
   const moduleName = '@graphql-hive/router-query-planner';
   const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
