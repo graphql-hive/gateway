@@ -26,6 +26,7 @@ import {
   getNamedType,
   GraphQLNamedOutputType,
   GraphQLSchema,
+  isUnionType,
   Kind,
   parse,
   print,
@@ -137,13 +138,28 @@ function resolvePubsubOperationRootField(
   );
 }
 
+function isEntityType(
+  getSubgraphSchema: () => GraphQLSchema,
+  type: GraphQLNamedOutputType | undefined,
+) {
+  if (type) {
+    const subgraphSchema = getSubgraphSchema();
+    const entityType = subgraphSchema.getType('_Entity');
+    if (isUnionType(entityType)) {
+      return entityType.getTypes().some((t) => t.name === type.name);
+    }
+  }
+  return false;
+}
+
 export function handlePubsubOperationField(
   supergraphSchema: GraphQLSchema,
   executionRequest: ExecutionRequest,
+  getSubgraphSchema: () => GraphQLSchema,
   executeSubgraph: (
     executionRequest: ExecutionRequest,
   ) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>,
-) {
+): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
   if (executionRequest.operationType === 'subscription') {
     const typeInfo = getTypeInfo(supergraphSchema);
     let responseKey: string | undefined;
@@ -176,28 +192,7 @@ export function handlePubsubOperationField(
         getPubsubOperationRootFields(supergraphSchema);
       const pubsubOperationOptions = pubsubOperationFields.get(fieldName);
       if (pubsubOperationOptions) {
-        let newExecutionRequest: ExecutionRequest | undefined;
-        if (selectionSet && returnType) {
-          const operationAST = getOperationASTFromRequest(executionRequest);
-          const varDefs =
-            operationAST.variableDefinitions?.filter(
-              (varDef) => varDef.variable.name.value != 'representations',
-            ) || [];
-          varDefs.push(REPRESENTATIONS_VAR_DEF);
-          const varDefsStr = varDefs.map((varDef) => print(varDef)).join(', ');
-          const newDocument = parse(/* GraphQL */ `
-                query ${executionRequest.operationName || ''}(${varDefsStr}) {
-                    _entities(representations: $representations) {
-                        __typename
-                        ... on ${returnType.name} ${print(selectionSet)}
-                    }
-                } 
-            `);
-          newExecutionRequest = {
-            ...executionRequest,
-            document: newDocument,
-          };
-        }
+        const isEntity = isEntityType(getSubgraphSchema, returnType);
         const args: Record<string, any> = {};
         if (argNodes) {
           for (const argNode of argNodes) {
@@ -209,35 +204,54 @@ export function handlePubsubOperationField(
             );
           }
         }
-        if (newExecutionRequest) {
-          const returnTypeName = returnType?.name;
-          return handleMaybePromiseMaybeAsyncIterable(
-            () =>
-              resolvePubsubOperationRootField(
-                pubsubOperationOptions,
-                responseKey!,
-                {
-                  root: executionRequest.rootValue,
-                  args,
-                  context: executionRequest.context,
-                },
-              ),
-            (executionResult: ExecutionResult<any>) => {
-              if (executionResult.data?.[responseKey!] != null) {
-                const representations = asArray(
-                  executionResult.data[responseKey!],
-                );
-                if (returnTypeName) {
-                  for (const representation of representations) {
-                    representation.__typename = returnTypeName;
-                  }
+        const returnTypeName = returnType?.name;
+        return handleMaybePromiseMaybeAsyncIterable(
+          () =>
+            resolvePubsubOperationRootField(
+              pubsubOperationOptions,
+              responseKey!,
+              {
+                root: executionRequest.rootValue,
+                args,
+                context: executionRequest.context,
+              },
+            ),
+          (executionResult: ExecutionResult<any>) => {
+            if (executionResult.data?.[responseKey!] != null) {
+              const representations = asArray(
+                executionResult.data[responseKey!],
+              ).filter(Boolean);
+              if (returnTypeName) {
+                for (const representation of representations) {
+                  representation.__typename = returnTypeName;
                 }
+              }
+              if (isEntity && selectionSet && representations.length) {
+                const operationAST =
+                  getOperationASTFromRequest(executionRequest);
+                const varDefs =
+                  operationAST.variableDefinitions?.filter(
+                    (varDef) => varDef.variable.name.value != 'representations',
+                  ) || [];
+                varDefs.push(REPRESENTATIONS_VAR_DEF);
+                const varDefsStr = varDefs
+                  .map((varDef) => print(varDef))
+                  .join(', ');
+                const entityResolutionDocument = parse(/* GraphQL */ `
+                query ${executionRequest.operationName || ''}(${varDefsStr}) {
+                    _entities(representations: $representations) {
+                        __typename
+                        ... on ${returnTypeName} ${print(selectionSet)}
+                    }
+                } 
+                 `);
                 return handleMaybePromiseMaybeAsyncIterable(
                   () =>
                     executeSubgraph({
-                      ...newExecutionRequest,
+                      ...executionRequest,
+                      document: entityResolutionDocument,
                       variables: {
-                        ...newExecutionRequest.variables,
+                        ...executionRequest.variables,
                         representations,
                       },
                     }),
@@ -259,7 +273,6 @@ export function handlePubsubOperationField(
                           );
                         }
                       }
-                      return executionResult;
                     }
                     if (entitiesResult?.errors?.length) {
                       executionResult.errors ||= [];
@@ -270,14 +283,14 @@ export function handlePubsubOperationField(
                   },
                 );
               }
-              return executionResult;
-            },
-          ) as AsyncIterable<ExecutionResult>;
-        }
+            }
+            return executionResult;
+          },
+        ) as AsyncIterable<ExecutionResult>;
       }
     }
   }
-  return false;
+  return executeSubgraph(executionRequest);
 }
 
 /** @pubsubPublish */
@@ -331,7 +344,11 @@ export function handleResultWithPubSubPublish(
   request: ExecutionRequest<any, GatewayContext>,
   result: ExecutionResult,
 ) {
-  if (result.data != null && request.context?.pubsub != null) {
+  if (
+    request.operationType === 'mutation' &&
+    result.data != null &&
+    request.context?.pubsub != null
+  ) {
     const pubsubPublishVisitor = getPubsubPublishVisitor(
       schema,
       request.context.pubsub,
@@ -340,4 +357,5 @@ export function handleResultWithPubSubPublish(
       return visitResult(result, request, schema, pubsubPublishVisitor);
     }
   }
+  return result;
 }

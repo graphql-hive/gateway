@@ -33,6 +33,9 @@ export async function unifiedGraphHandler(
   const getSubschema = getLazyFactory(
     () => getHandledFederationSupergraph().getSubschema,
   );
+  const getSubgraphSchema = getLazyFactory(
+    () => getHandledFederationSupergraph().getSubgraphSchema,
+  );
   const getHandledFederationSupergraph = getLazyValue(() =>
     handleFederationSupergraph(opts),
   );
@@ -146,40 +149,28 @@ export async function unifiedGraphHandler(
           return executeQueryPlan({
             supergraphSchema,
             executionRequest,
-            onSubgraphExecute(subgraphName, executionRequest) {
-              function executeSubgraph(executionRequest: ExecutionRequest) {
-                return handleMaybePromiseMaybeAsyncIterable(
-                  () =>
-                    onSubgraphExecuteWithTransforms(
-                      subgraphName,
-                      executionRequest,
-                      opts.onSubgraphExecute,
-                      getSubschema,
-                    ),
-                  (executionResult: ExecutionResult) => {
-                    if (executionRequest.operationType === 'mutation') {
+            onSubgraphExecute: (subgraphName, executionRequest) =>
+              handlePubsubOperationField(
+                supergraphSchema,
+                executionRequest,
+                () => getSubgraphSchema(subgraphName),
+                (executionRequest) =>
+                  handleMaybePromiseMaybeAsyncIterable(
+                    () =>
+                      onSubgraphExecuteWithTransforms(
+                        subgraphName,
+                        executionRequest,
+                        opts.onSubgraphExecute,
+                        getSubschema,
+                      ),
+                    (executionResult: ExecutionResult) =>
                       handleResultWithPubSubPublish(
                         supergraphSchema,
                         executionRequest,
                         executionResult,
-                      );
-                    }
-                    return executionResult;
-                  },
-                );
-              }
-
-              const maybeResult = handlePubsubOperationField(
-                supergraphSchema,
-                executionRequest,
-                // In case of an extra type resolution
-                executeSubgraph,
-              );
-              if (maybeResult) {
-                return maybeResult;
-              }
-              return executeSubgraph(executionRequest);
-            },
+                      ),
+                  ),
+              ),
             queryPlan,
           });
         },
