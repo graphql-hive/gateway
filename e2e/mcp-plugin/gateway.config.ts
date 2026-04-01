@@ -3,10 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@graphql-hive/gateway';
 
 const mockProvider = {
-  fetchDescription: (
-    _toolName: string,
-    config: Record<string, unknown>,
-  ) => `Resolved: ${config['prompt']}`,
+  fetchDescription: (_toolName: string, config: Record<string, unknown>) =>
+    `Resolved: ${config['prompt']}`,
 };
 
 export const gatewayConfig = defineConfig({
@@ -16,7 +14,10 @@ export const gatewayConfig = defineConfig({
     title: 'MCP E2E Test Gateway',
     description: 'Gateway for e2e testing of MCP features',
 
-    operationsPath: resolve(dirname(fileURLToPath(import.meta.url)), 'operations'),
+    operationsPath: resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      'operations',
+    ),
 
     providers: {
       mock: mockProvider,

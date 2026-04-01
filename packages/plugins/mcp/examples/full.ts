@@ -1,31 +1,31 @@
-import { config } from 'dotenv'
-import { createServer } from 'node:http'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { createYoga, createSchema } from 'graphql-yoga'
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
-import { type MCPConfig, useMCP } from '@graphql-hive/plugin-mcp'
+import { createServer } from 'node:http';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { useMCP, type MCPConfig } from '@graphql-hive/plugin-mcp';
+import { config } from 'dotenv';
+import { createSchema, createYoga } from 'graphql-yoga';
 
-config({ path: new URL('.env', import.meta.url).pathname })
+config({ path: new URL('.env', import.meta.url).pathname });
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
+const weatherData: Record<
+  string,
+  { temperature: number; conditions: string; humidity: number }
+> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
-  'london': { temperature: 58, conditions: 'Rainy', humidity: 85 },
-  'tokyo': { temperature: 68, conditions: 'Sunny', humidity: 55 },
-  'sydney': { temperature: 82, conditions: 'Clear', humidity: 45 },
-  'paris': { temperature: 63, conditions: 'Overcast', humidity: 70 },
-}
+  london: { temperature: 58, conditions: 'Rainy', humidity: 85 },
+  tokyo: { temperature: 68, conditions: 'Sunny', humidity: 55 },
+  sydney: { temperature: 82, conditions: 'Clear', humidity: 45 },
+  paris: { temperature: 63, conditions: 'Overcast', humidity: 70 },
+};
 
 const schema = createSchema({
   typeDefs: /* GraphQL */ `
     type Query {
       "Get current weather data for a location"
-      weather(
-        "City name or postal code"
-        location: String!
-      ): Weather!
+      weather("City name or postal code" location: String!): Weather!
 
       "Get weather forecast for upcoming days"
       forecast(
@@ -102,9 +102,13 @@ const schema = createSchema({
   resolvers: {
     Query: {
       weather: (_, { location }: { location: string }) => {
-        const loc = location.toLowerCase()
-        const data = weatherData[loc] || { temperature: 70, conditions: 'Unknown', humidity: 50 }
-        return { ...data, location }
+        const loc = location.toLowerCase();
+        const data = weatherData[loc] || {
+          temperature: 70,
+          conditions: 'Unknown',
+          humidity: 50,
+        };
+        return { ...data, location };
       },
       search: (_, { q, pageSize = 3 }: { q: string; pageSize?: number }) => ({
         items: Array.from({ length: Math.min(pageSize, 5) }, (_, i) => ({
@@ -115,45 +119,58 @@ const schema = createSchema({
         })),
       }),
       forecast: (_, { days = 5 }: { location: string; days?: number }) => {
-        const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Clear']
-        const result = []
-        const today = new Date()
+        const conditions = [
+          'Sunny',
+          'Partly Cloudy',
+          'Cloudy',
+          'Rainy',
+          'Clear',
+        ];
+        const result = [];
+        const today = new Date();
         for (let i = 0; i < days; i++) {
-          const date = new Date(today)
-          date.setDate(date.getDate() + i)
+          const date = new Date(today);
+          date.setDate(date.getDate() + i);
           result.push({
             date: date.toISOString().split('T')[0],
             high: Math.round(65 + Math.random() * 20),
             low: Math.round(45 + Math.random() * 15),
-            conditions: conditions[Math.floor(Math.random() * conditions.length)],
-          })
+            conditions:
+              conditions[Math.floor(Math.random() * conditions.length)],
+          });
         }
-        return result
+        return result;
       },
     },
     Mutation: {
-      cancelOrder: (_, { orderId, confirmationId }: { orderId: string; confirmationId?: string }) => {
+      cancelOrder: (
+        _,
+        {
+          orderId,
+          confirmationId,
+        }: { orderId: string; confirmationId?: string },
+      ) => {
         if (!confirmationId) {
-          return { success: false, message: 'Confirmation required' }
+          return { success: false, message: 'Confirmation required' };
         }
-        return { success: true, message: `Order ${orderId} cancelled` }
+        return { success: true, message: `Order ${orderId} cancelled` };
       },
     },
   },
-})
+});
 
-const subgraphYoga = createYoga({ schema })
-const subgraphServer = createServer(subgraphYoga)
+const subgraphYoga = createYoga({ schema });
+const subgraphServer = createServer(subgraphYoga);
 subgraphServer.listen(4001, () => {
-  console.log('Subgraph running at http://localhost:4001/graphql')
-})
+  console.log('Subgraph running at http://localhost:4001/graphql');
+});
 
 const mcpOptions: MCPConfig = {
-  name: 'weather-api',             // MCP server name (returned in initialize)
-  version: '1.0.0',                // MCP server version
-  protocolVersion: '2025-11-25',   // MCP protocol version (default: '2025-11-25')
+  name: 'weather-api', // MCP server name (returned in initialize)
+  version: '1.0.0', // MCP server version
+  protocolVersion: '2025-11-25', // MCP protocol version (default: '2025-11-25')
 
-  path: '/mcp',                    // MCP JSON-RPC endpoint (default: '/mcp')
+  path: '/mcp', // MCP JSON-RPC endpoint (default: '/mcp')
   // graphqlPath: '/graphql',      // GraphQL endpoint for internal dispatch (default: '/graphql')
 
   // Path to .graphql file(s) with named operations (and optional @mcpTool / @mcpDescription directives).
@@ -187,15 +204,15 @@ const mcpOptions: MCPConfig = {
     },
   },
 
-  suppressOutputSchema: false,      // Suppress outputSchema for all tools in tools/list
-  disableGraphQLEndpoint: false,    // Block external /graphql access (MCP-only mode)
+  suppressOutputSchema: false, // Suppress outputSchema for all tools in tools/list
+  disableGraphQLEndpoint: false, // Block external /graphql access (MCP-only mode)
 
   // Each tool maps to a GraphQL operation. The MCP input schema is auto-derived
   // from the operation's variables, and the output schema from its selection set.
   tools: [
     // Tool 1: File-based source + Langfuse + aliasing
     {
-      name: 'get_weather',            // MCP tool name (used in tools/call)
+      name: 'get_weather', // MCP tool name (used in tools/call)
 
       // source: where to find the GraphQL operation
       //   type: 'graphql' — reference a named operation from operationsPath
@@ -216,8 +233,8 @@ const mcpOptions: MCPConfig = {
         // The provider is called on every tools/list request (not cached).
         // Precedence: descriptionProvider > description > @mcpTool directive > schema description
         descriptionProvider: {
-          type: 'langfuse',                    // Registered provider name
-          prompt: 'get_weather_description',   // Langfuse prompt name
+          type: 'langfuse', // Registered provider name
+          prompt: 'get_weather_description', // Langfuse prompt name
           // version: 2,                       // Pin to a specific prompt version
           // options: { label: 'staging' },    // Per-tool override of provider defaults
         },
@@ -311,21 +328,21 @@ const mcpOptions: MCPConfig = {
         schema: {
           properties: {
             q: {
-              alias: 'searchQuery',             // MCP client sees "searchQuery", GraphQL gets "$q"
+              alias: 'searchQuery', // MCP client sees "searchQuery", GraphQL gets "$q"
               descriptionProvider: {
                 type: 'langfuse',
                 prompt: 'search_docs_argument_search_query',
               },
             },
             pageSize: {
-              default: 3,                       // Optional with default
+              default: 3, // Optional with default
               descriptionProvider: {
                 type: 'langfuse',
                 prompt: 'search_docs_argument_page_size',
               },
             },
             sources: {
-              default: ['ToastCentralArticle'],  // Hidden from MCP client with a fixed default
+              default: ['ToastCentralArticle'], // Hidden from MCP client with a fixed default
               description: 'Data sources to search',
             },
           },
@@ -341,12 +358,19 @@ const mcpOptions: MCPConfig = {
       // and inject _metadata for the agent (query context, source, timing).
       hooks: {
         postprocess: (result, args) => {
-          const items = result as Array<{ path: string; topic: string; description: string; score: number }>
-          if (!Array.isArray(items) || items.length === 0) return result
-          const header = '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|'
+          const items = result as Array<{
+            path: string;
+            topic: string;
+            description: string;
+            score: number;
+          }>;
+          if (!Array.isArray(items) || items.length === 0) return result;
+          const header =
+            '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|';
           const rows = items.map(
-            (item) => `| ${item.topic} | ${item.description} | ${item.score} | ${item.path} |`,
-          )
+            (item) =>
+              `| ${item.topic} | ${item.description} | ${item.score} | ${item.path} |`,
+          );
           return {
             content: [{ type: 'text', text: `${header}\n${rows.join('\n')}` }],
             _metadata: {
@@ -354,7 +378,7 @@ const mcpOptions: MCPConfig = {
               source: 'toast-central',
               timestamp: Date.now(),
             },
-          }
+          };
         },
       },
     },
@@ -375,10 +399,11 @@ const mcpOptions: MCPConfig = {
       },
       tool: {
         title: 'Cancel Order',
-        description: 'Cancel an order. Requires confirmation — call once to get a confirmation prompt, then again with the confirmationId.',
+        description:
+          'Cancel an order. Requires confirmation — call once to get a confirmation prompt, then again with the confirmationId.',
       },
-      output: { 
-        path: 'cancelOrder', 
+      output: {
+        path: 'cancelOrder',
       },
       hooks: {
         // Gate destructive mutations: require a confirmation round-trip before executing.
@@ -388,10 +413,10 @@ const mcpOptions: MCPConfig = {
               needsConfirmation: true,
               message: `Are you sure you want to cancel order "${args['orderId']}"? This cannot be undone. Call again with confirmationId: "confirm-${args['orderId']}" to proceed.`,
               confirmationId: `confirm-${args['orderId']}`,
-            }
+            };
           }
           // Has confirmationId — continue to GraphQL execution
-          return undefined
+          return undefined;
         },
       },
     },
@@ -460,13 +485,13 @@ const mcpOptions: MCPConfig = {
       description: 'Current weather data for any city, served as JSON',
       mimeType: 'application/json',
       handler: async (params) => {
-        const location = params['location'] ?? 'unknown'
+        const location = params['location'] ?? 'unknown';
         const data = weatherData[location.toLowerCase()] || {
           temperature: 70,
           conditions: 'Unknown',
           humidity: 50,
-        }
-        return { text: JSON.stringify({ location, ...data }, null, 2) }
+        };
+        return { text: JSON.stringify({ location, ...data }, null, 2) };
       },
     },
 
@@ -476,17 +501,19 @@ const mcpOptions: MCPConfig = {
       name: 'Forecast',
       description: 'Multi-day forecast as markdown',
       handler: async (params) => {
-        const days = parseInt(params['days'] ?? '5', 10) || 5
-        const location = params['location'] ?? 'unknown'
-        const lines = [`# ${days}-Day Forecast for ${location}`, '']
+        const days = parseInt(params['days'] ?? '5', 10) || 5;
+        const location = params['location'] ?? 'unknown';
+        const lines = [`# ${days}-Day Forecast for ${location}`, ''];
         for (let i = 0; i < days; i++) {
-          lines.push(`- Day ${i + 1}: ${Math.round(60 + Math.random() * 20)}°F`)
+          lines.push(
+            `- Day ${i + 1}: ${Math.round(60 + Math.random() * 20)}°F`,
+          );
         }
-        return { text: lines.join('\n'), mimeType: 'text/markdown' }
+        return { text: lines.join('\n'), mimeType: 'text/markdown' };
       },
     },
   ],
-}
+};
 
 const gateway = createGatewayRuntime({
   proxy: {
@@ -502,11 +529,11 @@ const gateway = createGatewayRuntime({
   //     request.url.includes('/mcp'),
   // },
   plugins: (ctx) => [useMCP(ctx, mcpOptions)],
-})
+});
 
-const gatewayServer = createServer(gateway)
+const gatewayServer = createServer(gateway);
 gatewayServer.listen(4000, () => {
-  console.log('Gateway running at http://localhost:4000/graphql')
-  console.log('MCP endpoint at http://localhost:4000/mcp')
-  console.log('  Per-request label override: POST /mcp?promptLabel=staging')
-})
+  console.log('Gateway running at http://localhost:4000/graphql');
+  console.log('MCP endpoint at http://localhost:4000/mcp');
+  console.log('  Per-request label override: POST /mcp?promptLabel=staging');
+});

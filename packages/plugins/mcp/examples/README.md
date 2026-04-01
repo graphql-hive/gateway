@@ -4,10 +4,10 @@ This example demonstrates the MCP (Model Context Protocol) plugin for Hive Gatew
 
 ## Examples
 
-| Script | Description |
-|--------|-------------|
+| Script     | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
 | `basic.ts` | Programmatic config with operation files and `@mcpTool` directives |
-| `full.ts` | YAML/JSON config with Langfuse as external description provider |
+| `full.ts`  | YAML/JSON config with Langfuse as external description provider    |
 
 Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on `:4000`.
 
@@ -20,6 +20,7 @@ npx tsx packages/plugins/mcp/examples/basic.ts
 ```
 
 This example demonstrates:
+
 - **Inline queries** with `source.type: 'inline'` (query string directly in config)
 - **File-based operations** via `operationsPath` + `source.type: 'graphql'` (reference by name)
 - **Auto-registration** from `@mcpTool` directives in `.graphql` files
@@ -29,65 +30,70 @@ This example demonstrates:
 ```typescript
 const gateway = createGatewayRuntime({
   proxy: { endpoint: 'http://localhost:4001/graphql' },
-  plugins: (ctx) => [useMCP(ctx, {
-    name: 'weather-api',
-    version: '1.0.0',
-    path: '/mcp',
-    // .graphql files containing named operations and @mcpTool directives
-    operationsPath: './operations/weather.graphql',
-    tools: [
-      // File-based source: references a named operation from operationsPath
-      {
-        name: 'get_weather',
-        source: {
-          type: 'graphql',
-          operationName: 'GetWeather',
-          operationType: 'query',
-        },
-        tool: {
-          title: 'Current Weather',
-          description: 'Get the current weather for a city',
-        },
-        input: {
-          schema: {
-            properties: {
-              location: { description: 'City name, e.g. "New York", "London", "Tokyo"' },
+  plugins: (ctx) => [
+    useMCP(ctx, {
+      name: 'weather-api',
+      version: '1.0.0',
+      path: '/mcp',
+      // .graphql files containing named operations and @mcpTool directives
+      operationsPath: './operations/weather.graphql',
+      tools: [
+        // File-based source: references a named operation from operationsPath
+        {
+          name: 'get_weather',
+          source: {
+            type: 'graphql',
+            operationName: 'GetWeather',
+            operationType: 'query',
+          },
+          tool: {
+            title: 'Current Weather',
+            description: 'Get the current weather for a city',
+          },
+          input: {
+            schema: {
+              properties: {
+                location: {
+                  description: 'City name, e.g. "New York", "London", "Tokyo"',
+                },
+              },
             },
           },
         },
-      },
-      // File-based source: no overrides, description auto-derived from GraphQL schema
-      {
-        name: 'get_forecast',
-        source: {
-          type: 'graphql',
-          operationName: 'GetForecast',
-          operationType: 'query',
+        // File-based source: no overrides, description auto-derived from GraphQL schema
+        {
+          name: 'get_forecast',
+          source: {
+            type: 'graphql',
+            operationName: 'GetForecast',
+            operationType: 'query',
+          },
         },
-      },
-      // Inline source: query defined directly in config (no operations file needed)
-      {
-        name: 'get_conditions',
-        source: {
-          type: 'inline',
-          query: `query GetConditions($location: String!) {
+        // Inline source: query defined directly in config (no operations file needed)
+        {
+          name: 'get_conditions',
+          source: {
+            type: 'inline',
+            query: `query GetConditions($location: String!) {
             weather(location: $location) { conditions }
           }`,
+          },
+          tool: {
+            title: 'Weather Conditions',
+            description: 'Get just the weather conditions for a city',
+          },
         },
-        tool: {
-          title: 'Weather Conditions',
-          description: 'Get just the weather conditions for a city',
-        },
-      },
-    ],
-  })],
-})
+      ],
+    }),
+  ],
+});
 ```
 
 The `operations/weather.graphql` file also contains a `@mcpTool` directive-based tool that auto-registers without a `tools[]` entry:
 
 ```graphql
-query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check") {
+query QuickWeather($location: String!)
+@mcpTool(name: "quick_weather", description: "Quick weather check") {
   weather(location: $location) {
     temperature
     conditions
@@ -138,10 +144,10 @@ This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https:/
 
 3. **Create two text prompts in your Langfuse dashboard:**
 
-   | Prompt name | Example content |
-   |---|---|
-   | `get_weather_description` | `Get current weather conditions including temperature, humidity, and sky conditions for any city worldwide.` |
-   | `get_forecast_description` | `Get a multi-day weather forecast with daily high/low temperatures and expected conditions.` |
+   | Prompt name                | Example content                                                                                              |
+   | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+   | `get_weather_description`  | `Get current weather conditions including temperature, humidity, and sky conditions for any city worldwide.` |
+   | `get_forecast_description` | `Get a multi-day weather forecast with daily high/low temperatures and expected conditions.`                 |
 
 ### Run
 
@@ -171,7 +177,7 @@ tools:
         prompt: get_weather_description
 
 providers:
-  langfuse: {}   # auto-instantiated from env vars
+  langfuse: {} # auto-instantiated from env vars
 ```
 
 - `providers: { langfuse: {} }` — the Langfuse client is auto-instantiated using `LANGFUSE_*` env vars
@@ -198,16 +204,18 @@ curl -s http://localhost:4000/mcp \
 You can mix YAML config with programmatic custom providers:
 
 ```typescript
-import type { DescriptionProvider } from '@graphql-hive/plugin-mcp'
+import type { DescriptionProvider } from '@graphql-hive/plugin-mcp';
 
 const myProvider: DescriptionProvider = {
   async fetchDescription(toolName, config) {
-    return fetch(`https://my-cms.com/api/${config.prompt}`).then(r => r.text())
+    return fetch(`https://my-cms.com/api/${config.prompt}`).then((r) =>
+      r.text(),
+    );
   },
-}
+};
 
 useMCP(ctx, {
   ...yamlConfig,
   providers: { ...yamlConfig.providers, custom: myProvider },
-})
+});
 ```

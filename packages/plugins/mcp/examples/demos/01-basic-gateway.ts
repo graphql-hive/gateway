@@ -2,26 +2,26 @@
 //
 // curl -s http://localhost:4000/graphql -H "Content-Type: application/json" -d '{"query":"{ weather(location: \"Tokyo\") { temperature conditions humidity } }"}' | jq
 
-import { createServer } from 'node:http'
-import { createYoga, createSchema } from 'graphql-yoga'
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
+import { createServer } from 'node:http';
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { createSchema, createYoga } from 'graphql-yoga';
 
-const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
+const weatherData: Record<
+  string,
+  { temperature: number; conditions: string; humidity: number }
+> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
-  'london': { temperature: 58, conditions: 'Rainy', humidity: 85 },
-  'tokyo': { temperature: 68, conditions: 'Sunny', humidity: 55 },
-  'sydney': { temperature: 82, conditions: 'Clear', humidity: 45 },
-  'paris': { temperature: 63, conditions: 'Overcast', humidity: 70 },
-}
+  london: { temperature: 58, conditions: 'Rainy', humidity: 85 },
+  tokyo: { temperature: 68, conditions: 'Sunny', humidity: 55 },
+  sydney: { temperature: 82, conditions: 'Clear', humidity: 45 },
+  paris: { temperature: 63, conditions: 'Overcast', humidity: 70 },
+};
 
 const schema = createSchema({
   typeDefs: /* GraphQL */ `
     type Query {
       "Get current weather data for a location"
-      weather(
-        "City name or postal code"
-        location: String!
-      ): Weather!
+      weather("City name or postal code" location: String!): Weather!
 
       "Get weather forecast for upcoming days"
       forecast(
@@ -64,43 +64,54 @@ const schema = createSchema({
   resolvers: {
     Query: {
       weather: (_, { location }: { location: string }) => {
-        const loc = location.toLowerCase()
-        const data = weatherData[loc] || { temperature: 70, conditions: 'Unknown', humidity: 50 }
-        return { ...data, location }
+        const loc = location.toLowerCase();
+        const data = weatherData[loc] || {
+          temperature: 70,
+          conditions: 'Unknown',
+          humidity: 50,
+        };
+        return { ...data, location };
       },
       forecast: (_, { days = 5 }: { location: string; days?: number }) => {
-        const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Clear']
-        const result = []
-        const today = new Date()
+        const conditions = [
+          'Sunny',
+          'Partly Cloudy',
+          'Cloudy',
+          'Rainy',
+          'Clear',
+        ];
+        const result = [];
+        const today = new Date();
         for (let i = 0; i < days; i++) {
-          const date = new Date(today)
-          date.setDate(date.getDate() + i)
+          const date = new Date(today);
+          date.setDate(date.getDate() + i);
           result.push({
             date: date.toISOString().split('T')[0],
             high: Math.round(65 + Math.random() * 20),
             low: Math.round(45 + Math.random() * 15),
-            conditions: conditions[Math.floor(Math.random() * conditions.length)],
-          })
+            conditions:
+              conditions[Math.floor(Math.random() * conditions.length)],
+          });
         }
-        return result
+        return result;
       },
     },
   },
-})
+});
 
-const subgraphYoga = createYoga({ schema })
-const subgraphServer = createServer(subgraphYoga)
+const subgraphYoga = createYoga({ schema });
+const subgraphServer = createServer(subgraphYoga);
 subgraphServer.listen(4001, () => {
-  console.log('Subgraph running at http://localhost:4001/graphql')
-})
+  console.log('Subgraph running at http://localhost:4001/graphql');
+});
 
 const gateway = createGatewayRuntime({
   proxy: {
     endpoint: 'http://localhost:4001/graphql',
   },
-})
+});
 
-const gatewayServer = createServer(gateway)
+const gatewayServer = createServer(gateway);
 gatewayServer.listen(4000, () => {
-  console.log('Gateway running at http://localhost:4000/graphql')
-})
+  console.log('Gateway running at http://localhost:4000/graphql');
+});

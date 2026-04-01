@@ -16,14 +16,23 @@ query GetForecast($location: String!, $days: Int) {
   }
 }
 
-query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check returns just temperature and conditions") {
+query QuickWeather($location: String!)
+@mcpTool(
+  name: "quick_weather"
+  description: "Quick weather check returns just temperature and conditions"
+) {
   weather(location: $location) {
     temperature
     conditions
   }
 }
 
-query QuickWeatherProvider($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check", descriptionProvider: "langfuse:get_weather_description") {
+query QuickWeatherProvider($location: String!)
+@mcpTool(
+  name: "quick_weather"
+  description: "Quick weather check"
+  descriptionProvider: "langfuse:get_weather_description"
+) {
   weather(location: $location) {
     temperature
     conditions
@@ -33,7 +42,11 @@ query QuickWeatherProvider($location: String!) @mcpTool(name: "quick_weather", d
 query WeatherWithFieldProvider(
   $location: String! @mcpDescription(provider: "langfuse:weather.location:3")
   $days: Int
-) @mcpTool(name: "weather_field_provider", description: "Weather with Langfuse-managed field descriptions") {
+)
+@mcpTool(
+  name: "weather_field_provider"
+  description: "Weather with Langfuse-managed field descriptions"
+) {
   forecast(location: $location, days: $days) {
     date
     high

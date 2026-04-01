@@ -12,10 +12,10 @@
 // curl -s http://localhost:4000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"cancel_order","arguments":{"orderId":"ORD-42","confirmationId":"confirm-ORD-42"}}}' | jq '.result'
 // curl -s http://localhost:4000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_docs","arguments":{"q":"billing"}}}' | jq '.result'
 
-import { createServer } from 'node:http'
-import { createYoga, createSchema } from 'graphql-yoga'
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
-import { useMCP } from '@graphql-hive/plugin-mcp'
+import { createServer } from 'node:http';
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { useMCP } from '@graphql-hive/plugin-mcp';
+import { createSchema, createYoga } from 'graphql-yoga';
 
 const mcpOptions = {
   name: 'my-api',
@@ -33,7 +33,8 @@ const mcpOptions = {
       },
       tool: {
         title: 'Cancel Order',
-        description: 'Cancel an order. Call once to get a confirmation prompt, then again with confirmationId.',
+        description:
+          'Cancel an order. Call once to get a confirmation prompt, then again with confirmationId.',
       },
       output: { path: 'cancelOrder' },
       hooks: {
@@ -44,9 +45,9 @@ const mcpOptions = {
               needsConfirmation: true,
               message: `Cancel order "${args['orderId']}"? Call again with confirmationId: "confirm-${args['orderId']}"`,
               confirmationId: `confirm-${args['orderId']}`,
-            }
+            };
           }
-          return undefined // Continue to GraphQL execution
+          return undefined; // Continue to GraphQL execution
         },
       },
     },
@@ -65,20 +66,28 @@ const mcpOptions = {
       output: { path: 'search.items' },
       hooks: {
         postprocess: (result: unknown, args: Record<string, unknown>) => {
-          const items = result as Array<{ path: string; topic: string; description: string; score: number }>
-          if (!Array.isArray(items) || items.length === 0) return result
-          const header = '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|'
-          const rows = items.map(i => `| ${i.topic} | ${i.description} | ${i.score} | ${i.path} |`)
+          const items = result as Array<{
+            path: string;
+            topic: string;
+            description: string;
+            score: number;
+          }>;
+          if (!Array.isArray(items) || items.length === 0) return result;
+          const header =
+            '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|';
+          const rows = items.map(
+            (i) => `| ${i.topic} | ${i.description} | ${i.score} | ${i.path} |`,
+          );
           // Return a raw MCP result with content array + custom _metadata
           return {
             content: [{ type: 'text', text: `${header}\n${rows.join('\n')}` }],
             _metadata: { query: args['q'], timestamp: Date.now() },
-          }
+          };
         },
       },
     },
   ],
-}
+};
 
 const schema = createSchema({
   typeDefs: /* GraphQL */ `
@@ -88,13 +97,26 @@ const schema = createSchema({
     type Mutation {
       cancelOrder(orderId: String!, confirmationId: String): CancelResult!
     }
-    type SearchResult { items: [SearchItem!]! }
-    type SearchItem { path: String! topic: String! description: String! score: Float! }
-    type CancelResult { success: Boolean! message: String! }
+    type SearchResult {
+      items: [SearchItem!]!
+    }
+    type SearchItem {
+      path: String!
+      topic: String!
+      description: String!
+      score: Float!
+    }
+    type CancelResult {
+      success: Boolean!
+      message: String!
+    }
   `,
   resolvers: {
     Query: {
-      search: (_: unknown, { q, pageSize = 3 }: { q: string; pageSize?: number }) => ({
+      search: (
+        _: unknown,
+        { q, pageSize = 3 }: { q: string; pageSize?: number },
+      ) => ({
         items: Array.from({ length: Math.min(pageSize, 5) }, (_, i) => ({
           path: `/articles/${q.toLowerCase().replace(/\s+/g, '-')}-${i + 1}`,
           topic: `${q} - Article ${i + 1}`,
@@ -104,27 +126,34 @@ const schema = createSchema({
       }),
     },
     Mutation: {
-      cancelOrder: (_: unknown, { orderId, confirmationId }: { orderId: string; confirmationId?: string }) => {
-        if (!confirmationId) return { success: false, message: 'Confirmation required' }
-        return { success: true, message: `Order ${orderId} cancelled` }
+      cancelOrder: (
+        _: unknown,
+        {
+          orderId,
+          confirmationId,
+        }: { orderId: string; confirmationId?: string },
+      ) => {
+        if (!confirmationId)
+          return { success: false, message: 'Confirmation required' };
+        return { success: true, message: `Order ${orderId} cancelled` };
       },
     },
   },
-})
+});
 
-const subgraphYoga = createYoga({ schema })
-const subgraphServer = createServer(subgraphYoga)
+const subgraphYoga = createYoga({ schema });
+const subgraphServer = createServer(subgraphYoga);
 subgraphServer.listen(4001, () => {
-  console.log('Subgraph running at http://localhost:4001/graphql')
-})
+  console.log('Subgraph running at http://localhost:4001/graphql');
+});
 
 const gateway = createGatewayRuntime({
   proxy: { endpoint: 'http://localhost:4001/graphql' },
   plugins: (ctx) => [useMCP(ctx, mcpOptions)],
-})
+});
 
-const gatewayServer = createServer(gateway)
+const gatewayServer = createServer(gateway);
 gatewayServer.listen(4000, () => {
-  console.log('Gateway running at http://localhost:4000/graphql')
-  console.log('MCP endpoint at http://localhost:4000/mcp')
-})
+  console.log('Gateway running at http://localhost:4000/graphql');
+  console.log('MCP endpoint at http://localhost:4000/mcp');
+});

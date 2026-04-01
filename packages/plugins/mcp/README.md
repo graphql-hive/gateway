@@ -57,7 +57,7 @@ Define tools directly in your `.graphql` operation files using `@mcpTool` and `@
 
 ```graphql
 query GetWeather($location: String!)
-  @mcpTool(name: "get_weather", description: "Get current weather") {
+@mcpTool(name: "get_weather", description: "Get current weather") {
   weather(location: $location) {
     temperature
     conditions
@@ -80,7 +80,7 @@ All operations with `@mcpTool` are auto-registered as tools. Operations without 
 
 ```graphql
 query GetForecast($location: String!, $days: Int)
-  @mcpTool(name: "get_forecast", description: "Weather forecast") {
+@mcpTool(name: "get_forecast", description: "Weather forecast") {
   forecast(location: $location, days: $days) {
     date
     high
@@ -320,9 +320,14 @@ Resources support three content sources: `text` (inline string), `blob` (inline 
 ```typescript
 resources: [
   { name: 'guide', uri: 'docs://guide', text: '# Guide\n...' },
-  { name: 'icon', uri: 'files://icon.png', mimeType: 'image/png', blob: 'iVBOR...' },
+  {
+    name: 'icon',
+    uri: 'files://icon.png',
+    mimeType: 'image/png',
+    blob: 'iVBOR...',
+  },
   { name: 'schema', uri: 'files://schema.graphql', file: './schema.graphql' },
-]
+];
 ```
 
 Agents discover resources via `resources/list` and fetch them with `resources/read`. Templates allow dynamic URIs with parameters.
@@ -393,7 +398,10 @@ You can also use `@mcpDescription` directives in `.graphql` files to reference p
 query GetWeather(
   $location: String! @mcpDescription(provider: "langfuse:location_field_desc")
 ) @mcpTool(name: "get_weather") {
-  weather(location: $location) { temperature conditions }
+  weather(location: $location) {
+    temperature
+    conditions
+  }
 }
 ```
 
@@ -432,28 +440,28 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 
 ## Configuration reference
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | `string` | (required) | Server name in `initialize` responses |
-| `version` | `string` | `"1.0.0"` | Server version |
-| `title` | `string` | | Human-readable server title |
-| `description` | `string` | | Human-readable server description |
-| `icons` | `MCPIcon[]` | | Server icons for client UIs |
-| `websiteUrl` | `string` | | Server website URL |
-| `path` | `string` | `"/mcp"` | HTTP path for the MCP endpoint |
-| `graphqlPath` | `string` | `"/graphql"` | HTTP path for the underlying GraphQL endpoint |
-| `operationsPath` | `string` | | Path to `.graphql` file(s) containing operations |
-| `operationsStr` | `string` | | Raw GraphQL operations string (alternative to file) |
-| `tools` | `MCPToolConfig[]` | `[]` | Tool definitions |
-| `resources` | `MCPResourceConfig[]` | `[]` | Static resource definitions |
-| `resourceTemplates` | `MCPResourceTemplateConfig[]` | `[]` | Dynamic resource templates |
-| `providers` | `object` | | Description provider instances (e.g. `{ langfuse: {} }`) |
-| `suppressOutputSchema` | `boolean` | `false` | Suppress outputSchema in `tools/list` |
-| `disableGraphQLEndpoint` | `boolean` | `false` | Block direct `/graphql` access |
-| `hive` | `MCPHiveConfig` | | Auto-fetch operations from Hive App Deployments |
-| `maxRequestBodySize` | `number` | `1048576` | Max request body size in bytes |
-| `instructions` | `string` | | Free-text instructions included in `initialize` for LLM context |
-| `protocolVersion` | `string` | `"2025-11-25"` | MCP protocol version to advertise |
+| Option                   | Type                          | Default        | Description                                                     |
+| ------------------------ | ----------------------------- | -------------- | --------------------------------------------------------------- |
+| `name`                   | `string`                      | (required)     | Server name in `initialize` responses                           |
+| `version`                | `string`                      | `"1.0.0"`      | Server version                                                  |
+| `title`                  | `string`                      |                | Human-readable server title                                     |
+| `description`            | `string`                      |                | Human-readable server description                               |
+| `icons`                  | `MCPIcon[]`                   |                | Server icons for client UIs                                     |
+| `websiteUrl`             | `string`                      |                | Server website URL                                              |
+| `path`                   | `string`                      | `"/mcp"`       | HTTP path for the MCP endpoint                                  |
+| `graphqlPath`            | `string`                      | `"/graphql"`   | HTTP path for the underlying GraphQL endpoint                   |
+| `operationsPath`         | `string`                      |                | Path to `.graphql` file(s) containing operations                |
+| `operationsStr`          | `string`                      |                | Raw GraphQL operations string (alternative to file)             |
+| `tools`                  | `MCPToolConfig[]`             | `[]`           | Tool definitions                                                |
+| `resources`              | `MCPResourceConfig[]`         | `[]`           | Static resource definitions                                     |
+| `resourceTemplates`      | `MCPResourceTemplateConfig[]` | `[]`           | Dynamic resource templates                                      |
+| `providers`              | `object`                      |                | Description provider instances (e.g. `{ langfuse: {} }`)        |
+| `suppressOutputSchema`   | `boolean`                     | `false`        | Suppress outputSchema in `tools/list`                           |
+| `disableGraphQLEndpoint` | `boolean`                     | `false`        | Block direct `/graphql` access                                  |
+| `hive`                   | `MCPHiveConfig`               |                | Auto-fetch operations from Hive App Deployments                 |
+| `maxRequestBodySize`     | `number`                      | `1048576`      | Max request body size in bytes                                  |
+| `instructions`           | `string`                      |                | Free-text instructions included in `initialize` for LLM context |
+| `protocolVersion`        | `string`                      | `"2025-11-25"` | MCP protocol version to advertise                               |
 
 ## Features
 

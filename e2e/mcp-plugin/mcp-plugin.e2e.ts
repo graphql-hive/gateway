@@ -92,9 +92,7 @@ it('tools/list shows correct inputSchema and outputSchema', async () => {
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
-  const weather = body.result.tools.find(
-    (t: any) => t.name === 'get_weather',
-  );
+  const weather = body.result.tools.find((t: any) => t.name === 'get_weather');
 
   expect(weather.title).toBe('Current Weather');
   expect(weather.inputSchema).toMatchObject({
@@ -157,9 +155,9 @@ it('mutation tool executes and returns structured data', async () => {
     arguments: { orderId: 'ORD-123' },
   });
   expect(withoutConfirmation.result.isError).toBe(false);
-  expect(withoutConfirmation.result.structuredContent.cancelOrder).toMatchObject(
-    { success: false, message: 'Confirmation required' },
-  );
+  expect(
+    withoutConfirmation.result.structuredContent.cancelOrder,
+  ).toMatchObject({ success: false, message: 'Confirmation required' });
 
   const withConfirmation = await mcpRequest(port, 'tools/call', {
     name: 'cancel_order',
@@ -202,9 +200,7 @@ it('@mcpTool directive auto-registers tool from operations file', async () => {
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
-  const quick = body.result.tools.find(
-    (t: any) => t.name === 'quick_weather',
-  );
+  const quick = body.result.tools.find((t: any) => t.name === 'quick_weather');
   expect(quick).toBeDefined();
   expect(quick.description).toBe('Quick weather check');
 
@@ -259,9 +255,7 @@ it('argument alias renames input and de-aliases on call', async () => {
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
-  const tool = body.result.tools.find(
-    (t: any) => t.name === 'aliased_weather',
-  );
+  const tool = body.result.tools.find((t: any) => t.name === 'aliased_weather');
   expect(tool.inputSchema.properties.city).toBeDefined();
   expect(tool.inputSchema.properties.location).toBeUndefined();
   expect(tool.inputSchema.required).toContain('city');
@@ -543,4 +537,3 @@ it('content annotations are included in tool call response', async () => {
     priority: 0.7,
   });
 });
-

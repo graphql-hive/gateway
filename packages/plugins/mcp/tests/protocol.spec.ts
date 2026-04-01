@@ -382,9 +382,7 @@ describe('handleMCPRequest', () => {
 
 describe('tool call functions', () => {
   it('handles basic execution and formats result', async () => {
-    const schema = buildSchema(
-      `type Query { hello(name: String!): String }`,
-    );
+    const schema = buildSchema(`type Query { hello(name: String!): String }`);
     const registry = new ToolRegistry(
       { log: logger },
       [
@@ -396,14 +394,17 @@ describe('tool call functions', () => {
       schema,
     );
     const tool = registry.getTool('say_hello')!;
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 3,
-      toolName: 'say_hello',
-      args: { name: 'World' },
-      tool,
-      data: { hello: 'World' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 3,
+        toolName: 'say_hello',
+        args: { name: 'World' },
+        tool,
+        data: { hello: 'World' },
+        headers: {},
+      },
+    );
 
     expect(body.result.structuredContent).toBeDefined();
     expect(body.result.content).toBeDefined();
@@ -428,14 +429,17 @@ describe('tool call functions', () => {
     const tool = registryWithOutput.getTool('get_weather')!;
     const executeResult = { getWeather: { temperature: 72 } };
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 5,
-      toolName: 'get_weather',
-      args: { location: 'NYC' },
-      tool,
-      data: executeResult,
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 5,
+        toolName: 'get_weather',
+        args: { location: 'NYC' },
+        tool,
+        data: executeResult,
+        headers: {},
+      },
+    );
 
     expect(body.result.structuredContent).toEqual(executeResult);
     expect(body.result.content).toBeDefined();
@@ -463,14 +467,17 @@ describe('tool call functions', () => {
     );
     const tool = annotRegistry.getTool('say_hello')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 1,
-      toolName: 'say_hello',
-      args: { name: 'World' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 1,
+        toolName: 'say_hello',
+        args: { name: 'World' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     expect(body.result.content[0].annotations).toEqual({
       audience: ['assistant'],
@@ -479,9 +486,7 @@ describe('tool call functions', () => {
   });
 
   it('omits content annotations when not configured', async () => {
-    const schema = buildSchema(
-      `type Query { hello(name: String!): String }`,
-    );
+    const schema = buildSchema(`type Query { hello(name: String!): String }`);
     const registry = new ToolRegistry(
       { log: logger },
       [
@@ -494,14 +499,17 @@ describe('tool call functions', () => {
     );
     const tool = registry.getTool('say_hello')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 1,
-      toolName: 'say_hello',
-      args: { name: 'World' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 1,
+        toolName: 'say_hello',
+        args: { name: 'World' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     expect(body.result.content[0].annotations).toBeUndefined();
   });
@@ -524,23 +532,24 @@ describe('tool call functions', () => {
     );
     const tool = pathRegistry.getTool('search')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 20,
-      toolName: 'search',
-      args: { q: 'test' },
-      tool,
-      data: { search: { items: ['a', 'b', 'c'] } },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 20,
+        toolName: 'search',
+        args: { q: 'test' },
+        tool,
+        data: { search: { items: ['a', 'b', 'c'] } },
+        headers: {},
+      },
+    );
 
     // Should return just the extracted array, not the full nested object
     expect(body.result.structuredContent).toEqual(['a', 'b', 'c']);
   });
 
   it('returns undefined for unknown tool via registry lookup', () => {
-    const schema = buildSchema(
-      `type Query { hello(name: String!): String }`,
-    );
+    const schema = buildSchema(`type Query { hello(name: String!): String }`);
     const registry = new ToolRegistry(
       { log: logger },
       [
@@ -651,10 +660,15 @@ describe('tool call functions', () => {
     );
     expect(preprocessResult).not.toBeUndefined();
 
-    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
-      hookProducedResult: true,
-      hasHooks: true,
-    });
+    const formatted: any = formatToolCallResult(
+      { log: logger },
+      preprocessResult,
+      tool,
+      {
+        hookProducedResult: true,
+        hasHooks: true,
+      },
+    );
     expect(formatted.content[0].text).toContain('confirmationRequired');
     expect(formatted.content[0].text).toContain('Alice');
   });
@@ -691,14 +705,17 @@ describe('tool call functions', () => {
 
     // Since preprocess returns undefined, execution continues normally.
     // Simulate by calling processExecutionResult with mock data.
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 101,
-      toolName: 'passthrough_tool',
-      args: { name: 'Bob' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 101,
+        toolName: 'passthrough_tool',
+        args: { name: 'Bob' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     // Even though preprocess passed through, hooks are configured so no structuredContent
     expect(body.result.structuredContent).toBeUndefined();
@@ -733,14 +750,19 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('search')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'search',
-      args: { q: 'test' },
-      tool,
-      data: { search: { items: [{ title: 'Doc', url: 'https://example.com' }] } },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'search',
+        args: { q: 'test' },
+        tool,
+        data: {
+          search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
+        },
+        headers: {},
+      },
+    );
 
     expect(body.result.content[0].text).toContain(
       '- [Doc](https://example.com)',
@@ -782,14 +804,19 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('search_mcp')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'search_mcp',
-      args: { q: 'test' },
-      tool,
-      data: { search: { items: [{ title: 'Doc', url: 'https://example.com' }] } },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'search_mcp',
+        args: { q: 'test' },
+        tool,
+        data: {
+          search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
+        },
+        headers: {},
+      },
+    );
 
     // Raw MCP result passed through - not wrapped in JSON.stringify
     expect(body.result.content[0].text).toBe(
@@ -839,10 +866,15 @@ describe('tool call functions', () => {
     );
     expect(preprocessResult).not.toBeUndefined();
 
-    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
-      hookProducedResult: true,
-      hasHooks: true,
-    });
+    const formatted: any = formatToolCallResult(
+      { log: logger },
+      preprocessResult,
+      tool,
+      {
+        hookProducedResult: true,
+        hasHooks: true,
+      },
+    );
 
     expect(formatted.content[0].text).toBe('Confirm action for Alice?');
     expect(formatted._confirmationRequired).toBe(true);
@@ -870,14 +902,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('error_hook')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'error_hook',
-      args: { name: 'test' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'error_hook',
+        args: { name: 'test' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     expect(body.result.isError).toBe(true);
     expect(body.result.content[0].text).toBe('Something went wrong');
@@ -903,19 +938,22 @@ describe('tool call functions', () => {
     );
     const tool = cmsRegistry.getTool('get_page')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'get_page',
-      args: { id: '1' },
-      tool,
-      data: {
-        getPage: {
-          title: 'Hello',
-          content: [{ type: 'paragraph', text: 'World' }],
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'get_page',
+        args: { id: '1' },
+        tool,
+        data: {
+          getPage: {
+            title: 'Hello',
+            content: [{ type: 'paragraph', text: 'World' }],
+          },
         },
+        headers: {},
       },
-      headers: {},
-    });
+    );
 
     // Should be wrapped as structuredContent, NOT passed through as raw MCP result
     expect(body.result.structuredContent).toEqual({
@@ -943,14 +981,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('empty_content')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'empty_content',
-      args: { name: 'test' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'empty_content',
+        args: { name: 'test' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     // Empty content array is NOT a valid MCP result - should be wrapped as text
     const parsed = JSON.parse(body.result.content[0].text);
@@ -978,14 +1019,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('bad_content_type')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 102,
-      toolName: 'bad_content_type',
-      args: { name: 'test' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 102,
+        toolName: 'bad_content_type',
+        args: { name: 'test' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     // Non-MCP content types should be wrapped as text, not passed through
     const parsed = JSON.parse(body.result.content[0].text);
@@ -1018,14 +1062,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('search_extract')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 103,
-      toolName: 'search_extract',
-      args: { q: 'test' },
-      tool,
-      data: { search: { items: ['hello', 'world'] } },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 103,
+        toolName: 'search_extract',
+        args: { q: 'test' },
+        tool,
+        data: { search: { items: ['hello', 'world'] } },
+        headers: {},
+      },
+    );
 
     const parsed = JSON.parse(body.result.content[0].text);
     expect(parsed).toEqual(['HELLO', 'WORLD']);
@@ -1089,14 +1136,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('post_error_tool')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 105,
-      toolName: 'post_error_tool',
-      args: { name: 'test' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 105,
+        toolName: 'post_error_tool',
+        args: { name: 'test' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     expect(body.result.isError).toBe(true);
     expect(body.result.content[0].text).toContain('postprocess hook failed');
@@ -1183,10 +1233,15 @@ describe('tool call functions', () => {
     // and never call postprocess
     expect(preprocessResult).not.toBeUndefined();
 
-    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
-      hookProducedResult: true,
-      hasHooks: true,
-    });
+    const formatted: any = formatToolCallResult(
+      { log: logger },
+      preprocessResult,
+      tool,
+      {
+        hookProducedResult: true,
+        hasHooks: true,
+      },
+    );
 
     expect(postprocessSpy).not.toHaveBeenCalled();
     expect(formatted.content[0].text).toContain('shortCircuit');
@@ -1229,14 +1284,17 @@ describe('tool call functions', () => {
     expect(preprocessResult).toBeUndefined();
 
     // Simulate normal execution followed by postprocess via processExecutionResult
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 111,
-      toolName: 'both_hooks_passthrough',
-      args: { name: 'Bob' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 111,
+        toolName: 'both_hooks_passthrough',
+        args: { name: 'Bob' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     const parsed = JSON.parse(body.result.content[0].text);
     expect(parsed).toEqual({ greeting: 'WORLD' });
@@ -1275,10 +1333,15 @@ describe('tool call functions', () => {
     );
     expect(preprocessResult).not.toBeUndefined();
 
-    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
-      hookProducedResult: true,
-      hasHooks: true,
-    });
+    const formatted: any = formatToolCallResult(
+      { log: logger },
+      preprocessResult,
+      tool,
+      {
+        hookProducedResult: true,
+        hasHooks: true,
+      },
+    );
     const parsed = JSON.parse(formatted.content[0].text);
     expect(parsed).toEqual({ async: true, name: 'test' });
   });
@@ -1304,14 +1367,17 @@ describe('tool call functions', () => {
     );
     const tool = hookRegistry.getTool('async_post_error')!;
 
-    const body: any = await processExecutionResult({ log: logger }, {
-      id: 113,
-      toolName: 'async_post_error',
-      args: { name: 'test' },
-      tool,
-      data: { hello: 'world' },
-      headers: {},
-    });
+    const body: any = await processExecutionResult(
+      { log: logger },
+      {
+        id: 113,
+        toolName: 'async_post_error',
+        args: { name: 'test' },
+        tool,
+        data: { hello: 'world' },
+        headers: {},
+      },
+    );
 
     expect(body.result.isError).toBe(true);
     expect(body.result.content[0].text).toContain('async postprocess failed');
