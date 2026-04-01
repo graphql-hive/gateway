@@ -1,19 +1,26 @@
 import type { GatewayContext } from '@graphql-hive/gateway-runtime';
 import type { PubSub } from '@graphql-hive/pubsub';
+import {
+  getResolverForPubSubOperation,
+  type PubSubOperationOptions,
+} from '@graphql-mesh/utils';
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
-  createGraphQLError,
+  asArray,
   ExecutionRequest,
   getDirectiveInExtensions,
   getOperationASTFromRequest,
-  mapAsyncIterator,
+  MaybeAsyncIterable,
+  MaybePromise,
   memoize1,
   memoize2,
+  mergeDeep,
   ResultVisitorMap,
   ValueVisitor,
   visitResult,
 } from '@graphql-tools/utils';
 import {
+  ArgumentNode,
   BREAK,
   ExecutionResult,
   getNamedType,
@@ -23,16 +30,52 @@ import {
   parse,
   print,
   SelectionSetNode,
+  valueFromASTUntyped,
   visit,
   visitWithTypeInfo,
 } from 'graphql';
+import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
 /**
  * @pubsubOperation
  */
 
+const REPRESENTATIONS_VAR_DEF = Object.freeze({
+  kind: Kind.VARIABLE_DEFINITION,
+  variable: {
+    kind: Kind.VARIABLE,
+    name: {
+      kind: Kind.NAME,
+      value: 'representations',
+    },
+  },
+  type: {
+    kind: Kind.NON_NULL_TYPE,
+    type: {
+      kind: Kind.LIST_TYPE,
+      type: {
+        kind: Kind.NON_NULL_TYPE,
+        type: {
+          kind: Kind.NAMED_TYPE,
+          name: {
+            kind: Kind.NAME,
+            value: '_Any',
+          },
+        },
+      },
+    },
+  },
+} as const);
+
 const getPubsubOperationRootFields = memoize1(function (schema: GraphQLSchema) {
-  const pubsubOperationFields = new Map<string, string>();
+  const pubsubOperationFields = new Map<
+    string,
+    {
+      pubsubTopic: string;
+      filterBy?: string;
+      result?: string;
+    }
+  >();
   const subscriptionType = schema.getSubscriptionType();
   if (subscriptionType) {
     const subscriptionFields = subscriptionType.getFields();
@@ -44,8 +87,11 @@ const getPubsubOperationRootFields = memoize1(function (schema: GraphQLSchema) {
           'pubsubOperation',
         );
         if (pubsubOperations) {
-          for (const { pubsubTopic } of pubsubOperations) {
-            pubsubOperationFields.set(fieldDef.name, pubsubTopic);
+          for (const operationDef of pubsubOperations) {
+            pubsubOperationFields.set(
+              fieldDef.name,
+              operationDef as PubSubOperationOptions,
+            );
           }
         }
       }
@@ -54,21 +100,49 @@ const getPubsubOperationRootFields = memoize1(function (schema: GraphQLSchema) {
   return pubsubOperationFields;
 });
 
+export interface PubsubOperationFieldResolverOpts {
+  root: any;
+  args: Record<string, any>;
+  context: GatewayContext;
+}
+
 function resolvePubsubOperationRootField(
+  opts: PubSubOperationOptions,
   responseKey: string,
-  topicName: string,
-  pubsub: PubSub,
-) {
-  return mapAsyncIterator(pubsub.subscribe(topicName), (payload) => ({
-    data: {
-      [responseKey]: payload,
-    },
-  }));
+  resolverOpts: PubsubOperationFieldResolverOpts,
+): MaybePromise<AsyncIterable<ExecutionResult>> {
+  const pubsubOperationResolver = getResolverForPubSubOperation(
+    opts,
+    (payload) => ({
+      data: {
+        [responseKey]: payload,
+      },
+    }),
+  );
+  return handleMaybePromiseMaybeAsyncIterable(
+    () =>
+      pubsubOperationResolver.subscribe(
+        resolverOpts.root,
+        resolverOpts.args,
+        resolverOpts.context,
+        undefined!,
+      ),
+    (root) =>
+      pubsubOperationResolver.resolve(
+        root,
+        resolverOpts.args,
+        resolverOpts.context,
+        undefined!,
+      ),
+  );
 }
 
 export function handlePubsubOperationField(
   supergraphSchema: GraphQLSchema,
   executionRequest: ExecutionRequest,
+  executeSubgraph: (
+    executionRequest: ExecutionRequest,
+  ) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>,
 ) {
   if (executionRequest.operationType === 'subscription') {
     const typeInfo = getTypeInfo(supergraphSchema);
@@ -76,6 +150,7 @@ export function handlePubsubOperationField(
     let fieldName: string | undefined;
     let selectionSet: SelectionSetNode | undefined;
     let returnType: GraphQLNamedOutputType | undefined;
+    let argNodes: readonly ArgumentNode[] | undefined;
     visit(
       executionRequest.document,
       visitWithTypeInfo(typeInfo, {
@@ -85,6 +160,7 @@ export function handlePubsubOperationField(
             responseKey = node.alias?.value || node.name.value;
             fieldName = node.name.value;
             selectionSet = node.selectionSet;
+            argNodes = node.arguments;
             const fieldDef = typeInfo.getFieldDef();
             if (fieldDef) {
               returnType = getNamedType(fieldDef.type);
@@ -98,14 +174,8 @@ export function handlePubsubOperationField(
     if (responseKey && fieldName) {
       const pubsubOperationFields =
         getPubsubOperationRootFields(supergraphSchema);
-      const pubsubTopic = pubsubOperationFields.get(fieldName);
-      if (pubsubTopic) {
-        const pubsub: PubSub = executionRequest.context?.pubsub;
-        if (!pubsub) {
-          throw createGraphQLError(
-            `You have to configure a PubSub instance in the context to execute subscription operations with @pubsubOperation directive.`,
-          );
-        }
+      const pubsubOperationOptions = pubsubOperationFields.get(fieldName);
+      if (pubsubOperationOptions) {
         let newExecutionRequest: ExecutionRequest | undefined;
         if (selectionSet && returnType) {
           const operationAST = getOperationASTFromRequest(executionRequest);
@@ -113,29 +183,7 @@ export function handlePubsubOperationField(
             operationAST.variableDefinitions?.filter(
               (varDef) => varDef.variable.name.value != 'representations',
             ) || [];
-          varDefs.push({
-            kind: Kind.VARIABLE_DEFINITION,
-            variable: {
-              kind: Kind.VARIABLE,
-              name: {
-                kind: Kind.NAME,
-                value: 'representations',
-              },
-            },
-            type: {
-              kind: Kind.NON_NULL_TYPE,
-              type: {
-                kind: Kind.LIST_TYPE,
-                type: {
-                  kind: Kind.NAMED_TYPE,
-                  name: {
-                    kind: Kind.NAME,
-                    value: 'Any',
-                  },
-                },
-              },
-            },
-          });
+          varDefs.push(REPRESENTATIONS_VAR_DEF);
           const varDefsStr = varDefs.map((varDef) => print(varDef)).join(', ');
           const newDocument = parse(/* GraphQL */ `
                 query ${executionRequest.operationName || ''}(${varDefsStr}) {
@@ -150,16 +198,82 @@ export function handlePubsubOperationField(
             document: newDocument,
           };
         }
-        return {
-          executionResult: resolvePubsubOperationRootField(
-            responseKey,
-            pubsubTopic,
-            pubsub,
-          ),
-          responseKey,
-          returnTypeName: returnType?.name,
-          newExecutionRequest,
-        };
+        const args: Record<string, any> = {};
+        if (argNodes) {
+          for (const argNode of argNodes) {
+            const argName = argNode.name.value;
+            const argValueNode = argNode.value;
+            args[argName] = valueFromASTUntyped(
+              argValueNode,
+              executionRequest.variables,
+            );
+          }
+        }
+        if (newExecutionRequest) {
+          const returnTypeName = returnType?.name;
+          return handleMaybePromiseMaybeAsyncIterable(
+            () =>
+              resolvePubsubOperationRootField(
+                pubsubOperationOptions,
+                responseKey!,
+                {
+                  root: executionRequest.rootValue,
+                  args,
+                  context: executionRequest.context,
+                },
+              ),
+            (executionResult: ExecutionResult<any>) => {
+              if (executionResult.data?.[responseKey!] != null) {
+                const representations = asArray(
+                  executionResult.data[responseKey!],
+                );
+                if (returnTypeName) {
+                  for (const representation of representations) {
+                    representation.__typename = returnTypeName;
+                  }
+                }
+                return handleMaybePromiseMaybeAsyncIterable(
+                  () =>
+                    executeSubgraph({
+                      ...newExecutionRequest,
+                      variables: {
+                        ...newExecutionRequest.variables,
+                        representations,
+                      },
+                    }),
+                  (entitiesResult: ExecutionResult<any>) => {
+                    if (entitiesResult?.data?._entities?.length) {
+                      const entities = asArray(entitiesResult.data._entities);
+                      for (let i = 0; i < entities.length; i++) {
+                        const entity = entities[i];
+                        const representation = representations[i];
+                        if (entity != null && representation != null) {
+                          Object.assign(
+                            representation,
+                            mergeDeep(
+                              [entity, representation],
+                              false,
+                              true,
+                              true,
+                            ),
+                          );
+                        }
+                      }
+                      return executionResult;
+                    }
+                    if (entitiesResult?.errors?.length) {
+                      executionResult.errors ||= [];
+                      // @ts-expect-error - it is writable
+                      executionResult.errors.push(...entitiesResult.errors);
+                    }
+                    return executionResult;
+                  },
+                );
+              }
+              return executionResult;
+            },
+          ) as AsyncIterable<ExecutionResult>;
+        }
       }
     }
   }

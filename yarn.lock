@@ -4728,6 +4728,7 @@ __metadata:
     "@graphql-hive/router-query-planner": "npm:^0.0.17"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/transport-common": "workspace:^"
+    "@graphql-mesh/utils": "npm:^0.104.33"
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/federation": "workspace:^"

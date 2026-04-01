@@ -16,11 +16,7 @@ import {
   ExecutionResult,
   mergeDeep,
 } from '@graphql-tools/utils';
-import {
-  handleMaybePromise,
-  mapAsyncIterator,
-  MaybePromise,
-} from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import {
   handlePubsubOperationField,
@@ -181,74 +177,11 @@ export async function unifiedGraphHandler(
               const maybeResult = handlePubsubOperationField(
                 supergraphSchema,
                 executionRequest,
+                // In case of an extra type resolution
+                executeSubgraph,
               );
               if (maybeResult) {
-                const {
-                  executionResult,
-                  newExecutionRequest,
-                  responseKey,
-                  returnTypeName,
-                } = maybeResult;
-                if (newExecutionRequest) {
-                  return mapAsyncIterator(
-                    executionResult,
-                    (executionResult: ExecutionResult) => {
-                      if (executionResult.data?.[responseKey] != null) {
-                        const representations = asArray(
-                          executionResult.data[responseKey],
-                        );
-                        if (returnTypeName) {
-                          for (const representation of representations) {
-                            representation.__typename = returnTypeName;
-                          }
-                        }
-                        return handleMaybePromiseMaybeAsyncIterable(
-                          () =>
-                            executeSubgraph({
-                              ...newExecutionRequest,
-                              variables: {
-                                ...newExecutionRequest.variables,
-                                representations,
-                              },
-                            }),
-                          (entitiesResult: ExecutionResult) => {
-                            if (entitiesResult?.data?._entities?.length) {
-                              const entities = asArray(
-                                entitiesResult.data._entities,
-                              );
-                              for (let i = 0; i < entities.length; i++) {
-                                const entity = entities[i];
-                                const representation = representations[i];
-                                if (entity != null && representation != null) {
-                                  Object.assign(
-                                    representation,
-                                    mergeDeep(
-                                      [entity, representation],
-                                      false,
-                                      true,
-                                      true,
-                                    ),
-                                  );
-                                }
-                              }
-                              return executionResult;
-                            }
-                            if (entitiesResult?.errors?.length) {
-                              executionResult.errors ||= [];
-                              // @ts-expect-error - it is writable
-                              executionResult.errors.push(
-                                ...entitiesResult.errors,
-                              );
-                            }
-                            return executionResult;
-                          },
-                        );
-                      }
-                      return executionResult;
-                    },
-                  ) as AsyncIterable<ExecutionResult>;
-                }
-                return executionResult;
+                return maybeResult;
               }
               return executeSubgraph(executionRequest);
             },
