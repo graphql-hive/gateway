@@ -22,7 +22,6 @@ import {
   print,
   SelectionSetNode,
   visit,
-  visitWithTypeInfo,
 } from 'graphql';
 
 /**
