@@ -1259,12 +1259,6 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
               return map;
             }
           : undefined,
-      execute: () => {
-        throw new Error(
-          'tools/call must be routed through the Yoga hook pipeline. ' +
-            'Ensure the MCP plugin is registered as a gateway plugin.',
-        );
-      },
     };
   }
 

@@ -25,129 +25,6 @@ export function dealiasArgs(
   return dealiased;
 }
 
-export async function handleToolCall(
-  ctx: PluginContext,
-  options: {
-    id: number | string;
-    toolName: string;
-    arguments: Record<string, unknown>;
-    registry: ToolRegistry;
-    execute: (
-      toolName: string,
-      args: Record<string, unknown>,
-    ) => Promise<unknown>;
-    headers: Record<string, string>;
-  },
-): Promise<JsonRpcResponse> {
-  const tool = options.registry.getTool(options.toolName);
-
-  if (!tool) {
-    return {
-      jsonrpc: '2.0',
-      id: options.id,
-      error: { code: -32602, message: `Unknown tool: ${options.toolName}` },
-    };
-  }
-
-  const args = dealiasArgs(options.arguments, tool.argumentAliases);
-  const hookContext: ToolHookContext = {
-    toolName: options.toolName,
-    headers: options.headers,
-    query: tool.query,
-  };
-
-  try {
-    // Preprocess hook can short-circuit
-    let result: unknown;
-    let shortCircuited = false;
-    if (tool.hooks?.preprocess) {
-      try {
-        const preprocessResult = await tool.hooks.preprocess(args, hookContext);
-        if (preprocessResult !== undefined) {
-          result = preprocessResult;
-          shortCircuited = true;
-        }
-      } catch (hookError) {
-        throw new Error(
-          `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-        );
-      }
-    }
-
-    if (!shortCircuited) {
-      result = await options.execute(options.toolName, args);
-      if (tool.outputPath) {
-        const extracted = getByPath(result, tool.outputPath);
-        if (extracted === undefined && result !== undefined) {
-          ctx.log.error(
-            `output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
-              `Check your output.path configuration.`,
-          );
-          return {
-            jsonrpc: '2.0',
-            id: options.id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    error: `output.path "${tool.outputPath}" could not extract data from the result`,
-                  }),
-                },
-              ],
-              isError: true,
-            },
-          };
-        }
-        result = extracted ?? null;
-      }
-    }
-
-    // Postprocess hook (skipped when preprocess short-circuits)
-    if (!shortCircuited && tool.hooks?.postprocess) {
-      try {
-        result = await tool.hooks.postprocess(result, args, hookContext);
-      } catch (hookError) {
-        throw new Error(
-          `postprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-        );
-      }
-    }
-
-    const hasHooks = !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
-    const hookProducedResult = shortCircuited || !!tool.hooks?.postprocess;
-
-    return {
-      jsonrpc: '2.0',
-      id: options.id,
-      result: formatToolCallResult(ctx, result, tool, {
-        hookProducedResult,
-        hasHooks,
-      }),
-    };
-  } catch (error) {
-    ctx.log.error(
-      `tools/call failed for tool "${options.toolName}":`,
-      error instanceof Error ? error.message : error,
-    );
-    return {
-      jsonrpc: '2.0',
-      id: options.id,
-      result: {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              error: error instanceof Error ? error.message : String(error),
-            }),
-          },
-        ],
-        isError: true,
-      },
-    };
-  }
-}
-
 export async function processExecutionResult(
   ctx: PluginContext,
   options: {
@@ -334,10 +211,6 @@ export interface MCPHandlerOptions {
   /** Page size for tools/list pagination. Defaults to returning all tools (no pagination). */
   toolsListPageSize?: number;
   registry: ToolRegistry;
-  execute: (
-    toolName: string,
-    args: Record<string, unknown>,
-  ) => Promise<unknown>;
   resolveToolDescriptions?: (
     context?: DescriptionProviderContext,
   ) => Promise<Map<string, string>>;
@@ -837,55 +710,6 @@ export async function handleMCPRequest(
 
     case 'notifications/initialized':
       return null;
-
-    case 'tools/call': {
-      if (!params || typeof params !== 'object' || Array.isArray(params)) {
-        return {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32602,
-            message: 'Invalid params: expected an object with "name" field',
-          },
-        };
-      }
-      const callParams = params as {
-        name?: unknown;
-        arguments?: unknown;
-      };
-      if (!callParams.name || typeof callParams.name !== 'string') {
-        return {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32602,
-            message: 'Invalid params: missing required "name" field',
-          },
-        };
-      }
-      if (
-        callParams.arguments != null &&
-        (typeof callParams.arguments !== 'object' ||
-          Array.isArray(callParams.arguments))
-      ) {
-        return {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32602,
-            message: 'Invalid params: "arguments" must be an object',
-          },
-        };
-      }
-      return handleToolCall(ctx, {
-        id,
-        toolName: callParams.name,
-        arguments: (callParams.arguments as Record<string, unknown>) || {},
-        registry,
-        execute: options.execute,
-        headers: options.requestContext?.headers ?? {},
-      });
-    }
 
     default:
       return {

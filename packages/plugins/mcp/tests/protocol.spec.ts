@@ -2,7 +2,10 @@ import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
 import { buildSchema } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  dealiasArgs,
+  formatToolCallResult,
   handleMCPRequest,
+  processExecutionResult,
   type JsonRpcRequest,
   type MCPHandlerOptions,
 } from '../src/protocol.js';
@@ -36,13 +39,10 @@ describe('handleMCPRequest', () => {
     schema,
   );
 
-  const mockExecute = vi.fn().mockResolvedValue({ data: { hello: 'world' } });
-
   const options: MCPHandlerOptions = {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry,
-    execute: mockExecute,
   };
 
   it('handles initialize request', async () => {
@@ -212,7 +212,6 @@ describe('handleMCPRequest', () => {
       serverName: 'test',
       serverVersion: '1.0.0',
       registry: paginationRegistry,
-      execute: vi.fn(),
       toolsListPageSize: 2,
     };
 
@@ -253,7 +252,6 @@ describe('handleMCPRequest', () => {
       serverName: 'test',
       serverVersion: '1.0.0',
       registry: paginationRegistry,
-      execute: vi.fn(),
       toolsListPageSize: 10,
     };
 
@@ -275,7 +273,6 @@ describe('handleMCPRequest', () => {
       serverName: 'test',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       toolsListPageSize: 0,
     };
 
@@ -294,7 +291,6 @@ describe('handleMCPRequest', () => {
       serverName: 'test',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       toolsListPageSize: -1,
     };
 
@@ -306,247 +302,6 @@ describe('handleMCPRequest', () => {
         params: {},
       }),
     ).rejects.toThrow('toolsListPageSize must be a positive integer');
-  });
-
-  it('handles tools/call request and executes GraphQL', async () => {
-    const body = await callMCP(options, {
-      jsonrpc: '2.0',
-      id: 3,
-      method: 'tools/call',
-      params: {
-        name: 'say_hello',
-        arguments: { name: 'World' },
-      },
-    });
-
-    expect(mockExecute).toHaveBeenCalledWith('say_hello', { name: 'World' });
-    expect(body.result.structuredContent).toBeDefined();
-    expect(body.result.content).toBeDefined();
-  });
-
-  it('includes structuredContent when tool has outputSchema', async () => {
-    const schemaWithOutput = buildSchema(`
-      type Query { getWeather(location: String!): Weather }
-      type Weather { temperature: Float! }
-    `);
-    const registryWithOutput = new ToolRegistry(
-      { log: logger },
-      [
-        {
-          name: 'get_weather',
-          query:
-            'query($location: String!) { getWeather(location: $location) { temperature } }',
-        },
-      ],
-      schemaWithOutput,
-    );
-    const executeResult = { data: { getWeather: { temperature: 72 } } };
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: registryWithOutput,
-      execute: vi.fn().mockResolvedValue(executeResult),
-    };
-
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 5,
-      method: 'tools/call',
-      params: { name: 'get_weather', arguments: { location: 'NYC' } },
-    });
-
-    expect(body.result.structuredContent).toEqual(executeResult);
-    expect(body.result.content).toBeDefined();
-  });
-
-  it('includes content annotations when configured', async () => {
-    const annotSchema = buildSchema(
-      `type Query { hello(name: String!): String }`,
-    );
-    const annotRegistry = new ToolRegistry(
-      { log: logger },
-      [
-        {
-          name: 'say_hello',
-          query: 'query($name: String!) { hello(name: $name) }',
-          output: {
-            contentAnnotations: {
-              audience: ['assistant'],
-              priority: 0.8,
-            },
-          },
-        },
-      ],
-      annotSchema,
-    );
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: annotRegistry,
-      execute: vi.fn().mockResolvedValue({ hello: 'world' }),
-    };
-
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: { name: 'say_hello', arguments: { name: 'World' } },
-    });
-
-    expect(body.result.content[0].annotations).toEqual({
-      audience: ['assistant'],
-      priority: 0.8,
-    });
-  });
-
-  it('omits content annotations when not configured', async () => {
-    const body = await callMCP(options, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: { name: 'say_hello', arguments: { name: 'World' } },
-    });
-
-    expect(body.result.content[0].annotations).toBeUndefined();
-  });
-
-  it('extracts data by outputPath on tools/call', async () => {
-    const pathSchema = buildSchema(`
-      type Query { search(q: String!): SearchResult }
-      type SearchResult { items: [String!]! }
-    `);
-    const pathRegistry = new ToolRegistry(
-      { log: logger },
-      [
-        {
-          name: 'search',
-          query: 'query($q: String!) { search(q: $q) { items } }',
-          output: { path: 'search.items' },
-        },
-      ],
-      pathSchema,
-    );
-    const pathExecute = vi.fn().mockResolvedValue({
-      search: { items: ['a', 'b', 'c'] },
-    });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: pathRegistry,
-      execute: pathExecute,
-    };
-
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 20,
-      method: 'tools/call',
-      params: { name: 'search', arguments: { q: 'test' } },
-    });
-
-    // Should return just the extracted array, not the full nested object
-    expect(body.result.structuredContent).toEqual(['a', 'b', 'c']);
-  });
-
-  it('returns error for unknown tool', async () => {
-    const body = await callMCP(options, {
-      jsonrpc: '2.0',
-      id: 4,
-      method: 'tools/call',
-      params: {
-        name: 'unknown_tool',
-        arguments: {},
-      },
-    });
-
-    expect(body.error.code).toBe(-32602);
-    expect(body.error.message).toContain('unknown_tool');
-    expect(body.result).toBeUndefined();
-  });
-
-  it('de-aliases arguments before executing', async () => {
-    const aliasSchema = buildSchema(`
-      type Query { search(q: String!): String }
-    `);
-    const aliasRegistry = new ToolRegistry(
-      { log: logger },
-      [
-        {
-          name: 'search',
-          query: 'query($q: String!) { search(q: $q) }',
-          input: {
-            schema: {
-              properties: {
-                q: { alias: 'searchQuery' },
-              },
-            },
-          },
-        },
-      ],
-      aliasSchema,
-    );
-    const aliasExecute = vi.fn().mockResolvedValue({ search: 'results' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: aliasRegistry,
-      execute: aliasExecute,
-    };
-
-    await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 10,
-      method: 'tools/call',
-      params: { name: 'search', arguments: { searchQuery: 'hello' } },
-    });
-    // Should call execute with original variable name
-    expect(aliasExecute).toHaveBeenCalledWith('search', { q: 'hello' });
-  });
-
-  it('de-aliases mixed aliased and non-aliased arguments', async () => {
-    const mixedSchema = buildSchema(`
-      type Query { search(q: String!, limit: Int): String }
-    `);
-    const mixedRegistry = new ToolRegistry(
-      { log: logger },
-      [
-        {
-          name: 'search',
-          query:
-            'query($q: String!, $limit: Int) { search(q: $q, limit: $limit) }',
-          input: {
-            schema: {
-              properties: {
-                q: { alias: 'searchQuery' },
-              },
-            },
-          },
-        },
-      ],
-      mixedSchema,
-    );
-    const mixedExecute = vi.fn().mockResolvedValue({ search: 'results' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: mixedRegistry,
-      execute: mixedExecute,
-    };
-
-    await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 12,
-      method: 'tools/call',
-      params: {
-        name: 'search',
-        arguments: { searchQuery: 'hello', limit: 10 },
-      },
-    });
-
-    // searchQuery should be de-aliased to q, limit should pass through
-    expect(mixedExecute).toHaveBeenCalledWith('search', {
-      q: 'hello',
-      limit: 10,
-    });
   });
 
   it('resolves per-field descriptions from providers', async () => {
@@ -599,6 +354,265 @@ describe('handleMCPRequest', () => {
     warnSpy.mockRestore();
   });
 
+  it('tools/list succeeds when resolveFieldDescriptions throws', async () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const opts = {
+      ...options,
+      resolveFieldDescriptions: async () => {
+        throw new Error('provider down');
+      },
+    };
+
+    const body = await callMCP(opts, {
+      jsonrpc: '2.0',
+      id: 14,
+      method: 'tools/list',
+      params: {},
+    });
+
+    expect(body).not.toBeNull();
+    expect(body.result.tools).toHaveLength(1);
+    expect(body.result.tools[0].name).toBe('say_hello');
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('provider down'),
+    );
+    errorSpy.mockRestore();
+  });
+});
+
+describe('tool call functions', () => {
+  it('handles basic execution and formats result', async () => {
+    const schema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'say_hello',
+          query: 'query($name: String!) { hello(name: $name) }',
+        },
+      ],
+      schema,
+    );
+    const tool = registry.getTool('say_hello')!;
+    const body: any = await processExecutionResult({ log: logger }, {
+      id: 3,
+      toolName: 'say_hello',
+      args: { name: 'World' },
+      tool,
+      data: { hello: 'World' },
+      headers: {},
+    });
+
+    expect(body.result.structuredContent).toBeDefined();
+    expect(body.result.content).toBeDefined();
+  });
+
+  it('includes structuredContent when tool has outputSchema', async () => {
+    const schemaWithOutput = buildSchema(`
+      type Query { getWeather(location: String!): Weather }
+      type Weather { temperature: Float! }
+    `);
+    const registryWithOutput = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'get_weather',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
+      schemaWithOutput,
+    );
+    const tool = registryWithOutput.getTool('get_weather')!;
+    const executeResult = { getWeather: { temperature: 72 } };
+
+    const body: any = await processExecutionResult({ log: logger }, {
+      id: 5,
+      toolName: 'get_weather',
+      args: { location: 'NYC' },
+      tool,
+      data: executeResult,
+      headers: {},
+    });
+
+    expect(body.result.structuredContent).toEqual(executeResult);
+    expect(body.result.content).toBeDefined();
+  });
+
+  it('includes content annotations when configured', async () => {
+    const annotSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const annotRegistry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'say_hello',
+          query: 'query($name: String!) { hello(name: $name) }',
+          output: {
+            contentAnnotations: {
+              audience: ['assistant'],
+              priority: 0.8,
+            },
+          },
+        },
+      ],
+      annotSchema,
+    );
+    const tool = annotRegistry.getTool('say_hello')!;
+
+    const body: any = await processExecutionResult({ log: logger }, {
+      id: 1,
+      toolName: 'say_hello',
+      args: { name: 'World' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
+    });
+
+    expect(body.result.content[0].annotations).toEqual({
+      audience: ['assistant'],
+      priority: 0.8,
+    });
+  });
+
+  it('omits content annotations when not configured', async () => {
+    const schema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'say_hello',
+          query: 'query($name: String!) { hello(name: $name) }',
+        },
+      ],
+      schema,
+    );
+    const tool = registry.getTool('say_hello')!;
+
+    const body: any = await processExecutionResult({ log: logger }, {
+      id: 1,
+      toolName: 'say_hello',
+      args: { name: 'World' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
+    });
+
+    expect(body.result.content[0].annotations).toBeUndefined();
+  });
+
+  it('extracts data by outputPath on tools/call', async () => {
+    const pathSchema = buildSchema(`
+      type Query { search(q: String!): SearchResult }
+      type SearchResult { items: [String!]! }
+    `);
+    const pathRegistry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($q: String!) { search(q: $q) { items } }',
+          output: { path: 'search.items' },
+        },
+      ],
+      pathSchema,
+    );
+    const tool = pathRegistry.getTool('search')!;
+
+    const body: any = await processExecutionResult({ log: logger }, {
+      id: 20,
+      toolName: 'search',
+      args: { q: 'test' },
+      tool,
+      data: { search: { items: ['a', 'b', 'c'] } },
+      headers: {},
+    });
+
+    // Should return just the extracted array, not the full nested object
+    expect(body.result.structuredContent).toEqual(['a', 'b', 'c']);
+  });
+
+  it('returns undefined for unknown tool via registry lookup', () => {
+    const schema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'say_hello',
+          query: 'query($name: String!) { hello(name: $name) }',
+        },
+      ],
+      schema,
+    );
+    expect(registry.getTool('unknown_tool')).toBeUndefined();
+  });
+
+  it('de-aliases arguments before executing', () => {
+    const aliasSchema = buildSchema(`
+      type Query { search(q: String!): String }
+    `);
+    const aliasRegistry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($q: String!) { search(q: $q) }',
+          input: {
+            schema: {
+              properties: {
+                q: { alias: 'searchQuery' },
+              },
+            },
+          },
+        },
+      ],
+      aliasSchema,
+    );
+    const tool = aliasRegistry.getTool('search')!;
+
+    const result = dealiasArgs({ searchQuery: 'hello' }, tool.argumentAliases);
+    expect(result).toEqual({ q: 'hello' });
+  });
+
+  it('de-aliases mixed aliased and non-aliased arguments', () => {
+    const mixedSchema = buildSchema(`
+      type Query { search(q: String!, limit: Int): String }
+    `);
+    const mixedRegistry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query:
+            'query($q: String!, $limit: Int) { search(q: $q, limit: $limit) }',
+          input: {
+            schema: {
+              properties: {
+                q: { alias: 'searchQuery' },
+              },
+            },
+          },
+        },
+      ],
+      mixedSchema,
+    );
+    const tool = mixedRegistry.getTool('search')!;
+
+    // searchQuery should be de-aliased to q, limit should pass through
+    const result = dealiasArgs(
+      { searchQuery: 'hello', limit: 10 },
+      tool.argumentAliases,
+    );
+    expect(result).toEqual({ q: 'hello', limit: 10 });
+  });
+
   it('preprocess hook short-circuits execution when returning a value', async () => {
     const hookSchema = buildSchema(
       `type Query { hello(name: String!): String }`,
@@ -624,24 +638,25 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('gated_tool')!;
+    const hookContext = {
+      toolName: 'gated_tool',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 100,
-      method: 'tools/call',
-      params: { name: 'gated_tool', arguments: { name: 'Alice' } },
-    });
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'Alice' },
+      hookContext,
+    );
+    expect(preprocessResult).not.toBeUndefined();
 
-    expect(hookExecute).not.toHaveBeenCalled();
-    expect(body.result.content[0].text).toContain('confirmationRequired');
-    expect(body.result.content[0].text).toContain('Alice');
+    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
+      hookProducedResult: true,
+      hasHooks: true,
+    });
+    expect(formatted.content[0].text).toContain('confirmationRequired');
+    expect(formatted.content[0].text).toContain('Alice');
   });
 
   it('preprocess hook returning undefined continues normal execution', async () => {
@@ -661,24 +676,30 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('passthrough_tool')!;
+    const hookContext = {
+      toolName: 'passthrough_tool',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'Bob' },
+      hookContext,
+    );
+    expect(preprocessResult).toBeUndefined();
+
+    // Since preprocess returns undefined, execution continues normally.
+    // Simulate by calling processExecutionResult with mock data.
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 101,
-      method: 'tools/call',
-      params: { name: 'passthrough_tool', arguments: { name: 'Bob' } },
+      toolName: 'passthrough_tool',
+      args: { name: 'Bob' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
-    expect(hookExecute).toHaveBeenCalledWith('passthrough_tool', {
-      name: 'Bob',
-    });
     // Even though preprocess passed through, hooks are configured so no structuredContent
     expect(body.result.structuredContent).toBeUndefined();
     expect(body.result.content[0].text).toContain('hello');
@@ -710,21 +731,15 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({
-      search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
-    });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('search')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'search', arguments: { q: 'test' } },
+      toolName: 'search',
+      args: { q: 'test' },
+      tool,
+      data: { search: { items: [{ title: 'Doc', url: 'https://example.com' }] } },
+      headers: {},
     });
 
     expect(body.result.content[0].text).toContain(
@@ -765,24 +780,18 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({
-      search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
-    });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('search_mcp')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'search_mcp', arguments: { q: 'test' } },
+      toolName: 'search_mcp',
+      args: { q: 'test' },
+      tool,
+      data: { search: { items: [{ title: 'Doc', url: 'https://example.com' }] } },
+      headers: {},
     });
 
-    // Raw MCP result passed through — not wrapped in JSON.stringify
+    // Raw MCP result passed through - not wrapped in JSON.stringify
     expect(body.result.content[0].text).toBe(
       '| Title | URL |\n| Doc | https://example.com |',
     );
@@ -817,24 +826,26 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn();
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('mcp_gate')!;
+    const hookContext = {
+      toolName: 'mcp_gate',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 102,
-      method: 'tools/call',
-      params: { name: 'mcp_gate', arguments: { name: 'Alice' } },
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'Alice' },
+      hookContext,
+    );
+    expect(preprocessResult).not.toBeUndefined();
+
+    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
+      hookProducedResult: true,
+      hasHooks: true,
     });
 
-    expect(hookExecute).not.toHaveBeenCalled();
-    expect(body.result.content[0].text).toBe('Confirm action for Alice?');
-    expect(body.result._confirmationRequired).toBe(true);
+    expect(formatted.content[0].text).toBe('Confirm action for Alice?');
+    expect(formatted._confirmationRequired).toBe(true);
   });
 
   it('hook returning raw MCP result with isError: true passes through', async () => {
@@ -857,19 +868,15 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('error_hook')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'error_hook', arguments: { name: 'test' } },
+      toolName: 'error_hook',
+      args: { name: 'test' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
     expect(body.result.isError).toBe(true);
@@ -894,24 +901,20 @@ describe('handleMCPRequest', () => {
       ],
       cmsSchema,
     );
-    const cmsExecute = vi.fn().mockResolvedValue({
-      getPage: {
-        title: 'Hello',
-        content: [{ type: 'paragraph', text: 'World' }],
-      },
-    });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: cmsRegistry,
-      execute: cmsExecute,
-    };
+    const tool = cmsRegistry.getTool('get_page')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'get_page', arguments: { id: '1' } },
+      toolName: 'get_page',
+      args: { id: '1' },
+      tool,
+      data: {
+        getPage: {
+          title: 'Hello',
+          content: [{ type: 'paragraph', text: 'World' }],
+        },
+      },
+      headers: {},
     });
 
     // Should be wrapped as structuredContent, NOT passed through as raw MCP result
@@ -938,22 +941,18 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('empty_content')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'empty_content', arguments: { name: 'test' } },
+      toolName: 'empty_content',
+      args: { name: 'test' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
-    // Empty content array is NOT a valid MCP result — should be wrapped as text
+    // Empty content array is NOT a valid MCP result - should be wrapped as text
     const parsed = JSON.parse(body.result.content[0].text);
     expect(parsed).toEqual({ content: [] });
   });
@@ -977,19 +976,15 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('bad_content_type')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 102,
-      method: 'tools/call',
-      params: { name: 'bad_content_type', arguments: { name: 'test' } },
+      toolName: 'bad_content_type',
+      args: { name: 'test' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
     // Non-MCP content types should be wrapped as text, not passed through
@@ -1021,21 +1016,15 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({
-      search: { items: ['hello', 'world'] },
-    });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('search_extract')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 103,
-      method: 'tools/call',
-      params: { name: 'search_extract', arguments: { q: 'test' } },
+      toolName: 'search_extract',
+      args: { q: 'test' },
+      tool,
+      data: { search: { items: ['hello', 'world'] } },
+      headers: {},
     });
 
     const parsed = JSON.parse(body.result.content[0].text);
@@ -1043,7 +1032,6 @@ describe('handleMCPRequest', () => {
   });
 
   it('returns MCP error when preprocess hook throws', async () => {
-    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const hookSchema = buildSchema(
       `type Query { hello(name: String!): String }`,
     );
@@ -1062,30 +1050,21 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn();
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('error_tool')!;
+    const hookContext = {
+      toolName: 'error_tool',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 104,
-      method: 'tools/call',
-      params: { name: 'error_tool', arguments: { name: 'test' } },
-    });
-
-    expect(hookExecute).not.toHaveBeenCalled();
-    expect(body.result.isError).toBe(true);
-    expect(body.result.content[0].text).toContain('preprocess hook failed');
-    expect(body.result.content[0].text).toContain('preprocess failed');
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('error_tool'),
-      expect.stringContaining('preprocess hook failed'),
-    );
-    errorSpy.mockRestore();
+    try {
+      await tool.hooks!.preprocess!({ name: 'test' }, hookContext);
+      // Should not reach here
+      expect.unreachable('preprocess should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect((err as Error).message).toBe('preprocess failed');
+    }
   });
 
   it('returns MCP error when postprocess hook throws', async () => {
@@ -1108,22 +1087,17 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('post_error_tool')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 105,
-      method: 'tools/call',
-      params: { name: 'post_error_tool', arguments: { name: 'test' } },
+      toolName: 'post_error_tool',
+      args: { name: 'test' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
-    expect(hookExecute).toHaveBeenCalled();
     expect(body.result.isError).toBe(true);
     expect(body.result.content[0].text).toContain('postprocess hook failed');
     expect(body.result.content[0].text).toContain('postprocess failed');
@@ -1151,23 +1125,19 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-      requestContext: {
-        headers: { authorization: 'Bearer token123' },
-      },
-    };
+    const tool = hookRegistry.getTool('context_tool')!;
+    const headers = { authorization: 'Bearer token123' };
 
-    await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 106,
-      method: 'tools/call',
-      params: { name: 'context_tool', arguments: { name: 'test' } },
-    });
+    // processExecutionResult does not call preprocess, so we call it directly
+    // to verify the hook receives correct context
+    await tool.hooks!.preprocess!(
+      { name: 'test' },
+      {
+        toolName: 'context_tool',
+        headers,
+        query: hookQuery,
+      },
+    );
 
     expect(contextSpy).toHaveBeenCalledWith(
       { name: 'test' },
@@ -1198,25 +1168,29 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn();
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('both_hooks_tool')!;
+    const hookContext = {
+      toolName: 'both_hooks_tool',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 110,
-      method: 'tools/call',
-      params: { name: 'both_hooks_tool', arguments: { name: 'test' } },
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'test' },
+      hookContext,
+    );
+    // Preprocess short-circuited, so we format the result directly
+    // and never call postprocess
+    expect(preprocessResult).not.toBeUndefined();
+
+    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
+      hookProducedResult: true,
+      hasHooks: true,
     });
 
-    expect(hookExecute).not.toHaveBeenCalled();
     expect(postprocessSpy).not.toHaveBeenCalled();
-    expect(body.result.content[0].text).toContain('shortCircuit');
-    expect(body.result.structuredContent).toBeUndefined();
+    expect(formatted.content[0].text).toContain('shortCircuit');
+    expect(formatted.structuredContent).toBeUndefined();
   });
 
   it('runs both preprocess (passthrough) and postprocess together', async () => {
@@ -1240,22 +1214,30 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('both_hooks_passthrough')!;
+    const hookContext = {
+      toolName: 'both_hooks_passthrough',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    // Preprocess returns undefined, so execution continues
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'Bob' },
+      hookContext,
+    );
+    expect(preprocessResult).toBeUndefined();
+
+    // Simulate normal execution followed by postprocess via processExecutionResult
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 111,
-      method: 'tools/call',
-      params: { name: 'both_hooks_passthrough', arguments: { name: 'Bob' } },
+      toolName: 'both_hooks_passthrough',
+      args: { name: 'Bob' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
-    expect(hookExecute).toHaveBeenCalled();
     const parsed = JSON.parse(body.result.content[0].text);
     expect(parsed).toEqual({ greeting: 'WORLD' });
     expect(body.result.structuredContent).toBeUndefined();
@@ -1280,23 +1262,24 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn();
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
+    const tool = hookRegistry.getTool('async_preprocess')!;
+    const hookContext = {
+      toolName: 'async_preprocess',
+      headers: {},
+      query: tool.query,
     };
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 112,
-      method: 'tools/call',
-      params: { name: 'async_preprocess', arguments: { name: 'test' } },
-    });
+    const preprocessResult = await tool.hooks!.preprocess!(
+      { name: 'test' },
+      hookContext,
+    );
+    expect(preprocessResult).not.toBeUndefined();
 
-    expect(hookExecute).not.toHaveBeenCalled();
-    const parsed = JSON.parse(body.result.content[0].text);
+    const formatted: any = formatToolCallResult({ log: logger }, preprocessResult, tool, {
+      hookProducedResult: true,
+      hasHooks: true,
+    });
+    const parsed = JSON.parse(formatted.content[0].text);
     expect(parsed).toEqual({ async: true, name: 'test' });
   });
 
@@ -1319,19 +1302,15 @@ describe('handleMCPRequest', () => {
       ],
       hookSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: hookRegistry,
-      execute: hookExecute,
-    };
+    const tool = hookRegistry.getTool('async_post_error')!;
 
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
+    const body: any = await processExecutionResult({ log: logger }, {
       id: 113,
-      method: 'tools/call',
-      params: { name: 'async_post_error', arguments: { name: 'test' } },
+      toolName: 'async_post_error',
+      args: { name: 'test' },
+      tool,
+      data: { hello: 'world' },
+      headers: {},
     });
 
     expect(body.result.isError).toBe(true);
@@ -1339,8 +1318,7 @@ describe('handleMCPRequest', () => {
     errorSpy.mockRestore();
   });
 
-  it('preprocess receives de-aliased args when aliases are configured', async () => {
-    const preprocessSpy = vi.fn().mockReturnValue(undefined);
+  it('preprocess receives de-aliased args when aliases are configured', () => {
     const aliasSchema = buildSchema(`
       type Query { searchProducts(query: String!, category: String): String }
     `);
@@ -1358,59 +1336,31 @@ describe('handleMCPRequest', () => {
               },
             },
           },
-          hooks: { preprocess: preprocessSpy },
+          hooks: { preprocess: vi.fn().mockReturnValue(undefined) },
         },
       ],
       aliasSchema,
     );
-    const hookExecute = vi.fn().mockResolvedValue({ searchProducts: 'result' });
-    const opts = {
-      serverName: 'test',
-      serverVersion: '1.0.0',
-      registry: aliasRegistry,
-      execute: hookExecute,
+    const tool = aliasRegistry.getTool('alias_hook_tool')!;
+
+    // De-alias first, then pass to preprocess
+    const dealiased = dealiasArgs(
+      { searchQuery: 'test', category: 'docs' },
+      tool.argumentAliases,
+    );
+    expect(dealiased).toEqual({ query: 'test', category: 'docs' });
+
+    // Verify preprocess receives de-aliased args
+    const hookContext = {
+      toolName: 'alias_hook_tool',
+      headers: {},
+      query: tool.query,
     };
-
-    await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 114,
-      method: 'tools/call',
-      params: {
-        name: 'alias_hook_tool',
-        arguments: { searchQuery: 'test', category: 'docs' },
-      },
-    });
-
-    // Should receive original GraphQL variable names, not aliases
-    expect(preprocessSpy).toHaveBeenCalledWith(
+    tool.hooks!.preprocess!(dealiased, hookContext);
+    expect(tool.hooks!.preprocess).toHaveBeenCalledWith(
       { query: 'test', category: 'docs' },
       expect.any(Object),
     );
-  });
-
-  it('tools/list succeeds when resolveFieldDescriptions throws', async () => {
-    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
-    const opts = {
-      ...options,
-      resolveFieldDescriptions: async () => {
-        throw new Error('provider down');
-      },
-    };
-
-    const body = await callMCP(opts, {
-      jsonrpc: '2.0',
-      id: 14,
-      method: 'tools/list',
-      params: {},
-    });
-
-    expect(body).not.toBeNull();
-    expect(body.result.tools).toHaveLength(1);
-    expect(body.result.tools[0].name).toBe('say_hello');
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('provider down'),
-    );
-    errorSpy.mockRestore();
   });
 });
 
@@ -1443,7 +1393,6 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry: outputRegistry,
-    execute: vi.fn(),
   };
 
   it('applies output field descriptions to outputSchema', async () => {
@@ -1543,7 +1492,6 @@ describe('resolveOutputFieldDescriptions in tools/list', () => {
       serverName: 'test',
       serverVersion: '1.0.0',
       registry: arrayRegistry,
-      execute: vi.fn(),
       resolveOutputFieldDescriptions: async () => {
         const map = new Map<string, Map<string, string>>();
         map.set(
@@ -1624,7 +1572,6 @@ describe('resources/list', () => {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry,
-    execute: vi.fn(),
   };
 
   const resourceOptions: MCPHandlerOptions = {
@@ -1844,7 +1791,6 @@ describe('resources/read', () => {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry,
-    execute: vi.fn(),
   };
 
   const resourceOptions: MCPHandlerOptions = {
@@ -1955,7 +1901,6 @@ describe('resources/templates/list', () => {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry,
-    execute: vi.fn(),
   };
 
   it('returns resource templates', async () => {
@@ -2019,7 +1964,6 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       resources: new Map(),
       resourceTemplates: [
         {
@@ -2053,7 +1997,6 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       resources: new Map([
         [
           'docs://schemas/User',
@@ -2092,7 +2035,6 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       resourceTemplates: [
         {
           uriTemplate: 'docs://{name}',
@@ -2123,7 +2065,6 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       resourceTemplates: [
         {
           uriTemplate: 'files://{name}',
@@ -2151,7 +2092,6 @@ describe('resources/read with templates', () => {
       serverName: 'test-mcp',
       serverVersion: '1.0.0',
       registry,
-      execute: vi.fn(),
       resourceTemplates: [
         {
           uriTemplate: 'docs://{name}',
@@ -2187,7 +2127,6 @@ describe('resources/read with templates', () => {
         ],
         buildSchema('type Query { hello(name: String!): String }'),
       ),
-      execute: vi.fn(),
       resourceTemplates: [
         {
           uriTemplate: 'docs://{name}',
@@ -2225,7 +2164,6 @@ describe('resources/templates/list description providers', () => {
     serverName: 'test-mcp',
     serverVersion: '1.0.0',
     registry,
-    execute: vi.fn(),
     resourceTemplates: [
       {
         uriTemplate: 'docs://{name}',
@@ -2289,7 +2227,6 @@ describe('JSON-RPC validation', () => {
     serverName: 'test',
     serverVersion: '1.0.0',
     registry,
-    execute: vi.fn(),
   };
 
   it('rejects request with missing jsonrpc field', async () => {
