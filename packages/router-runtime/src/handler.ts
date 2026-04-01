@@ -11,9 +11,10 @@ import {
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import {
+  asArray,
   ExecutionRequest,
   ExecutionResult,
-  isAsyncIterable,
+  mergeDeep,
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -21,15 +22,31 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
+import {
+  handlePubsubOperationField,
+  handleResultWithPubSubPublish,
+} from './edfs';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, queryPlanForExecutionRequestContext } from './utils';
+import {
+  getLazyFactory,
+  getLazyValue,
+  handleMaybePromiseMaybeAsyncIterable,
+  onSubgraphExecuteWithTransforms,
+  queryPlanForExecutionRequestContext,
+} from './utils';
 
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const getSubschema = getLazyFactory(
-    () => handleFederationSupergraph(opts).getSubschema,
+    () => getHandledFederationSupergraph().getSubschema,
+  );
+  const getHandledFederationSupergraph = getLazyValue(() =>
+    handleFederationSupergraph(opts),
+  );
+  const getSubgraphSchema = getLazyFactory(
+    () => getHandledFederationSupergraph().getSubgraphSchema,
   );
 
   const moduleName = '@graphql-hive/router-query-planner';
@@ -142,44 +159,100 @@ export async function unifiedGraphHandler(
             supergraphSchema,
             executionRequest,
             onSubgraphExecute(subgraphName, executionRequest) {
-              const subschema = getSubschema(subgraphName);
-              if (subschema.transforms?.length) {
-                const transforms = subschema.transforms;
-                const transformationContext = Object.create(null);
-                for (const transform of transforms) {
-                  if (transform.transformRequest) {
-                    executionRequest = transform.transformRequest(
+              function executeSubgraph(executionRequest: ExecutionRequest) {
+                return handleMaybePromiseMaybeAsyncIterable(
+                  () =>
+                    onSubgraphExecuteWithTransforms(
+                      subgraphName,
                       executionRequest,
-                      undefined as any,
-                      transformationContext,
-                    );
-                  }
-                }
-                return handleMaybePromise(
-                  () => opts.onSubgraphExecute(subgraphName, executionRequest),
-                  (executionResult) => {
-                    function handleResult(executionResult: ExecutionResult) {
-                      for (const transform of transforms.toReversed()) {
-                        if (transform.transformResult) {
-                          executionResult = transform.transformResult(
-                            executionResult,
-                            undefined as any,
-                            transformationContext,
-                          );
-                        }
-                      }
-                      return executionResult;
-                    }
-                    if (isAsyncIterable(executionResult)) {
-                      return mapAsyncIterator(executionResult, (result) =>
-                        handleResult(result),
+                      opts.onSubgraphExecute,
+                      getSubschema,
+                    ),
+                  (executionResult: ExecutionResult) => {
+                    if (executionRequest.operationType === 'mutation') {
+                      handleResultWithPubSubPublish(
+                        supergraphSchema,
+                        executionRequest,
+                        executionResult,
                       );
                     }
-                    return handleResult(executionResult);
+                    return executionResult;
                   },
                 );
               }
-              return opts.onSubgraphExecute(subgraphName, executionRequest);
+
+              const maybeResult = handlePubsubOperationField(
+                supergraphSchema,
+                executionRequest,
+              );
+              if (maybeResult) {
+                const {
+                  executionResult,
+                  newExecutionRequest,
+                  responseKey,
+                  returnTypeName,
+                } = maybeResult;
+                if (newExecutionRequest) {
+                  return mapAsyncIterator(
+                    executionResult,
+                    (executionResult: ExecutionResult) => {
+                      if (executionResult.data?.[responseKey] != null) {
+                        const representations = asArray(
+                          executionResult.data[responseKey],
+                        );
+                        if (returnTypeName) {
+                          for (const representation of representations) {
+                            representation.__typename = returnTypeName;
+                          }
+                        }
+                        return handleMaybePromiseMaybeAsyncIterable(
+                          () =>
+                            executeSubgraph({
+                              ...newExecutionRequest,
+                              variables: {
+                                representations,
+                              },
+                            }),
+                          (entitiesResult: ExecutionResult) => {
+                            if (entitiesResult?.data?._entities?.length) {
+                              const entities = asArray(
+                                entitiesResult.data._entities,
+                              );
+                              for (let i = 0; i < entities.length; i++) {
+                                const entity = entities[i];
+                                const representation = representations[i];
+                                if (entity != null && representation != null) {
+                                  Object.assign(
+                                    representation,
+                                    mergeDeep(
+                                      [entity, representation],
+                                      false,
+                                      true,
+                                      true,
+                                    ),
+                                  );
+                                }
+                              }
+                              return executionResult;
+                            }
+                            if (entitiesResult?.errors?.length) {
+                              executionResult.errors ||= [];
+                              // @ts-expect-error - it is writable
+                              executionResult.errors.push(
+                                ...entitiesResult.errors,
+                              );
+                            }
+                            return executionResult;
+                          },
+                        );
+                      }
+                      return executionResult;
+                    },
+                  ) as ExecutionResult;
+                }
+                return executionResult;
+              }
+              return executeSubgraph(executionRequest);
             },
             queryPlan,
           });

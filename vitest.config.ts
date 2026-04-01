@@ -60,7 +60,6 @@ export default defineConfig({
                   '!**/e2e/auto-type-merging', // has custom type merging (using @merge and @resolveTo)
                   '!**/e2e/distributed-subscriptions-webhooks', // has additional typedefs (using @resolveTo)
                   '!**/e2e/edfs-gateway-defs', // has additional typedefs (using @resolveTo)
-                  '!**/e2e/edfs-subgraph-defs', // has additional typedefs
                   '!**/e2e/federation-batching-plan', // uses stitching plan
                   '!**/e2e/extra-fields', // has additional typedefs
                   '!**/e2e/federation-mixed', // has transforms
