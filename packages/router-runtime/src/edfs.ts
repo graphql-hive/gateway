@@ -132,6 +132,7 @@ export function handlePubsubOperationField(
       }
     }
   }
+  return false;
 }
 
 /** @pubsubPublish */
