@@ -3212,7 +3212,7 @@ __metadata:
     "@graphql-codegen/typescript-resolvers": "npm:^5.1.7"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
-    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.11"
+    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.12"
     "@omnigraph/openapi": "npm:^0.109.23"
     graphql: "npm:^16.12.0"
     graphql-scalars: "npm:^1.25.0"
@@ -3336,7 +3336,7 @@ __metadata:
     "@graphql-codegen/typescript-resolvers": "npm:^5.1.7"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
-    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.11"
+    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.12"
     "@omnigraph/openapi": "npm:^0.109.23"
     fets: "npm:^0.8.4"
     graphql: "npm:16.13.2"
@@ -4898,7 +4898,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-runtime@npm:^1.8.3, @graphql-mesh/fusion-runtime@workspace:^, @graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime":
+"@graphql-mesh/fusion-runtime@npm:^1.8.4, @graphql-mesh/fusion-runtime@workspace:^, @graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
   dependencies:
@@ -4967,15 +4967,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/incontext-sdk-codegen@npm:^0.0.11":
-  version: 0.0.11
-  resolution: "@graphql-mesh/incontext-sdk-codegen@npm:0.0.11"
+"@graphql-mesh/incontext-sdk-codegen@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "@graphql-mesh/incontext-sdk-codegen@npm:0.0.12"
   dependencies:
     "@graphql-codegen/core": "npm:^5.0.1"
     "@graphql-codegen/plugin-helpers": "npm:^6.2.0"
     "@graphql-codegen/typescript": "npm:^5.0.9"
     "@graphql-mesh/cross-helpers": "npm:^0.4.12"
-    "@graphql-mesh/fusion-runtime": "npm:^1.8.3"
+    "@graphql-mesh/fusion-runtime": "npm:^1.8.4"
     "@graphql-mesh/transport-common": "npm:^1.0.15"
     "@graphql-mesh/types": "npm:^0.104.25"
     "@graphql-mesh/utils": "npm:^0.104.33"
@@ -4986,7 +4986,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/7365c680734c20d18cb197163b0492dd8abc121f28e018c93bb97abdc9a8b005dd12c7cd548b0a85761ba9dcd56a29c5d48f3da389aee79045edf17db88051d8
+  checksum: 10c0/0780a6cfb6c3be5609f8810bab2d10c7a6adf2f58d893ffa7c3f61e9f0aa3bf148f1fa330fef19907bdd3e2b29393f5ebfa410216bbfc79da67657c8f63f794f
   languageName: node
   linkType: hard
 
