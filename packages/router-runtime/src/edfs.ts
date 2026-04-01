@@ -20,7 +20,6 @@ import {
   GraphQLSchema,
   parse,
   print,
-  printSchema,
   SelectionSetNode,
   visit,
   visitWithTypeInfo,
