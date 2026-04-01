@@ -10,12 +10,7 @@ import {
   filterInternalFieldsAndTypes,
   getRngFromEnv,
 } from '@graphql-tools/federation';
-import {
-  asArray,
-  ExecutionRequest,
-  ExecutionResult,
-  mergeDeep,
-} from '@graphql-tools/utils';
+import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import {
