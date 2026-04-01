@@ -1,9 +1,10 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
-it('resolves extra fields', async () => {
+it.skipIf(usingHiveRouterRuntime())('resolves extra fields', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',

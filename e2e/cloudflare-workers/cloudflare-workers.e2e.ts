@@ -1,13 +1,17 @@
 import os from 'os';
 import { createTenv, getAvailablePort, type Container } from '@internal/e2e';
-import { getLocalhost } from '@internal/testing';
+import { getLocalhost, usingHiveRouterRuntime } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const { spawn, container, gatewayRunner } = createTenv(__dirname);
 
-describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
+describe.skipIf(
+  gatewayRunner !== 'node' ||
+    process.version.startsWith('v1') ||
+    usingHiveRouterRuntime(),
+)(
   'Cloudflare Workers',
   () => {
     let jaeger: Container;

@@ -1,9 +1,10 @@
 import { createExampleSetup, createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { expect, it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
 const { supergraph, query } = createExampleSetup(__dirname);
-it('should consistently explain the query plan', async () => {
+it.skipIf(usingHiveRouterRuntime())('should consistently explain the query plan', async () => {
   const { execute } = await gateway({
     supergraph: await supergraph(),
   });

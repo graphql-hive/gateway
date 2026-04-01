@@ -1,9 +1,10 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { expect, it } from 'vitest';
 
 const { composeWithMesh, gateway, service, fs } = createTenv(__dirname);
 
-it('should execute', async () => {
+it.skipIf(usingHiveRouterRuntime())('should execute', async () => {
   const { output } = await composeWithMesh({
     output: 'graphql',
     services: [await service('weather')],

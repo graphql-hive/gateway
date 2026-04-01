@@ -1,11 +1,13 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 import { expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
-it('should pull related data from other subgraph after emit', async () => {
+it.skipIf(usingHiveRouterRuntime())(
+  'should pull related data from other subgraph after emit', async () => {
   const users = await service('users');
 
   const gw = await gateway({

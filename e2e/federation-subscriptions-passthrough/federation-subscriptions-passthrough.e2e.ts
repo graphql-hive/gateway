@@ -1,5 +1,6 @@
 import { setTimeout } from 'timers/promises';
 import { createTenv, getAvailablePort } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import {
   createClient as createSSEClient,
@@ -28,7 +29,7 @@ const subscriptionsClientFactories = [
 ][];
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
-  describe(`with ${protocol}`, () => {
+  describe.skipIf(usingHiveRouterRuntime())(`with ${protocol}`, () => {
     if (protocol === 'WS' && process.version.startsWith('v18')) {
       it.skip(
         'WebSocket tests are skipped on Node.js v18 due to a bug in the WebSocket implementation',

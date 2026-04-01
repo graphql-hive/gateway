@@ -1,9 +1,10 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { expect, it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
 
-it('should execute Metrics with banana', async () => {
+it.skipIf(usingHiveRouterRuntime())('should execute Metrics with banana', async () => {
   const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   const result = await execute({
     query: /* GraphQL */ `
@@ -36,7 +37,7 @@ it('should execute Metrics with banana', async () => {
   ).toEqual('🍌');
 });
 
-it('should execute Metrics with apple', async () => {
+it.skipIf(usingHiveRouterRuntime())('should execute Metrics with apple', async () => {
   const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   const result = await execute({
     query: /* GraphQL */ `
