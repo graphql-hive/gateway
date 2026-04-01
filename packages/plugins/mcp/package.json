@@ -54,6 +54,7 @@
   "devDependencies": {
     "@graphql-hive/gateway-runtime": "workspace:*",
     "@langfuse/client": "^5.0.2",
+    "@opentelemetry/api": "^1.9.0",
     "graphql": "^16.13.2",
     "graphql-yoga": "^5.19.0",
     "pkgroll": "2.27.0",

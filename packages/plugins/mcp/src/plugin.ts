@@ -455,11 +455,11 @@ export interface MCPConfig {
   resources?: MCPResourceConfig[];
   /** Dynamic resource templates with URI patterns and handler functions */
   resourceTemplates?: MCPResourceTemplateConfig[];
-  /** 
-   * Description provider instances or configuration (e.g. Langfuse or custom providers) 
-   * 
-   * Custom providers: pass a DescriptionProvider instance containing fetchDescription or a config object for a built-in provider 
-  */
+  /**
+   * Description provider instances or configuration (e.g. Langfuse or custom providers)
+   *
+   * Custom providers: pass a DescriptionProvider instance containing fetchDescription or a config object for a built-in provider
+   */
   providers?: {
     /** Built-in Langfuse provider. Accepts LangfuseClientParams (publicKey, secretKey, baseUrl) plus optional defaults */
     langfuse?: Prettify<
