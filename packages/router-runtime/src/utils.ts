@@ -107,7 +107,7 @@ export function handleMaybePromiseMaybeAsyncIterable<
   TOutput = T,
 >(
   executor: () => T$,
-  mapper: (executionResult: T) => TOutput,
+  mapper: (executionResult: T) => MaybePromise<MaybeAsyncIterable<TOutput>>,
   errorMapper?: (error: Error) => TOutput,
 ): MaybePromise<MaybeAsyncIterable<TOutput>> {
   return handleMaybePromise(

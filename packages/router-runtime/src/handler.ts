@@ -246,7 +246,7 @@ export async function unifiedGraphHandler(
                       }
                       return executionResult;
                     },
-                  );
+                  ) as AsyncIterable<ExecutionResult>;
                 }
                 return executionResult;
               }

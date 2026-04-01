@@ -5,6 +5,7 @@ import {
   createGraphQLError,
   ExecutionRequest,
   getDirectiveInExtensions,
+  getOperationASTFromRequest,
   mapAsyncIterator,
   memoize1,
   memoize2,
@@ -18,7 +19,7 @@ import {
   getNamedType,
   GraphQLNamedOutputType,
   GraphQLSchema,
-  OperationDefinitionNode,
+  Kind,
   parse,
   print,
   SelectionSetNode,
@@ -107,24 +108,37 @@ export function handlePubsubOperationField(
         }
         let newExecutionRequest: ExecutionRequest | undefined;
         if (selectionSet && returnType) {
-          const operationDef = executionRequest.document.definitions.find(
-            (def): def is OperationDefinitionNode =>
-              def.kind === 'OperationDefinition' &&
-              (!executionRequest.operationName ||
-                def.name?.value === executionRequest.operationName),
-          );
-          const existingVarDefs = (
-            operationDef?.variableDefinitions ?? []
-          ).filter((v) => v.variable.name.value !== 'representations');
-          const varDefsStr = [
-            ...existingVarDefs.map((v) => print(v)),
-            '$representations: [_Any!]!',
-          ].join(', ');
-          const operationHeader = executionRequest.operationName
-            ? `query ${executionRequest.operationName}(${varDefsStr})`
-            : `query (${varDefsStr})`;
+          const operationAST = getOperationASTFromRequest(executionRequest);
+          const varDefs =
+            operationAST.variableDefinitions?.filter(
+              (varDef) => varDef.variable.name.value != 'representations',
+            ) || [];
+          varDefs.push({
+            kind: Kind.VARIABLE_DEFINITION,
+            variable: {
+              kind: Kind.VARIABLE,
+              name: {
+                kind: Kind.NAME,
+                value: 'representations',
+              },
+            },
+            type: {
+              kind: Kind.NON_NULL_TYPE,
+              type: {
+                kind: Kind.LIST_TYPE,
+                type: {
+                  kind: Kind.NAMED_TYPE,
+                  name: {
+                    kind: Kind.NAME,
+                    value: 'Any',
+                  },
+                },
+              },
+            },
+          });
+          const varDefsStr = varDefs.map((varDef) => print(varDef)).join(', ');
           const newDocument = parse(/* GraphQL */ `
-                ${operationHeader} {
+                query ${executionRequest.operationName || ''}(${varDefsStr}) {
                     _entities(representations: $representations) {
                         __typename
                         ... on ${returnType.name} ${print(selectionSet)}
