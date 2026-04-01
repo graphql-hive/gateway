@@ -1,5 +1,23 @@
 # @graphql-hive/router-runtime
 
+## 1.2.5
+### Patch Changes
+
+
+
+- [#2201](https://github.com/graphql-hive/gateway/pull/2201) [`237f546`](https://github.com/graphql-hive/gateway/commit/237f546f2bb55d7ea9582fcb0127e38b0613f6b8) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.17` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.17) (from `^0.0.16`, in `dependencies`)
+
+
+- [#2201](https://github.com/graphql-hive/gateway/pull/2201) [`237f546`](https://github.com/graphql-hive/gateway/commit/237f546f2bb55d7ea9582fcb0127e38b0613f6b8) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Update `@graphql-hive/router-query-planner` to v0.0.17
+  
+  This update includes fixes in the query planner:
+  
+  - **Preserve client aliases in mismatch output rewrites**: Fixed query planner mismatch handling so conflicting fields are tracked by response key (alias-aware), and internal alias rewrites restore the original client-facing key (alias-or-name) instead of always the schema field name.
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.4
+
 ## 1.2.4
 ### Patch Changes
 
