@@ -18,10 +18,12 @@ import {
   getNamedType,
   GraphQLNamedOutputType,
   GraphQLSchema,
+  OperationDefinitionNode,
   parse,
   print,
   SelectionSetNode,
   visit,
+  visitWithTypeInfo,
 } from 'graphql';
 
 /**
@@ -105,8 +107,24 @@ export function handlePubsubOperationField(
         }
         let newExecutionRequest: ExecutionRequest | undefined;
         if (selectionSet && returnType) {
+          const operationDef = executionRequest.document.definitions.find(
+            (def): def is OperationDefinitionNode =>
+              def.kind === 'OperationDefinition' &&
+              (!executionRequest.operationName ||
+                def.name?.value === executionRequest.operationName),
+          );
+          const existingVarDefs = (
+            operationDef?.variableDefinitions ?? []
+          ).filter((v) => v.variable.name.value !== 'representations');
+          const varDefsStr = [
+            ...existingVarDefs.map((v) => print(v)),
+            '$representations: [_Any!]!',
+          ].join(', ');
+          const operationHeader = executionRequest.operationName
+            ? `query ${executionRequest.operationName}(${varDefsStr})`
+            : `query (${varDefsStr})`;
           const newDocument = parse(/* GraphQL */ `
-                query ${executionRequest.operationName}($representations: [_Any!]!) {
+                ${operationHeader} {
                     _entities(representations: $representations) {
                         __typename
                         ... on ${returnType.name} ${print(selectionSet)}
@@ -157,7 +175,15 @@ const getPubsubPublishVisitor = memoize2(function getPubsubPublishFields(
               const typeVisitor = (pubsubPublishVisitor[typeName] ||=
                 {}) as Record<string, ValueVisitor>;
               typeVisitor[fieldName] = (value) => {
-                pubsub.publish(pubsubTopic, value);
+                const maybePromise = pubsub.publish(pubsubTopic, value);
+                if (
+                  maybePromise &&
+                  typeof (maybePromise as Promise<void>).catch === 'function'
+                ) {
+                  (maybePromise as Promise<void>).catch(() => {
+                    // Swallow publish errors to avoid unhandled promise rejections.
+                  });
+                }
                 return value;
               };
             }

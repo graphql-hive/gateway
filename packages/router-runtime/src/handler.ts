@@ -207,6 +207,7 @@ export async function unifiedGraphHandler(
                             executeSubgraph({
                               ...newExecutionRequest,
                               variables: {
+                                ...newExecutionRequest.variables,
                                 representations,
                               },
                             }),
@@ -245,7 +246,7 @@ export async function unifiedGraphHandler(
                       }
                       return executionResult;
                     },
-                  ) as ExecutionResult;
+                  );
                 }
                 return executionResult;
               }
