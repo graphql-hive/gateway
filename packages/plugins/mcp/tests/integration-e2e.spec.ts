@@ -1432,7 +1432,7 @@ describe('MCP E2E', () => {
           name: 'file-desc-gateway',
           operationsPath: require('node:path').resolve(
             __dirname,
-            '../../../../examples/mcp-example/operations/weather_directive.graphql',
+            '../examples/operations/weather_directive.graphql',
           ),
           tools: [],
           providers: { langfuse: fileMockProvider as any },

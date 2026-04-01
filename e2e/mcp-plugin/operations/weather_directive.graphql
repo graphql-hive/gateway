@@ -1,0 +1,23 @@
+query QuickWeather($location: String!)
+@mcpTool(name: "quick_weather", description: "Quick weather check") {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
+
+query WeatherWithFieldProvider(
+  $location: String! @mcpDescription(provider: "mock:weather.location")
+  $days: Int
+)
+@mcpTool(
+  name: "weather_field_provider"
+  description: "Weather with field descriptions"
+) {
+  forecast(location: $location, days: $days) {
+    date
+    high
+    low
+    conditions @mcpDescription(provider: "mock:forecast.conditions")
+  }
+}

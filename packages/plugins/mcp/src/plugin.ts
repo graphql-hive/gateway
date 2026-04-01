@@ -1410,7 +1410,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                 id: null,
                 error: {
                   code: -32000,
-                  message: 'MCP server not ready. Schema loading failed.',
+                  message: bootstrapErrorMsg
+                    ? `MCP server not ready. Schema loading failed: ${bootstrapErrorMsg}`
+                    : 'MCP server not ready. Schema loading failed.',
                 },
               },
               { status: 503 },
@@ -1486,6 +1488,24 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
       // tools/call: route through Yoga's pipeline via onRequestParse -> execute -> onResultProcess
       if (body.method === 'tools/call') {
+        if (
+          body.id !== null &&
+          typeof body.id !== 'string' &&
+          typeof body.id !== 'number'
+        ) {
+          return endResponse(
+            fetchAPI.Response.json({
+              jsonrpc: '2.0',
+              id: null,
+              error: {
+                code: -32600,
+                message:
+                  'Invalid Request: "id" must be a string, number, or null',
+              },
+            }),
+          );
+        }
+
         if (
           !body.params ||
           typeof body.params !== 'object' ||

@@ -30,7 +30,7 @@ const mcpOptions: MCPConfig = {
         schema: {
           properties: {
             // NEW: alias renames the input field for MCP clients
-            // MCP client passes { city: "Tokyo" } → plugin sends $location = "Tokyo" to GraphQL
+            // MCP client passes { city: "Tokyo" }; plugin sends $location = "Tokyo" to GraphQL
             location: {
               alias: 'city',
               description: 'City name, e.g. "Tokyo", "London"',

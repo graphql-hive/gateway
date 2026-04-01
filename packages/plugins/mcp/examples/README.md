@@ -16,7 +16,7 @@ Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on
 ## basic.ts — Programmatic Configuration
 
 ```bash
-npx tsx examples/mcp-example/basic.ts
+npx tsx packages/plugins/mcp/examples/basic.ts
 ```
 
 This example demonstrates:
@@ -146,7 +146,7 @@ This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https:/
 ### Run
 
 ```bash
-npx tsx examples/mcp-example/full.ts
+npx tsx packages/plugins/mcp/examples/full.ts
 ```
 
 ### How it works

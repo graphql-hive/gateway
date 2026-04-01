@@ -303,9 +303,9 @@ export function createHiveLoader(
   }
   try {
     new URL(config.endpoint);
-  } catch {
+  } catch (urlErr) {
     throw new Error(
-      `HiveLoaderConfig endpoint is not a valid URL: "${config.endpoint}"`,
+      `HiveLoaderConfig endpoint is not a valid URL: "${config.endpoint}" (${urlErr instanceof Error ? urlErr.message : String(urlErr)})`,
     );
   }
   if (!Number.isFinite(config.pollIntervalMs) || config.pollIntervalMs < 1000) {
