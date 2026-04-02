@@ -567,7 +567,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           await spawn(
             {
               cwd: exampleDir,
-              signal: TIMEOUT,
+              signal: AbortSignal.timeout(TIMEOUT),
             },
             ...cmdAndArgs(background.wait),
           );
