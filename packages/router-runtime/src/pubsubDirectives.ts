@@ -14,6 +14,7 @@ import {
   MaybePromise,
   memoize2,
   mergeDeep,
+  parseSelectionSet,
   ResultVisitorMap,
   ValueVisitor,
   visitResult,
@@ -25,6 +26,7 @@ import {
   ExecutionResult,
   getNamedType,
   GraphQLSchema,
+  isEnumType,
   Kind,
   OperationTypeNode,
   SelectionSetNode,
@@ -73,8 +75,22 @@ export interface PubsubOperationRootFieldsMetadata {
   entityTypeName?: string;
 }
 
-function getEntityNamesFromSupergraph(supergraphSchema: GraphQLSchema) {
-  const entityNames = new Set<string>();
+export function getEntityResolutionMap(supergraphSchema: GraphQLSchema) {
+  const entityResolutionMap = new Map<
+    string,
+    Record<string, SelectionSetNode>
+  >();
+  const realSubgraphNames = new Map<string, string>();
+  const joinGraph = supergraphSchema.getType('join__Graph');
+  if (isEnumType(joinGraph)) {
+    for (const value of joinGraph.getValues()) {
+      const valueDirectives = getDirectiveExtensions(value, supergraphSchema);
+      const graphName = valueDirectives?.['join__graph']?.[0]?.['name'];
+      if (graphName) {
+        realSubgraphNames.set(value.name, graphName);
+      }
+    }
+  }
   for (const typeName in supergraphSchema.getTypeMap()) {
     const type = supergraphSchema.getType(typeName);
     if (type) {
@@ -82,18 +98,29 @@ function getEntityNamesFromSupergraph(supergraphSchema: GraphQLSchema) {
       const joinTypeDirective = directives?.['join__type'];
       if (joinTypeDirective) {
         for (const joinTypeDirectiveArgs of joinTypeDirective) {
-          if (joinTypeDirectiveArgs['key']) {
-            entityNames.add(typeName);
+          const subgraphName = joinTypeDirectiveArgs['graph'];
+          const keySelectionSetStr = joinTypeDirectiveArgs['key'];
+          const resolvable = joinTypeDirectiveArgs['resolvable'] !== false;
+          if (subgraphName && keySelectionSetStr && resolvable) {
+            const realSubgraphName =
+              realSubgraphNames.get(subgraphName) || subgraphName;
+            entityResolutionMap.set(typeName, {
+              [realSubgraphName]: parseSelectionSet(
+                `{ ${keySelectionSetStr} }`,
+              ),
+            });
           }
         }
       }
     }
   }
-  return entityNames;
+  return entityResolutionMap;
 }
 
-export function getPubsubOperationRootFields(schema: GraphQLSchema) {
-  const entities = getEntityNamesFromSupergraph(schema);
+export function getPubsubOperationRootFields(
+  schema: GraphQLSchema,
+  entityResolutionMap: Map<string, Record<string, SelectionSetNode>>,
+) {
   const pubsubOperationFields = new Map<
     string,
     PubsubOperationRootFieldsMetadata
@@ -111,12 +138,12 @@ export function getPubsubOperationRootFields(schema: GraphQLSchema) {
         if (pubsubOperations) {
           for (const operationDef of pubsubOperations) {
             const returnType = getNamedType(fieldDef.type);
-            const isEntity = entities.has(returnType.name);
+            const entityResolution = entityResolutionMap.has(returnType.name);
             pubsubOperationFields.set(fieldDef.name, {
               pubsubTopic: operationDef['pubsubTopic'],
               filterBy: operationDef['filterBy'],
               result: operationDef['result'],
-              entityTypeName: isEntity ? returnType.name : undefined,
+              entityTypeName: entityResolution ? returnType.name : undefined,
             });
           }
         }
@@ -355,7 +382,10 @@ export function handlePubsubOperationField(
     executionRequest: ExecutionRequest,
   ) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>,
 ): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
-  if (executionRequest.operationType === 'subscription') {
+  if (
+    executionRequest.operationType === 'subscription' &&
+    pubsubOperationMetadataMap.size > 0
+  ) {
     const {
       responseKey,
       fieldName,
@@ -403,11 +433,20 @@ export function handlePubsubOperationField(
 
 /** @pubsubPublish */
 
-const getPubsubPublishVisitor = memoize2(function getPubsubPublishFields(
+export interface PubsubPublishMetadata {
+  pubsubTopic: string;
+  entityInfo?: Record<string, SelectionSetNode>;
+}
+
+export function getPubsubPublishMetadata(
   schema: GraphQLSchema,
-  pubsub: PubSub,
+  entityResolutionMap: Map<string, Record<string, SelectionSetNode>>,
 ) {
-  const pubsubPublishVisitor: ResultVisitorMap = {};
+  // Pubsub publish metadata by typename and fieldname
+  const pubsubPublishMetadataMap: Map<
+    string,
+    Map<string, PubsubPublishMetadata>
+  > = new Map();
   for (const typeName in schema.getTypeMap()) {
     const type = schema.getType(typeName);
     if (type != null && 'getFields' in type) {
@@ -421,34 +460,106 @@ const getPubsubPublishVisitor = memoize2(function getPubsubPublishFields(
           );
           if (pubsubPublishes) {
             for (const { pubsubTopic } of pubsubPublishes) {
-              const typeVisitor = (pubsubPublishVisitor[typeName] ||=
-                {}) as Record<string, ValueVisitor>;
-              typeVisitor[fieldName] = (value) => {
-                const maybePromise = pubsub.publish(pubsubTopic, value);
-                if (
-                  maybePromise &&
-                  typeof (maybePromise as Promise<void>).catch === 'function'
-                ) {
-                  (maybePromise as Promise<void>).catch(() => {
-                    // Swallow publish errors to avoid unhandled promise rejections.
-                  });
-                }
-                return value;
-              };
+              let typeMap = pubsubPublishMetadataMap.get(typeName);
+              if (!typeMap) {
+                typeMap = new Map<string, PubsubPublishMetadata>();
+                pubsubPublishMetadataMap.set(typeName, typeMap);
+              }
+              const returnType = getNamedType(fieldDef.type);
+              const returnTypeName = returnType.name;
+              const entityInfo = entityResolutionMap.get(returnTypeName);
+              typeMap.set(fieldName, { pubsubTopic, entityInfo });
             }
           }
         }
       }
     }
   }
-  if (!Object.keys(pubsubPublishVisitor).length) {
+  return pubsubPublishMetadataMap;
+}
+
+export function addEntityResolutionFieldsForPubsubPublish(
+  schema: GraphQLSchema,
+  executionRequest: ExecutionRequest,
+  subgraphName: string,
+  metadata: Map<string, Map<string, PubsubPublishMetadata>>,
+) {
+  if (executionRequest.operationType === 'mutation' && metadata.size > 0) {
+    const typeInfo = getTypeInfo(schema);
+    let changed = false;
+    const document = visit(
+      executionRequest.document,
+      visitWithTypeInfo(typeInfo, {
+        [Kind.FIELD](node) {
+          const parentType = typeInfo.getParentType();
+          const fieldDef = typeInfo.getFieldDef();
+          if (parentType && fieldDef) {
+            const typeMetadata = metadata.get(parentType.name);
+            const fieldMetadata = typeMetadata?.get(fieldDef.name);
+            const entitySelectionSet =
+              fieldMetadata?.entityInfo?.[subgraphName];
+            if (entitySelectionSet) {
+              changed = true;
+              return {
+                ...node,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: [
+                    ...(node.selectionSet?.selections || []),
+                    ...entitySelectionSet.selections,
+                  ],
+                },
+              };
+            }
+          }
+          return node;
+        },
+      }),
+    );
+    if (changed) {
+      return {
+        ...executionRequest,
+        document,
+      };
+    }
+  }
+  return executionRequest;
+}
+
+const getPubsubPublishVisitor = memoize2(function getPubsubPublishFields(
+  metadata: Map<string, Map<string, PubsubPublishMetadata>>,
+  pubsub: PubSub,
+) {
+  if (!metadata.size) {
     return false;
+  }
+  const pubsubPublishVisitor: ResultVisitorMap = {};
+  for (const [typeName, fieldsMap] of metadata) {
+    const typeVisitor = (pubsubPublishVisitor[typeName] ||= {}) as Record<
+      string,
+      ValueVisitor
+    >;
+    for (const [fieldName, { pubsubTopic }] of fieldsMap) {
+      typeVisitor[fieldName] = (value) => {
+        const maybePromise = pubsub.publish(pubsubTopic, value);
+        if (
+          maybePromise &&
+          typeof (maybePromise as Promise<void>).catch === 'function'
+        ) {
+          (maybePromise as Promise<void>).catch(() => {
+            // Swallow publish errors to avoid unhandled promise rejections.
+          });
+        }
+        return value;
+      };
+    }
   }
   return pubsubPublishVisitor;
 });
 
 export function handleResultWithPubSubPublish(
   schema: GraphQLSchema,
+  metadata: Map<string, Map<string, PubsubPublishMetadata>>,
   request: ExecutionRequest<any, GatewayContext>,
   result: ExecutionResult,
 ) {
@@ -458,7 +569,7 @@ export function handleResultWithPubSubPublish(
     request.context?.pubsub != null
   ) {
     const pubsubPublishVisitor = getPubsubPublishVisitor(
-      schema,
+      metadata,
       request.context.pubsub,
     );
     if (pubsubPublishVisitor) {

@@ -15,7 +15,10 @@ import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
+  addEntityResolutionFieldsForPubsubPublish,
+  getEntityResolutionMap,
   getPubsubOperationRootFields,
+  getPubsubPublishMetadata,
   handlePubsubOperationField,
   handleResultWithPubSubPublish,
 } from './pubsubDirectives';
@@ -54,8 +57,14 @@ export async function unifiedGraphHandler(
     return activePercentLabels;
   }
 
+  const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
   const pubsubOperationMetadataMap = getPubsubOperationRootFields(
     opts.unifiedGraph,
+    entityResolutionMap,
+  );
+  const pubsubPublishMetadataMap = getPubsubPublishMetadata(
+    opts.unifiedGraph,
+    entityResolutionMap,
   );
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
@@ -139,6 +148,7 @@ export async function unifiedGraphHandler(
       if (isIntrospection(executionRequest.document)) {
         return defaultExecutor(executionRequest);
       }
+      // Prepare pubsub metadata for this request
       return handleMaybePromise(
         () => planDocument(executionRequest),
         (queryPlan) => {
@@ -153,7 +163,12 @@ export async function unifiedGraphHandler(
             onSubgraphExecute: (subgraphName, executionRequest) =>
               handlePubsubOperationField(
                 supergraphSchema,
-                executionRequest,
+                addEntityResolutionFieldsForPubsubPublish(
+                  supergraphSchema,
+                  executionRequest,
+                  subgraphName,
+                  pubsubPublishMetadataMap,
+                ),
                 pubsubOperationMetadataMap,
                 (executionRequest) =>
                   handleMaybePromiseMaybeAsyncIterable(
@@ -167,6 +182,7 @@ export async function unifiedGraphHandler(
                     (executionResult: ExecutionResult) =>
                       handleResultWithPubSubPublish(
                         supergraphSchema,
+                        pubsubPublishMetadataMap,
                         executionRequest,
                         executionResult,
                       ),
