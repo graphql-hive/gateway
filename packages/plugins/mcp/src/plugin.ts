@@ -477,8 +477,6 @@ export interface MCPConfig {
   disableGraphQLEndpoint?: boolean;
   /** Hive App Deployment as an operation source. Fetches persisted documents; those with @mcpTool directives are auto-registered as tools, and all documents are available as named operations for tools with source.type: 'graphql'. */
   hive?: MCPHiveConfig;
-  /** Maximum request body size in bytes for the MCP endpoint (default: 1048576 = 1MB) */
-  maxRequestBodySize?: number;
 }
 
 /** Internal resolved form of a tool config after merging directive and explicit config sources. */
@@ -1423,45 +1421,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         }
       }
 
-      // Validate request body size
-      const maxBodySize = config.maxRequestBodySize ?? 1_048_576; // 1MB default
-      const contentLength = request.headers.get('content-length');
-      if (contentLength && parseInt(contentLength, 10) > maxBodySize) {
-        return endResponse(
-          fetchAPI.Response.json(
-            {
-              jsonrpc: '2.0',
-              id: null,
-              error: {
-                code: -32600,
-                message: `Request body too large (limit: ${maxBodySize} bytes)`,
-              },
-            },
-            { status: 413 },
-          ),
-        );
-      }
-
       // Parse JSON-RPC body
       let bodyText: string;
       let body: JsonRpcRequest;
       try {
         bodyText = await request.text();
-        if (bodyText.length > maxBodySize) {
-          return endResponse(
-            fetchAPI.Response.json(
-              {
-                jsonrpc: '2.0',
-                id: null,
-                error: {
-                  code: -32600,
-                  message: `Request body too large (limit: ${maxBodySize} bytes)`,
-                },
-              },
-              { status: 413 },
-            ),
-          );
-        }
         const parsed = JSON.parse(bodyText);
         if (
           typeof parsed !== 'object' ||

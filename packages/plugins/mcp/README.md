@@ -461,7 +461,6 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 | `suppressOutputSchema`   | `boolean`                     | `false`        | Suppress outputSchema in `tools/list`                           |
 | `disableGraphQLEndpoint` | `boolean`                     | `false`        | Block direct `/graphql` access                                  |
 | `hive`                   | `MCPHiveConfig`               |                | Auto-fetch operations from Hive App Deployments                 |
-| `maxRequestBodySize`     | `number`                      | `1048576`      | Max request body size in bytes                                  |
 | `instructions`           | `string`                      |                | Free-text instructions included in `initialize` for LLM context |
 | `protocolVersion`        | `string`                      | `"2025-11-25"` | MCP protocol version to advertise                               |
 
