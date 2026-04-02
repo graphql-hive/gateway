@@ -1,38 +1,30 @@
-import { controllerInSignalSy, isNode, signalRegistry } from './utils';
+import { controllerInSignalSy, signalRegistry } from './utils';
 
-/**
- * Memory safe ponyfill of `AbortSignal.any`. In Node environments, the native
- * `AbortSignal.any` seems to be leaky and can lead to subtle memory leaks over
- * a larger period of time.
- *
- * This ponyfill is a custom implementation that makes sure AbortSignals get properly
- * GC-ed as well as aborted.
- */
-export function abortSignalAny(
+export function abortSignalAll(
   signals: AbortSignal[],
 ): AbortSignal | undefined {
   if (signals.length === 0) {
     // if no signals are passed, return undefined because the abortcontroller
     // wouldnt ever be aborted (should be when GCd, but it's only a waste of memory)
-    // furthermore, the native AbortSignal.any will also never abort if receiving no signals
+    // furthermore, the native AbortSignal.all will also never abort if receiving no signals
     return undefined;
   }
-
   if (signals.length === 1) {
     // no need to waste resources by wrapping a single signal, simply return it
     return signals[0];
   }
-
-  if (!isNode) {
-    // AbortSignal.any seems to be leaky only in Node env
-    // TODO: should we ponyfill other envs, will they always have AbortSignal.any?
-    return AbortSignal.any(signals);
-  }
-
-  for (const signal of signals) {
-    if (signal.aborted) {
-      // if any of the signals has already been aborted, return it immediately no need to continue at all
-      return signal;
+  if (signals.every((signal) => signal.aborted)) {
+    const errors = signals
+      .map((signal) => signal.reason)
+      .filter(
+        (reason) =>
+          reason != null && !reason?.toString?.()?.includes('AbortError'),
+      );
+    if (errors.length < 2) {
+      // if all signals are already aborted, return one of them immediately
+      return signals[0];
+    } else {
+      return AbortSignal.abort(new AggregateError(errors));
     }
   }
 
@@ -45,14 +37,29 @@ export function abortSignalAny(
 
   const eventListenerPairs: [WeakRef<AbortSignal>, () => void][] = [];
   let retainedSignalsCount = signals.length;
+  let remainingSignalsToAbort = signals.length;
+  const errors = new Set<unknown>();
 
   for (const signal of signals) {
     const signalRef = new WeakRef(signal);
-    function abort() {
-      ctrlRef.deref()?.abort(signalRef.deref()?.reason);
+    function onAbort() {
+      remainingSignalsToAbort--;
+      const reason = signal.reason;
+      if (reason != null && !reason?.toString().includes('AbortError')) {
+        errors.add(reason);
+      }
+      if (remainingSignalsToAbort === 0) {
+        let error;
+        if (errors.size < 2) {
+          error = errors.values().next().value;
+        } else {
+          error = new AggregateError(errors);
+        }
+        ctrlRef.deref()?.abort(error);
+      }
     }
-    signal.addEventListener('abort', abort);
-    eventListenerPairs.push([signalRef, abort]);
+    signal.addEventListener('abort', onAbort);
+    eventListenerPairs.push([signalRef, onAbort]);
     signalRegistry!.register(
       signal,
       () =>
@@ -69,12 +76,13 @@ export function abortSignalAny(
         signal.removeEventListener('abort', abort);
         signalRegistry!.unregister(signal);
       }
-      const ctrl = ctrlRef.deref();
-      if (ctrl) {
-        signalRegistry.unregister(ctrl.signal);
-        // @ts-expect-error
-        delete ctrl.signal[controllerInSignalSy];
-      }
+    }
+    const ctrl = ctrlRef.deref();
+    if (ctrl) {
+      ctrl.signal.removeEventListener('abort', dispose);
+      signalRegistry!.unregister(ctrl.signal);
+      // @ts-expect-error
+      delete ctrl.signal[controllerInSignalSy];
     }
   }
 
