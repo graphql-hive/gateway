@@ -1,10 +1,15 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadDocumentsSync } from '@graphql-tools/load';
-import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
 import type { LangfuseClientParams } from '@langfuse/client';
-import { concatAST, parse, type DocumentNode, type GraphQLSchema } from 'graphql';
+import {
+  concatAST,
+  parse,
+  type DocumentNode,
+  type GraphQLSchema,
+} from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
 import {
   resolveDescriptions,
@@ -832,9 +837,7 @@ function loadOperationsSource(config: MCPConfig): DocumentNode | undefined {
       loaders: [new GraphQLFileLoader()],
     });
   } catch {
-    throw new Error(
-      `No .graphql files found at "${config.operationsPath}"`,
-    );
+    throw new Error(`No .graphql files found at "${config.operationsPath}"`);
   }
 
   const documents = sources.map((s) => {

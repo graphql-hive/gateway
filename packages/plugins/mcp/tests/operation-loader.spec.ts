@@ -44,9 +44,9 @@ describe('loadOperationsFromDocument', () => {
 
   it('throws for anonymous operations', () => {
     const source = `query { getWeatherData { temperature } }`;
-    expect(() => loadOperationsFromDocument({ log: logger }, parse(source))).toThrow(
-      'anonymous operations are not supported',
-    );
+    expect(() =>
+      loadOperationsFromDocument({ log: logger }, parse(source)),
+    ).toThrow('anonymous operations are not supported');
   });
 
   it('extracts @mcpTool directive args from operation', () => {

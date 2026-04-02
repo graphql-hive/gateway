@@ -92,9 +92,7 @@ describe('hive integration', () => {
   });
 
   it('operations without @mcpTool are still available as source for explicit tools', () => {
-    const hiveOps = parse(
-      'query GetUser($id: ID!) { user(id: $id) { name } }',
-    );
+    const hiveOps = parse('query GetUser($id: ID!) { user(id: $id) { name } }');
 
     const tools = resolveToolConfigs(
       { log: logger },
