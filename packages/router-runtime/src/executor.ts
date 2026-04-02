@@ -13,11 +13,11 @@ import {
   getVariableValues,
 } from '@graphql-tools/executor';
 import {
+  createGraphQLError,
   ExecutionRequest,
   getDirective,
   getOperationASTFromDocument,
   getOperationASTFromRequest,
-  isAsyncIterable,
   MaybeAsyncIterable,
   memoize1,
   mergeDeep,
@@ -27,21 +27,15 @@ import {
 import {
   handleMaybePromise,
   isPromise,
-  mapAsyncIterator,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type {
+import {
   DocumentNode,
   FragmentDefinitionNode,
+  getNamedType,
   GraphQLError,
   GraphQLNamedType,
   GraphQLSchema,
-  OperationDefinitionNode,
-  OperationTypeNode,
-  SelectionSetNode,
-} from 'graphql';
-import {
-  getNamedType,
   isAbstractType,
   isEnumType,
   isInterfaceType,
@@ -49,9 +43,13 @@ import {
   isObjectType,
   isOutputType,
   Kind,
+  OperationDefinitionNode,
+  OperationTypeNode,
   parse,
+  SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
+import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
 export interface QueryPlanExecutionContext {
   /**
@@ -142,23 +140,17 @@ export function executeQueryPlan({
     executionRequest,
     onSubgraphExecute,
   });
-  function handleResp() {
-    const executionResult = {} as ExecutionResult;
-    if (Object.keys(executionContext.data).length > 0) {
-      executionResult.data = projectDataByOperation(executionContext);
-    }
-    if (executionContext.errors.length > 0) {
-      executionResult.errors = executionContext.errors;
-    }
-    return executionResult;
-  }
-  return handleMaybePromise(
+  return handleMaybePromiseMaybeAsyncIterable(
     () => executePlanNode(node, executionContext),
-    (res) => {
-      if (isAsyncIterable(res)) {
-        return mapAsyncIterator(res, handleResp);
+    () => {
+      const executionResult = {} as ExecutionResult;
+      if (Object.keys(executionContext.data).length > 0) {
+        executionResult.data = projectDataByOperation(executionContext);
       }
-      return handleResp();
+      if (executionContext.errors.length > 0) {
+        executionResult.errors = executionContext.errors;
+      }
+      return executionResult;
     },
   );
 }
@@ -742,47 +734,7 @@ function executeBatchFetchPlanNode(
     selectedVariables,
   );
 
-  const handleBatchResult = (
-    fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
-  ): MaybeAsyncIterable<unknown> | void => {
-    if (isAsyncIterable(fetchResult)) {
-      return mapAsyncIterator(fetchResult, handleBatchResult);
-    }
-
-    if (fetchResult.errors?.length) {
-      executionContext.errors.push(
-        ...normalizeBatchFetchErrors(fetchResult.errors, batchContext),
-      );
-    }
-
-    const responseData = fetchResult.data;
-    if (!responseData || typeof responseData !== 'object') {
-      return;
-    }
-
-    for (const [aliasName, aliasContext] of batchContext.byAlias.entries()) {
-      let aliasData = (responseData as Record<string, any>)[aliasName];
-      if (!aliasData) {
-        continue;
-      }
-      if (aliasContext.outputRewrites?.length) {
-        aliasData = applyOutputRewrites(
-          aliasData,
-          aliasContext.outputRewrites,
-          executionContext.supergraphSchema,
-        );
-      }
-      if (Array.isArray(aliasData)) {
-        applyBatchAliasEntities(
-          aliasData as EntityRepresentation[],
-          aliasContext,
-        );
-      }
-    }
-    return;
-  };
-
-  return handleMaybePromise(
+  return handleMaybePromiseMaybeAsyncIterable(
     () =>
       executionContext.onSubgraphExecute(batchFetchNode.serviceName, {
         document: getDocumentNodeOfFetchingNode(batchFetchNode),
@@ -798,7 +750,45 @@ function executeBatchFetchPlanNode(
         info: executionContext.executionRequest.info,
         signal: executionContext.executionRequest.signal,
       }),
-    handleBatchResult,
+    (fetchResult: ExecutionResult) => {
+      if (fetchResult.errors?.length) {
+        executionContext.errors.push(
+          ...normalizeBatchFetchErrors(fetchResult.errors, batchContext),
+        );
+      }
+
+      const responseData = fetchResult.data;
+      if (!responseData || typeof responseData !== 'object') {
+        return;
+      }
+
+      for (const [aliasName, aliasContext] of batchContext.byAlias.entries()) {
+        let aliasData = (responseData as Record<string, any>)[aliasName];
+        if (!aliasData) {
+          continue;
+        }
+        if (aliasContext.outputRewrites?.length) {
+          aliasData = applyOutputRewrites(
+            aliasData,
+            aliasContext.outputRewrites,
+            executionContext.supergraphSchema,
+          );
+        }
+        if (Array.isArray(aliasData)) {
+          applyBatchAliasEntities(
+            aliasData as EntityRepresentation[],
+            aliasContext,
+          );
+        }
+      }
+      return;
+    },
+    (error) =>
+      handleSubgraphExecutionError(
+        error,
+        executionContext,
+        batchFetchNode.serviceName,
+      ),
   );
 }
 
@@ -894,66 +884,7 @@ function executeFetchPlanNode(
     state?.flatten?.errorPath ??
     getDefaultErrorPath(fetchNode);
 
-  const handleFetchResult = (
-    fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
-  ): MaybeAsyncIterable<unknown> | void => {
-    if (isAsyncIterable(fetchResult)) {
-      return mapAsyncIterator(fetchResult, handleFetchResult);
-    }
-
-    if (fetchResult.errors?.length) {
-      const normalizedErrors = normalizeFetchErrors(fetchResult.errors, {
-        fetchNode,
-        state,
-        defaultPath: defaultErrorPath,
-      });
-      if (normalizedErrors.length) {
-        executionContext.errors.push(...normalizedErrors);
-      }
-    }
-
-    const responseData = fetchNode.outputRewrites
-      ? applyOutputRewrites(
-          fetchResult.data,
-          fetchNode.outputRewrites,
-          executionContext.supergraphSchema,
-        )
-      : fetchResult.data;
-
-    if (!responseData) {
-      return;
-    }
-
-    if (flattenState && flattenState.entityRefs.length) {
-      const returnedEntities = responseData._entities as
-        | EntityRepresentation[]
-        | undefined;
-      if (Array.isArray(returnedEntities)) {
-        mergeFlattenEntities(returnedEntities, flattenState);
-      }
-      return;
-    }
-
-    if (representationTargets?.length && responseData._entities) {
-      const returnedEntities: EntityRepresentation[] = responseData._entities;
-      for (let index = 0; index < returnedEntities.length; index++) {
-        const entity = returnedEntities[index];
-        const target = representationTargets[index];
-        if (target && entity) {
-          Object.assign(target, mergeDeep([target, entity], false, true, true));
-        }
-      }
-      return;
-    }
-
-    Object.assign(
-      executionContext.data,
-      mergeDeep([executionContext.data, responseData], false, true, true),
-    );
-    return;
-  };
-
-  return handleMaybePromise(
+  return handleMaybePromiseMaybeAsyncIterable(
     () =>
       executionContext.onSubgraphExecute(fetchNode.serviceName, {
         document: getDocumentNodeOfFetchingNode(fetchNode),
@@ -969,8 +900,90 @@ function executeFetchPlanNode(
         info: executionContext.executionRequest.info,
         signal: executionContext.executionRequest.signal,
       }),
-    handleFetchResult,
+    (fetchResult: ExecutionResult) => {
+      if (fetchResult.errors?.length) {
+        const normalizedErrors = normalizeFetchErrors(fetchResult.errors, {
+          fetchNode,
+          state,
+          defaultPath: defaultErrorPath,
+        });
+        if (normalizedErrors.length) {
+          executionContext.errors.push(...normalizedErrors);
+        }
+      }
+
+      const responseData = fetchNode.outputRewrites
+        ? applyOutputRewrites(
+            fetchResult.data,
+            fetchNode.outputRewrites,
+            executionContext.supergraphSchema,
+          )
+        : fetchResult.data;
+
+      if (!responseData) {
+        return;
+      }
+
+      if (flattenState && flattenState.entityRefs.length) {
+        const returnedEntities = responseData._entities as
+          | EntityRepresentation[]
+          | undefined;
+        if (Array.isArray(returnedEntities)) {
+          mergeFlattenEntities(returnedEntities, flattenState);
+        }
+        return;
+      }
+
+      if (representationTargets?.length && responseData._entities) {
+        const returnedEntities: EntityRepresentation[] = responseData._entities;
+        for (let index = 0; index < returnedEntities.length; index++) {
+          const entity = returnedEntities[index];
+          const target = representationTargets[index];
+          if (target && entity) {
+            Object.assign(
+              target,
+              mergeDeep([target, entity], false, true, true),
+            );
+          }
+        }
+        return;
+      }
+      Object.assign(
+        executionContext.data,
+        mergeDeep([executionContext.data, responseData], false, true, true),
+      );
+      return;
+    },
+    (error) =>
+      handleSubgraphExecutionError(
+        error,
+        executionContext,
+        fetchNode.serviceName,
+        defaultErrorPath,
+      ),
   );
+}
+
+function handleSubgraphExecutionError(
+  error: Error,
+  executionContext: QueryPlanExecutionContext,
+  serviceName: string,
+  path?: (string | number)[],
+) {
+  let graphQLError: GraphQLError;
+  if (error instanceof GraphQLError) {
+    graphQLError = error;
+  } else {
+    graphQLError = createGraphQLError(error.message, {
+      originalError: error,
+      extensions: {
+        code: 'DOWNSTREAM_SERVICE_ERROR',
+        serviceName,
+      },
+      path,
+    });
+  }
+  executionContext.errors.push(graphQLError);
 }
 
 function selectFetchVariables(
