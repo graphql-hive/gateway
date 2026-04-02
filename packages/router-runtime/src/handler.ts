@@ -10,26 +10,35 @@ import {
   filterInternalFieldsAndTypes,
   getRngFromEnv,
 } from '@graphql-tools/federation';
-import {
-  ExecutionRequest,
-  ExecutionResult,
-  isAsyncIterable,
-} from '@graphql-tools/utils';
-import {
-  handleMaybePromise,
-  mapAsyncIterator,
-  MaybePromise,
-} from '@whatwg-node/promise-helpers';
+import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, queryPlanForExecutionRequestContext } from './utils';
+import {
+  addEntityResolutionFieldsForPubsubPublish,
+  getEntityResolutionMap,
+  getPubsubOperationRootFields,
+  getPubsubPublishMetadata,
+  handlePubsubOperationField,
+  handleResultWithPubSubPublish,
+} from './pubsubDirectives';
+import {
+  getLazyFactory,
+  getLazyValue,
+  handleMaybePromiseMaybeAsyncIterable,
+  onSubgraphExecuteWithTransforms,
+  queryPlanForExecutionRequestContext,
+} from './utils';
 
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const getSubschema = getLazyFactory(
-    () => handleFederationSupergraph(opts).getSubschema,
+    () => getHandledFederationSupergraph().getSubschema,
+  );
+  const getHandledFederationSupergraph = getLazyValue(() =>
+    handleFederationSupergraph(opts),
   );
 
   const moduleName = '@graphql-hive/router-query-planner';
@@ -48,6 +57,15 @@ export async function unifiedGraphHandler(
     return activePercentLabels;
   }
 
+  const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
+  const pubsubOperationMetadataMap = getPubsubOperationRootFields(
+    opts.unifiedGraph,
+    entityResolutionMap,
+  );
+  const pubsubPublishMetadataMap = getPubsubPublishMetadata(
+    opts.unifiedGraph,
+    entityResolutionMap,
+  );
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
@@ -130,6 +148,7 @@ export async function unifiedGraphHandler(
       if (isIntrospection(executionRequest.document)) {
         return defaultExecutor(executionRequest);
       }
+      // Prepare pubsub metadata for this request
       return handleMaybePromise(
         () => planDocument(executionRequest),
         (queryPlan) => {
@@ -141,46 +160,34 @@ export async function unifiedGraphHandler(
           return executeQueryPlan({
             supergraphSchema,
             executionRequest,
-            onSubgraphExecute(subgraphName, executionRequest) {
-              const subschema = getSubschema(subgraphName);
-              if (subschema.transforms?.length) {
-                const transforms = subschema.transforms;
-                const transformationContext = Object.create(null);
-                for (const transform of transforms) {
-                  if (transform.transformRequest) {
-                    executionRequest = transform.transformRequest(
-                      executionRequest,
-                      undefined as any,
-                      transformationContext,
-                    );
-                  }
-                }
-                return handleMaybePromise(
-                  () => opts.onSubgraphExecute(subgraphName, executionRequest),
-                  (executionResult) => {
-                    function handleResult(executionResult: ExecutionResult) {
-                      for (const transform of transforms.toReversed()) {
-                        if (transform.transformResult) {
-                          executionResult = transform.transformResult(
-                            executionResult,
-                            undefined as any,
-                            transformationContext,
-                          );
-                        }
-                      }
-                      return executionResult;
-                    }
-                    if (isAsyncIterable(executionResult)) {
-                      return mapAsyncIterator(executionResult, (result) =>
-                        handleResult(result),
-                      );
-                    }
-                    return handleResult(executionResult);
-                  },
-                );
-              }
-              return opts.onSubgraphExecute(subgraphName, executionRequest);
-            },
+            onSubgraphExecute: (subgraphName, executionRequest) =>
+              handlePubsubOperationField(
+                supergraphSchema,
+                addEntityResolutionFieldsForPubsubPublish(
+                  supergraphSchema,
+                  executionRequest,
+                  subgraphName,
+                  pubsubPublishMetadataMap,
+                ),
+                pubsubOperationMetadataMap,
+                (executionRequest) =>
+                  handleMaybePromiseMaybeAsyncIterable(
+                    () =>
+                      onSubgraphExecuteWithTransforms(
+                        subgraphName,
+                        executionRequest,
+                        opts.onSubgraphExecute,
+                        getSubschema,
+                      ),
+                    (executionResult: ExecutionResult) =>
+                      handleResultWithPubSubPublish(
+                        supergraphSchema,
+                        pubsubPublishMetadataMap,
+                        executionRequest,
+                        executionResult,
+                      ),
+                  ),
+              ),
             queryPlan,
           });
         },
