@@ -548,7 +548,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         const [proc, waitForExit] = await spawn(
           {
             cwd: exampleDir,
-            signal: background ? undefined : AbortSignal.timeout(60_000),
+            signal: background ? undefined : AbortSignal.timeout(60_000 * 5), // 5 minutes timeout for non-background tasks
           },
           ...cmdAndArgs(task),
         );
