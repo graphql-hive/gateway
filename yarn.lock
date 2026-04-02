@@ -4690,6 +4690,8 @@ __metadata:
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:*"
     "@graphql-hive/logger": "workspace:^"
+    "@graphql-tools/graphql-file-loader": "npm:^8.1.12"
+    "@graphql-tools/load": "npm:^8.1.8"
     "@langfuse/client": "npm:^5.0.2"
     "@opentelemetry/api": "npm:^1.9.0"
     graphql: "npm:^16.13.2"

@@ -1,13 +1,14 @@
 import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
+import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import {
-  loadOperationsFromString,
+  loadOperationsFromDocument,
   resolveOperation,
 } from '../src/operation-loader.js';
 
 const logger = createLoggerFromLogging(false);
 
-describe('loadOperationsFromString', () => {
+describe('loadOperationsFromDocument', () => {
   it('parses a single operation from a string', () => {
     const source = `
       query GetWeather($location: String!) {
@@ -17,7 +18,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops).toHaveLength(1);
     expect(ops[0]!.name).toBe('GetWeather');
     expect(ops[0]!.type).toBe('query');
@@ -33,7 +34,7 @@ describe('loadOperationsFromString', () => {
         createOrder(input: $input) { id }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops).toHaveLength(2);
     expect(ops[0]!.name).toBe('GetWeather');
     expect(ops[0]!.type).toBe('query');
@@ -43,7 +44,7 @@ describe('loadOperationsFromString', () => {
 
   it('throws for anonymous operations', () => {
     const source = `query { getWeatherData { temperature } }`;
-    expect(() => loadOperationsFromString({ log: logger }, source)).toThrow(
+    expect(() => loadOperationsFromDocument({ log: logger }, parse(source))).toThrow(
       'anonymous operations are not supported',
     );
   });
@@ -54,7 +55,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops).toHaveLength(1);
     expect(ops[0]!.mcpDirective).toEqual({
       name: 'get_weather',
@@ -69,7 +70,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.document).not.toContain('mcpTool');
     expect(ops[0]!.document).toContain('GetWeather');
   });
@@ -80,7 +81,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.mcpDirective).toBeUndefined();
   });
 
@@ -90,7 +91,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.mcpDirective).toBeUndefined();
   });
 
@@ -100,7 +101,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.mcpDirective).toEqual({
       name: 'get_weather',
       descriptionProvider: 'langfuse:weather_description',
@@ -113,7 +114,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.mcpDirective).toEqual({
       name: 'get_weather',
       descriptionProvider: 'langfuse:weather_description:3',
@@ -126,7 +127,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.fieldDescriptionProviders).toEqual({
       location: 'langfuse:weather.location:3',
     });
@@ -142,7 +143,7 @@ describe('loadOperationsFromString', () => {
         search(q: $q, limit: $limit, offset: $offset) { title }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.fieldDescriptionProviders).toEqual({
       q: 'langfuse:search.query',
       offset: 'langfuse:search.offset:2',
@@ -155,7 +156,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.document).not.toContain('mcpDescription');
     expect(ops[0]!.document).not.toContain('mcpTool');
     expect(ops[0]!.document).toContain('GetWeather');
@@ -168,7 +169,7 @@ describe('loadOperationsFromString', () => {
         weather(location: $location) { temperature }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.fieldDescriptionProviders).toBeUndefined();
   });
 
@@ -181,7 +182,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.selectionDescriptionProviders).toEqual({
       'forecast.conditions': 'langfuse:forecast.conditions:3',
     });
@@ -198,7 +199,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.selectionDescriptionProviders).toEqual({
       'user.name': 'langfuse:user.name',
       'user.address.city': 'langfuse:user.address.city:2',
@@ -214,7 +215,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.document).not.toContain('mcpDescription');
     expect(ops[0]!.document).toContain('conditions');
     expect(ops[0]!.document).toContain('date');
@@ -226,7 +227,7 @@ describe('loadOperationsFromString', () => {
         forecast(location: $location) { date conditions }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.selectionDescriptionProviders).toBeUndefined();
   });
 
@@ -241,7 +242,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.fieldDescriptionProviders).toEqual({
       q: 'langfuse:search.query',
     });
@@ -265,7 +266,7 @@ describe('loadOperationsFromString', () => {
         }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops[0]!.selectionDescriptionProviders).toEqual({
       'node.id': 'langfuse:node.id',
     });
@@ -281,7 +282,7 @@ describe('loadOperationsFromString', () => {
         forecast(location: $location) { date }
       }
     `;
-    const ops = loadOperationsFromString({ log: logger }, source);
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
     expect(ops).toHaveLength(2);
     expect(ops[0]!.mcpDirective).toEqual({ name: 'get_weather' });
     expect(ops[1]!.mcpDirective).toBeUndefined();
@@ -289,16 +290,16 @@ describe('loadOperationsFromString', () => {
 });
 
 describe('resolveOperation', () => {
-  const ops = loadOperationsFromString(
+  const ops = loadOperationsFromDocument(
     { log: logger },
-    `
+    parse(`
     query GetWeather($location: String!) {
       getWeatherData(location: $location) { temperature }
     }
     query GetForecast($location: String!, $days: Int) {
       getForecast(location: $location, days: $days) { date high low }
     }
-  `,
+  `),
   );
 
   it('finds operation by name and type', () => {

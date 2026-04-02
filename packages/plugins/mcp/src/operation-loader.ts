@@ -1,6 +1,5 @@
 import {
   Kind,
-  parse,
   print,
   type DirectiveNode,
   type DocumentNode,
@@ -223,11 +222,10 @@ function stripMcpDirectives(
   } as OperationDefinitionNode;
 }
 
-export function loadOperationsFromString(
+export function loadOperationsFromDocument(
   ctx: PluginContext,
-  source: string,
+  doc: DocumentNode,
 ): ParsedOperation[] {
-  const doc = parse(source);
   const operations = [];
 
   for (const def of doc.definitions) {

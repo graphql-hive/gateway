@@ -1,8 +1,10 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
+import { loadDocumentsSync } from '@graphql-tools/load';
 import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
 import type { LangfuseClientParams } from '@langfuse/client';
-import type { GraphQLSchema } from 'graphql';
+import { concatAST, parse, type DocumentNode, type GraphQLSchema } from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
 import {
   resolveDescriptions,
@@ -15,7 +17,7 @@ import {
 } from './description-provider.js';
 import { createHiveLoader, type HiveLoader } from './hive-loader.js';
 import {
-  loadOperationsFromString,
+  loadOperationsFromDocument,
   resolveOperation,
   type ParsedOperation,
 } from './operation-loader.js';
@@ -536,7 +538,7 @@ function parseDescriptionProviderDirective(
 
 interface ResolveToolConfigsInput {
   tools: MCPToolConfig[];
-  operationsSource?: string;
+  operationsSource?: DocumentNode;
 }
 
 export function resolveToolConfigs(
@@ -547,7 +549,7 @@ export function resolveToolConfigs(
   let parsedOps: ParsedOperation[] | undefined;
 
   if (operationsSource) {
-    parsedOps = loadOperationsFromString(ctx, operationsSource);
+    parsedOps = loadOperationsFromDocument(ctx, operationsSource);
   }
 
   // build base configs from @mcpTool directives
@@ -621,7 +623,7 @@ export function resolveToolConfigs(
             `Tool "${tool.name}": cannot read operations file "${source.file}": ${err instanceof Error ? err.message : String(err)}`,
           );
         }
-        opsPool = loadOperationsFromString(ctx, fileSource);
+        opsPool = loadOperationsFromDocument(ctx, parse(fileSource));
       } else {
         opsPool = parsedOps || [];
       }
@@ -811,36 +813,39 @@ export function resolveResourceTemplates(
   });
 }
 
-function loadOperationsSource(config: MCPConfig): string | undefined {
+function loadOperationsSource(config: MCPConfig): DocumentNode | undefined {
   if (!config.operationsPath) return undefined;
 
   const opsPath = resolve(config.operationsPath);
-  let stat;
+  let pointer = config.operationsPath;
   try {
-    stat = statSync(opsPath);
-  } catch (err) {
+    if (statSync(opsPath).isDirectory()) {
+      pointer = join(opsPath, '**/*.graphql');
+    }
+  } catch {
+    // Let loadDocumentsSync handle the error for non-existent paths
+  }
+
+  let sources;
+  try {
+    sources = loadDocumentsSync(pointer, {
+      loaders: [new GraphQLFileLoader()],
+    });
+  } catch {
     throw new Error(
-      `Cannot access operations path "${config.operationsPath}": ${err instanceof Error ? err.message : String(err)}`,
+      `No .graphql files found at "${config.operationsPath}"`,
     );
   }
 
-  if (stat.isFile()) {
-    return readFileSync(opsPath, 'utf-8');
-  }
-
-  if (stat.isDirectory()) {
-    const files = readdirSync(opsPath).filter((f) => f.endsWith('.graphql'));
-    if (files.length === 0) {
+  const documents = sources.map((s) => {
+    if (!s.document) {
       throw new Error(
-        `Operations directory "${config.operationsPath}" contains no .graphql files`,
+        `Failed to parse "${s.location ?? config.operationsPath}": no document produced`,
       );
     }
-    return files.map((f) => readFileSync(join(opsPath, f), 'utf-8')).join('\n');
-  }
-
-  throw new Error(
-    `Operations path "${config.operationsPath}" is neither a file nor a directory`,
-  );
+    return s.document;
+  });
+  return concatAST(documents);
 }
 
 /**
@@ -868,7 +873,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   const logger = ctx.log;
 
   // Resolve operations from files at startup
-  const operationsSource = config.operationsStr || loadOperationsSource(config);
+  const operationsSource = config.operationsStr
+    ? parse(config.operationsStr)
+    : loadOperationsSource(config);
   let resolvedTools = resolveToolConfigs(ctx, {
     tools: config.tools || [],
     operationsSource,
@@ -879,15 +886,16 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   let hiveInitPromise: Promise<void> | null = null;
 
   function rebuildToolsWithHiveSource(hiveSource: string) {
-    const mergedSource = [hiveSource, operationsSource]
-      .filter(Boolean)
-      .join('\n');
+    const hiveDoc = parse(hiveSource);
+    const mergedDoc = operationsSource
+      ? concatAST([hiveDoc, operationsSource])
+      : hiveDoc;
 
     let newResolvedTools: ResolvedToolConfig[];
     try {
       newResolvedTools = resolveToolConfigs(ctx, {
         tools: config.tools || [],
-        operationsSource: mergedSource || undefined,
+        operationsSource: mergedDoc,
       });
     } catch (err) {
       logger.error(

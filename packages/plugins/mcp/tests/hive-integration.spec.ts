@@ -1,4 +1,5 @@
 import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
+import { parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { createHiveLoader } from '../src/hive-loader.js';
 import { resolveToolConfigs } from '../src/plugin.js';
@@ -25,7 +26,7 @@ describe('hive integration', () => {
       },
     ];
 
-    const operationsSource = hiveDocs.map((d) => d.body).join('\n');
+    const operationsSource = parse(hiveDocs.map((d) => d.body).join('\n'));
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource },
@@ -45,7 +46,7 @@ describe('hive integration', () => {
   it('hive and local operations merge without conflict', () => {
     const localOps = 'query LocalOp @mcpTool(name: "local_tool") { hello }';
     const hiveOps = 'query HiveOp @mcpTool(name: "hive_tool") { world }';
-    const merged = [localOps, hiveOps].join('\n');
+    const merged = parse([localOps, hiveOps].join('\n'));
 
     const tools = resolveToolConfigs(
       { log: logger },
@@ -60,8 +61,9 @@ describe('hive integration', () => {
   });
 
   it('explicit tools[] config overrides hive directive metadata', () => {
-    const hiveOps =
-      'query GetUser($id: ID!) @mcpTool(name: "get_user", description: "From directive") { user(id: $id) { name } }';
+    const hiveOps = parse(
+      'query GetUser($id: ID!) @mcpTool(name: "get_user", description: "From directive") { user(id: $id) { name } }',
+    );
 
     const tools = resolveToolConfigs(
       { log: logger },
@@ -90,7 +92,9 @@ describe('hive integration', () => {
   });
 
   it('operations without @mcpTool are still available as source for explicit tools', () => {
-    const hiveOps = 'query GetUser($id: ID!) { user(id: $id) { name } }';
+    const hiveOps = parse(
+      'query GetUser($id: ID!) { user(id: $id) { name } }',
+    );
 
     const tools = resolveToolConfigs(
       { log: logger },
@@ -120,7 +124,7 @@ describe('hive integration', () => {
     const localOps =
       'query LocalVersion @mcpTool(name: "my_tool", description: "From local") { local }';
 
-    const merged = [hiveOps, localOps].join('\n');
+    const merged = parse([hiveOps, localOps].join('\n'));
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: merged },
@@ -134,13 +138,12 @@ describe('hive integration', () => {
 
   describe('rebuildToolsWithHiveSource simulation', () => {
     it('merges hive documents with local operationsSource correctly', () => {
-      const operationsSource =
-        'query LocalTool @mcpTool(name: "local") { local }';
-      const hiveSource = 'query HiveTool @mcpTool(name: "from_hive") { hive }';
+      const localOps = 'query LocalTool @mcpTool(name: "local") { local }';
+      const hiveOps = 'query HiveTool @mcpTool(name: "from_hive") { hive }';
 
-      const mergedSource = [hiveSource, operationsSource]
-        .filter(Boolean)
-        .join('\n');
+      const mergedSource = parse(
+        [hiveOps, localOps].filter(Boolean).join('\n'),
+      );
 
       const tools = resolveToolConfigs(
         { log: logger },
@@ -155,11 +158,13 @@ describe('hive integration', () => {
     });
 
     it('explicit tools[] config wins over both hive and local sources', () => {
-      const hiveSource =
+      const hiveOps =
         'query GetData @mcpTool(name: "get_data", description: "Hive desc") { data }';
-      const localSource =
+      const localOps =
         'query GetData @mcpTool(name: "get_data", description: "Local desc") { data }';
-      const mergedSource = [hiveSource, localSource].filter(Boolean).join('\n');
+      const mergedSource = parse(
+        [hiveOps, localOps].filter(Boolean).join('\n'),
+      );
 
       const tools = resolveToolConfigs(
         { log: logger },
@@ -236,7 +241,7 @@ describe('hive integration', () => {
       );
 
       const docs = await loader.fetchDocuments();
-      const hiveSource = docs.map((d) => d.body).join('\n');
+      const hiveSource = parse(docs.map((d) => d.body).join('\n'));
       const tools = resolveToolConfigs(
         { log: logger },
         {

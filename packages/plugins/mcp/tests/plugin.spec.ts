@@ -2,6 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
+import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import {
   createProviderRegistry,
@@ -34,12 +35,12 @@ describe('resolveToolConfigs', () => {
     expect(tools[0]!.query).toBe('query { hello }');
   });
 
-  it('resolves operations from operationsSource string', () => {
-    const operationsSource = `
+  it('resolves operations from operationsSource document', () => {
+    const operationsSource = parse(`
       query GetWeather($location: String!) {
         getWeatherData(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -74,7 +75,7 @@ describe('resolveToolConfigs', () => {
               },
             },
           ],
-          operationsSource: 'query Other { hello }',
+          operationsSource: parse('query Other { hello }'),
         },
       ),
     ).toThrow('NotHere');
@@ -103,11 +104,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('auto-registers tools from @mcpTool directives', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather", title: "Weather") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource },
@@ -121,11 +122,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('config wins over directive on conflict', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Directive desc", title: "Directive Title") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -150,11 +151,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('config input overrides apply on top of directive tool', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -201,11 +202,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('parses descriptionProvider from @mcpTool directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_prompt") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource },
@@ -218,11 +219,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('parses descriptionProvider with version from @mcpTool directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_prompt:3") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource },
@@ -235,99 +236,99 @@ describe('resolveToolConfigs', () => {
   });
 
   it('throws on invalid descriptionProvider format in directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "invalid") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on invalid version in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:abc") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid version');
   });
 
   it('throws on version 0 in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:0") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Version must be a positive integer');
   });
 
   it('throws on negative version in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:-1") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Version must be a positive integer');
   });
 
   it('throws on trailing colon in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Trailing colon with no version');
   });
 
   it('throws on extra segments in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:3:extra") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on empty type in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: ":prompt") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('throws on empty prompt in descriptionProvider directive', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs({ log: logger }, { tools: [], operationsSource }),
     ).toThrow('Invalid descriptionProvider directive format');
   });
 
   it('config descriptionProvider wins over directive descriptionProvider', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:directive_prompt") {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -357,11 +358,11 @@ describe('resolveToolConfigs', () => {
   });
 
   it('does not auto-register operations without @mcpTool', () => {
-    const operationsSource = `
+    const operationsSource = parse(`
       query GetWeather($location: String!) {
         weather(location: $location) { temperature }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource },
@@ -794,11 +795,11 @@ describe('resolveDescriptions integration', () => {
 
 describe('@mcpDescription directive on variables', () => {
   it('populates input.schema.properties with descriptionProvider from @mcpDescription', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String! @mcpDescription(provider: "langfuse:search.query:3")) @mcpTool(name: "search") {
         search(q: $q) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -815,7 +816,7 @@ describe('@mcpDescription directive on variables', () => {
   });
 
   it('handles multiple @mcpDescription directives on different variables', () => {
-    const source = `
+    const source = parse(`
       query Search(
         $q: String! @mcpDescription(provider: "langfuse:search.query")
         $limit: Int
@@ -823,7 +824,7 @@ describe('@mcpDescription directive on variables', () => {
       ) @mcpTool(name: "search") {
         search(q: $q, limit: $limit, offset: $offset) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -843,11 +844,11 @@ describe('@mcpDescription directive on variables', () => {
   });
 
   it('config input overrides directive input', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String! @mcpDescription(provider: "langfuse:from_directive")) @mcpTool(name: "search") {
         search(q: $q) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -886,11 +887,11 @@ describe('@mcpDescription directive on variables', () => {
   });
 
   it('preserves directive input when config has no input', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String! @mcpDescription(provider: "langfuse:search.query")) @mcpTool(name: "search") {
         search(q: $q) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -918,11 +919,11 @@ describe('@mcpDescription directive on variables', () => {
   });
 
   it('does not populate input when no @mcpDescription is present', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String!) @mcpTool(name: "search") {
         search(q: $q) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -933,14 +934,14 @@ describe('@mcpDescription directive on variables', () => {
 
 describe('@mcpDescription directive on selection fields', () => {
   it('populates output.descriptionProviders from @mcpDescription on selection fields', () => {
-    const source = `
+    const source = parse(`
       query GetForecast($location: String!) @mcpTool(name: "forecast") {
         forecast(location: $location) {
           date
           conditions @mcpDescription(provider: "langfuse:forecast.conditions:3")
         }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -957,7 +958,7 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('handles nested selection field providers', () => {
-    const source = `
+    const source = parse(`
       query GetUser @mcpTool(name: "get_user") {
         user {
           profile {
@@ -965,7 +966,7 @@ describe('@mcpDescription directive on selection fields', () => {
           }
         }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -977,13 +978,13 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('config output overrides directive output', () => {
-    const source = `
+    const source = parse(`
       query GetForecast($location: String!) @mcpTool(name: "forecast") {
         forecast(location: $location) {
           conditions @mcpDescription(provider: "langfuse:from_directive")
         }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -1007,13 +1008,13 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('preserves directive output when config has no output', () => {
-    const source = `
+    const source = parse(`
       query GetForecast($location: String!) @mcpTool(name: "forecast") {
         forecast(location: $location) {
           conditions @mcpDescription(provider: "langfuse:forecast.conditions")
         }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       {
@@ -1040,11 +1041,11 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('does not populate output when no @mcpDescription in selection set', () => {
-    const source = `
+    const source = parse(`
       query GetForecast($location: String!) @mcpTool(name: "forecast") {
         forecast(location: $location) { date conditions }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -1053,7 +1054,7 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('combines input and output @mcpDescription directives', () => {
-    const source = `
+    const source = parse(`
       query Search(
         $q: String! @mcpDescription(provider: "langfuse:search.query")
       ) @mcpTool(name: "search") {
@@ -1061,7 +1062,7 @@ describe('@mcpDescription directive on selection fields', () => {
           title @mcpDescription(provider: "langfuse:search.title")
         }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
@@ -1079,11 +1080,11 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('throws on invalid provider string in @mcpDescription on variable', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String! @mcpDescription(provider: "invalid")) @mcpTool(name: "search") {
         search(q: $q) { title }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs(
         { log: logger },
@@ -1093,13 +1094,13 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('throws on invalid provider string in @mcpDescription on selection field', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String!) @mcpTool(name: "search") {
         search(q: $q) {
           title @mcpDescription(provider: "invalid")
         }
       }
-    `;
+    `);
     expect(() =>
       resolveToolConfigs(
         { log: logger },
@@ -1109,11 +1110,11 @@ describe('@mcpDescription directive on selection fields', () => {
   });
 
   it('ignores @mcpDescription on variables when operation has no @mcpTool', () => {
-    const source = `
+    const source = parse(`
       query Search($q: String! @mcpDescription(provider: "langfuse:search.query")) {
         search(q: $q) { title }
       }
-    `;
+    `);
     const tools = resolveToolConfigs(
       { log: logger },
       { tools: [], operationsSource: source },
