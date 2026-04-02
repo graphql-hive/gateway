@@ -73,6 +73,8 @@ export interface RegisteredTool {
   contentAnnotations?: MCPContentAnnotations;
   /** Pre/post-process hooks for intercepting or transforming tool execution */
   hooks?: MCPToolHooks;
+  /** Maps variable name to HTTP header name for automatic injection from @mcpHeader directives */
+  headerMappings?: Record<string, string>;
 }
 
 /** Walk a dot-notation path through an object, returning the value at that path. */
@@ -122,7 +124,52 @@ export class ToolRegistry {
       let inputSchema = operationToInputSchema(query, schema);
       let argumentAliases: Record<string, string> | undefined;
 
+      // Apply @mcpHeader directives: hide mapped variables from input schema
+      if (config.headerMappings) {
+        for (const varName of Object.keys(config.headerMappings)) {
+          if (inputSchema.properties?.[varName]) {
+            delete inputSchema.properties[varName];
+            if (inputSchema.required) {
+              inputSchema.required = inputSchema.required.filter(
+                (r) => r !== varName,
+              );
+              if (inputSchema.required.length === 0) {
+                delete inputSchema.required;
+              }
+            }
+          } else {
+            throw new Error(
+              `Tool "${config.name}": @mcpHeader on variable "$${varName}" but this variable does not exist in the operation. ` +
+                `Available variables: ${Object.keys(inputSchema.properties || {}).join(', ')}`,
+            );
+          }
+        }
+      }
+
       if (config.input?.schema?.properties) {
+        // Check for conflicts between @mcpHeader and input overrides
+        if (config.headerMappings) {
+          for (const [fieldName, fieldOverrides] of Object.entries(
+            config.input.schema.properties,
+          )) {
+            if (config.headerMappings[fieldName]) {
+              throw new Error(
+                `Tool "${config.name}": field "${fieldName}" has both @mcpHeader and input schema overrides. ` +
+                  `A header-mapped variable is removed from the input schema and cannot have aliases or other overrides.`,
+              );
+            }
+            if (
+              fieldOverrides.alias &&
+              config.headerMappings[fieldOverrides.alias]
+            ) {
+              throw new Error(
+                `Tool "${config.name}": alias "${fieldOverrides.alias}" for field "${fieldName}" conflicts with ` +
+                  `@mcpHeader-mapped variable "${fieldOverrides.alias}".`,
+              );
+            }
+          }
+        }
+
         const overrides = config.input.schema.properties;
         const hiddenFields: string[] = [];
         for (const [fieldName, fieldOverrides] of Object.entries(overrides)) {
@@ -281,6 +328,7 @@ export class ToolRegistry {
         suppressOutputSchema: config.output?.schema === false,
         contentAnnotations: config.output?.contentAnnotations,
         hooks: config.hooks,
+        headerMappings: config.headerMappings,
       });
     }
   }

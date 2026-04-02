@@ -23,6 +23,7 @@ import {
 import { createHiveLoader, type HiveLoader } from './hive-loader.js';
 import {
   loadOperationsFromDocument,
+  parseInlineHeaderDirectives,
   resolveOperation,
   type ParsedOperation,
 } from './operation-loader.js';
@@ -506,6 +507,8 @@ export interface ResolvedToolConfig {
   directiveDescription?: string;
   /** Description from a provider (highest priority, resolved at request time) */
   providerDescription?: string;
+  /** Maps variable name to HTTP header name, from @mcpHeader directives */
+  headerMappings?: Record<string, string>;
 }
 
 /**
@@ -605,6 +608,7 @@ export function resolveToolConfigs(
         tool: Object.keys(toolOverrides).length > 0 ? toolOverrides : undefined,
         input: directiveInput,
         output: directiveOutput,
+        headerMappings: op.headerMappings,
       });
     }
   }
@@ -614,9 +618,19 @@ export function resolveToolConfigs(
   for (const tool of tools) {
     const { source } = tool;
     let query: string;
+    let headerMappings: Record<string, string> | undefined;
 
     if (source.type === 'inline') {
-      query = source.query!;
+      let parsed;
+      try {
+        parsed = parseInlineHeaderDirectives(ctx, source.query!);
+      } catch (err) {
+        throw new Error(
+          `Tool "${tool.name}": failed to parse inline query: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      query = parsed.query;
+      headerMappings = parsed.headerMappings;
     } else {
       let opsPool: ParsedOperation[];
       if (source.file) {
@@ -643,6 +657,9 @@ export function resolveToolConfigs(
         );
       }
       query = op.document;
+      if (op.headerMappings) {
+        headerMappings = op.headerMappings;
+      }
     }
 
     configTools.set(tool.name, {
@@ -652,6 +669,7 @@ export function resolveToolConfigs(
       input: tool.input,
       output: tool.output,
       hooks: tool.hooks,
+      headerMappings,
     });
   }
 
@@ -671,6 +689,7 @@ export function resolveToolConfigs(
         input: configTool.input || base.input,
         output: configTool.output || base.output,
         hooks: configTool.hooks || base.hooks,
+        headerMappings: configTool.headerMappings || base.headerMappings,
       });
     } else {
       merged.set(name, configTool);
@@ -1562,6 +1581,33 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         request.headers.forEach((value, key) => {
           forwardedHeaders[key] = value;
         });
+
+        // Inject @mcpHeader-mapped variables from HTTP headers
+        if (tool.headerMappings) {
+          for (const [varName, headerName] of Object.entries(
+            tool.headerMappings,
+          )) {
+            const value = forwardedHeaders[headerName.toLowerCase()];
+            if (value === undefined || value.trim() === '') {
+              return endResponse(
+                fetchAPI.Response.json({
+                  jsonrpc: '2.0',
+                  id: body.id,
+                  result: {
+                    content: [
+                      {
+                        type: 'text',
+                        text: `Missing or empty HTTP header "${headerName}" for variable "${varName}".`,
+                      },
+                    ],
+                    isError: true,
+                  },
+                }),
+              );
+            }
+            args[varName] = value;
+          }
+        }
 
         const hookContext: ToolHookContext = {
           toolName: callParams.name,

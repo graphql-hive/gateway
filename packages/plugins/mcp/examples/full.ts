@@ -461,7 +461,7 @@ const mcpOptions: MCPConfig = {
       output: { path: 'company' },
       hooks: {
         preprocess(args, { headers }) {
-          args.companyId = headers['x-company-id'];
+          args.companyId = headers['x-company-id'] || 'default-company-id';
         },
       },
     },
@@ -470,6 +470,12 @@ const mcpOptions: MCPConfig = {
     // Operations with @mcpTool directives in operationsPath are auto-registered.
     // Example in a .graphql file:
     //   query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check") { ... }
+    //
+    // With @mcpDescription to fetch field descriptions from a provider:
+    //   query GetWeather($location: String! @mcpDescription(provider: "langfuse:location_desc")) @mcpTool(name: "get_weather") { ... }
+    //
+    // With @mcpHeader to inject a variable from an HTTP header (hidden from MCP input schema):
+    //   query GetData($companyId: String! @mcpHeader(name: "x-company-id")) @mcpTool(name: "get_data") { ... }
     //
     // With Langfuse description provider (format: "type:prompt" or "type:prompt:version"):
     //   query SearchDocs($q: String!) @mcpTool(name: "search_docs", descriptionProvider: "langfuse:search_tool_desc:3") { ... }

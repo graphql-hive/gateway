@@ -1,5 +1,6 @@
 import {
   Kind,
+  parse,
   print,
   type DirectiveNode,
   type DocumentNode,
@@ -12,6 +13,7 @@ import type { PluginContext } from './types.js';
 
 const MCP_TOOL_DIRECTIVE = 'mcpTool';
 const MCP_DESCRIPTION_DIRECTIVE = 'mcpDescription';
+const MCP_HEADER_DIRECTIVE = 'mcpHeader';
 
 export interface MCPDirectiveArgs {
   name: string;
@@ -28,6 +30,8 @@ export interface ParsedOperation {
   mcpDirective?: MCPDirectiveArgs;
   fieldDescriptionProviders?: Record<string, string>;
   selectionDescriptionProviders?: Record<string, string>;
+  /** Maps variable name to HTTP header name, from @mcpHeader directives */
+  headerMappings?: Record<string, string>;
 }
 
 function extractMcpToolDirective(
@@ -110,6 +114,34 @@ function extractFieldDescriptionProviders(
   return providers;
 }
 
+function extractHeaderMappings(
+  _: PluginContext,
+  variables: readonly VariableDefinitionNode[],
+): Record<string, string> | undefined {
+  let mappings: Record<string, string> | undefined;
+  for (const variable of variables) {
+    const directive = variable.directives?.find(
+      (d) => d.name.value === MCP_HEADER_DIRECTIVE,
+    );
+    if (!directive) continue;
+
+    const nameArg = directive.arguments?.find((a) => a.name.value === 'name');
+    if (
+      !nameArg ||
+      nameArg.value.kind !== Kind.STRING ||
+      !nameArg.value.value.trim()
+    ) {
+      throw new Error(
+        `@mcpHeader on variable "$${variable.variable.name.value}" requires a non-empty "name" string argument ` +
+          `(e.g., @mcpHeader(name: "x-company-id")).`,
+      );
+    }
+    mappings ??= {};
+    mappings[variable.variable.name.value] = nameArg.value.value;
+  }
+  return mappings;
+}
+
 function extractSelectionDescriptionProviders(
   ctx: PluginContext,
   selectionSet: SelectionSetNode,
@@ -187,30 +219,32 @@ function hasSelectionDirectives(selectionSet?: SelectionSetNode): boolean {
   });
 }
 
+const MCP_VAR_DIRECTIVES = [MCP_DESCRIPTION_DIRECTIVE, MCP_HEADER_DIRECTIVE];
+
 function stripMcpDirectives(
   def: OperationDefinitionNode,
 ): OperationDefinitionNode {
   const hasMcpTool = def.directives?.some(
     (d) => d.name.value === MCP_TOOL_DIRECTIVE,
   );
-  const hasVarDesc = def.variableDefinitions?.some((v) =>
-    v.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE),
+  const hasVarDirective = def.variableDefinitions?.some((v) =>
+    v.directives?.some((d) => MCP_VAR_DIRECTIVES.includes(d.name.value)),
   );
   const hasSelDesc = hasSelectionDirectives(def.selectionSet);
-  if (!hasMcpTool && !hasVarDesc && !hasSelDesc) return def;
+  if (!hasMcpTool && !hasVarDirective && !hasSelDesc) return def;
 
   return {
     ...def,
     directives: hasMcpTool
       ? def.directives?.filter((d) => d.name.value !== MCP_TOOL_DIRECTIVE)
       : def.directives,
-    variableDefinitions: hasVarDesc
+    variableDefinitions: hasVarDirective
       ? def.variableDefinitions?.map((v) =>
-          v.directives?.some((d) => d.name.value === MCP_DESCRIPTION_DIRECTIVE)
+          v.directives?.some((d) => MCP_VAR_DIRECTIVES.includes(d.name.value))
             ? {
                 ...v,
                 directives: v.directives!.filter(
-                  (d) => d.name.value !== MCP_DESCRIPTION_DIRECTIVE,
+                  (d) => !MCP_VAR_DIRECTIVES.includes(d.name.value),
                 ),
               }
             : v,
@@ -220,6 +254,27 @@ function stripMcpDirectives(
       ? stripSelectionDirectives(def.selectionSet)
       : def.selectionSet,
   } as OperationDefinitionNode;
+}
+
+export function parseInlineHeaderDirectives(
+  ctx: PluginContext,
+  queryStr: string,
+): { query: string; headerMappings?: Record<string, string> } {
+  const doc = parse(queryStr);
+  const def = doc.definitions.find(
+    (d) => d.kind === Kind.OPERATION_DEFINITION,
+  ) as OperationDefinitionNode | undefined;
+  if (!def?.variableDefinitions) return { query: queryStr };
+
+  const headerMappings = extractHeaderMappings(ctx, def.variableDefinitions);
+  if (!headerMappings) return { query: queryStr };
+
+  const stripped = stripMcpDirectives(def);
+  const strippedDoc: DocumentNode = {
+    kind: Kind.DOCUMENT,
+    definitions: [stripped],
+  };
+  return { query: print(strippedDoc), headerMappings };
 }
 
 export function loadOperationsFromDocument(
@@ -244,6 +299,9 @@ export function loadOperationsFromDocument(
     const selectionDescriptionProviders = def.selectionSet
       ? extractSelectionDescriptionProviders(ctx, def.selectionSet)
       : undefined;
+    const headerMappings = def.variableDefinitions
+      ? extractHeaderMappings(ctx, def.variableDefinitions)
+      : undefined;
 
     const singleDoc: DocumentNode = {
       kind: Kind.DOCUMENT,
@@ -258,6 +316,7 @@ export function loadOperationsFromDocument(
       mcpDirective,
       fieldDescriptionProviders,
       selectionDescriptionProviders,
+      headerMappings,
     });
   }
 

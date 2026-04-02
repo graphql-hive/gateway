@@ -53,7 +53,7 @@ const gateway = createGatewayRuntime({
 
 ### Directive-based
 
-Define tools directly in your `.graphql` operation files using `@mcpTool` and `@mcpDescription` directives:
+Define tools directly in your `.graphql` operation files using `@mcpTool`, `@mcpDescription`, and `@mcpHeader` directives:
 
 ```graphql
 query GetWeather($location: String!)
@@ -87,6 +87,36 @@ query GetForecast($location: String!, $days: Int)
     low
     conditions @mcpDescription(provider: "langfuse:conditions_desc")
   }
+}
+```
+
+`@mcpHeader` injects a variable from an HTTP header instead of exposing it in the tool's input schema. This is useful for auth context like company or user IDs that come from request headers rather than the LLM:
+
+```graphql
+query GetCompanyData($companyId: String! @mcpHeader(name: "x-company-id"))
+@mcpTool(name: "get_company_data") {
+  company(companyId: $companyId) {
+    id
+    name
+    plan
+  }
+}
+```
+
+The `companyId` variable is hidden from `tools/list` and automatically populated from the `x-company-id` header on each `tools/call` request. If the header is missing, the tool returns an error.
+
+For cases where you need more control (e.g. transforming the header value or falling back to a default), use `hidden: true` with a `preprocess` hook instead:
+
+```typescript
+{
+  name: 'get_company_data',
+  source: { type: 'inline', query: `query($companyId: String!) { ... }` },
+  input: { schema: { properties: { companyId: { hidden: true } } } },
+  hooks: {
+    preprocess(args, { headers }) {
+      args.companyId = headers['x-company-id'] || 'default-company';
+    },
+  },
 }
 ```
 
@@ -467,7 +497,8 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 ## Features
 
 - **Tool sources**: inline queries, file-based operations (`operationsPath`), or auto-registered via `@mcpTool` directives
-- **Input overrides**: aliases, descriptions, and description providers per field
+- **Input overrides**: aliases, descriptions, description providers, and `hidden` per field
+- **Header injection**: `@mcpHeader` directive to inject variables from HTTP headers (hidden from input schema)
 - **Output extraction**: `output.path` to return a subset of the GraphQL response
 - **Hooks**: `preprocess` (short-circuit or transform args) and `postprocess` (transform results)
 - **Description providers**: resolve tool/field descriptions dynamically (built-in [Langfuse](https://langfuse.com/) support, or bring your own)

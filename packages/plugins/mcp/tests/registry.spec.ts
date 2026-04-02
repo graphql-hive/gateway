@@ -469,6 +469,87 @@ describe('ToolRegistry with overrides', () => {
     ).toThrow('Alias "term"');
   });
 
+  it('hides header-mapped variables from input schema', () => {
+    const twoFieldSchema = buildSchema(`
+      type Query {
+        searchProducts(query: String!, companyId: String!): String
+      }
+    `);
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $companyId: String!) { searchProducts(query: $query, companyId: $companyId) }',
+          headerMappings: { companyId: 'x-company-id' },
+        },
+      ],
+      twoFieldSchema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.inputSchema.properties!['companyId']).toBeUndefined();
+    expect(tools[0]!.inputSchema.properties!['query']).toBeDefined();
+    expect(tools[0]!.inputSchema.required).toEqual(['query']);
+  });
+
+  it('stores headerMappings on registered tool', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          headerMappings: { query: 'x-query' },
+        },
+      ],
+      schema,
+    );
+    const tool = registry.getTool('search');
+    expect(tool!.headerMappings).toEqual({ query: 'x-query' });
+  });
+
+  it('throws when headerMappings references non-existent variable', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          { log: logger },
+          [
+            {
+              name: 'search',
+              query: 'query($query: String!) { searchProducts(query: $query) }',
+              headerMappings: { nonExistent: 'x-header' },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('@mcpHeader on variable "$nonExistent"');
+  });
+
+  it('throws when headerMappings and input overrides target the same field', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          { log: logger },
+          [
+            {
+              name: 'search',
+              query: 'query($query: String!) { searchProducts(query: $query) }',
+              headerMappings: { query: 'x-query' },
+              input: {
+                schema: {
+                  properties: {
+                    query: { description: 'conflict' },
+                  },
+                },
+              },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('both @mcpHeader and input schema overrides');
+  });
+
   it('hides required field from input schema when hidden is true', () => {
     const twoFieldSchema = buildSchema(`
       type Query {

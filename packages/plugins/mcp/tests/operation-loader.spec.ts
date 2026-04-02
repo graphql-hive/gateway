@@ -3,6 +3,7 @@ import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import {
   loadOperationsFromDocument,
+  parseInlineHeaderDirectives,
   resolveOperation,
 } from '../src/operation-loader.js';
 
@@ -273,6 +274,87 @@ describe('loadOperationsFromDocument', () => {
     expect(ops[0]!.document).not.toContain('mcpDescription');
   });
 
+  it('extracts @mcpHeader from variable definitions', () => {
+    const source = `
+      query GetCompany($companyId: String! @mcpHeader(name: "x-company-id")) @mcpTool(name: "get_company") {
+        company(companyId: $companyId) { id name }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.headerMappings).toEqual({
+      companyId: 'x-company-id',
+    });
+  });
+
+  it('extracts @mcpHeader from multiple variables', () => {
+    const source = `
+      query GetData(
+        $companyId: String! @mcpHeader(name: "x-company-id")
+        $userId: String! @mcpHeader(name: "x-user-id")
+        $query: String!
+      ) @mcpTool(name: "get_data") {
+        data(companyId: $companyId, userId: $userId, query: $query) { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.headerMappings).toEqual({
+      companyId: 'x-company-id',
+      userId: 'x-user-id',
+    });
+  });
+
+  it('strips @mcpHeader from printed document', () => {
+    const source = `
+      query GetCompany($companyId: String! @mcpHeader(name: "x-company-id")) @mcpTool(name: "get_company") {
+        company(companyId: $companyId) { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.document).not.toContain('mcpHeader');
+    expect(ops[0]!.document).toContain('$companyId');
+    expect(ops[0]!.document).toContain('GetCompany');
+  });
+
+  it('returns undefined headerMappings when no @mcpHeader present', () => {
+    const source = `
+      query GetWeather($location: String!) {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.headerMappings).toBeUndefined();
+  });
+
+  it('extracts @mcpHeader and @mcpDescription on the same variable', () => {
+    const source = `
+      query GetCompany(
+        $companyId: String! @mcpHeader(name: "x-company-id") @mcpDescription(provider: "langfuse:company_id")
+      ) @mcpTool(name: "get_company") {
+        company(companyId: $companyId) { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.headerMappings).toEqual({
+      companyId: 'x-company-id',
+    });
+    expect(ops[0]!.fieldDescriptionProviders).toEqual({
+      companyId: 'langfuse:company_id',
+    });
+    expect(ops[0]!.document).not.toContain('mcpHeader');
+    expect(ops[0]!.document).not.toContain('mcpDescription');
+  });
+
+  it('throws for @mcpHeader missing name argument', () => {
+    const source = `
+      query GetCompany($companyId: String! @mcpHeader) @mcpTool(name: "get_company") {
+        company(companyId: $companyId) { id }
+      }
+    `;
+    expect(() =>
+      loadOperationsFromDocument({ log: logger }, parse(source)),
+    ).toThrow('@mcpHeader on variable "$companyId"');
+  });
+
   it('handles mixed operations with and without @mcpTool', () => {
     const source = `
       query GetWeather($location: String!) @mcpTool(name: "get_weather") {
@@ -316,5 +398,24 @@ describe('resolveOperation', () => {
   it('returns undefined for wrong type', () => {
     const op = resolveOperation(ops, 'GetWeather', 'mutation');
     expect(op).toBeUndefined();
+  });
+});
+
+describe('parseInlineHeaderDirectives', () => {
+  it('extracts @mcpHeader from anonymous inline query', () => {
+    const result = parseInlineHeaderDirectives(
+      { log: logger },
+      `query($companyId: String! @mcpHeader(name: "x-company-id")) { company(companyId: $companyId) { id } }`,
+    );
+    expect(result.headerMappings).toEqual({ companyId: 'x-company-id' });
+    expect(result.query).not.toContain('mcpHeader');
+    expect(result.query).toContain('$companyId');
+  });
+
+  it('returns original query when no @mcpHeader present', () => {
+    const original = `query($id: ID!) { user(id: $id) { name } }`;
+    const result = parseInlineHeaderDirectives({ log: logger }, original);
+    expect(result.headerMappings).toBeUndefined();
+    expect(result.query).toBe(original);
   });
 });

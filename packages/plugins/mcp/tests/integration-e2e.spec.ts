@@ -1858,4 +1858,208 @@ describe('MCP E2E', () => {
       await pdsGateway[Symbol.asyncDispose]?.();
     }
   });
+
+  it('@mcpHeader hides variable from schema and injects from header', async () => {
+    const headerUpstream = createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            company(companyId: String!): Company
+          }
+          type Company {
+            id: String
+            name: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            company: (_root, { companyId }) => ({
+              id: companyId,
+              name: `Company ${companyId}`,
+            }),
+          },
+        },
+      }),
+      logging: false,
+    });
+
+    const headerGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => headerUpstream.fetch(url, init),
+        ),
+        useMCP(ctx, {
+          name: 'header-test',
+          operationsStr: `
+            query GetCompany($companyId: String! @mcpHeader(name: "X-Company-Id")) @mcpTool(name: "get_company") {
+              company(companyId: $companyId) { id name }
+            }
+          `,
+        }),
+      ],
+    });
+
+    try {
+      await headerGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // tools/list should not expose companyId
+      const listRes = await headerGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      const tool = listBody.result.tools.find(
+        (t: any) => t.name === 'get_company',
+      );
+      expect(tool).toBeDefined();
+      expect(tool.inputSchema.properties.companyId).toBeUndefined();
+      expect(tool.inputSchema.required).toBeUndefined();
+
+      // tools/call with header should inject the value
+      const callRes = await headerGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-company-id': 'acme-42',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_company', arguments: {} },
+        }),
+      });
+      const callBody = await callRes.json();
+      expect(callBody.result.isError).toBeFalsy();
+      const data = JSON.parse(callBody.result.content[0].text);
+      expect(data.company.id).toBe('acme-42');
+      expect(data.company.name).toBe('Company acme-42');
+
+      // tools/call without header should return error
+      const missingRes = await headerGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: { name: 'get_company', arguments: {} },
+        }),
+      });
+      const missingBody = await missingRes.json();
+      expect(missingBody.result.isError).toBe(true);
+      expect(missingBody.result.content[0].text).toContain('X-Company-Id');
+    } finally {
+      await headerGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('@mcpHeader works with inline source type', async () => {
+    const inlineUpstream = createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            company(companyId: String!): Company
+          }
+          type Company {
+            id: String
+            name: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            company: (_root, { companyId }) => ({
+              id: companyId,
+              name: `Company ${companyId}`,
+            }),
+          },
+        },
+      }),
+      logging: false,
+    });
+
+    const inlineGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => inlineUpstream.fetch(url, init),
+        ),
+        useMCP(ctx, {
+          name: 'inline-header-test',
+          tools: [
+            {
+              name: 'get_company',
+              source: {
+                type: 'inline',
+                query: `query GetCompany($companyId: String! @mcpHeader(name: "x-company-id")) {
+                  company(companyId: $companyId) { id name }
+                }`,
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await inlineGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // tools/list should hide companyId
+      const listRes = await inlineGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      const tool = listBody.result.tools.find(
+        (t: any) => t.name === 'get_company',
+      );
+      expect(tool.inputSchema.properties.companyId).toBeUndefined();
+
+      // tools/call with header should inject
+      const callRes = await inlineGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-company-id': 'inline-42',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_company', arguments: {} },
+        }),
+      });
+      const callBody = await callRes.json();
+      expect(callBody.result.isError).toBeFalsy();
+      const data = JSON.parse(callBody.result.content[0].text);
+      expect(data.company.id).toBe('inline-42');
+    } finally {
+      await inlineGateway[Symbol.asyncDispose]?.();
+    }
+  });
 });

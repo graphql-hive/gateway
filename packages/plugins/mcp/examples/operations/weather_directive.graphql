@@ -39,6 +39,18 @@ query QuickWeatherProvider($location: String!)
   }
 }
 
+query CompanyInfo($companyId: String! @mcpHeader(name: "x-company-id"))
+@mcpTool(
+  name: "company_info"
+  description: "Get info about the authenticated company"
+) {
+  company(companyId: $companyId) {
+    id
+    name
+    plan
+  }
+}
+
 query WeatherWithFieldProvider(
   $location: String! @mcpDescription(provider: "langfuse:weather.location:3")
   $days: Int
