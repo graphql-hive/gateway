@@ -132,6 +132,8 @@ export interface MCPInputOverrides {
         alias?: string;
         /** Dynamic description provider config for this specific field */
         descriptionProvider?: DescriptionProviderConfig;
+        /** Hide this variable from the MCP input schema. The variable can still be set via a preprocess hook (e.g. from HTTP headers). */
+        hidden?: boolean;
       }
     >;
   };

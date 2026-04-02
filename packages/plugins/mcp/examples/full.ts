@@ -36,6 +36,9 @@ const schema = createSchema({
         days: Int = 5
       ): [ForecastDay!]!
 
+      "Get company info for the authenticated company"
+      company(companyId: String!): Company!
+
       "Search documentation articles"
       search(
         q: String!
@@ -77,6 +80,12 @@ const schema = createSchema({
       score: Float!
     }
 
+    type Company {
+      id: String!
+      name: String!
+      plan: String!
+    }
+
     type Weather {
       "Temperature in Fahrenheit"
       temperature: Float!
@@ -110,6 +119,11 @@ const schema = createSchema({
         };
         return { ...data, location };
       },
+      company: (_, { companyId }: { companyId: string }) => ({
+        id: companyId,
+        name: `Company ${companyId}`,
+        plan: 'enterprise',
+      }),
       search: (_, { q, pageSize = 3 }: { q: string; pageSize?: number }) => ({
         items: Array.from({ length: Math.min(pageSize, 5) }, (_, i) => ({
           path: `/articles/${q.toLowerCase().replace(/\s+/g, '-')}-${i + 1}`,
@@ -421,7 +435,38 @@ const mcpOptions: MCPConfig = {
       },
     },
 
-    // Tool 6: @mcpTool directive (auto-registered)
+    // Tool 6: Context from HTTP headers via preprocess
+    // The companyId variable is injected from the x-company-id header,
+    // so the MCP client never needs to provide it.
+    {
+      name: 'get_company',
+      source: {
+        type: 'inline',
+        query: `query GetCompany($companyId: String!) {
+          company(companyId: $companyId) { id name plan }
+        }`,
+      },
+      tool: {
+        title: 'Company Info',
+        description:
+          'Get info about the current company (resolved from auth headers)',
+      },
+      input: {
+        schema: {
+          properties: {
+            companyId: { hidden: true },
+          },
+        },
+      },
+      output: { path: 'company' },
+      hooks: {
+        preprocess(args, { headers }) {
+          args.companyId = headers['x-company-id'];
+        },
+      },
+    },
+
+    // Tool 7: @mcpTool directive (auto-registered)
     // Operations with @mcpTool directives in operationsPath are auto-registered.
     // Example in a .graphql file:
     //   query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check") { ... }

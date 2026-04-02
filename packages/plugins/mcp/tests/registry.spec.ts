@@ -469,6 +469,90 @@ describe('ToolRegistry with overrides', () => {
     ).toThrow('Alias "term"');
   });
 
+  it('hides required field from input schema when hidden is true', () => {
+    const twoFieldSchema = buildSchema(`
+      type Query {
+        searchProducts(query: String!, category: String): String
+      }
+    `);
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          input: {
+            schema: {
+              properties: {
+                query: { hidden: true },
+              },
+            },
+          },
+        },
+      ],
+      twoFieldSchema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.inputSchema.properties!['query']).toBeUndefined();
+    expect(tools[0]!.inputSchema.properties!['category']).toBeDefined();
+    expect(tools[0]!.inputSchema.required).toBeUndefined();
+  });
+
+  it('hides optional field from input schema when hidden is true', () => {
+    const twoFieldSchema = buildSchema(`
+      type Query {
+        searchProducts(query: String!, category: String): String
+      }
+    `);
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          input: {
+            schema: {
+              properties: {
+                category: { hidden: true },
+              },
+            },
+          },
+        },
+      ],
+      twoFieldSchema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.inputSchema.properties!['category']).toBeUndefined();
+    expect(tools[0]!.inputSchema.properties!['query']).toBeDefined();
+    expect(tools[0]!.inputSchema.required).toEqual(['query']);
+  });
+
+  it('hides aliased field from input schema', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          input: {
+            schema: {
+              properties: {
+                query: { alias: 'searchQuery', hidden: true },
+              },
+            },
+          },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.inputSchema.properties!['query']).toBeUndefined();
+    expect(tools[0]!.inputSchema.properties!['searchQuery']).toBeUndefined();
+    expect(tools[0]!.inputSchema.required).toBeUndefined();
+  });
+
   it('does not leak descriptionProvider into inputSchema', () => {
     const registry = new ToolRegistry(
       { log: logger },

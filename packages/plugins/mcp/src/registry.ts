@@ -124,6 +124,7 @@ export class ToolRegistry {
 
       if (config.input?.schema?.properties) {
         const overrides = config.input.schema.properties;
+        const hiddenFields: string[] = [];
         for (const [fieldName, fieldOverrides] of Object.entries(overrides)) {
           if (!inputSchema.properties?.[fieldName]) {
             throw new Error(
@@ -133,10 +134,14 @@ export class ToolRegistry {
           }
 
           // Apply non-alias overrides (description, examples, default)
-          const { alias, descriptionProvider, ...schemaOverrides } =
+          const { alias, descriptionProvider, hidden, ...schemaOverrides } =
             fieldOverrides;
           if (Object.keys(schemaOverrides).length > 0) {
             Object.assign(inputSchema.properties[fieldName], schemaOverrides);
+          }
+
+          if (hidden) {
+            hiddenFields.push(alias ?? fieldName);
           }
 
           // Handle alias: rename the property in the input schema
@@ -167,6 +172,19 @@ export class ToolRegistry {
               if (idx !== -1) {
                 inputSchema.required[idx] = alias;
               }
+            }
+          }
+        }
+
+        // Remove hidden fields from the input schema
+        for (const name of hiddenFields) {
+          delete inputSchema.properties?.[name];
+          if (inputSchema.required) {
+            inputSchema.required = inputSchema.required.filter(
+              (r) => r !== name,
+            );
+            if (inputSchema.required.length === 0) {
+              delete inputSchema.required;
             }
           }
         }
