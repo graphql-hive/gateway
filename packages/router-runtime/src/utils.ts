@@ -1,23 +1,19 @@
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
 import type {
   DelegationContext,
-  StitchingInfo,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
-  getDirectiveExtensions,
   isAsyncIterable,
   MaybeAsyncIterable,
-  memoize1,
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
   mapAsyncIterator,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { GraphQLSchema } from 'graphql';
 
 export const queryPlanForExecutionRequestContext = new WeakMap<
   any,
