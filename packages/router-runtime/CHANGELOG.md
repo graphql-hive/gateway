@@ -1,5 +1,24 @@
 # @graphql-hive/router-runtime
 
+## 1.3.0
+### Minor Changes
+
+
+
+- [#2203](https://github.com/graphql-hive/gateway/pull/2203) [`ded76e2`](https://github.com/graphql-hive/gateway/commit/ded76e273d12d938fe886d26f7612ac45b17a203) Thanks [@ardatan](https://github.com/ardatan)! - EDFS Support for Router Runtime
+
+
+### Patch Changes
+
+
+
+- [#2203](https://github.com/graphql-hive/gateway/pull/2203) [`ded76e2`](https://github.com/graphql-hive/gateway/commit/ded76e273d12d938fe886d26f7612ac45b17a203) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Added dependency [`@graphql-mesh/utils@^0.104.33` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.33) (to `dependencies`)
+  - Added dependency [`@graphql-tools/delegate@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/delegate/v/workspace:^) (to `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.4
+
 ## 1.2.5
 ### Patch Changes
 
