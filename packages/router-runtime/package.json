@@ -47,6 +47,7 @@
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/utils": "^0.104.33",
+    "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor": "^1.4.13",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/federation": "workspace:^",

@@ -13,11 +13,12 @@ import {
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
+import { executeQueryPlan } from './executor';
 import {
+  getPubsubOperationRootFields,
   handlePubsubOperationField,
   handleResultWithPubSubPublish,
-} from './edfs';
-import { executeQueryPlan } from './executor';
+} from './pubsubDirectives';
 import {
   getLazyFactory,
   getLazyValue,
@@ -32,9 +33,6 @@ export async function unifiedGraphHandler(
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const getSubschema = getLazyFactory(
     () => getHandledFederationSupergraph().getSubschema,
-  );
-  const getSubgraphSchema = getLazyFactory(
-    () => getHandledFederationSupergraph().getSubgraphSchema,
   );
   const getHandledFederationSupergraph = getLazyValue(() =>
     handleFederationSupergraph(opts),
@@ -56,6 +54,9 @@ export async function unifiedGraphHandler(
     return activePercentLabels;
   }
 
+  const pubsubOperationMetadataMap = getPubsubOperationRootFields(
+    opts.unifiedGraph,
+  );
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
@@ -153,7 +154,7 @@ export async function unifiedGraphHandler(
               handlePubsubOperationField(
                 supergraphSchema,
                 executionRequest,
-                () => getSubgraphSchema(subgraphName),
+                pubsubOperationMetadataMap,
                 (executionRequest) =>
                   handleMaybePromiseMaybeAsyncIterable(
                     () =>
