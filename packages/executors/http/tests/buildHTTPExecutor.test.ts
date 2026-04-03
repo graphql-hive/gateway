@@ -520,7 +520,7 @@ describe('buildHTTPExecutor', () => {
       document: parse(query, { noLocation: true }),
     });
 
-    expect(res).toMatchObject({
+    expect(res).toEqual({
       data,
       extensions: {
         request: {
@@ -531,9 +531,9 @@ describe('buildHTTPExecutor', () => {
           status,
           statusText,
           headers: expect.objectContaining(headers),
-          body: expect.objectContaining({
+          body: {
             data,
-          }),
+          },
         },
       },
     });
