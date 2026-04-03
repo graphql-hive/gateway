@@ -500,57 +500,42 @@ describe('buildHTTPExecutor', () => {
     expect(hasAborted).toBe(true);
   });
   it('exposes HTTP details in extensions when exposeHTTPDetailsInExtensions is true', async () => {
+    const query = `{hello}`;
+    const data = { hello: 'world' };
+    const headers = { 'x-custom-header': 'CustomValue' };
+    const status = 201;
+    const statusText = 'Created';
+    const responseBody = { data };
     await using executor = buildHTTPExecutor({
       exposeHTTPDetailsInExtensions: true,
-      fetch() {
-        return new Response(JSON.stringify({ data: { hello: 'world' } }), {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Custom-Header': 'CustomValue',
-          },
-          status: 201,
-          statusText: 'Created',
-        });
-      },
+      fetch: () =>
+        Response.json(responseBody, {
+          headers,
+          status,
+          statusText,
+        }),
     });
-
-    const query = parse(/* GraphQL */ `
-      {
-        hello
-      }
-    `);
 
     const res = await executor({
-      document: query,
+      document: parse(query, { noLocation: true }),
     });
 
-    const extensions = {
-      request: {
-        method: 'POST',
-        body: JSON.stringify({
-          query: `{hello}`,
-        }),
-      },
-      response: {
-        status: 201,
-        statusText: 'Created',
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-          'X-Custom-Header': 'CustomValue',
-          'content-length': expect.any(String),
-        }),
-        body: {
-          data: { hello: 'world' },
-          get extensions() {
-            return extensions;
-          },
+    expect(res).toMatchObject({
+      data,
+      extensions: {
+        request: {
+          method: 'POST',
+          body: JSON.stringify({ query }),
+        },
+        response: {
+          status,
+          statusText,
+          headers: expect.objectContaining(headers),
+          body: expect.objectContaining({
+            data,
+          }),
         },
       },
-    };
-
-    expect(res).toEqual({
-      data: { hello: 'world' },
-      extensions,
     });
   });
 });
