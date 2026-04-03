@@ -525,13 +525,19 @@ export function buildHTTPExecutor(
         if (options?.exposeHTTPDetailsInExtensions) {
           return handleMaybePromise(
             () => result$,
-            (result) => ({
-              ...result,
-              extensions: {
-                ...result.extensions,
-                ...upstreamErrorExtensions,
-              },
-            }),
+            (result) => {
+              if (upstreamErrorExtensions.response?.body) {
+                upstreamErrorExtensions.response.body = structuredClone(
+                  upstreamErrorExtensions.response.body,
+                );
+              }
+              result.extensions ||= {};
+              result.extensions = Object.assign(
+                result.extensions,
+                upstreamErrorExtensions,
+              );
+              return result;
+            },
           );
         }
         return result$;
