@@ -1,5 +1,13 @@
 # @graphql-tools/stitch
 
+## 10.1.17
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@12.0.13
+  - @graphql-tools/batch-delegate@10.0.19
+  - @graphql-tools/wrap@11.1.13
+
 ## 10.1.16
 ### Patch Changes
 

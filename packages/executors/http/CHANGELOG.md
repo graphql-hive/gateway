@@ -1,5 +1,46 @@
 # @graphql-tools/executor-http
 
+## 3.2.0
+### Minor Changes
+
+
+
+- [#2211](https://github.com/graphql-hive/gateway/pull/2211) [`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95) Thanks [@ardatan](https://github.com/ardatan)! - Add `exposeHTTPDetailsInExtensions` flag to get `Response` details in the result extensions.
+  
+  ```ts
+  import { buildHTTPExecutor } from '@graphql-tools/executor-http';
+  
+  const executor = buildHTTPExecutor({
+    exposeHTTPDetailsInExtensions: true,
+  });
+  ```
+  
+  Then in the result;
+  
+  ```ts
+  {
+      "data": {
+          "hello": "world"
+      },
+      "extensions": {
+          "request": {
+              "url": "http://localhost:4000/graphql",
+              "method": "POST",
+              "headers": {
+                  "content-type": "application/json"
+              },
+              "body": "{\"query\":\"{ hello }\"}"
+          },
+          "response": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                  "content-type": "application/json"
+              }
+          }
+      }
+  }
+
 ## 3.1.4
 ### Patch Changes
 
