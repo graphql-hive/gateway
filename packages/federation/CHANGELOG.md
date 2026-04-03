@@ -1,5 +1,20 @@
 # @graphql-tools/federation
 
+## 4.3.6
+### Patch Changes
+
+- Updated dependencies [[`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6)]:
+  - @graphql-tools/executor-http@3.2.1
+
+## 4.3.5
+### Patch Changes
+
+- Updated dependencies [[`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95)]:
+  - @graphql-tools/executor-http@3.2.0
+  - @graphql-tools/delegate@12.0.13
+  - @graphql-tools/stitch@10.1.17
+  - @graphql-tools/wrap@11.1.13
+
 ## 4.3.4
 ### Patch Changes
 

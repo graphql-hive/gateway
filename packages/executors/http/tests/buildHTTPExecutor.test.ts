@@ -499,4 +499,43 @@ describe('buildHTTPExecutor', () => {
 
     expect(hasAborted).toBe(true);
   });
+  it('exposes HTTP details in extensions when exposeHTTPDetailsInExtensions is true', async () => {
+    const query = `{hello}`;
+    const data = { hello: 'world' };
+    const headers = { 'x-custom-header': 'CustomValue' };
+    const status = 201;
+    const statusText = 'Created';
+    const responseBody = { data };
+    await using executor = buildHTTPExecutor({
+      exposeHTTPDetailsInExtensions: true,
+      fetch: () =>
+        Response.json(responseBody, {
+          headers,
+          status,
+          statusText,
+        }),
+    });
+
+    const res = await executor({
+      document: parse(query, { noLocation: true }),
+    });
+
+    expect(res).toEqual({
+      data,
+      extensions: {
+        request: {
+          method: 'POST',
+          body: JSON.stringify({ query }),
+        },
+        response: {
+          status,
+          statusText,
+          headers: expect.objectContaining(headers),
+          body: {
+            data,
+          },
+        },
+      },
+    });
+  });
 });

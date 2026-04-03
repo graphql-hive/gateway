@@ -14,6 +14,7 @@ describe('batch execution', () => {
   let executorCalls = 0;
   let executorDocument: string | undefined;
   let executorVariables: any | undefined;
+  let executorOperationName: string | undefined;
   const extensions = { foo: 'bar' };
 
   const schema = makeExecutableSchema({
@@ -45,10 +46,11 @@ describe('batch execution', () => {
     },
   });
 
-  const exec: Executor = async ({ document, variables }) => {
+  const exec: Executor = async ({ document, variables, operationName }) => {
     executorCalls += 1;
     executorDocument = print(document);
     executorVariables = variables;
+    executorOperationName = operationName;
     const errors = validate(schema, document);
     if (errors.length > 0) {
       return { errors };
@@ -308,5 +310,60 @@ describe('batch execution', () => {
         .catch((e) => e);
       expect(error).toBeUndefined();
     });
+  });
+
+  it('keeps the original operation name in the request', async () => {
+    const requests = await Promise.all([
+      batchExec({
+        document: parse('query MyQuery { field1 }'),
+      }),
+      batchExec({
+        document: parse('query MyQuery { field2 }'),
+      }),
+    ]);
+    expect(requests).toEqual([
+      {
+        data: { field1: '1' },
+      },
+      {
+        data: { field2: '2' },
+      },
+    ]);
+    expect(executorCalls).toEqual(1);
+    expect(executorOperationName).toEqual('MyQuery');
+  });
+
+  it('inherits context and subgraphName from the first available request', async () => {
+    const ctx = { user: 'alice' };
+    let capturedContext: unknown;
+    let capturedSubgraphName: string | undefined;
+
+    const execWithCapture: Executor = async (req) => {
+      executorCalls += 1;
+      capturedContext = req.context;
+      capturedSubgraphName = req.subgraphName;
+      return normalizedExecutor({
+        schema,
+        document: req.document,
+        variableValues: req.variables,
+      });
+    };
+
+    const batchExecWithCapture = createBatchingExecutor(execWithCapture);
+
+    await Promise.all([
+      batchExecWithCapture({
+        document: parse('{ field1 }'),
+        context: ctx,
+        subgraphName: 'mySubgraph',
+      }),
+      batchExecWithCapture({
+        document: parse('{ field2 }'),
+      }),
+    ]);
+
+    expect(executorCalls).toEqual(1);
+    expect(capturedContext).toBe(ctx);
+    expect(capturedSubgraphName).toEqual('mySubgraph');
   });
 });
