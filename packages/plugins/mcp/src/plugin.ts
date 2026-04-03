@@ -1337,6 +1337,21 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       }
     },
 
+    // Extend Yoga's graphqlEndpoint to also accept the MCP path so
+    // tools/call requests flow through the full pipeline without 404.
+    onYogaInit({ yoga }) {
+      const mcp = mcpPath
+        .replace(/^\//, '')
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const groupMatch = yoga.graphqlEndpoint.match(/^\/\((.+)\)$/);
+      if (groupMatch) {
+        yoga.graphqlEndpoint = `/(${groupMatch[1]}|${mcp})`;
+      } else {
+        const current = yoga.graphqlEndpoint.replace(/^\//, '');
+        yoga.graphqlEndpoint = `/(${current}|${mcp})`;
+      }
+    },
+
     onRequestParse({ request, url, setRequestParser }) {
       const ctx = mcpToolCalls.get(request);
       if (!ctx) {
@@ -1344,6 +1359,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           logger.error(
             'onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
           );
+          // Provide a parser that yields an empty query so Yoga doesn't
+          // attempt to re-read the already-consumed body. onResultProcess
+          // will not find a WeakMap entry either, so the error surfaces
+          // as a standard GraphQL validation failure.
+          setRequestParser(() => ({ query: '' }));
         }
         return;
       }
@@ -1484,7 +1504,8 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         );
       }
 
-      // tools/call: route through Yoga's pipeline via onRequestParse -> execute -> onResultProcess
+      // tools/call: parsed and validated here, then flows through Yoga's normal pipeline
+      // (onRequestParse -> onExecute -> onResultProcess) without recursive requestHandler call
       if (body.method === 'tools/call') {
         if (
           body.id !== null &&
@@ -1665,40 +1686,16 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           }
         }
 
-        // Route through Yoga's handle pipeline directly (parseRequest -> execute -> processResult)
-        // This bypasses useUnhandledRoute, keeping the original /mcp URL for monitoring/tracing
-        const mcpExecRequest = new Request(request.url, {
-          method: 'POST',
-          headers: request.headers,
-          body: bodyText,
-        });
-
-        mcpToolCalls.set(mcpExecRequest, {
+        // Store context for onRequestParse and onResultProcess, then let Yoga
+        // handle the request through its normal pipeline (no recursive requestHandler call).
+        mcpToolCalls.set(request, {
           jsonrpcId: body.id,
           toolName: callParams.name,
           args,
           tool,
           headers: forwardedHeaders,
         });
-
-        try {
-          const response = await requestHandler(mcpExecRequest, serverContext);
-          return endResponse(response);
-        } catch (execError) {
-          logger.error(
-            `tools/call execution failed for tool "${callParams.name}":`,
-            execError instanceof Error ? execError.message : execError,
-          );
-          return endResponse(
-            mcpErrorResponse(
-              body.id,
-              execError instanceof Error
-                ? execError.message
-                : String(execError),
-              fetchAPI,
-            ),
-          );
-        }
+        return;
       }
 
       // All other MCP methods (initialize, tools/list, etc.)
