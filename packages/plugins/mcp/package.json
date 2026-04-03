@@ -58,7 +58,7 @@
     "@langfuse/client": "^5.0.2",
     "@opentelemetry/api": "^1.9.0",
     "graphql": "^16.13.2",
-    "graphql-yoga": "5.20.0-alpha-20260403171057-74b8645742b9e38cd0ec99c771f84f67d66ad535",
+    "graphql-yoga": "^5.20.0",
     "pkgroll": "2.27.0",
     "sofa-api": "0.18.10"
   },
