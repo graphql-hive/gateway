@@ -95,8 +95,8 @@ export function mergeRequests(
       for (const def of prefixedRequests.document.definitions) {
         if (isOperationDefinition(def)) {
           mergedSelections.push(...def.selectionSet.selections);
-          operationType ||= def.operation;
-          operationName ||= def.name?.value;
+          operationType ??= def.operation;
+          operationName ??= def.name?.value;
           if (def.variableDefinitions) {
             mergedVariableDefinitions.push(...def.variableDefinitions);
           }

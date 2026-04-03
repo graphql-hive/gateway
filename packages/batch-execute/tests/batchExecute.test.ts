@@ -332,4 +332,38 @@ describe('batch execution', () => {
     expect(executorCalls).toEqual(1);
     expect(executorOperationName).toEqual('MyQuery');
   });
+
+  it('inherits context and subgraphName from the first available request', async () => {
+    const ctx = { user: 'alice' };
+    let capturedContext: unknown;
+    let capturedSubgraphName: string | undefined;
+
+    const execWithCapture: Executor = async (req) => {
+      executorCalls += 1;
+      capturedContext = req.context;
+      capturedSubgraphName = req.subgraphName;
+      return normalizedExecutor({
+        schema,
+        document: req.document,
+        variableValues: req.variables as Record<string, unknown>,
+      });
+    };
+
+    const batchExecWithCapture = createBatchingExecutor(execWithCapture);
+
+    await Promise.all([
+      batchExecWithCapture({
+        document: parse('{ field1 }'),
+        context: ctx,
+        subgraphName: 'mySubgraph',
+      }),
+      batchExecWithCapture({
+        document: parse('{ field2 }'),
+      }),
+    ]);
+
+    expect(executorCalls).toEqual(1);
+    expect(capturedContext).toBe(ctx);
+    expect(capturedSubgraphName).toEqual('mySubgraph');
+  });
 });
