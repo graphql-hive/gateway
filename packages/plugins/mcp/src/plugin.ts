@@ -49,19 +49,26 @@ interface MCPToolCallContext {
   headers: Record<string, string>;
 }
 
-/** Defines how a tool's GraphQL operation is sourced, either inline or by reference to a named operation. */
-export interface MCPToolSource {
-  /** Source type: 'inline' for a query string, 'graphql' for a named operation reference */
-  type: string;
-  /** The GraphQL operation source (required when type is 'inline') */
-  query?: string;
-  /** Name of the operation to resolve (required when type is 'graphql') */
-  operationName?: string;
-  /** Whether the operation is a query or mutation (required when type is 'graphql') */
-  operationType?: string;
+/** Inline source: the GraphQL query is provided directly as a string. */
+type InlineMCPToolSource = {
+  type: 'inline';
+  /** The GraphQL operation source */
+  query: string;
+};
+
+/** Reference source: resolves a named operation from operationsPath or a specific file. */
+type GraphQLMCPToolSource = {
+  type: 'graphql';
+  /** Name of the operation to resolve */
+  operationName: string;
+  /** Whether the operation is a query or mutation */
+  operationType: 'query' | 'mutation';
   /** Optional path to a .graphql file containing the operation (overrides operationsPath) */
   file?: string;
-}
+};
+
+/** Defines how a tool's GraphQL operation is sourced, either inline or by reference to a named operation. */
+export type MCPToolSource = InlineMCPToolSource | GraphQLMCPToolSource;
 
 /** Behavioral hints for MCP clients about a tool's characteristics. */
 export interface MCPToolAnnotations {
@@ -623,7 +630,7 @@ export function resolveToolConfigs(
     if (source.type === 'inline') {
       let parsed;
       try {
-        parsed = parseInlineHeaderDirectives(ctx, source.query!);
+        parsed = parseInlineHeaderDirectives(ctx, source.query);
       } catch (err) {
         throw new Error(
           `Tool "${tool.name}": failed to parse inline query: ${err instanceof Error ? err.message : String(err)}`,
@@ -648,8 +655,8 @@ export function resolveToolConfigs(
       }
       const op = resolveOperation(
         opsPool,
-        source.operationName!,
-        source.operationType as 'query' | 'mutation',
+        source.operationName,
+        source.operationType,
       );
       if (!op) {
         throw new Error(
