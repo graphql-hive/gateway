@@ -59,6 +59,7 @@
     "@apollo/server-gateway-interface": "^2.0.0",
     "@apollo/subgraph": "^2.13.3",
     "@graphql-hive/federation-gateway-audit": "0.0.2",
+    "@graphql-yoga/plugin-defer-stream": "^3.20.0",
     "@types/lodash": "4.17.24",
     "change-case": "^5.4.4",
     "graphql": "^16.12.0",

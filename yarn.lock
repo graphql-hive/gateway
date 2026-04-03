@@ -5705,6 +5705,7 @@ __metadata:
     "@graphql-tools/stitch": "workspace:^"
     "@graphql-tools/utils": "npm:^11.0.0"
     "@graphql-tools/wrap": "workspace:^"
+    "@graphql-yoga/plugin-defer-stream": "npm:^3.20.0"
     "@graphql-yoga/typed-event-target": "npm:^3.0.2"
     "@types/lodash": "npm:4.17.24"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -6120,6 +6121,18 @@ __metadata:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.18.1
   checksum: 10c0/4c9ae8dcdd07a4ec9d29aff3aacefc70276f94d0e983f089f9f813ebd92f65d6794cc7dbd8c29c6b6d3d72db343aa7a5c17a2f3aa42cd2d7152e6eedd5f07d9c
+  languageName: node
+  linkType: hard
+
+"@graphql-yoga/plugin-defer-stream@npm:^3.20.0":
+  version: 3.20.0
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.20.0"
+  dependencies:
+    "@graphql-tools/utils": "npm:^10.11.0"
+  peerDependencies:
+    graphql: ^15.2.0 || ^16.0.0
+    graphql-yoga: ^5.20.0
+  checksum: 10c0/cee5b1e9488b28e511e21a0bb099310b792cee8910b1c8d2c31f5e8d79693f0615419c7aa886d5e3c37b39d371d7fabfdbec423f70c97f11214785a5b3f15102
   languageName: node
   linkType: hard
 
