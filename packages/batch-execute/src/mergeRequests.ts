@@ -1,18 +1,17 @@
 // adapted from https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
 
-import {
-  ExecutionRequest,
-  getOperationASTFromRequest,
-} from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import {
   DefinitionNode,
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
+  GraphQLResolveInfo,
   InlineFragmentNode,
   Kind,
   OperationDefinitionNode,
+  OperationTypeNode,
   SelectionNode,
   VariableDefinitionNode,
   VariableNode,
@@ -61,24 +60,43 @@ export function mergeRequests(
     request: ExecutionRequest,
   ) => Record<string, any>,
 ): ExecutionRequest {
-  if (requests.length === 1) {
-    return requests[0]!;
+  const firstRequest = requests[0]!;
+  if (!firstRequest) {
+    throw new Error('At least one request is required');
   }
-  const subgraphName = requests[0]!.subgraphName;
+  const requestCount = requests.length;
+  if (requestCount === 1) {
+    return firstRequest;
+  }
   const mergedVariables: Record<string, any> = Object.create(null);
   const mergedVariableDefinitions: Array<VariableDefinitionNode> = [];
   const mergedSelections: Array<SelectionNode> = [];
   const mergedFragmentDefinitions: Array<FragmentDefinitionNode> = [];
   let mergedExtensions: Record<string, any> = Object.create(null);
+  let subgraphName: string | undefined;
+  let operationName: string | undefined;
+  let operationType: OperationTypeNode | undefined;
+  let context;
+  let info: GraphQLResolveInfo | undefined;
+  let rootValue;
 
-  for (let index = 0; index < requests.length; index++) {
+  for (let index = 0; index < requestCount; index++) {
     const request = requests[index];
     if (request) {
+      subgraphName ||= request.subgraphName;
+      operationName ||= request.operationName;
+      operationType ||= request.operationType;
+      context ||= request.context;
+      info ||= request.info;
+      rootValue ||= request.rootValue;
+
       const prefixedRequests = prefixRequest(createPrefix(index), request);
 
       for (const def of prefixedRequests.document.definitions) {
         if (isOperationDefinition(def)) {
           mergedSelections.push(...def.selectionSet.selections);
+          operationType ||= def.operation;
+          operationName ||= def.name?.value;
           if (def.variableDefinitions) {
             mergedVariableDefinitions.push(...def.variableDefinitions);
           }
@@ -92,13 +110,13 @@ export function mergeRequests(
     }
   }
 
-  const firstRequest = requests[0];
-  if (!firstRequest) {
-    throw new Error('At least one request is required');
+  // If no operationName is found, then inherit the parent operationName from the operation itself, if it has a name.
+  if (operationName == null) {
+    operationName = info?.operation?.name?.value;
   }
-  const operationType =
-    firstRequest.operationType ??
-    getOperationASTFromRequest(firstRequest).operation;
+
+  operationType ||= 'query' as OperationTypeNode;
+
   const mergedOperationDefinition: OperationDefinitionNode = {
     kind: Kind.OPERATION_DEFINITION,
     operation: operationType,
@@ -107,15 +125,13 @@ export function mergeRequests(
       kind: Kind.SELECTION_SET,
       selections: mergedSelections,
     },
+    name: operationName
+      ? {
+          kind: Kind.NAME,
+          value: operationName,
+        }
+      : undefined,
   };
-  const operationName =
-    firstRequest.operationName ?? firstRequest.info?.operation?.name?.value;
-  if (operationName) {
-    (mergedOperationDefinition as any).name = {
-      kind: Kind.NAME,
-      value: operationName,
-    };
-  }
 
   return {
     subgraphName,
@@ -125,10 +141,11 @@ export function mergeRequests(
     },
     variables: mergedVariables,
     extensions: mergedExtensions,
-    context: firstRequest.context,
-    info: firstRequest.info,
+    context,
+    info,
     operationType,
-    rootValue: firstRequest.rootValue,
+    rootValue,
+    operationName,
   };
 }
 
