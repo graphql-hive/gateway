@@ -215,7 +215,7 @@ const myProvider: DescriptionProvider = {
 };
 
 useMCP(ctx, {
-  ...yamlConfig,
+  ...yamlConfig, // note: yaml loading logic not shown here for demonstration purposes
   providers: { ...yamlConfig.providers, custom: myProvider },
 });
 ```
