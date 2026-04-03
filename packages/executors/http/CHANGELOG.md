@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 3.2.1
+### Patch Changes
+
+
+
+- [`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6) Thanks [@ardatan](https://github.com/ardatan)! - Do not recursively return HTTP extensions
+
 ## 3.2.0
 ### Minor Changes
 
