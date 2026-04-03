@@ -499,4 +499,58 @@ describe('buildHTTPExecutor', () => {
 
     expect(hasAborted).toBe(true);
   });
+  it('exposes HTTP details in extensions when exposeHTTPDetailsInExtensions is true', async () => {
+    await using executor = buildHTTPExecutor({
+      exposeHTTPDetailsInExtensions: true,
+      fetch() {
+        return new Response(JSON.stringify({ data: { hello: 'world' } }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Custom-Header': 'CustomValue',
+          },
+          status: 201,
+          statusText: 'Created',
+        });
+      },
+    });
+
+    const query = parse(/* GraphQL */ `
+      {
+        hello
+      }
+    `);
+
+    const res = await executor({
+      document: query,
+    });
+
+    const extensions = {
+      request: {
+        method: 'POST',
+        body: JSON.stringify({
+          query: `{hello}`,
+        }),
+      },
+      response: {
+        status: 201,
+        statusText: 'Created',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          'X-Custom-Header': 'CustomValue',
+          'content-length': expect.any(String),
+        }),
+        body: {
+          data: { hello: 'world' },
+          get extensions() {
+            return extensions;
+          },
+        },
+      },
+    };
+
+    expect(res).toEqual({
+      data: { hello: 'world' },
+      extensions,
+    });
+  });
 });
