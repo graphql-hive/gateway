@@ -2,14 +2,38 @@
 '@graphql-tools/executor-http': minor
 ---
 
-Add `onHTTPResponse` hook to get `Response` returned by `fetch`;
+Add `exposeHTTPDetailsInExtensions` flag to get `Response` details in the result extensions.
 
 ```ts
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 
 const executor = buildHTTPExecutor({
-  onHTTPResponse(response) {
-    console.log('Received response with status:', response.status);
-  },
+  exposeHTTPDetailsInExtensions: true,
 });
 ```
+
+Then in the result;
+
+```ts
+{
+    "data": {
+        "hello": "world"
+    },
+    "extensions": {
+        "request": {
+            "url": "http://localhost:4000/graphql",
+            "method": "POST",
+            "headers": {
+                "content-type": "application/json"
+            },
+            "body": "{\"query\":\"{ hello }\"}"
+        },
+        "response": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+                "content-type": "application/json"
+            }
+        }
+    }
+}

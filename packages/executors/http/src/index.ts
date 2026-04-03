@@ -142,7 +142,14 @@ export interface HTTPExecutorOptions {
    */
   deduplicateInflightRequests?: boolean;
 
-  onHTTPResponse?(response: Response): void;
+  /**
+   * This option allows you to include the response detauls in the result extensions when a request fails.
+   * This can be useful for debugging and error handling purposes, as it provides additional context about the response that led to the error.
+   * However, be cautious when enabling this option, as response headers may contain sensitive information.
+   *
+   * @default false
+   */
+  exposeHTTPDetailsInExtensions?: boolean;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -374,7 +381,7 @@ export function buildHTTPExecutor(
         return runInflightRequest();
       }
       function runInflightRequest() {
-        return handleMaybePromise(
+        const result$ = handleMaybePromise(
           () =>
             fetchFn(
               inflightRequestOptions.url,
@@ -394,20 +401,27 @@ export function buildHTTPExecutor(
               ExecutionResult
             >(
               () => {
-                options?.onHTTPResponse?.(fetchResult);
                 upstreamErrorExtensions.response ||= {};
                 upstreamErrorExtensions.response.status = fetchResult.status;
                 upstreamErrorExtensions.response.statusText =
                   fetchResult.statusText;
-                Object.defineProperty(
-                  upstreamErrorExtensions.response,
-                  'headers',
-                  {
-                    get() {
-                      return Object.fromEntries(fetchResult.headers.entries());
+                if (options?.exposeHTTPDetailsInExtensions) {
+                  upstreamErrorExtensions.response.headers = Object.fromEntries(
+                    fetchResult.headers.entries(),
+                  );
+                } else {
+                  Object.defineProperty(
+                    upstreamErrorExtensions.response,
+                    'headers',
+                    {
+                      get() {
+                        return Object.fromEntries(
+                          fetchResult.headers.entries(),
+                        );
+                      },
                     },
-                  },
-                );
+                  );
+                }
 
                 // Retry should respect HTTP Errors
                 if (
@@ -508,6 +522,20 @@ export function buildHTTPExecutor(
             ),
           handleError,
         );
+        if (options?.exposeHTTPDetailsInExtensions) {
+          return handleMaybePromise(
+            () => result$,
+            (result) => {
+              result.extensions ||= {};
+              result.extensions = Object.assign(
+                result.extensions,
+                upstreamErrorExtensions,
+              );
+              return result;
+            },
+          );
+        }
+        return result$;
       }
       if (typeof inflightRequestOptions.body === 'object') {
         return runInflightRequest();
