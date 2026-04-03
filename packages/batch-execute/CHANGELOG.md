@@ -1,5 +1,13 @@
 # @graphql-tools/batch-execute
 
+## 10.0.8
+### Patch Changes
+
+
+
+- [#2210](https://github.com/graphql-hive/gateway/pull/2210) [`d2bf6af`](https://github.com/graphql-hive/gateway/commit/d2bf6af899b21e5faee5f8436f39e50fd594ab7a) Thanks [@ardatan](https://github.com/ardatan)! - Inherit `operationName`, `operationType`, `context`, `info`, and `subgraphName` from any available request in the batch.
+  If `operationName` is not defined, it will be inherited from the operation itself, if it has a name.
+
 ## 10.0.7
 ### Patch Changes
 
