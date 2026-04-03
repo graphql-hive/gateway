@@ -345,7 +345,7 @@ describe('batch execution', () => {
       return normalizedExecutor({
         schema,
         document: req.document,
-        variableValues: req.variables as Record<string, unknown>,
+        variableValues: req.variables,
       });
     };
 
