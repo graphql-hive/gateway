@@ -141,6 +141,8 @@ export interface HTTPExecutorOptions {
    * @default true
    */
   deduplicateInflightRequests?: boolean;
+
+  onHTTPResponse?(response: Response): void;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -392,6 +394,7 @@ export function buildHTTPExecutor(
               ExecutionResult
             >(
               () => {
+                options?.onHTTPResponse?.(fetchResult);
                 upstreamErrorExtensions.response ||= {};
                 upstreamErrorExtensions.response.status = fetchResult.status;
                 upstreamErrorExtensions.response.statusText =
