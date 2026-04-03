@@ -967,8 +967,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
   function startHiveInit() {
     if (!hiveInitFailed && hiveInitPromise) return;
+    if (!hiveLoader) return;
     hiveInitFailed = false;
-    hiveInitPromise = hiveLoader!
+    hiveInitPromise = hiveLoader
       .fetchDocuments()
       .then((docs) => {
         if (disposed) return;
@@ -980,7 +981,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         );
         rebuildToolsWithHiveSource(docsToSource(docs));
 
-        hiveLoader!.startPolling((newDocs) => {
+        hiveLoader?.startPolling((newDocs) => {
           const newToolCount = newDocs.filter((d) =>
             d.body.includes('@mcpTool'),
           ).length;
