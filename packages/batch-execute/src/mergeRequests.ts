@@ -83,12 +83,12 @@ export function mergeRequests(
   for (let index = 0; index < requestCount; index++) {
     const request = requests[index];
     if (request) {
-      subgraphName ||= request.subgraphName;
-      operationName ||= request.operationName;
-      operationType ||= request.operationType;
-      context ||= request.context;
-      info ||= request.info;
-      rootValue ||= request.rootValue;
+      subgraphName ??= request.subgraphName;
+      operationName ??= request.operationName;
+      operationType ??= request.operationType;
+      context ??= request.context;
+      info ??= request.info;
+      rootValue ??= request.rootValue;
 
       const prefixedRequests = prefixRequest(createPrefix(index), request);
 
