@@ -1,7 +1,7 @@
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI, usingHiveRouterRuntime } from './internal/env/src/index';
+import { isCI } from './internal/env/src/index';
 import { isNotPlatform } from './internal/env/src/node';
 
 // By default, Vite bypasses node_packages to native Node; meaning, imports to
@@ -51,11 +51,6 @@ export default defineConfig({
                   '!**/e2e/distributed-subscriptions-webhooks',
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
-                ]
-              : []),
-            ...(usingHiveRouterRuntime()
-              ? [
-                  // TODO: fix these tests with router runtime
                 ]
               : []),
           ],
