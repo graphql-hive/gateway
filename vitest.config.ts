@@ -56,23 +56,6 @@ export default defineConfig({
             ...(usingHiveRouterRuntime()
               ? [
                   // TODO: fix these tests with router runtime
-                  '!**/e2e/js-config', // has additional resolvers
-                  '!**/e2e/auto-type-merging', // has custom type merging (using @merge and @resolveTo)
-                  '!**/e2e/distributed-subscriptions-webhooks', // has additional typedefs (using @resolveTo)
-                  '!**/e2e/edfs-gateway-defs', // has additional typedefs (using @resolveTo)
-                  '!**/e2e/federation-batching-plan', // uses stitching plan
-                  '!**/e2e/extra-fields', // has additional typedefs
-                  '!**/e2e/federation-mixed', // has transforms
-                  '!**/e2e/hoist-and-prefix-transform', // has transforms
-                  '!**/e2e/interface-additional-resolvers', // has additional resolvers
-                  '!**/e2e/naming-convention-additional-typedefs', // has additional typedefs and transforms
-                  '!**/e2e/openapi-additional-resolvers', // has additional resolvers
-                  '!**/e2e/programmatic-batching', // has additional resolvers and is specific to stitching
-                  '!**/e2e/type-merging-batching', // has custom type merging (using @merge and @resolveTo)
-                  '!**/e2e/subscriptions-data-other-subgraph', // cannot "stitch" together from other subgraphs
-                  '!**/e2e/federation-subscriptions-passthrough', // cannot "stitch" together from other subgraphs
-                  '!**/e2e/openapi-javascript-wiki', // has additional resolvers
-                  '!**/e2e/cloudflare-workers', // runs gateway in proxy mode
                 ]
               : []),
           ],

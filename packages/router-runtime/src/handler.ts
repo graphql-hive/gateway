@@ -33,6 +33,13 @@ import {
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
+  // Fall back to the stitching handler when additional resolvers or type
+  // definitions are present, since the Rust QP can only plan queries for
+  // fields that are part of the federation supergraph SDL.
+  if (opts.additionalResolvers != null || opts.additionalTypeDefs != null) {
+    return handleFederationSupergraph(opts);
+  }
+
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const getSubschema = getLazyFactory(
     () => getHandledFederationSupergraph().getSubschema,

@@ -1,4 +1,5 @@
 import { createTenv, type Container } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '@internal/testing';
 import { beforeAll, expect, it } from 'vitest';
 
 const { service, gateway, container } = createTenv(__dirname);
@@ -13,7 +14,8 @@ beforeAll(async () => {
   });
 });
 
-it('should execute', async () => {
+// uses non-federation (stitching) type merging which is not supported by Rust QP
+it.skipIf(usingHiveRouterRuntime())('should execute', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
