@@ -27,7 +27,6 @@ const mcpOptions = {
   providers: {
     langfuse: {},
   },
-  // disableGraphQLEndpoint: true,
   tools: [
     {
       name: 'get_weather',

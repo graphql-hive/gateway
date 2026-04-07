@@ -139,14 +139,6 @@ describe('MCP E2E', () => {
     });
   }
 
-  function graphqlRequest(query: string) {
-    return gateway.fetch('http://localhost/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-  }
-
   it('initialize returns protocol version and capabilities', async () => {
     const res = await mcpRequest('initialize');
     expect(res.status).toBe(200);
@@ -163,8 +155,6 @@ describe('MCP E2E', () => {
   });
 
   it('tools/list returns tools with name, description, inputSchema, and outputSchema', async () => {
-    await graphqlRequest('{ __typename }');
-
     const res = await mcpRequest('tools/list');
     const body = await res.json();
     const tools = body.result.tools;
@@ -197,8 +187,6 @@ describe('MCP E2E', () => {
   });
 
   it('tools/list auto-descriptions come from gql schema', async () => {
-    await graphqlRequest('{ __typename }');
-
     const res = await mcpRequest('tools/list');
     const body = await res.json();
     const tools = body.result.tools;
@@ -212,8 +200,6 @@ describe('MCP E2E', () => {
   });
 
   it('tools/call executes a tool and returns gql data', async () => {
-    await graphqlRequest('{ __typename }');
-
     const res = await mcpRequest('tools/call', {
       name: 'get_weather',
       arguments: { location: 'London' },
@@ -229,8 +215,6 @@ describe('MCP E2E', () => {
   });
 
   it('tools/call passes arguments correctly', async () => {
-    await graphqlRequest('{ __typename }');
-
     const res = await mcpRequest('tools/call', {
       name: 'search_cities',
       arguments: { query: 'New York' },
@@ -245,8 +229,6 @@ describe('MCP E2E', () => {
   });
 
   it('tools/call returns protocol error for unknown tool', async () => {
-    await graphqlRequest('{ __typename }');
-
     const res = await mcpRequest('tools/call', {
       name: 'nonexistent_tool',
       arguments: {},
@@ -368,12 +350,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await providerGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await providerGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -396,87 +372,6 @@ describe('MCP E2E', () => {
     } finally {
       await providerGateway[Symbol.asyncDispose]?.();
     }
-  });
-
-  describe('disableGraphQL', () => {
-    const standaloneGateway = createGatewayRuntime({
-      logging: false,
-      proxy: {
-        endpoint: 'http://upstream:4000/graphql',
-      },
-      plugins: (ctx) => [
-        useCustomFetch(
-          // @ts-expect-error MeshFetch type mismatch
-          (url: string, init: RequestInit) => upstream.fetch(url, init),
-        ),
-        useMCP(ctx, {
-          name: 'standalone-gateway',
-          disableGraphQLEndpoint: true,
-          tools: [
-            {
-              name: 'get_weather',
-              source: {
-                type: 'inline',
-                query: `query GetWeather($location: String!) {
-                  weather(location: $location) { temperature conditions humidity }
-                }`,
-              },
-              tool: { description: 'Get weather' },
-            },
-          ],
-        }),
-      ],
-    });
-
-    afterAll(() => standaloneGateway[Symbol.asyncDispose]?.());
-
-    it('returns 404 for /graphql', async () => {
-      const res = await standaloneGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-      expect(res.status).toBe(404);
-    });
-
-    it('MCP tools/list still works', async () => {
-      const res = await standaloneGateway.fetch('http://localhost/mcp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'tools/list',
-          params: {},
-        }),
-      });
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.result.tools).toHaveLength(1);
-      expect(body.result.tools[0].name).toBe('get_weather');
-    });
-
-    it('MCP tools/call executes GraphQL internally', async () => {
-      const res = await standaloneGateway.fetch('http://localhost/mcp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 2,
-          method: 'tools/call',
-          params: { name: 'get_weather', arguments: { location: 'London' } },
-        }),
-      });
-      const body = await res.json();
-
-      expect(body.result.isError).toBe(false);
-      expect(body.result.structuredContent.weather).toMatchObject({
-        temperature: 12.5,
-        conditions: 'Cloudy',
-        humidity: 65,
-      });
-    });
   });
 
   it('forwards headers from MCP request to internal dispatch', async () => {
@@ -512,13 +407,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      // Trigger schema load
-      await headerGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       capturedRequest = undefined;
 
       await headerGateway.fetch('http://localhost/mcp', {
@@ -551,8 +439,6 @@ describe('MCP E2E', () => {
   });
 
   it('argument aliasing renames input and de-aliases on call', async () => {
-    await graphqlRequest('{ __typename }');
-
     const aliasGateway = createGatewayRuntime({
       logging: false,
       proxy: { endpoint: 'http://upstream:4000/graphql' },
@@ -587,12 +473,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await aliasGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/list should show aliased name
       const listRes = await aliasGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -678,12 +558,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await fieldGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await fieldGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -753,12 +627,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await comboGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/list: alias applied + provider description on aliased field
       const listRes = await comboGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -830,12 +698,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await pathGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/call should return just the cities array, not { cities: [...] }
       const res = await pathGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -914,12 +776,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await labelGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // With promptLabel
       const res = await labelGateway.fetch(
         'http://localhost/mcp?promptLabel=staging',
@@ -1011,13 +867,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      // Load schema
-      await hooksGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/list should omit outputSchema for tools with hooks
       const listRes = await hooksGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -1094,12 +943,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await directiveGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const listRes = await directiveGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1169,13 +1012,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      // Trigger schema load
-      await pathGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       capturedUrls.length = 0;
 
       const res = await pathGateway.fetch('http://localhost/mcp', {
@@ -1265,13 +1101,6 @@ describe('MCP E2E', () => {
     });
 
     it('resources/list returns configured resources', async () => {
-      // Trigger schema load
-      await resourceGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await resourceMcpRequest('resources/list');
       const body = await res.json();
       expect(body.result.resources).toHaveLength(3);
@@ -1455,12 +1284,6 @@ describe('MCP E2E', () => {
     }
 
     it('registers @mcpTool operations from file and resolves @mcpDescription', async () => {
-      await fileGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await fileRequest('tools/list');
       const body = await res.json();
       const tools = body.result.tools;
@@ -1472,12 +1295,6 @@ describe('MCP E2E', () => {
     });
 
     it('@mcpDescription on variable resolves description from provider (langfuse mock)', async () => {
-      await fileGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await fileRequest('tools/list');
       const body = await res.json();
       const tool = body.result.tools.find(
@@ -1492,12 +1309,6 @@ describe('MCP E2E', () => {
     });
 
     it('@mcpDescription on selection field resolves description from provider', async () => {
-      await fileGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await fileRequest('tools/list');
       const body = await res.json();
       const tool = body.result.tools.find(
@@ -1514,12 +1325,6 @@ describe('MCP E2E', () => {
     });
 
     it('tools/call works with @mcpDescription directives stripped', async () => {
-      await fileGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await fileRequest('tools/call', {
         name: 'weather_field_provider',
         arguments: { location: 'London', days: 3 },
@@ -1580,12 +1385,6 @@ describe('MCP E2E', () => {
     }
 
     it('@mcpDescription on variable populates input field description via provider', async () => {
-      await descGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await descRequest('tools/list');
       const body = await res.json();
       const tool = body.result.tools.find((t: any) => t.name === 'get_weather');
@@ -1598,12 +1397,6 @@ describe('MCP E2E', () => {
     });
 
     it('@mcpDescription on selection field populates output field description via provider', async () => {
-      await descGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await descRequest('tools/list');
       const body = await res.json();
       const tool = body.result.tools.find((t: any) => t.name === 'get_weather');
@@ -1617,12 +1410,6 @@ describe('MCP E2E', () => {
     });
 
     it('@mcpDescription directives are stripped from the executed query', async () => {
-      await descGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       const res = await descRequest('tools/call', {
         name: 'get_weather',
         arguments: { location: 'London' },
@@ -1669,13 +1456,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      // Bootstrap schema
-      await customGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // MCP request custom plugin should detect via pathname
       await customGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -1737,13 +1517,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      // Bootstrap schema
-      await pqsGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       capturedUrls.length = 0;
 
       // MCP tools/call internal dispatch should keep /mcp URL
@@ -1903,12 +1676,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await headerGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/list should not expose companyId
       const listRes = await headerGateway.fetch('http://localhost/mcp', {
         method: 'POST',
@@ -2017,12 +1784,6 @@ describe('MCP E2E', () => {
     });
 
     try {
-      await inlineGateway.fetch('http://localhost/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ __typename }' }),
-      });
-
       // tools/list should hide companyId
       const listRes = await inlineGateway.fetch('http://localhost/mcp', {
         method: 'POST',

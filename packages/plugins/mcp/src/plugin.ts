@@ -460,8 +460,6 @@ export interface MCPConfig {
   protocolVersion?: string;
   /** HTTP path for the MCP endpoint (default: "/mcp") */
   path?: string;
-  /** HTTP path for the underlying GraphQL endpoint (default: "/graphql") */
-  graphqlPath?: string;
   /** Path to a .graphql file or directory of .graphql files containing operations */
   operationsPath?: string;
   /** Raw GraphQL operations source string (alternative to operationsPath) */
@@ -490,8 +488,6 @@ export interface MCPConfig {
   };
   /** Suppress outputSchema from all tools in tools/list responses */
   suppressOutputSchema?: boolean;
-  /** Block direct access to the GraphQL endpoint (only MCP path is accessible) */
-  disableGraphQLEndpoint?: boolean;
   /** Hive App Deployment as an operation source. Fetches persisted documents; those with @mcpTool directives are auto-registered as tools, and all documents are available as named operations for tools with source.type: 'graphql'. */
   hive?: MCPHiveConfig;
 }
@@ -894,7 +890,6 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     );
   }
   const mcpPath = config.path || '/mcp';
-  const graphqlPath = config.graphqlPath || '/graphql';
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
 
@@ -962,11 +957,6 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   let hiveInitFailed = false;
   let hiveInitFailedAt = 0;
   const HIVE_RETRY_COOLDOWN_MS = 30_000;
-  let bootstrapFailedAt = 0;
-  let bootstrapErrorMsg: string | undefined;
-  let bootstrapPromise: Promise<void> | null = null;
-  const BOOTSTRAP_RETRY_COOLDOWN_MS = 10_000;
-  const internalRequests = new WeakSet<Request>();
 
   function docsToSource(docs: { body: string }[]): string {
     return docs.map((d) => d.body).join('\n');
@@ -1002,7 +992,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       })
       .catch((err) => {
         // Log but don't re-throw: avoids unhandled rejection.
-        // onRequest will retry on next MCP request.
+        // onRequestParse will retry on next MCP request.
         hiveInitFailed = true;
         hiveInitFailedAt = Date.now();
         hiveInitPromise = null;
@@ -1338,15 +1328,16 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         mcpHandlerOptions = newOptions;
       } catch (err) {
         logger.error(
-          `Failed to rebuild tool registry after schema change. ` +
-            `MCP tools will continue using the previous schema.`,
+          registry
+            ? `Failed to rebuild tool registry after schema change. MCP tools will continue using the previous schema.`
+            : `Failed to build initial tool registry. MCP server will not be functional until schema changes again.`,
           err instanceof Error ? err.message : err,
         );
       }
     },
 
     // Extend Yoga's graphqlEndpoint to also accept the MCP path so
-    // tools/call requests flow through the full pipeline without 404.
+    // all requests flow through the full pipeline.
     onYogaInit({ yoga }) {
       const mcp = mcpPath
         .replace(/^\//, '')
@@ -1360,46 +1351,13 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       }
     },
 
-    onRequestParse({ request, url, setRequestParser }) {
-      const ctx = mcpToolCalls.get(request);
-      if (!ctx) {
-        if (url.pathname === mcpPath) {
-          logger.error(
-            'onRequestParse: MCP-path request but WeakMap lookup missed, request object identity may have changed.',
-          );
-          // Provide a parser that yields an empty query so Yoga doesn't
-          // attempt to re-read the already-consumed body. onResultProcess
-          // will not find a WeakMap entry either, so the error surfaces
-          // as a standard GraphQL validation failure.
-          setRequestParser(() => ({ query: '' }));
-        }
-        return;
-      }
-
-      setRequestParser(() => ({
-        query: ctx.tool.query,
-        variables: ctx.args,
-      }));
-    },
-
-    async onRequest({
+    async onRequestParse({
       request,
       url,
+      setRequestParser,
       endResponse,
-      requestHandler,
-      serverContext,
       fetchAPI,
     }) {
-      // Block external GraphQL access when disableGraphQLEndpoint is set
-      if (
-        config.disableGraphQLEndpoint &&
-        url.pathname === graphqlPath &&
-        !internalRequests.has(request)
-      ) {
-        endResponse(new Response(null, { status: 404 }));
-        return;
-      }
-
       if (url.pathname !== mcpPath) {
         return;
       }
@@ -1418,74 +1376,29 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         }
       }
 
-      // Schema bootstrap: one-time dispatch to trigger schema loading
+      // Schema should be ready by the time onRequestParse fires.
+      // If not (e.g. startup race), return 503.
       if (!registry || !schema || !mcpHandlerOptions) {
-        if (Date.now() - bootstrapFailedAt < BOOTSTRAP_RETRY_COOLDOWN_MS) {
-          return endResponse(
-            fetchAPI.Response.json(
-              {
-                jsonrpc: '2.0',
-                id: null,
-                error: {
-                  code: -32000,
-                  message: 'MCP server not ready. Schema loading failed.',
-                },
-              },
-              { status: 503 },
-            ),
-          );
-        }
-        if (!bootstrapPromise) {
-          bootstrapPromise = (async () => {
-            try {
-              const bootstrapReq = new Request(
-                `http://localhost${graphqlPath}`,
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ query: '{ __typename }' }),
-                },
-              );
-              internalRequests.add(bootstrapReq);
-              await requestHandler(bootstrapReq, serverContext);
-            } catch (bootstrapError) {
-              bootstrapFailedAt = Date.now();
-              bootstrapErrorMsg =
-                bootstrapError instanceof Error
-                  ? bootstrapError.message
-                  : String(bootstrapError);
-              logger.error(`Schema bootstrap failed:`, bootstrapErrorMsg);
-            } finally {
-              bootstrapPromise = null;
-            }
-          })();
-        }
-        await bootstrapPromise;
-
-        if (!registry || !schema || !mcpHandlerOptions) {
-          return endResponse(
-            fetchAPI.Response.json(
-              {
-                jsonrpc: '2.0',
-                id: null,
-                error: {
-                  code: -32000,
-                  message: bootstrapErrorMsg
-                    ? `MCP server not ready. Schema loading failed: ${bootstrapErrorMsg}`
-                    : 'MCP server not ready. Schema loading failed.',
-                },
-              },
-              { status: 503 },
-            ),
-          );
-        }
+        const message = schema
+          ? 'MCP server not ready. Tool registry failed to initialize. check server logs.'
+          : 'MCP server not ready. Schema not yet loaded.';
+        logger.warn(`MCP request rejected: ${message}`);
+        return endResponse(
+          fetchAPI.Response.json(
+            {
+              jsonrpc: '2.0',
+              id: null,
+              error: { code: -32000, message },
+            },
+            { status: 503 },
+          ),
+        );
       }
 
       // Parse JSON-RPC body
-      let bodyText: string;
       let body: JsonRpcRequest;
       try {
-        bodyText = await request.text();
+        const bodyText = await request.text();
         const parsed = JSON.parse(bodyText);
         if (
           typeof parsed !== 'object' ||
@@ -1512,8 +1425,8 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         );
       }
 
-      // tools/call: parsed and validated here, then flows through Yoga's normal pipeline
-      // (onRequestParse -> onExecute -> onResultProcess) without recursive requestHandler call
+      // tools/call: validated here, then flows through Yoga's pipeline
+      // (execute -> onResultProcess) via setRequestParser
       if (body.method === 'tools/call') {
         if (
           body.id !== null &&
@@ -1694,8 +1607,8 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           }
         }
 
-        // Store context for onRequestParse and onResultProcess, then let Yoga
-        // handle the request through its normal pipeline (no recursive requestHandler call).
+        // Store context for onResultProcess, then let Yoga continue
+        // through its pipeline (execute -> onResultProcess).
         mcpToolCalls.set(request, {
           jsonrpcId: body.id,
           toolName: callParams.name,
@@ -1703,10 +1616,14 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           tool,
           headers: forwardedHeaders,
         });
+        setRequestParser(() => ({
+          query: tool.query,
+          variables: args,
+        }));
         return;
       }
 
-      // All other MCP methods (initialize, tools/list, etc.)
+      // All other MCP methods (initialize, tools/list, etc.) - short-circuit
       const rawPromptLabel = url.searchParams.get('promptLabel');
       const promptLabel =
         rawPromptLabel &&
@@ -1761,7 +1678,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
       if (result === null) {
         // notifications/initialized: no response
-        endResponse(new Response(null, { status: 204 }));
+        endResponse(new fetchAPI.Response(null, { status: 204 }));
       } else {
         endResponse(fetchAPI.Response.json(result));
       }

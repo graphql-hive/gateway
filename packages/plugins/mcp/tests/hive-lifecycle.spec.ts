@@ -48,21 +48,21 @@ function docsResponse(
 
 const emptyDocs = docsResponse([]);
 
-function callOnRequest(plugin: ReturnType<typeof useMCP>, path = '/mcp') {
+function callOnRequestParse(plugin: ReturnType<typeof useMCP>, path = '/mcp') {
   const endResponse = vi.fn();
-  const requestHandler = vi.fn();
-  const promise = (plugin as any).onRequest({
+  const setRequestParser = vi.fn();
+  const promise = (plugin as any).onRequestParse({
     request: new Request(`http://localhost${path}`, {
       method: 'POST',
       body: '{}',
     }),
     url: new URL(`http://localhost${path}`),
     endResponse,
-    requestHandler,
+    setRequestParser,
     serverContext: {},
-    fetchAPI: { Response },
+    fetchAPI: { Response, Request },
   });
-  return { promise, endResponse, requestHandler };
+  return { promise, endResponse, setRequestParser };
 }
 
 async function waitFor(fn: () => void, { timeout = 1000, interval = 10 } = {}) {
@@ -131,8 +131,8 @@ describe('startHiveInit double-invocation guard', () => {
 
     expect(fetchFn).toHaveBeenCalledTimes(1);
 
-    const { promise } = callOnRequest(plugin);
-    // onRequest should NOT trigger a second init
+    const { promise } = callOnRequestParse(plugin);
+    // onRequestParse should NOT trigger a second init
     expect(fetchFn).toHaveBeenCalledTimes(1);
 
     resolveInit(emptyDocs.resolve);
@@ -141,7 +141,7 @@ describe('startHiveInit double-invocation guard', () => {
   });
 });
 
-describe('onRequest hive init retry', () => {
+describe('onRequestParse hive init retry', () => {
   it('retries hive init when init failed and cooldown has elapsed', async () => {
     const fetchFn = createMockFetch([
       { reject: new Error('Network error') },
@@ -158,7 +158,7 @@ describe('onRequest hive init retry', () => {
     await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1));
 
     // Request during cooldown should NOT retry
-    const { promise: p1 } = callOnRequest(plugin);
+    const { promise: p1 } = callOnRequestParse(plugin);
     await p1;
     expect(fetchFn).toHaveBeenCalledTimes(1);
 
@@ -167,7 +167,7 @@ describe('onRequest hive init retry', () => {
     await Promise.resolve();
 
     // Request after cooldown should retry
-    const { promise: p2 } = callOnRequest(plugin);
+    const { promise: p2 } = callOnRequestParse(plugin);
     await p2;
 
     expect(fetchFn).toHaveBeenCalledTimes(2);
@@ -185,7 +185,7 @@ describe('onRequest hive init retry', () => {
 
     await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1));
 
-    const { promise } = callOnRequest(plugin);
+    const { promise } = callOnRequestParse(plugin);
     await promise;
 
     // No additional fetch — init already completed
@@ -228,7 +228,7 @@ describe('rebuildToolsWithHiveSource error safety', () => {
     (plugin as any).onSchemaChange({ schema: minimalSchema });
 
     // First request should work with valid tools
-    const { promise } = callOnRequest(plugin);
+    const { promise } = callOnRequestParse(plugin);
     await promise;
 
     // Trigger a poll with bad docs — should not crash
@@ -238,7 +238,7 @@ describe('rebuildToolsWithHiveSource error safety', () => {
     await Promise.resolve();
 
     const { promise: promise2, endResponse: endResponse2 } =
-      callOnRequest(plugin);
+      callOnRequestParse(plugin);
     await promise2;
     expect(endResponse2).toHaveBeenCalled();
 
@@ -266,7 +266,7 @@ describe('rebuildToolsWithHiveSource deferred path', () => {
 
     (plugin as any).onSchemaChange({ schema: minimalSchema });
 
-    const { promise, endResponse } = callOnRequest(plugin);
+    const { promise, endResponse } = callOnRequestParse(plugin);
     await promise;
     expect(endResponse).toHaveBeenCalled();
 

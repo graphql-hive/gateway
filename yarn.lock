@@ -4462,7 +4462,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     graphql-sse: "npm:^2.6.0"
     graphql-ws: "npm:^6.0.6"
-    graphql-yoga: "npm:^5.20.0"
+    graphql-yoga: "npm:^5.21.0"
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.27.0"
     react: "npm:^19.2.0"
@@ -4695,7 +4695,7 @@ __metadata:
     "@langfuse/client": "npm:^5.0.2"
     "@opentelemetry/api": "npm:^1.9.0"
     graphql: "npm:^16.13.2"
-    graphql-yoga: "npm:^5.20.0"
+    graphql-yoga: "npm:^5.21.0"
     pkgroll: "npm:2.27.0"
     sofa-api: "npm:0.18.10"
     tslib: "npm:^2.8.1"
@@ -5714,7 +5714,7 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     change-case: "npm:^5.4.4"
     graphql: "npm:^16.12.0"
-    graphql-yoga: "npm:^5.20.0"
+    graphql-yoga: "npm:^5.21.0"
     pkgroll: "npm:2.27.0"
     tslib: "npm:^2.8.1"
   peerDependencies:
@@ -16871,9 +16871,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:^5.20.0":
-  version: 5.20.0
-  resolution: "graphql-yoga@npm:5.20.0"
+"graphql-yoga@npm:^5.21.0":
+  version: 5.21.0
+  resolution: "graphql-yoga@npm:5.21.0"
   dependencies:
     "@envelop/core": "npm:^5.5.1"
     "@envelop/instrumentation": "npm:^1.0.0"
@@ -16889,7 +16889,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/027b5c540092268719536e293981920f498ff8ff752d5ffe0de80e5212da4c554962a8522a5650db3fcc54b93fc49b9b86f58158b916c44053a2c2e0f9ce5817
+  checksum: 10c0/15e344ffd77e29e1f09efcaf4d6cb4d0bf92cb4a2f3e81d69c009c55103a03cd7eb1c24fdbafc31d67204b5e6669e2c3e5afef34ccea13d012a1f2581184eb44
   languageName: node
   linkType: hard
 

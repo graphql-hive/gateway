@@ -40,6 +40,6 @@ describe('MCP Integration', () => {
   it('plugin exports correctly', () => {
     expect(mcpPlugin).toBeDefined();
     expect(mcpPlugin.onSchemaChange).toBeDefined();
-    expect(mcpPlugin.onRequest).toBeDefined();
+    expect(mcpPlugin.onRequestParse).toBeDefined();
   });
 });

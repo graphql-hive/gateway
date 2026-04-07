@@ -185,7 +185,6 @@ const mcpOptions: MCPConfig = {
   protocolVersion: '2025-11-25', // MCP protocol version (default: '2025-11-25')
 
   path: '/mcp', // MCP JSON-RPC endpoint (default: '/mcp')
-  // graphqlPath: '/graphql',      // GraphQL endpoint for internal dispatch (default: '/graphql')
 
   // Path to .graphql file(s) with named operations (and optional @mcpTool / @mcpDescription directives).
   // Can be a single file or a directory (all .graphql files are loaded).
@@ -219,7 +218,6 @@ const mcpOptions: MCPConfig = {
   },
 
   suppressOutputSchema: false, // Suppress outputSchema for all tools in tools/list
-  disableGraphQLEndpoint: false, // Block external /graphql access (MCP-only mode)
 
   // Each tool maps to a GraphQL operation. The MCP input schema is auto-derived
   // from the operation's variables, and the output schema from its selection set.
