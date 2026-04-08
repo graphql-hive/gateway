@@ -1,5 +1,12 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.8.7
+### Patch Changes
+
+
+
+- [#2225](https://github.com/graphql-hive/gateway/pull/2225) [`3645fe7`](https://github.com/graphql-hive/gateway/commit/3645fe7930fc026c33aea6d70aaf66cfd0f61d38) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Inject the @resolveTo directive definition when not present in the composed supergraph SDL
+
 ## 1.8.6
 ### Patch Changes
 
