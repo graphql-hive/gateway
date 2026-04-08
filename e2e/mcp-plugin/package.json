@@ -2,6 +2,7 @@
   "name": "@e2e/mcp-plugin",
   "private": true,
   "dependencies": {
+    "@graphql-hive/plugin-mcp": "workspace:^",
     "@graphql-mesh/compose-cli": "^1.5.25",
     "graphql": "^16.13.2",
     "graphql-yoga": "^5.19.0",

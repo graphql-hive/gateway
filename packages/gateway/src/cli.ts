@@ -17,7 +17,6 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
-import type { MCPConfig } from '@graphql-hive/plugin-mcp';
 import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
@@ -200,12 +199,6 @@ export interface GatewayCLIBuiltinPluginConfig {
    * @default false
    */
   blockFieldSuggestions?: boolean;
-  /**
-   * Configure MCP (Model Context Protocol) server
-   *
-   * Exposes GraphQL operations as MCP tools for AI agents
-   */
-  mcp?: MCPConfig;
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {

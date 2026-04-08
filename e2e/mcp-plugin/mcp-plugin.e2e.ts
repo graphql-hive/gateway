@@ -4,6 +4,26 @@ import { describe, expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
+async function startGateway() {
+  const weatherService = await service('weather');
+  return gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [weatherService],
+    },
+    runner: {
+      docker: {
+        volumes: [
+          {
+            host: './operations',
+            container: '/gateway/operations',
+          },
+        ],
+      },
+    },
+  });
+}
+
 async function mcpRequest(
   port: number,
   method: string,
@@ -26,12 +46,7 @@ async function mcpRequest(
 }
 
 it('initialize returns protocol version and capabilities', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'initialize');
@@ -57,12 +72,7 @@ it('initialize returns protocol version and capabilities', async () => {
 });
 
 it('tools/list returns all configured tools', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -83,12 +93,7 @@ it('tools/list returns all configured tools', async () => {
 });
 
 it('tools/list shows correct inputSchema and outputSchema', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -104,12 +109,7 @@ it('tools/list shows correct inputSchema and outputSchema', async () => {
 });
 
 it('tools/call executes inline tool and returns structured data', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -125,12 +125,7 @@ it('tools/call executes inline tool and returns structured data', async () => {
 });
 
 it('tools/call returns protocol error for unknown tool', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -142,12 +137,7 @@ it('tools/call returns protocol error for unknown tool', async () => {
 });
 
 it('mutation tool executes and returns structured data', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const withoutConfirmation = await mcpRequest(port, 'tools/call', {
@@ -171,12 +161,7 @@ it('mutation tool executes and returns structured data', async () => {
 });
 
 it('file-based tool (operationName) works', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -191,12 +176,7 @@ it('file-based tool (operationName) works', async () => {
 });
 
 it('@mcpTool directive auto-registers tool from operations file', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -212,12 +192,7 @@ it('@mcpTool directive auto-registers tool from operations file', async () => {
 });
 
 it('description provider resolves tool description', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -228,12 +203,7 @@ it('description provider resolves tool description', async () => {
 });
 
 it('per-field description provider overrides input field description', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -246,12 +216,7 @@ it('per-field description provider overrides input field description', async () 
 });
 
 it('argument alias renames input and de-aliases on call', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -268,12 +233,7 @@ it('argument alias renames input and de-aliases on call', async () => {
 });
 
 it('output.path extracts subset of response data', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -292,12 +252,7 @@ it('output.path extracts subset of response data', async () => {
 });
 
 it('postprocess hook transforms tool result to text', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -309,12 +264,7 @@ it('postprocess hook transforms tool result to text', async () => {
 });
 
 it('preprocess hook short-circuits execution', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {
@@ -326,12 +276,7 @@ it('preprocess hook short-circuits execution', async () => {
 });
 
 it('@mcpDescription on variable resolves from provider', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -345,12 +290,7 @@ it('@mcpDescription on variable resolves from provider', async () => {
 });
 
 it('@mcpDescription on selection field resolves from provider', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -480,12 +420,7 @@ describe('resource templates', () => {
 });
 
 it('header forwarding from MCP to internal dispatch', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(
@@ -500,12 +435,7 @@ it('header forwarding from MCP to internal dispatch', async () => {
 });
 
 it('tool annotations appear in tools/list', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/list');
@@ -519,12 +449,7 @@ it('tool annotations appear in tools/list', async () => {
 });
 
 it('content annotations are included in tool call response', async () => {
-  const { port, execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('weather')],
-    },
-  });
+  const { port, execute } = await startGateway();
   await execute({ query: '{ __typename }' });
 
   const body = await mcpRequest(port, 'tools/call', {

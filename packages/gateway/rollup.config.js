@@ -96,6 +96,8 @@ const deps = {
     '../plugins/opentelemetry/src/api.ts',
   'node_modules/@graphql-hive/plugin-opentelemetry/attributes':
     '../plugins/opentelemetry/src/attributes.ts',
+  'node_modules/@graphql-hive/plugin-mcp/index':
+    '../plugins/mcp/src/index.ts',
   // Enable the Rust Query Planner in the Docker image without installing an extra package by bundling it in the node_modules.
   // The module is dynamically imported, so it needs to be in the node_modules to be found.
   'node_modules/@graphql-hive/router-runtime/index':

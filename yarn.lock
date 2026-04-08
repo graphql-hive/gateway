@@ -3188,6 +3188,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/mcp-plugin@workspace:e2e/mcp-plugin"
   dependencies:
+    "@graphql-hive/plugin-mcp": "workspace:^"
     "@graphql-mesh/compose-cli": "npm:^1.5.25"
     graphql: "npm:^16.13.2"
     graphql-yoga: "npm:^5.19.0"
@@ -4504,7 +4505,6 @@ __metadata:
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
-    "@graphql-hive/plugin-mcp": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.16"
