@@ -17,6 +17,16 @@ it.each(['mesh', 'gateway', 'both'])(
       env: {
         ADDITIONAL_TYPE_DEFS_IN: loc,
       },
+      runner: {
+        docker: {
+          volumes: [
+            {
+              host: 'additionalTypeDefs.ts',
+              container: '/gateway/additionalTypeDefs.ts',
+            },
+          ],
+        },
+      },
     });
     await expect(
       execute({
