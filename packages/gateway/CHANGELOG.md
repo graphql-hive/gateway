@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 2.5.22
+### Patch Changes
+
+
+
+- [#2228](https://github.com/graphql-hive/gateway/pull/2228) [`36840e6`](https://github.com/graphql-hive/gateway/commit/36840e69b532b0465fcf1dec706e31f4e7706297) Thanks [@ardatan](https://github.com/ardatan)! - Update OpenSSL packages (libssl3t64, openssl, openssl-provider-legacy) in the Docker image to fix the security vulnerability alert (CVE-2026-31790)
+
 ## 2.5.21
 ### Patch Changes
 
