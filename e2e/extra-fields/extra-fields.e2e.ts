@@ -3,30 +3,38 @@ import { expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
-it('resolves extra fields', async () => {
-  const { execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('foo'), await service('bar')],
-    },
-  });
-  await expect(
-    execute({
-      query: /* GraphQL */ `
-        query FooBarFoo {
-          foo {
-            id
-            bar {
+it.each(['mesh', 'gateway', 'both'])(
+  'resolves extra fields using @resolveTo defined in %s',
+  async (loc) => {
+    const { execute } = await gateway({
+      supergraph: {
+        with: 'mesh',
+        services: [await service('foo'), await service('bar')],
+        env: {
+          ADDITIONAL_TYPE_DEFS_IN: loc,
+        },
+      },
+      env: {
+        ADDITIONAL_TYPE_DEFS_IN: loc,
+      },
+    });
+    await expect(
+      execute({
+        query: /* GraphQL */ `
+          query FooBarFoo {
+            foo {
               id
-              foo {
+              bar {
                 id
+                foo {
+                  id
+                }
               }
             }
           }
-        }
-      `,
-    }),
-  ).resolves.toMatchInlineSnapshot(`
+        `,
+      }),
+    ).resolves.toMatchInlineSnapshot(`
     {
       "data": {
         "foo": {
@@ -41,4 +49,5 @@ it('resolves extra fields', async () => {
       },
     }
   `);
-});
+  },
+);
