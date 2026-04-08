@@ -7,7 +7,7 @@ This example demonstrates the MCP (Model Context Protocol) plugin for Hive Gatew
 | Script     | Description                                                        |
 | ---------- | ------------------------------------------------------------------ |
 | `basic.ts` | Programmatic config with operation files and `@mcpTool` directives |
-| `full.ts`  | All features: Langfuse, hooks, resources, templates, directives   |
+| `full.ts`  | All features: Langfuse, hooks, resources, templates, directives    |
 
 Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on `:4000`.
 

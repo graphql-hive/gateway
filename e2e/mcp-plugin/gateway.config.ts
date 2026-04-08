@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@graphql-hive/gateway';
-import { type MCPConfig, useMCP } from '@graphql-hive/plugin-mcp';
+import { useMCP, type MCPConfig } from '@graphql-hive/plugin-mcp';
 
 const mockProvider = {
   fetchDescription: (_toolName: string, config: Record<string, unknown>) =>
