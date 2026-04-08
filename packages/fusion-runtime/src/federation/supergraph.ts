@@ -30,7 +30,9 @@ import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import {
   isEnumType,
   Kind,
+  parse,
   visit,
+  type DocumentNode,
   type GraphQLSchema,
   type ObjectTypeDefinitionNode,
 } from 'graphql';
@@ -121,19 +123,49 @@ interface EnumDirectives {
   };
 }
 
+// the @resolveTo directive definition, needed when additionalTypeDefs with @resolveTo are
+// provided only at the gateway level and were never composed into the supergraph SDL
+// TODO: same definition is also present in mesh, deduplicate and use the one from mesh
+const RESOLVE_TO_DIRECTIVE_DEF: DocumentNode = parse(/* GraphQL */ `
+  scalar ResolveToSourceArgs
+  directive @resolveTo(
+    requiredSelectionSet: String
+    sourceName: String
+    sourceTypeName: String
+    sourceFieldName: String
+    sourceSelectionSet: String
+    sourceArgs: ResolveToSourceArgs
+    keyField: String
+    keysArg: String
+    pubsubTopic: String
+    filterBy: String
+    additionalArgs: ResolveToSourceArgs
+    result: String
+    resultType: String
+  ) on FIELD_DEFINITION
+`);
+
 export function handleResolveToDirectives(
   typeDefsOpt: TypeSource,
   additionalTypeDefs: TypeSource,
   additionalResolvers: IResolvers[],
 ) {
-  const mergedTypeDefs = mergeTypeDefs([typeDefsOpt, additionalTypeDefs]);
+  let mergedTypeDefs = mergeTypeDefs([typeDefsOpt, additionalTypeDefs]);
+  let resolveToUsed = false;
+  let resolveToDirectiveDefined = false;
   visit(mergedTypeDefs, {
+    [Kind.DIRECTIVE_DEFINITION](node) {
+      if (node.name.value === 'resolveTo') {
+        resolveToDirectiveDefined = true;
+      }
+    },
     [Kind.FIELD_DEFINITION](field, _key, _parent, _path, ancestors) {
       const fieldDirectives = getDirectiveExtensions<{
         resolveTo: YamlConfig.AdditionalStitchingResolverObject;
       }>({ astNode: field });
       const resolveToDirectives = fieldDirectives?.resolveTo;
       if (resolveToDirectives?.length) {
+        resolveToUsed = true;
         const targetTypeName = (
           ancestors[ancestors.length - 1] as ObjectTypeDefinitionNode
         ).name.value;
@@ -150,6 +182,12 @@ export function handleResolveToDirectives(
       }
     },
   });
+  // when @resolveTo is used in gateway-only additionalTypeDefs but was never composed into
+  // the supergraph SDL, the directive definition is absent - inject it so stitchSchemas
+  // validation doesn't fail
+  if (resolveToUsed && !resolveToDirectiveDefined) {
+    mergedTypeDefs = mergeTypeDefs([RESOLVE_TO_DIRECTIVE_DEF, mergedTypeDefs]);
+  }
   return mergedTypeDefs;
 }
 

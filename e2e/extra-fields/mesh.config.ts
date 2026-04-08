@@ -3,8 +3,11 @@ import {
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
 import { Opts } from '@internal/testing';
+import { additionalTypeDefs } from './additionalTypeDefs';
 
 const opts = Opts(process.argv);
+
+const additionalTypeDefsIn = process.env['ADDITIONAL_TYPE_DEFS_IN'];
 
 export const composeConfig = defineConfig({
   subgraphs: [
@@ -19,23 +22,8 @@ export const composeConfig = defineConfig({
       }),
     },
   ],
-  additionalTypeDefs: /* GraphQL */ `
-    extend type Foo {
-      bar: Bar
-        @resolveTo(
-          sourceName: "bar"
-          sourceTypeName: "Query"
-          sourceFieldName: "bar"
-        )
-    }
-
-    extend type Bar {
-      foo: Foo
-        @resolveTo(
-          sourceName: "foo"
-          sourceTypeName: "Query"
-          sourceFieldName: "foo"
-        )
-    }
-  `,
+  additionalTypeDefs:
+    additionalTypeDefsIn === 'both' || additionalTypeDefsIn === 'mesh'
+      ? additionalTypeDefs
+      : undefined,
 });

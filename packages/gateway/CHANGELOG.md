@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 2.5.22
+### Patch Changes
+
+
+
+- [#2228](https://github.com/graphql-hive/gateway/pull/2228) [`36840e6`](https://github.com/graphql-hive/gateway/commit/36840e69b532b0465fcf1dec706e31f4e7706297) Thanks [@ardatan](https://github.com/ardatan)! - Update OpenSSL packages (libssl3t64, openssl, openssl-provider-legacy) in the Docker image to fix the security vulnerability alert (CVE-2026-31790)
+
+## 2.5.21
+### Patch Changes
+
+- Updated dependencies [[`95ea66e`](https://github.com/graphql-hive/gateway/commit/95ea66e020d7b3d487e991468406964303e98e86)]:
+  - @graphql-hive/gateway-runtime@2.8.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.39
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.16
+  - @graphql-mesh/plugin-prometheus@2.1.35
+
 ## 2.5.20
 ### Patch Changes
 

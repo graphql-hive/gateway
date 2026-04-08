@@ -1,5 +1,17 @@
 # @graphql-hive/gateway-runtime
 
+## 2.8.5
+### Patch Changes
+
+
+
+- [#2219](https://github.com/graphql-hive/gateway/pull/2219) [`95ea66e`](https://github.com/graphql-hive/gateway/commit/95ea66e020d7b3d487e991468406964303e98e86) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.16.0) (from `^0.14.0`, in `dependencies`)
+- Updated dependencies [[`3645fe7`](https://github.com/graphql-hive/gateway/commit/3645fe7930fc026c33aea6d70aaf66cfd0f61d38)]:
+  - @graphql-mesh/fusion-runtime@1.8.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
 ## 2.8.4
 ### Patch Changes
 
