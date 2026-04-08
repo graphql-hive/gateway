@@ -7,7 +7,7 @@ This example demonstrates the MCP (Model Context Protocol) plugin for Hive Gatew
 | Script     | Description                                                        |
 | ---------- | ------------------------------------------------------------------ |
 | `basic.ts` | Programmatic config with operation files and `@mcpTool` directives |
-| `full.ts`  | YAML/JSON config with Langfuse as external description provider    |
+| `full.ts`  | All features: Langfuse, hooks, resources, templates, directives   |
 
 Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on `:4000`.
 
@@ -122,7 +122,7 @@ curl -s http://localhost:4000/mcp \
 
 ---
 
-## full.ts — YAML Config + Langfuse
+## full.ts — Full Feature Demo
 
 This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https://langfuse.com) as an external description provider. Tool descriptions are fetched from Langfuse prompts at request time, so you can update them without restarting the server.
 

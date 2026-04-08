@@ -46,8 +46,7 @@ async function mcpRequest(
 }
 
 it('initialize returns protocol version and capabilities', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'initialize');
   expect(body).toMatchObject({
@@ -72,8 +71,7 @@ it('initialize returns protocol version and capabilities', async () => {
 });
 
 it('tools/list returns all configured tools', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const names = body.result.tools.map((t: any) => t.name).sort();
@@ -93,8 +91,7 @@ it('tools/list returns all configured tools', async () => {
 });
 
 it('tools/list shows correct inputSchema and outputSchema', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const weather = body.result.tools.find((t: any) => t.name === 'get_weather');
@@ -109,8 +106,7 @@ it('tools/list shows correct inputSchema and outputSchema', async () => {
 });
 
 it('tools/call executes inline tool and returns structured data', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'get_weather',
@@ -125,8 +121,7 @@ it('tools/call executes inline tool and returns structured data', async () => {
 });
 
 it('tools/call returns protocol error for unknown tool', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'nonexistent',
@@ -137,8 +132,7 @@ it('tools/call returns protocol error for unknown tool', async () => {
 });
 
 it('mutation tool executes and returns structured data', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const withoutConfirmation = await mcpRequest(port, 'tools/call', {
     name: 'cancel_order',
@@ -161,8 +155,7 @@ it('mutation tool executes and returns structured data', async () => {
 });
 
 it('file-based tool (operationName) works', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'get_forecast',
@@ -176,8 +169,7 @@ it('file-based tool (operationName) works', async () => {
 });
 
 it('@mcpTool directive auto-registers tool from operations file', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const quick = body.result.tools.find((t: any) => t.name === 'quick_weather');
@@ -192,8 +184,7 @@ it('@mcpTool directive auto-registers tool from operations file', async () => {
 });
 
 it('description provider resolves tool description', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tool = body.result.tools.find(
@@ -203,8 +194,7 @@ it('description provider resolves tool description', async () => {
 });
 
 it('per-field description provider overrides input field description', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tool = body.result.tools.find(
@@ -216,8 +206,7 @@ it('per-field description provider overrides input field description', async () 
 });
 
 it('argument alias renames input and de-aliases on call', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tool = body.result.tools.find((t: any) => t.name === 'aliased_weather');
@@ -233,8 +222,7 @@ it('argument alias renames input and de-aliases on call', async () => {
 });
 
 it('output.path extracts subset of response data', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'search_cities',
@@ -252,8 +240,7 @@ it('output.path extracts subset of response data', async () => {
 });
 
 it('postprocess hook transforms tool result to text', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'formatted_weather',
@@ -264,8 +251,7 @@ it('postprocess hook transforms tool result to text', async () => {
 });
 
 it('preprocess hook short-circuits execution', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'gated_weather',
@@ -276,8 +262,7 @@ it('preprocess hook short-circuits execution', async () => {
 });
 
 it('@mcpDescription on variable resolves from provider', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tool = body.result.tools.find(
@@ -290,8 +275,7 @@ it('@mcpDescription on variable resolves from provider', async () => {
 });
 
 it('@mcpDescription on selection field resolves from provider', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tool = body.result.tools.find(
@@ -306,13 +290,7 @@ it('@mcpDescription on selection field resolves from provider', async () => {
 
 describe('resources', () => {
   it('resources/list returns configured resources', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/list');
     expect(body.result.resources).toHaveLength(3);
@@ -330,13 +308,7 @@ describe('resources', () => {
   });
 
   it('resources/read returns text content', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/read', {
       uri: 'docs://agent-guide',
@@ -351,13 +323,7 @@ describe('resources', () => {
   });
 
   it('resources/read returns blob for binary resources', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/read', {
       uri: 'files://icon.png',
@@ -367,13 +333,7 @@ describe('resources', () => {
   });
 
   it('resources/read returns error for unknown URI', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/read', {
       uri: 'docs://nonexistent',
@@ -384,13 +344,7 @@ describe('resources', () => {
 
 describe('resource templates', () => {
   it('resources/templates/list returns templates', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/templates/list');
     expect(body.result.resourceTemplates).toHaveLength(1);
@@ -401,13 +355,7 @@ describe('resource templates', () => {
   });
 
   it('resources/read resolves template and calls handler', async () => {
-    const { port, execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('weather')],
-      },
-    });
-    await execute({ query: '{ __typename }' });
+    const { port } = await startGateway();
 
     const body = await mcpRequest(port, 'resources/read', {
       uri: 'weather://London',
@@ -420,8 +368,7 @@ describe('resource templates', () => {
 });
 
 it('header forwarding from MCP to internal dispatch', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(
     port,
@@ -435,8 +382,7 @@ it('header forwarding from MCP to internal dispatch', async () => {
 });
 
 it('tool annotations appear in tools/list', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/list');
   const tools = body.result.tools;
@@ -449,8 +395,7 @@ it('tool annotations appear in tools/list', async () => {
 });
 
 it('content annotations are included in tool call response', async () => {
-  const { port, execute } = await startGateway();
-  await execute({ query: '{ __typename }' });
+  const { port } = await startGateway();
 
   const body = await mcpRequest(port, 'tools/call', {
     name: 'get_weather',
