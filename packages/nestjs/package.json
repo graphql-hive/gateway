@@ -55,7 +55,7 @@
   "devDependencies": {
     "@nestjs/common": "11.1.18",
     "@nestjs/core": "11.1.18",
-    "@nestjs/graphql": "13.2.4",
+    "@nestjs/graphql": "13.2.5",
     "@nestjs/platform-express": "^11.1.15",
     "@nestjs/testing": "11.1.18",
     "@types/supertest": "7.2.0",
