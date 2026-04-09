@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "tsx": "^4.20.3",
-    "@apollo/rover": "^0.37.0"
+    "@apollo/rover": "^0.38.0"
   },
   "dependencies": {
     "@apollo/server": "^5.4.0",
