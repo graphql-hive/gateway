@@ -12,10 +12,17 @@ export type FetchInstrumentation = {
   ) => MaybePromise<void>;
 };
 
+const missingFetchFn: MeshFetch = function missingFetchFn() {
+  throw new Error(
+    'wrapFetchWithHooks requires an initial fetch function or an onFetch hook that sets fetchFn.',
+  );
+};
+
 export function wrapFetchWithHooks<TContext>(
   onFetchHooks: OnFetchHook<TContext>[],
   log: Logger,
   instrumentation?: () => FetchInstrumentation | undefined,
+  initialFetchFn: MeshFetch = missingFetchFn,
 ): MeshFetch {
   let wrappedFetchFn = function wrappedFetchFn(
     url,
@@ -23,10 +30,13 @@ export function wrapFetchWithHooks<TContext>(
     context = {},
     info,
   ) {
-    let fetchFn: MeshFetch;
+    let fetchFn = initialFetchFn;
+    context.log ||= log;
+    if (onFetchHooks.length === 0) {
+      return fetchFn(url, options, context, info);
+    }
     let response$: MaybePromise<Response>;
     const onFetchDoneHooks: OnFetchHookDone[] = [];
-    context.log ||= log;
     return handleMaybePromise(
       () =>
         iterateAsync(
