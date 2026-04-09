@@ -34,6 +34,7 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import * as defaultFetchAPI from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
@@ -47,6 +48,7 @@ import {
 import {
   chain,
   createYoga,
+  FetchAPI,
   isAsyncIterable,
   useExecutionCancellation,
   useReadinessCheck,
@@ -118,7 +120,18 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  let fetchAPI = config.fetchAPI;
+  const fetchAPI: FetchAPI = {
+    ...defaultFetchAPI,
+  };
+  if (config?.fetchAPI) {
+    for (const key in config.fetchAPI) {
+      const fetchAPIKey = key as keyof FetchAPI;
+      if (config.fetchAPI[fetchAPIKey]) {
+        // @ts-expect-error - types don't match somehow
+        fetchAPI[fetchAPIKey] = config.fetchAPI[fetchAPIKey];
+      }
+    }
+  }
   const log = createLoggerFromLogging(config.logging);
 
   let instrumentation: GatewayPlugin['instrumentation'];
@@ -127,11 +140,14 @@ export function createGatewayRuntime<
   const onCacheGetHooks: OnCacheGetHook[] = [];
   const onCacheSetHooks: OnCacheSetHook[] = [];
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
+
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
     log,
     () => instrumentation,
+    fetchAPI.fetch,
   );
+
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
         cache: config.cache,
@@ -631,11 +647,6 @@ export function createGatewayRuntime<
   });
 
   const defaultGatewayPlugin: GatewayPlugin = {
-    onFetch({ setFetchFn }) {
-      if (fetchAPI?.fetch) {
-        setFetchFn(fetchAPI.fetch);
-      }
-    },
     onRequestParse() {
       return handleMaybePromise(getSchema, () => {});
     },
@@ -1000,8 +1011,6 @@ export function createGatewayRuntime<
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
   });
-
-  fetchAPI ||= yoga.fetchAPI;
 
   Object.defineProperties(yoga, {
     version: {

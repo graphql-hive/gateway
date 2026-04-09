@@ -1,7 +1,10 @@
 import { Logger } from '@graphql-hive/logger';
+import { createDisposableServer, type MaybePromise } from '@internal/testing';
 import { createServerAdapter, Response } from '@whatwg-node/server';
-import type { GraphQLResolveInfo } from 'graphql';
+import { buildSchema, type GraphQLResolveInfo } from 'graphql';
 import { expect, it } from 'vitest';
+import { createGatewayRuntime } from '../src/createGatewayRuntime';
+import type { GatewayConfigContext, GatewayPlugin } from '../src/types';
 import {
   wrapFetchWithHooks,
   type FetchInstrumentation,
@@ -36,4 +39,73 @@ it('should wrap fetch instrumentation', async () => {
   } as GraphQLResolveInfo);
   expect(await res.json()).toEqual({ hello: 'world' });
   expect(receivedExecutionRequest).toBe(executionRequest);
+});
+
+const serverAdapter = createServerAdapter(() =>
+  Response.json({ hello: 'world' }),
+);
+const dummySchema = buildSchema(/* GraphQL */ `
+  type Query {
+    hello: String!
+  }
+`);
+
+it('ctx.fetch available on onPluginInit', async () => {
+  await using testServer = await createDisposableServer(serverAdapter);
+  let res$: MaybePromise<Response> | undefined;
+  function useMyPlugin<TContext extends Record<string, any>>(
+    ctx: GatewayConfigContext,
+  ): GatewayPlugin<TContext> {
+    return {
+      onPluginInit() {
+        res$ = ctx.fetch(testServer.url);
+      },
+    };
+  }
+  await using _gw = createGatewayRuntime({
+    supergraph: () => dummySchema,
+    plugins: (ctx) => [useMyPlugin(ctx)],
+  });
+  const res = await res$;
+  const json = await res?.json();
+  expect(json).toEqual({ hello: 'world' });
+});
+
+it('ctx.fetch available on plugin factory', async () => {
+  await using testServer = await createDisposableServer(serverAdapter);
+  let res$: MaybePromise<Response> | undefined;
+  function useMyPlugin<TContext extends Record<string, any>>(
+    ctx: GatewayConfigContext,
+  ): GatewayPlugin<TContext> {
+    res$ = ctx.fetch(testServer.url);
+    return {};
+  }
+  await using _gw = createGatewayRuntime({
+    supergraph: () => dummySchema,
+    plugins: (ctx) => [useMyPlugin(ctx)],
+  });
+  const res = await res$;
+  const json = await res?.json();
+  expect(json).toEqual({ hello: 'world' });
+});
+
+it('ctx.fetch available on onYogaInit', async () => {
+  await using testServer = await createDisposableServer(serverAdapter);
+  let res$: MaybePromise<Response> | undefined;
+  function useMyPlugin<TContext extends Record<string, any>>(
+    ctx: GatewayConfigContext,
+  ): GatewayPlugin<TContext> {
+    return {
+      onYogaInit() {
+        res$ = ctx.fetch(testServer.url);
+      },
+    };
+  }
+  await using _gw = createGatewayRuntime({
+    supergraph: () => dummySchema,
+    plugins: (ctx) => [useMyPlugin(ctx)],
+  });
+  const res = await res$;
+  const json = await res?.json();
+  expect(json).toEqual({ hello: 'world' });
 });
