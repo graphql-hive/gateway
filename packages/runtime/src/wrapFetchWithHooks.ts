@@ -31,12 +31,12 @@ export function wrapFetchWithHooks<TContext>(
     info,
   ) {
     let fetchFn = initialFetchFn;
+    context.log ||= log;
     if (onFetchHooks.length === 0) {
       return fetchFn(url, options, context, info);
     }
     let response$: MaybePromise<Response>;
     const onFetchDoneHooks: OnFetchHookDone[] = [];
-    context.log ||= log;
     return handleMaybePromise(
       () =>
         iterateAsync(
