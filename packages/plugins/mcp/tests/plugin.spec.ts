@@ -150,6 +150,53 @@ describe('resolveToolConfigs', () => {
     expect(tools[0]!.tool?.title).toBe('Directive Title');
   });
 
+  it('sets directiveMeta from @mcpTool meta argument', () => {
+    const operationsSource = parse(`
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", meta: { entitlement: "weather_access", version: 2 }) {
+        weather(location: $location) { temperature }
+      }
+    `);
+    const tools = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.directiveMeta).toEqual({
+      entitlement: 'weather_access',
+      version: 2,
+    });
+  });
+
+  it('preserves directiveMeta through config merge', () => {
+    const operationsSource = parse(`
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", meta: { entitlement: "weather_access" }) {
+        weather(location: $location) { temperature }
+      }
+    `);
+    const tools = resolveToolConfigs(
+      { log: logger },
+      {
+        tools: [
+          {
+            name: 'get_weather',
+            source: {
+              type: 'graphql',
+              operationName: 'GetWeather',
+              operationType: 'query' as const,
+            },
+            tool: { description: 'Config desc' },
+          },
+        ],
+        operationsSource,
+      },
+    );
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.directiveMeta).toEqual({
+      entitlement: 'weather_access',
+    });
+    expect(tools[0]!.tool?.description).toBe('Config desc');
+  });
+
   it('config input overrides apply on top of directive tool', () => {
     const operationsSource = parse(`
       query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {

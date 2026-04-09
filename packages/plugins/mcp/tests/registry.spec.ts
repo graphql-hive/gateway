@@ -1,7 +1,7 @@
 import { createLoggerFromLogging } from '@graphql-hive/gateway-runtime';
-import { buildSchema } from 'graphql';
+import { buildSchema, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import type { ResolvedToolConfig } from '../src/plugin.js';
+import { resolveToolConfigs, type ResolvedToolConfig } from '../src/plugin.js';
 import { getByPath, ToolRegistry } from '../src/registry.js';
 
 const logger = createLoggerFromLogging(false);
@@ -138,6 +138,7 @@ describe('ToolRegistry', () => {
               },
             ],
             execution: { taskSupport: 'optional' },
+            _meta: { team: 'platform', version: '2.1' },
           },
         },
       ],
@@ -157,6 +158,7 @@ describe('ToolRegistry', () => {
       },
     ]);
     expect(tools[0]!.execution).toEqual({ taskSupport: 'optional' });
+    expect(tools[0]!._meta).toEqual({ team: 'platform', version: '2.1' });
   });
 
   it('omits annotations, icons, and execution when not provided', () => {
@@ -166,6 +168,87 @@ describe('ToolRegistry', () => {
     expect(tools[0]!.annotations).toBeUndefined();
     expect(tools[0]!.icons).toBeUndefined();
     expect(tools[0]!.execution).toBeUndefined();
+  });
+});
+
+describe('ToolRegistry with directive _meta', () => {
+  const schema = buildSchema(`
+    type Query {
+      searchProducts(query: String!): String
+    }
+  `);
+
+  it('passes directive meta as _meta to registered tool', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          tool: {},
+          directiveMeta: { entitlement: 'docs_access', permissions: ['read'] },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!._meta).toEqual({
+      entitlement: 'docs_access',
+      permissions: ['read'],
+    });
+  });
+
+  it('shallow merges directive meta with config _meta (config wins on key conflicts)', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          tool: { _meta: { entitlement: 'override', extra: true } },
+          directiveMeta: { entitlement: 'docs_access', permissions: ['read'] },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!._meta).toEqual({
+      entitlement: 'override',
+      permissions: ['read'],
+      extra: true,
+    });
+  });
+
+  it('uses only config _meta when no directive meta', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          tool: { _meta: { team: 'platform' } },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!._meta).toEqual({ team: 'platform' });
+  });
+
+  it('uses only directive meta when no config _meta', () => {
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          directiveMeta: { team: 'platform' },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!._meta).toEqual({ team: 'platform' });
   });
 });
 
@@ -905,6 +988,85 @@ describe('ToolRegistry with overrides', () => {
           },
         },
       },
+    });
+  });
+});
+
+describe('meta directive integration (resolveToolConfigs -> ToolRegistry -> getMCPTools)', () => {
+  const schema = buildSchema(`
+    type Query {
+      weather(location: String!): Weather
+    }
+    type Weather {
+      temperature: Float
+      conditions: String
+    }
+  `);
+
+  it('directive meta flows through to _meta in MCP tool listing', () => {
+    const operationsSource = parse(`
+      query MetaWeather($location: String!) @mcpTool(
+        name: "meta_weather"
+        description: "Weather with metadata"
+        meta: { entitlement: "weather_access", tags: ["read", "public"], version: 2 }
+      ) {
+        weather(location: $location) { temperature conditions }
+      }
+    `);
+    const configs = resolveToolConfigs(
+      { log: logger },
+      { tools: [], operationsSource },
+    );
+    const registry = new ToolRegistry({ log: logger }, configs, schema);
+    const tools = registry.getMCPTools();
+
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.name).toBe('meta_weather');
+    expect(tools[0]!._meta).toEqual({
+      entitlement: 'weather_access',
+      tags: ['read', 'public'],
+      version: 2,
+    });
+  });
+
+  it('config _meta shallow merges with directive meta end-to-end', () => {
+    const operationsSource = parse(`
+      query MetaWeather($location: String!) @mcpTool(
+        name: "meta_weather"
+        description: "Weather with metadata"
+        meta: { entitlement: "weather_access", tags: ["read"], version: 1 }
+      ) {
+        weather(location: $location) { temperature }
+      }
+    `);
+    const configs = resolveToolConfigs(
+      { log: logger },
+      {
+        tools: [
+          {
+            name: 'meta_weather',
+            source: {
+              type: 'graphql',
+              operationName: 'MetaWeather',
+              operationType: 'query' as const,
+            },
+            tool: {
+              _meta: { entitlement: 'config_override', team: 'platform' },
+            },
+          },
+        ],
+        operationsSource,
+      },
+    );
+    const registry = new ToolRegistry({ log: logger }, configs, schema);
+    const tools = registry.getMCPTools();
+
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!._meta).toEqual({
+      entitlement: 'config_override',
+      tags: ['read'],
+      version: 1,
+      team: 'platform',
     });
   });
 });

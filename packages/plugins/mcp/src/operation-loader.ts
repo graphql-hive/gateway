@@ -7,6 +7,7 @@ import {
   type FieldNode,
   type OperationDefinitionNode,
   type SelectionSetNode,
+  type ValueNode,
   type VariableDefinitionNode,
 } from 'graphql';
 import type { PluginContext } from './types.js';
@@ -20,6 +21,7 @@ export interface MCPDirectiveArgs {
   description?: string;
   title?: string;
   descriptionProvider?: string;
+  meta?: Record<string, unknown>;
 }
 
 export interface ParsedOperation {
@@ -34,6 +36,42 @@ export interface ParsedOperation {
   headerMappings?: Record<string, string>;
 }
 
+function astValueToJs(node: ValueNode): unknown {
+  switch (node.kind) {
+    case Kind.STRING:
+      return node.value;
+    case Kind.INT:
+      return parseInt(node.value, 10);
+    case Kind.FLOAT:
+      return parseFloat(node.value);
+    case Kind.BOOLEAN:
+      return node.value;
+    case Kind.NULL:
+      return null;
+    case Kind.ENUM:
+      return node.value;
+    case Kind.LIST:
+      return node.values.map(astValueToJs);
+    case Kind.OBJECT: {
+      const obj: Record<string, unknown> = {};
+      for (const field of node.fields) {
+        obj[field.name.value] = astValueToJs(field.value);
+      }
+      return obj;
+    }
+    case Kind.VARIABLE:
+      throw new Error(
+        `Variable references ($${node.name.value}) are not supported in @mcpTool meta. Use literal values instead.`,
+      );
+    default: {
+      const _exhaustive: never = node;
+      throw new Error(
+        `Unexpected AST value node kind: ${(_exhaustive as { kind: string }).kind}`,
+      );
+    }
+  }
+}
+
 function extractMcpToolDirective(
   ctx: PluginContext,
   node: OperationDefinitionNode,
@@ -44,8 +82,17 @@ function extractMcpToolDirective(
   if (!directive) return undefined;
 
   const args: Record<string, string> = {};
+  let meta: Record<string, unknown> | undefined;
   for (const arg of directive.arguments || []) {
-    if (arg.value.kind === Kind.STRING) {
+    if (arg.name.value === 'meta') {
+      if (arg.value.kind === Kind.OBJECT) {
+        meta = astValueToJs(arg.value) as Record<string, unknown>;
+      } else {
+        ctx.log.warn(
+          `@mcpTool directive argument "meta" must be an object literal (got ${arg.value.kind}). The tool will be registered without metadata.`,
+        );
+      }
+    } else if (arg.value.kind === Kind.STRING) {
       args[arg.name.value] = arg.value.value;
     } else {
       ctx.log.warn(
@@ -66,6 +113,7 @@ function extractMcpToolDirective(
   if (args['title']) result.title = args['title'];
   if (args['descriptionProvider'])
     result.descriptionProvider = args['descriptionProvider'];
+  if (meta) result.meta = meta;
   return result;
 }
 

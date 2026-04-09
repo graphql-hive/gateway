@@ -312,6 +312,13 @@ export class ToolRegistry {
         }
       }
 
+      const directiveMeta = config.directiveMeta;
+      const configMeta = config.tool?._meta;
+      const _meta =
+        directiveMeta && configMeta
+          ? { ...directiveMeta, ...configMeta }
+          : configMeta || directiveMeta;
+
       this.tools.set(config.name, {
         name: config.name,
         description,
@@ -322,7 +329,7 @@ export class ToolRegistry {
         annotations: config.tool?.annotations,
         icons: config.tool?.icons,
         execution: config.tool?.execution,
-        _meta: config.tool?._meta,
+        _meta,
         argumentAliases,
         outputPath,
         suppressOutputSchema: config.output?.schema === false,

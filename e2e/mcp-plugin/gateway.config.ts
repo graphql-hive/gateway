@@ -168,6 +168,18 @@ const mcpConfig: MCPConfig = {
         },
       },
     },
+    // Config tool with _meta that merges with directive meta
+    {
+      name: 'meta_weather',
+      source: {
+        type: 'graphql',
+        operationName: 'MetaWeather',
+        operationType: 'query',
+      },
+      tool: {
+        _meta: { entitlement: 'config_override', team: 'platform' },
+      },
+    },
     // Mutation tool
     {
       name: 'cancel_order',

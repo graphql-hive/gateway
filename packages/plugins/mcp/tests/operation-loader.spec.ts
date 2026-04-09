@@ -355,6 +355,90 @@ describe('loadOperationsFromDocument', () => {
     ).toThrow('@mcpHeader on variable "$companyId"');
   });
 
+  it('extracts meta from @mcpTool directive', () => {
+    const source = `
+      query SearchDocs($query: String!) @mcpTool(
+        name: "search_docs"
+        description: "Search documentation"
+        meta: { entitlement: "docs_access", permissions: ["read", "write"], version: 2 }
+      ) {
+        searchDocs(query: $query) { title }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.mcpDirective).toEqual({
+      name: 'search_docs',
+      description: 'Search documentation',
+      meta: {
+        entitlement: 'docs_access',
+        permissions: ['read', 'write'],
+        version: 2,
+      },
+    });
+  });
+
+  it('extracts meta with nested objects from @mcpTool directive', () => {
+    const source = `
+      query GetData @mcpTool(
+        name: "get_data"
+        meta: { auth: { role: "admin", level: 3 }, tags: ["a", "b"] }
+      ) {
+        getData { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.mcpDirective!.meta).toEqual({
+      auth: { role: 'admin', level: 3 },
+      tags: ['a', 'b'],
+    });
+  });
+
+  it('extracts meta with boolean and float values', () => {
+    const source = `
+      query GetData @mcpTool(
+        name: "get_data"
+        meta: { enabled: true, threshold: 0.5 }
+      ) {
+        getData { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.mcpDirective!.meta).toEqual({
+      enabled: true,
+      threshold: 0.5,
+    });
+  });
+
+  it('extracts meta with null and enum values', () => {
+    const source = `
+      query GetData @mcpTool(
+        name: "get_data"
+        meta: { removed: null, status: ACTIVE }
+      ) {
+        getData { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.mcpDirective!.meta).toEqual({
+      removed: null,
+      status: 'ACTIVE',
+    });
+  });
+
+  it('ignores non-object meta and logs warning', () => {
+    const source = `
+      query GetData @mcpTool(
+        name: "get_data"
+        meta: "invalid"
+      ) {
+        getData { id }
+      }
+    `;
+    const ops = loadOperationsFromDocument({ log: logger }, parse(source));
+    expect(ops[0]!.mcpDirective).toEqual({ name: 'get_data' });
+    expect(ops[0]!.mcpDirective!.meta).toBeUndefined();
+  });
+
   it('handles mixed operations with and without @mcpTool', () => {
     const source = `
       query GetWeather($location: String!) @mcpTool(name: "get_weather") {

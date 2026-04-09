@@ -6,6 +6,18 @@ query QuickWeather($location: String!)
   }
 }
 
+query MetaWeather($location: String!)
+@mcpTool(
+  name: "meta_weather"
+  description: "Weather with metadata"
+  meta: { entitlement: "weather_access", tags: ["read", "public"], version: 2 }
+) {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
+
 query WeatherWithFieldProvider(
   $location: String! @mcpDescription(provider: "mock:weather.location")
   $days: Int

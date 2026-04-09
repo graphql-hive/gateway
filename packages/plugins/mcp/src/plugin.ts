@@ -512,6 +512,8 @@ export interface ResolvedToolConfig {
   providerDescription?: string;
   /** Maps variable name to HTTP header name, from @mcpHeader directives */
   headerMappings?: Record<string, string>;
+  /** Metadata from @mcpTool meta argument (shallow merged with config _meta; config wins on key conflicts) */
+  directiveMeta?: Record<string, unknown>;
 }
 
 /**
@@ -608,6 +610,7 @@ export function resolveToolConfigs(
         name: op.mcpDirective.name,
         query: op.document,
         directiveDescription: op.mcpDirective.description,
+        directiveMeta: op.mcpDirective.meta,
         tool: Object.keys(toolOverrides).length > 0 ? toolOverrides : undefined,
         input: directiveInput,
         output: directiveOutput,
@@ -685,6 +688,7 @@ export function resolveToolConfigs(
         name,
         query: configTool.query,
         directiveDescription: base.directiveDescription,
+        directiveMeta: base.directiveMeta,
         tool: {
           ...base.tool,
           ...configTool.tool,

@@ -308,6 +308,12 @@ const mcpOptions: MCPConfig = {
       tool: {
         title: 'Weather Conditions',
         description: 'Get just the weather conditions for a city',
+
+        // _meta - opaque metadata passed through to MCP clients in tools/list.
+        // Clients can use this for access control, routing, UI hints, etc.
+        // If the operation also has @mcpTool(meta: {...}), the two are shallow
+        // merged with config _meta winning on key conflicts.
+        _meta: { team: 'weather', readOnly: true },
       },
 
       // output.path — extract a nested value from the GraphQL response.
@@ -477,6 +483,12 @@ const mcpOptions: MCPConfig = {
     //
     // With Langfuse description provider (format: "type:prompt" or "type:prompt:version"):
     //   query SearchDocs($q: String!) @mcpTool(name: "search_docs", descriptionProvider: "langfuse:search_tool_desc:3") { ... }
+    //
+    // With meta for opaque metadata passed through to clients as _meta:
+    //   query SearchDocs($q: String!) @mcpTool(name: "search_docs", meta: { entitlement: "docs_access", tags: ["read"] }) { ... }
+    //   meta supports strings, numbers, booleans, null, arrays, and nested objects.
+    //   If a config tool[] entry for the same name also has tool._meta, the two are
+    //   shallow merged (config wins on key conflicts).
     //
     // Directive tools can be augmented by adding a matching entry here with the same name.
   ],

@@ -83,6 +83,7 @@ it('tools/list returns all configured tools', async () => {
     'gated_weather',
     'get_forecast',
     'get_weather',
+    'meta_weather',
     'provider_weather',
     'quick_weather',
     'search_cities',
@@ -392,6 +393,24 @@ it('tool annotations appear in tools/list', async () => {
 
   const getWeather = tools.find((t: any) => t.name === 'get_weather');
   expect(getWeather.annotations).toMatchObject({ readOnlyHint: true });
+});
+
+it('@mcpTool meta merges with config _meta in tools/list', async () => {
+  const { port } = await startGateway();
+
+  const body = await mcpRequest(port, 'tools/list');
+  const tool = body.result.tools.find((t: any) => t.name === 'meta_weather');
+  expect(tool).toBeDefined();
+  expect(tool.description).toBe('Weather with metadata');
+  // Directive meta: { entitlement: "weather_access", tags: ["read", "public"], version: 2 }
+  // Config _meta:   { entitlement: "config_override", team: "platform" }
+  // Shallow merge (config wins on conflicts):
+  expect(tool._meta).toEqual({
+    entitlement: 'config_override',
+    tags: ['read', 'public'],
+    version: 2,
+    team: 'platform',
+  });
 });
 
 it('content annotations are included in tool call response', async () => {
