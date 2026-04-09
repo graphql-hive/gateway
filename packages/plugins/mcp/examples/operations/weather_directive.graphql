@@ -39,6 +39,18 @@ query QuickWeatherProvider($location: String!)
   }
 }
 
+query MetaWeather($location: String!)
+@mcpTool(
+  name: "meta_weather"
+  description: "Weather with metadata from directive"
+  meta: { entitlement: "weather_access", tags: ["read", "public"], version: 2 }
+) {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
+
 query CompanyInfo($companyId: String! @mcpHeader(name: "x-company-id"))
 @mcpTool(
   name: "company_info"
