@@ -34,7 +34,29 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import * as defaultFetchAPI from '@whatwg-node/fetch';
+import {
+  Blob,
+  btoa,
+  CompressionStream,
+  crypto,
+  DecompressionStream,
+  fetch,
+  File,
+  FormData,
+  Headers,
+  ReadableStream,
+  Request,
+  Response,
+  TextDecoder,
+  TextDecoderStream,
+  TextEncoder,
+  TextEncoderStream,
+  TransformStream,
+  URL,
+  URLPattern,
+  URLSearchParams,
+  WritableStream,
+} from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
@@ -121,7 +143,27 @@ export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   const fetchAPI: FetchAPI = {
-    ...defaultFetchAPI,
+    fetch,
+    Request,
+    Response,
+    Headers,
+    FormData,
+    ReadableStream,
+    WritableStream,
+    TransformStream,
+    CompressionStream,
+    DecompressionStream,
+    TextDecoderStream,
+    TextEncoderStream,
+    Blob,
+    File,
+    crypto,
+    btoa,
+    TextEncoder,
+    TextDecoder,
+    URLPattern,
+    URL,
+    URLSearchParams,
   };
   if (config?.fetchAPI) {
     for (const key in config.fetchAPI) {
