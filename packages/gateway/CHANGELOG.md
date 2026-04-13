@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 2.5.23
+### Patch Changes
+
+
+
+- [#2244](https://github.com/graphql-hive/gateway/pull/2244) [`82af7d7`](https://github.com/graphql-hive/gateway/commit/82af7d718ea487e5dd3cca55e371ac7297e5098b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Importable @grpc/grpc-js in Docker bundle
+
+- Updated dependencies [[`994a292`](https://github.com/graphql-hive/gateway/commit/994a2927aa16d16c96d1e0ebd0c4c9884a331662), [`66e83ed`](https://github.com/graphql-hive/gateway/commit/66e83edc2beccbdacecc53e50fad8017c3651495)]:
+  - @graphql-hive/gateway-runtime@2.8.6
+  - @graphql-hive/plugin-aws-sigv4@2.0.39
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.17
+  - @graphql-mesh/plugin-prometheus@2.1.36
+
 ## 2.5.22
 ### Patch Changes
 

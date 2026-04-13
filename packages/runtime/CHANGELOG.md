@@ -1,5 +1,20 @@
 # @graphql-hive/gateway-runtime
 
+## 2.8.6
+### Patch Changes
+
+
+
+- [#2238](https://github.com/graphql-hive/gateway/pull/2238) [`994a292`](https://github.com/graphql-hive/gateway/commit/994a2927aa16d16c96d1e0ebd0c4c9884a331662) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Added dependency [`@whatwg-node/fetch@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.13) (to `dependencies`)
+
+
+- [#2236](https://github.com/graphql-hive/gateway/pull/2236) [`66e83ed`](https://github.com/graphql-hive/gateway/commit/66e83edc2beccbdacecc53e50fad8017c3651495) Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug where `fetch` function is not available in `GatewayConfigContext` while initializing the plugins
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
 ## 2.8.5
 ### Patch Changes
 
