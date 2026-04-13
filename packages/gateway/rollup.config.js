@@ -86,6 +86,18 @@ const deps = {
     '../plugins/opentelemetry/src/async-context-manager.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
+  // sometimes the grpc exporter needs to use insecure credentials (e.g. to bypass TLS
+  // certificate validation in private networks by using plain gRPC instead).
+  //
+  // for example:
+  // import { credentials } from '@grpc/grpc-js';
+  // import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+  // const exporter = new OTLPTraceExporter({
+  //   url: '<url of grpc>',
+  //   credentials: credentials.createInsecure(),
+  // });
+  'node_modules/@grpc/grpc-js/index':
+    '../../node_modules/@grpc/grpc-js/build/src/index.js',
   'node_modules/@opentelemetry/sdk-node/index':
     '../plugins/opentelemetry/src/sdk-node.ts',
   'node_modules/@opentelemetry/auto-instrumentations-node/index':
