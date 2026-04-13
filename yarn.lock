@@ -4549,7 +4549,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.5"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:1.3.11"
+    "@types/bun": "npm:1.3.12"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/server": "npm:^0.10.17"
@@ -10935,12 +10935,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:1.3.11":
-  version: 1.3.11
-  resolution: "@types/bun@npm:1.3.11"
+"@types/bun@npm:1.3.12":
+  version: 1.3.12
+  resolution: "@types/bun@npm:1.3.12"
   dependencies:
-    bun-types: "npm:1.3.11"
-  checksum: 10c0/ab50a22f900c09928d7b2bcd45829433667bb6e383930f9862b563f509df41a22f021156d9d30890c76fdd154e8581b48a2707b3a9b73259870df9dae2d17c52
+    bun-types: "npm:1.3.12"
+  checksum: 10c0/dacc8c77819f1d851657c5d80b1b2928dd7752016c53ae6a406f4f9a8291a5fea0799e77da99a511f4d9080e31bb97106be57f9b1a5f2a35dd235f5854953e4e
   languageName: node
   linkType: hard
 
@@ -13557,12 +13557,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.3.11":
-  version: 1.3.11
-  resolution: "bun-types@npm:1.3.11"
+"bun-types@npm:1.3.12":
+  version: 1.3.12
+  resolution: "bun-types@npm:1.3.12"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/1dcbde8abc4d7dbf732a81d580fee476eb41c295324f9f55268aca80f49366c88ece7447fa69945f17391ee42d2f026270f9e4c8ab766b5c9d393a241cf6e953
+  checksum: 10c0/adc61bfc37e91ad59ef4f9ecaef17c9a80bd221ee494aefed8034414623a695e0be3bed54c45f3238b3a0483ae0bf1d09b112122c266ba12ff0da1e66cdf7124
   languageName: node
   linkType: hard
 
