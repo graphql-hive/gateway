@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway",
-  "version": "2.5.22",
+  "version": "2.5.23",
   "type": "module",
   "repository": {
     "type": "git",
@@ -152,7 +152,7 @@
     "@rollup/plugin-sucrase": "^5.0.2",
     "@tsconfig/node18": "^18.2.5",
     "@types/adm-zip": "^0.5.5",
-    "@types/bun": "1.3.11",
+    "@types/bun": "1.3.12",
     "@types/ws": "^8.5.12",
     "@whatwg-node/fetch": "^0.10.13",
     "adm-zip": "^0.5.15",
