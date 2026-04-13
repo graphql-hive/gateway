@@ -86,8 +86,8 @@ const deps = {
     '../plugins/opentelemetry/src/async-context-manager.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
-  // sometimes the grpc exporter needs the credentials explicitly disabled so that users
-  // can use the grpc exporter from inside a private vpn network with self signed certificates.
+  // sometimes the grpc exporter needs to use insecure credentials (e.g. to bypass TLS
+  // certificate validation in private networks by using plain gRPC instead).
   //
   // for example:
   // import { credentials } from '@grpc/grpc-js';
