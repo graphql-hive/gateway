@@ -20,7 +20,6 @@ import {
   type DescriptionProviderContext,
   type ProviderRegistry,
 } from './description-provider.js';
-import { createHiveLoader, type HiveLoader } from './hive-loader.js';
 import {
   loadOperationsFromDocument,
   parseInlineHeaderDirectives,
@@ -422,20 +421,25 @@ export interface MCPToolConfig {
   hooks?: MCPToolHooks;
 }
 
-/** Configuration for loading operations from a Hive App Deployment. */
-export interface MCPHiveConfig {
-  /** Hive registry access token */
-  token: string;
-  /** Target selector as "organizationSlug/projectSlug/targetSlug" */
-  target: string;
-  /** App deployment name to fetch operations from */
-  appName: string;
-  /** Specific app version (omit for latest active deployment) */
-  appVersion?: string;
-  /** Poll interval in ms (default: 60000) */
-  pollIntervalMs?: number;
-  /** Hive API endpoint override (default: "https://app.graphql-hive.com/graphql") */
-  endpoint?: string;
+/**
+ * A user-provided operations source that can load GraphQL documents at startup
+ * and optionally push live updates. The plugin handles parsing, tool registration,
+ * and registry rebuilds; the loader only fetches the raw GraphQL source strings.
+ */
+export interface MCPOperationsLoader {
+  /**
+   * Fetch the operations source as a raw GraphQL string (may contain one or more operations).
+   * Called once at startup. If this rejects, the plugin logs the error and proceeds
+   * without loader-sourced tools. Implement retry logic inside load() if you need
+   * automatic recovery.
+   */
+  load(): Promise<string>;
+  /**
+   * Subscribe to live updates. Called once after the initial `load()` succeeds.
+   * Invoke `callback` with the full updated source whenever it changes.
+   * Optionally return a cleanup function to unsubscribe (called on plugin dispose).
+   */
+  onUpdate?(callback: (source: string) => void): (() => void) | void;
 }
 
 /** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
@@ -488,8 +492,8 @@ export interface MCPConfig {
   };
   /** Suppress outputSchema from all tools in tools/list responses */
   suppressOutputSchema?: boolean;
-  /** Hive App Deployment as an operation source. Fetches persisted documents; those with @mcpTool directives are auto-registered as tools, and all documents are available as named operations for tools with source.type: 'graphql'. */
-  hive?: MCPHiveConfig;
+  /** Dynamic operations source. Loaded at startup; if `onUpdate` is provided, the plugin subscribes to live changes and rebuilds tools automatically. */
+  loader?: MCPOperationsLoader;
 }
 
 /** Internal resolved form of a tool config after merging directive and explicit config sources. */
@@ -909,15 +913,27 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     operationsSource,
   });
 
-  // Hive App Deployment loader: async init + polling
-  let hiveLoader: HiveLoader | null = null;
-  let hiveInitPromise: Promise<void> | null = null;
+  // Dynamic operations loader: async init + live updates.
+  // If load() fails, the error is logged and no retry is attempted.
+  // The plugin continues without loader-sourced tools.
+  let loaderInitPromise: Promise<void> | null = null;
+  let loaderCleanup: (() => void) | void | null = null;
+  let loaderDisposed = false;
 
-  function rebuildToolsWithHiveSource(hiveSource: string) {
-    const hiveDoc = parse(hiveSource);
+  function rebuildToolsFromLoader(source: string) {
+    let loaderDoc: DocumentNode;
+    try {
+      loaderDoc = parse(source);
+    } catch (err) {
+      logger.error(
+        `Failed to parse loader operations. Keeping previous tools.`,
+        err instanceof Error ? err.message : err,
+      );
+      return;
+    }
     const mergedDoc = operationsSource
-      ? concatAST([hiveDoc, operationsSource])
-      : hiveDoc;
+      ? concatAST([loaderDoc, operationsSource])
+      : loaderDoc;
 
     let newResolvedTools: ResolvedToolConfig[];
     try {
@@ -927,7 +943,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       });
     } catch (err) {
       logger.error(
-        `Failed to parse Hive operations. Keeping previous tools.`,
+        `Failed to resolve loader operations. Keeping previous tools.`,
         err instanceof Error ? err.message : err,
       );
       return;
@@ -947,7 +963,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       } catch (err) {
         resolvedTools = previousTools;
         logger.error(
-          `Failed to rebuild tool registry after Hive update. Keeping previous tools.`,
+          `Failed to rebuild tool registry after loader update. Keeping previous tools.`,
           err instanceof Error ? err.message : err,
         );
       }
@@ -957,66 +973,27 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     }
   }
 
-  let disposed = false;
-  let hiveInitFailed = false;
-  let hiveInitFailedAt = 0;
-  const HIVE_RETRY_COOLDOWN_MS = 30_000;
-
-  function docsToSource(docs: { body: string }[]): string {
-    return docs.map((d) => d.body).join('\n');
-  }
-
-  function startHiveInit() {
-    if (!hiveInitFailed && hiveInitPromise) return;
-    if (!hiveLoader) return;
-    hiveInitFailed = false;
-    hiveInitPromise = hiveLoader
-      .fetchDocuments()
-      .then((docs) => {
-        if (disposed) return;
-        const toolCount = docs.filter((d) =>
-          d.body.includes('@mcpTool'),
-        ).length;
-        logger.info(
-          `Loaded ${docs.length} documents from Hive (${toolCount} with @mcpTool)`,
-        );
-        rebuildToolsWithHiveSource(docsToSource(docs));
-
-        hiveLoader?.startPolling((newDocs) => {
-          const newToolCount = newDocs.filter((d) =>
-            d.body.includes('@mcpTool'),
-          ).length;
-          logger.info(
-            `Hive app deployment updated: ${newDocs.length} documents (${newToolCount} with @mcpTool)`,
-          );
-          rebuildToolsWithHiveSource(docsToSource(newDocs));
-        }, docs);
-
-        hiveInitPromise = null;
+  if (config.loader) {
+    const loader = config.loader;
+    loaderInitPromise = loader
+      .load()
+      .then((source) => {
+        if (loaderDisposed) return;
+        rebuildToolsFromLoader(source);
+        if (loader.onUpdate) {
+          loaderCleanup = loader.onUpdate((newSource) => {
+            if (loaderDisposed) return;
+            rebuildToolsFromLoader(newSource);
+          });
+        }
+        loaderInitPromise = null;
       })
       .catch((err) => {
-        // Log but don't re-throw: avoids unhandled rejection.
-        // onRequestParse will retry on next MCP request.
-        hiveInitFailed = true;
-        hiveInitFailedAt = Date.now();
-        hiveInitPromise = null;
+        loaderInitPromise = null;
         logger.error(
-          `Failed to fetch operations from Hive: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to load operations from loader: ${err instanceof Error ? err.message : String(err)}`,
         );
       });
-  }
-
-  if (config.hive) {
-    hiveLoader = createHiveLoader(ctx, {
-      token: config.hive.token,
-      target: config.hive.target,
-      appName: config.hive.appName,
-      appVersion: config.hive.appVersion,
-      endpoint: config.hive.endpoint || 'https://app.graphql-hive.com/graphql',
-      pollIntervalMs: config.hive.pollIntervalMs ?? 60_000,
-    });
-
-    startHiveInit();
   }
 
   // Validate that tools referencing providers have matching entries in config
@@ -1122,7 +1099,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     return providersPromise;
   }
 
-  // Recomputed each time buildHandlerOptions is called so hive rebuilds are reflected
+  // Recomputed each time buildHandlerOptions is called so loader rebuilds are reflected
   let providerToolConfigs: ResolvedToolConfig[] = [];
   let fieldProviderToolConfigs: ResolvedToolConfig[] = [];
   let outputFieldProviderToolConfigs: ResolvedToolConfig[] = [];
@@ -1319,8 +1296,15 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
 
   return {
     onDispose() {
-      disposed = true;
-      hiveLoader?.stopPolling();
+      loaderDisposed = true;
+      try {
+        loaderCleanup?.();
+      } catch (err) {
+        logger.error(
+          `Loader cleanup failed during dispose`,
+          err instanceof Error ? err.message : err,
+        );
+      }
     },
 
     onSchemaChange({ schema: newSchema }) {
@@ -1366,18 +1350,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         return;
       }
 
-      // Wait for in-progress Hive init, or retry if previous init failed and cooldown elapsed
-      if (hiveInitPromise) {
-        await hiveInitPromise;
-      } else if (hiveInitFailed && hiveLoader) {
-        if (Date.now() - hiveInitFailedAt > HIVE_RETRY_COOLDOWN_MS) {
-          startHiveInit();
-          await hiveInitPromise;
-        } else {
-          logger.warn(
-            `Serving MCP request with potentially stale tools: Hive init failed ${Math.round((Date.now() - hiveInitFailedAt) / 1000)}s ago. Will retry after ${Math.round(HIVE_RETRY_COOLDOWN_MS / 1000)}s cooldown.`,
-          );
-        }
+      // Wait for in-progress loader init
+      if (loaderInitPromise) {
+        await loaderInitPromise;
       }
 
       // Schema should be ready by the time onRequestParse fires.

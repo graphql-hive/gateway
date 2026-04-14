@@ -191,16 +191,20 @@ const mcpOptions: MCPConfig = {
   operationsPath: join(__dirname, 'operations/weather_directive.graphql'),
   // operationsStr: '...',         // Alternative: pass operations as a string directly
 
-  // Hive App Deployments: fetch persisted documents from Hive and register
-  // operations that have @mcpTool directives as tools. Polls for updates.
-  // Requires a Hive registry access token.
-  // hive: {
-  //   token: process.env.HIVE_REGISTRY_TOKEN!,  // Hive registry access token
-  //   target: 'my-org/my-project/production',   // Target as "org/project/target" slugs
-  //   appName: 'my-mcp-app',                    // App deployment name in Hive
-  //   // appVersion: '1.0.0',                   // Pin to a specific version (omit for latest active)
-  //   // pollIntervalMs: 60_000,                // How often to check for new deployments (default: 60s)
-  //   // endpoint: 'https://app.graphql-hive.com/graphql',  // Hive API endpoint (default)
+  // Dynamic operations loader: fetch operations from any external source.
+  // load() is called at startup. onUpdate() subscribes to live changes.
+  // loader: {
+  //   async load() {
+  //     const res = await fetch('https://my-cdn.example.com/operations.graphql');
+  //     return res.text();
+  //   },
+  //   onUpdate(callback) {
+  //     const interval = setInterval(async () => {
+  //       const res = await fetch('https://my-cdn.example.com/operations.graphql');
+  //       callback(await res.text());
+  //     }, 60_000);
+  //     return () => clearInterval(interval);
+  //   },
   // },
 
   // Register providers that can dynamically fetch tool/field descriptions.

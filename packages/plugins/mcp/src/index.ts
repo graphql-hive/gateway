@@ -1,7 +1,7 @@
 export { useMCP } from './plugin.js';
 export type {
   MCPConfig,
-  MCPHiveConfig,
+  MCPOperationsLoader,
   MCPToolConfig,
   MCPToolSource,
   MCPToolOverrides,
@@ -22,12 +22,6 @@ export type {
   ToolHookContext,
   ResolvedToolConfig,
 } from './plugin.js';
-export { createHiveLoader } from './hive-loader.js';
-export type {
-  HiveDocument,
-  HiveLoader,
-  HiveLoaderConfig,
-} from './hive-loader.js';
 export { createLangfuseProvider } from './providers/langfuse.js';
 export type {
   DescriptionProvider,

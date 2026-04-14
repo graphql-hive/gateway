@@ -362,24 +362,32 @@ resources: [
 
 Agents discover resources via `resources/list` and fetch them with `resources/read`. Templates allow dynamic URIs with parameters.
 
-## Hive integration
+## Dynamic operations loader
 
-Fetch operations directly from [Hive App Deployments](https://the-guild.dev/graphql/hive/docs/management/app-deployments). Operations with `@mcpTool` directives are auto-registered as tools, and the plugin polls for updates.
+Supply a custom `loader` to fetch operations from any external source at startup and optionally subscribe to live updates. The plugin handles parsing, tool registration, and registry rebuilds.
 
 ```typescript
 useMCP(ctx, {
   name: 'my-api',
-  hive: {
-    token: process.env['HIVE_REGISTRY_TOKEN']!,
-    target: 'my-org/my-project/production',
-    appName: 'my-mcp-app',
-    // appVersion: '1.0.0',    // pin to a specific version (omit for latest active)
-    // pollIntervalMs: 60_000, // how often to check for new deployments (default: 60s)
+  loader: {
+    async load() {
+      const res = await fetch('https://my-cdn.example.com/operations.graphql');
+      return res.text();
+    },
+    onUpdate(callback) {
+      const interval = setInterval(async () => {
+        const res = await fetch('https://my-cdn.example.com/operations.graphql');
+        callback(await res.text());
+      }, 60_000);
+      return () => clearInterval(interval);
+    },
   },
 });
 ```
 
-This means you can manage your MCP tools from Hive's UI and deploy new operations without restarting the gateway.
+The `load()` method is called once at startup. If `onUpdate` is provided, it is called after `load()` succeeds and should invoke the callback whenever the source changes. Optionally return a cleanup function from `onUpdate` to unsubscribe on dispose.
+
+If `load()` rejects, the error is logged and `onUpdate` is not called. The plugin continues without loader-sourced operations. Implement retry logic inside `load()` if you need automatic recovery.
 
 ## Langfuse integration
 
@@ -488,7 +496,7 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 | `resourceTemplates`    | `MCPResourceTemplateConfig[]` | `[]`           | Dynamic resource templates                                      |
 | `providers`            | `object`                      |                | Description provider instances (e.g. `{ langfuse: {} }`)        |
 | `suppressOutputSchema` | `boolean`                     | `false`        | Suppress outputSchema in `tools/list`                           |
-| `hive`                 | `MCPHiveConfig`               |                | Auto-fetch operations from Hive App Deployments                 |
+| `loader`               | `MCPOperationsLoader`         |                | Dynamic operations source with optional live updates            |
 | `instructions`         | `string`                      |                | Free-text instructions included in `initialize` for LLM context |
 | `protocolVersion`      | `string`                      | `"2025-11-25"` | MCP protocol version to advertise                               |
 
@@ -504,7 +512,7 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 - **Resource templates**: dynamic URI-based resources with custom handlers
 - **Annotations**: tool hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and content annotations (`audience`, `priority`)
 - **Task support**: per-tool `execution.taskSupport` (`'forbidden'`, `'optional'`, `'required'`) for long-running operations
-- **Hive integration**: auto-fetch operations from Hive App Deployments
+- **Dynamic loader**: fetch operations from any external source with optional live updates
 
 ## Examples
 
