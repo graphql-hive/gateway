@@ -1351,5 +1351,67 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',
       });
     });
+
+    describe('sampling', () => {
+      it('should report all traces by default (samplingRate=1)', async () => {
+        await using gateway = await buildTestGateway();
+
+        // Make multiple requests; all should be reported
+        await gateway.query();
+        await gateway.query();
+        await gateway.query();
+
+        expect(spanExporter.spans.length).toBeGreaterThan(0);
+      });
+
+      it('should drop all successful traces when samplingRate=0', async () => {
+        disableAll();
+        hiveTracingSetup({
+          log: silentLog,
+          target: 'test-target',
+          contextManager: new AsyncLocalStorageContextManager(),
+          processor: new SimpleSpanProcessor(spanExporter),
+          samplingRate: 0,
+        });
+
+        await using gateway = await buildTestGateway();
+        await gateway.query();
+
+        // No operation span should be reported for a successful request
+        spanExporter.assertNoSpanWithName('graphql.operation');
+      });
+
+      it('should always report traces with GraphQL errors even when samplingRate=0', async () => {
+        disableAll();
+        hiveTracingSetup({
+          log: silentLog,
+          target: 'test-target',
+          contextManager: new AsyncLocalStorageContextManager(),
+          processor: new SimpleSpanProcessor(spanExporter),
+          samplingRate: 0,
+        });
+
+        await using gateway = await buildTestGateway({
+          fetch: () => () => new Response(null, { status: 500 }),
+        });
+        await gateway.query({ shouldReturnErrors: true });
+
+        // Error trace must always be reported regardless of samplingRate
+        const spans = spanExporter.spans.filter((s) =>
+          s.name.startsWith('graphql.operation'),
+        );
+        expect(spans.length).toBeGreaterThan(0);
+      });
+
+      it('should pass samplingRate to HiveTracingSpanProcessor', () => {
+        // Test HiveTracingSpanProcessor directly to verify samplingRate is stored
+        const processor = new HiveTracingSpanProcessor({
+          processor: new SimpleSpanProcessor(spanExporter),
+          samplingRate: 0.5,
+        });
+        // @ts-expect-error Access of private field
+        expect(processor.samplingRate).toBe(0.5);
+      });
+    });
   });
 });
