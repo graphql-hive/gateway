@@ -33,7 +33,7 @@ jobs:
       value: ${{ steps.choose-tag.outputs.result }}
     steps:
       - name: Choose NPM Tag
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         id: choose-tag
         with:
           result-encoding: string
@@ -119,7 +119,7 @@ jobs:
       )
     steps:
       - name: Version
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         id: ver-gateway
         with:
           script: |
@@ -162,7 +162,7 @@ jobs:
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
       - name: Bake and Push
-        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
+        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
@@ -174,7 +174,7 @@ jobs:
           push: true
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3.0.3
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
@@ -208,7 +208,7 @@ jobs:
           ]
     steps:
       - name: Version
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         id: ver-gateway
         with:
           result-encoding: string
@@ -263,13 +263,13 @@ jobs:
       - if: github.event_name == 'pull_request'
         name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: ${{ steps.binary.outputs.name }}
           path: ${{ steps.binary.outputs.path }}
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3.0.3
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
