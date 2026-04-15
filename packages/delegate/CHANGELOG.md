@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.0.14
+### Patch Changes
+
+
+
+- [#2243](https://github.com/graphql-hive/gateway/pull/2243) [`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163) Thanks [@qsona](https://github.com/qsona)! - Fix redundant type merging calls when subschemas have no explicit name.
+  
+  The fallback name-based matching in `resolveExternalValue` (introduced in [#1557](https://github.com/graphql-hive/gateway/issues/1557)) incorrectly matched unrelated subschemas when neither had an explicit `name` set, because `undefined === undefined` evaluated to `true`. This caused type merging to trigger even when fetching a type directly from its source subschema, resulting in a redundant second call.
+
 ## 12.0.13
 ### Patch Changes
 
