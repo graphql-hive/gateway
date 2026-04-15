@@ -1,14 +1,17 @@
 // The below is meant to be an alternative canonical schema stitching example
 // which relies on type merging.
 
-import { delegateToSchema } from '@graphql-tools/delegate';
+import {
+  createDefaultExecutor,
+  delegateToSchema,
+} from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { assertSome } from '@graphql-tools/utils';
+import { assertSome, Executor } from '@graphql-tools/utils';
 import { RenameRootFields, RenameTypes } from '@graphql-tools/wrap';
 import { graphql, OperationTypeNode, parse } from 'graphql';
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 
 describe('merging using type merging', () => {
@@ -1122,4 +1125,89 @@ it('shared fields but one of them is not resolvable', async () => {
       },
     },
   });
+});
+
+it('should not trigger redundant type merging when fetching from source subschema', async () => {
+  const schemaA = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Query {
+        itemById(id: ID!): Item
+      }
+      type Item {
+        id: ID!
+        name: String!
+        description: String!
+      }
+    `,
+    resolvers: {
+      Query: {
+        itemById: (_: any, { id }: { id: string }) => ({
+          id,
+          name: 'Test Item',
+          description: 'A test item',
+        }),
+      },
+    },
+  });
+  const executorA = createDefaultExecutor(schemaA);
+  const wrappedExecutorA = vi.fn(executorA);
+
+  const schemaB = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Query {
+        items: [Item]
+      }
+      type Item {
+        id: ID!
+      }
+    `,
+    resolvers: {
+      Query: {
+        items: () => [{ id: '1' }, { id: '2' }],
+      },
+    },
+  });
+  const executorB = createDefaultExecutor(schemaB);
+
+  const stitchedSchema = stitchSchemas({
+    subschemas: [
+      {
+        schema: schemaA,
+        executor: wrappedExecutorA as Executor,
+        merge: {
+          Item: {
+            fieldName: 'itemById',
+            selectionSet: '{ id }',
+            args: (obj: any) => ({ id: obj.id }),
+          },
+        },
+      },
+      {
+        schema: schemaB,
+        executor: executorB as Executor,
+      },
+    ],
+  });
+
+  const result: any = await normalizedExecutor({
+    schema: stitchedSchema,
+    document: parse(/* GraphQL */ `
+      query {
+        itemById(id: "1") {
+          id
+          name
+          description
+        }
+      }
+    `),
+    contextValue: {},
+  });
+
+  expect(result.errors).toBeUndefined();
+  expect(result.data?.itemById).toEqual({
+    id: '1',
+    name: 'Test Item',
+    description: 'A test item',
+  });
+  expect(wrappedExecutorA).toHaveBeenCalledTimes(1);
 });
