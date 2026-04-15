@@ -24,11 +24,7 @@ import {
   relocatedError,
   type ExecutionResult,
 } from '@graphql-tools/utils';
-import {
-  handleMaybePromise,
-  isPromise,
-  type MaybePromise,
-} from '@whatwg-node/promise-helpers';
+import { isPromise, type MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   DocumentNode,
   FragmentDefinitionNode,
@@ -1241,7 +1237,7 @@ function executePlanNode(
       for (const node of planNode.nodes) {
         const currentState = nextState;
         nextState = undefined;
-        pending = handleMaybePromise(
+        pending = handleMaybePromiseMaybeAsyncIterable(
           () => pending,
           () => executePlanNode(node, executionContext, currentState),
         );
@@ -1310,7 +1306,8 @@ function executePlanNode(
       break;
     }
     case 'Subscription': {
-      return executePlanNode(planNode.primary, executionContext);
+      // @ts-expect-error - Subscription uses FetchNode for `primary`
+      return executeFetchPlanNode(planNode.primary, executionContext);
     }
     default:
       throw new Error(`Invalid plan node: ${JSON.stringify(planNode)}`);
