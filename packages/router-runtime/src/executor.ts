@@ -944,10 +944,16 @@ function executeFetchPlanNode(
         }
         return;
       }
-      Object.assign(
-        executionContext.data,
-        mergeDeep([executionContext.data, responseData], false, true, true),
-      );
+
+      // Subscription root payloads should represent a single event snapshot.
+      if (executionContext.operation.operation === 'subscription') {
+        executionContext.data = responseData;
+      } else {
+        Object.assign(
+          executionContext.data,
+          mergeDeep([executionContext.data, responseData], false, true, true),
+        );
+      }
       return;
     },
     (error) =>
