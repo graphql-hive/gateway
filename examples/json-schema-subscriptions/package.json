@@ -2,7 +2,7 @@
   "name": "@example/json-schema-subscriptions",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.29",
+    "@graphql-mesh/compose-cli": "^1.5.30",
     "@graphql-mesh/cross-helpers": "^0.4.13",
     "@graphql-mesh/plugin-live-query": "^0.104.37",
     "@omnigraph/json-schema": "^0.109.39",
@@ -10,7 +10,7 @@
     "graphql": "^16.12.0",
     "graphql-sse": "^2.6.0",
     "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.5.23"
+    "@graphql-hive/gateway": "^2.5.24"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
