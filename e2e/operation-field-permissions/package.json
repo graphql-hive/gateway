@@ -4,7 +4,7 @@
   "dependencies": {
     "@envelop/core": "^5.4.0",
     "@envelop/operation-field-permissions": "^9.0.0",
-    "@graphql-mesh/compose-cli": "^1.5.3",
+    "@graphql-mesh/compose-cli": "^1.5.29",
     "graphql": "^16.12.0"
   }
 }
