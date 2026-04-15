@@ -85,7 +85,7 @@
   },
   "devDependencies": {
     "@apollo/subgraph": "^2.13.3",
-    "@graphql-mesh/fusion-composition": "^0.8.45",
+    "@graphql-mesh/fusion-composition": "^0.8.46",
     "@graphql-mesh/transport-rest": "^0.9.38",
     "@omnigraph/openapi": "^0.109.49",
     "@types/html-minifier-terser": "^7.0.2",

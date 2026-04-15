@@ -2,7 +2,7 @@
   "name": "@e2e/openapi-arg-rename",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.29",
+    "@graphql-mesh/compose-cli": "^1.5.30",
     "@omnigraph/openapi": "^0.109.49",
     "graphql": "16.13.2",
     "moment": "2.30.1",
