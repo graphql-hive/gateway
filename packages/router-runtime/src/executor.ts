@@ -1312,7 +1312,6 @@ function executePlanNode(
       break;
     }
     case 'Subscription': {
-      // @ts-expect-error - Subscription uses FetchNode for `primary`
       return executeFetchPlanNode(planNode.primary, executionContext);
     }
     default:
