@@ -1,5 +1,43 @@
 # @graphql-hive/router-runtime
 
+## 1.4.1
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.22` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.22) (from `^0.0.20`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.35) (from `^0.104.33`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-mesh/fusion-runtime@1.8.9
+  - @graphql-mesh/transport-common@1.0.16
+
+## 1.4.0
+### Minor Changes
+
+
+
+- [#2253](https://github.com/graphql-hive/gateway/pull/2253) [`5c4917e`](https://github.com/graphql-hive/gateway/commit/5c4917eceb76f33cca03d0dff36b8d424e896673) Thanks [@ardatan](https://github.com/ardatan)! - Add entity resolution support for Subscription plans
+
+
+### Patch Changes
+
+
+
+- [#2250](https://github.com/graphql-hive/gateway/pull/2250) [`d8d578e`](https://github.com/graphql-hive/gateway/commit/d8d578e2e09f2e72e40e3ee9e9aee7727da43ffe) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.18` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.18) (from `^0.0.17`, in `dependencies`)
+
+
+- [#2253](https://github.com/graphql-hive/gateway/pull/2253) [`5c4917e`](https://github.com/graphql-hive/gateway/commit/5c4917eceb76f33cca03d0dff36b8d424e896673) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.20` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.20) (from `^0.0.18`, in `dependencies`)
+- Updated dependencies [[`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163)]:
+  - @graphql-tools/delegate@12.0.14
+  - @graphql-mesh/fusion-runtime@1.8.8
+  - @graphql-tools/federation@4.3.7
+
 ## 1.3.3
 ### Patch Changes
 

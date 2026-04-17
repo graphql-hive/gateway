@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-testing",
-  "version": "7.0.6",
+  "version": "7.0.8",
   "type": "module",
   "repository": {
     "type": "git",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@apollo/subgraph": "^2.13.3",
-    "@graphql-mesh/fusion-composition": "^0.8.20",
+    "@graphql-mesh/fusion-composition": "^0.8.46",
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/utils": "^11.0.0",
     "graphql-yoga": "^5.16.2"

@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/fusion-runtime",
-  "version": "1.8.7",
+  "version": "1.8.9",
   "type": "module",
   "description": "Runtime for GraphQL Mesh Fusion Supergraph",
   "repository": {
@@ -46,10 +46,10 @@
     "@envelop/core": "^5.4.0",
     "@envelop/instrumentation": "^1.0.0",
     "@graphql-hive/logger": "workspace:^",
-    "@graphql-mesh/cross-helpers": "^0.4.10",
+    "@graphql-mesh/cross-helpers": "^0.4.13",
     "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/types": "^0.104.16",
-    "@graphql-mesh/utils": "^0.104.16",
+    "@graphql-mesh/types": "^0.104.27",
+    "@graphql-mesh/utils": "^0.104.35",
     "@graphql-tools/batch-execute": "workspace:^",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor": "^1.4.13",

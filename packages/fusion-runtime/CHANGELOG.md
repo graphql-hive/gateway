@@ -1,5 +1,28 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.8.9
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.13) (from `^0.4.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.27` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.27) (from `^0.104.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.35) (from `^0.104.16`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-mesh/transport-common@1.0.16
+
+## 1.8.8
+### Patch Changes
+
+- Updated dependencies [[`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163)]:
+  - @graphql-tools/delegate@12.0.14
+  - @graphql-tools/federation@4.3.7
+  - @graphql-tools/stitch@10.1.18
+  - @graphql-tools/stitching-directives@4.0.20
+  - @graphql-tools/wrap@11.1.14
+
 ## 1.8.7
 ### Patch Changes
 
