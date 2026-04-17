@@ -1018,7 +1018,7 @@ describe('useOpenTelemetry', () => {
       });
 
       it('should allow to use a given logger', () => {
-        const logger = { emit: vi.fn() };
+        const logger = { emit: vi.fn(), enabled: vi.fn(() => true) };
         const log = new Logger({
           writers: [
             new OpenTelemetryLogWriter({
@@ -1099,6 +1099,7 @@ describe('useOpenTelemetry', () => {
         const exportFn = vi.fn<LogRecordExporter['export']>();
         const exporter: LogRecordExporter = {
           export: exportFn,
+          forceFlush: vi.fn(async () => {}),
           shutdown: vi.fn(),
         };
 
