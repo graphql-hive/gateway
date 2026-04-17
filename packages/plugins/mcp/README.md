@@ -376,7 +376,9 @@ useMCP(ctx, {
     },
     onUpdate(callback) {
       const interval = setInterval(async () => {
-        const res = await fetch('https://my-cdn.example.com/operations.graphql');
+        const res = await fetch(
+          'https://my-cdn.example.com/operations.graphql',
+        );
         callback(await res.text());
       }, 60_000);
       return () => clearInterval(interval);
