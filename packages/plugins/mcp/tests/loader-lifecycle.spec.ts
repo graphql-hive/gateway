@@ -7,72 +7,74 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MCPOperationsLoader } from '../src/plugin.js';
 import { useMCP } from '../src/plugin.js';
 
-const upstream = createYoga({
-  schema: createSchema({
-    typeDefs: /* GraphQL */ `
-      type Query {
-        hello(name: String!): String
-        weather(location: String!): Weather
-      }
-      type Weather {
-        temperature: Float
-        conditions: String
-      }
-    `,
-    resolvers: {
-      Query: {
-        hello: (_root, { name }) => `Hello, ${name}!`,
-        weather: (_root, { location }) => ({
-          temperature: location === 'London' ? 12.5 : 22.0,
-          conditions: location === 'London' ? 'Cloudy' : 'Sunny',
-        }),
-      },
-    },
-  }),
-  logging: false,
-});
-
-function createGateway(loader: MCPOperationsLoader) {
-  return createGatewayRuntime({
-    logging: false,
-    proxy: { endpoint: 'http://upstream:4000/graphql' },
-    plugins: (ctx) => [
-      useCustomFetch(
-        // @ts-expect-error MeshFetch type mismatch
-        (url, init) => upstream.fetch(url, init),
-      ),
-      useMCP(ctx, {
-        name: 'loader-test',
-        version: '1.0.0',
-        loader,
-      }),
-    ],
-  });
-}
-
-async function mcpRequest(
-  gateway: ReturnType<typeof createGatewayRuntime>,
-  body: Record<string, unknown>,
-) {
-  // Warm the schema so the registry is built
-  await gateway.fetch('http://localhost/graphql', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query: '{ __typename }' }),
-  });
-  return gateway.fetch('http://localhost/mcp', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, ...body }),
-  });
-}
-
 describe('MCPOperationsLoader lifecycle', () => {
+  const upstream = createYoga({
+    schema: createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          hello(name: String!): String
+          weather(location: String!): Weather
+        }
+        type Weather {
+          temperature: Float
+          conditions: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          hello: (_root, { name }) => `Hello, ${name}!`,
+          weather: (_root, { location }) => ({
+            temperature: location === 'London' ? 12.5 : 22.0,
+            conditions: location === 'London' ? 'Cloudy' : 'Sunny',
+          }),
+        },
+      },
+    }),
+    logging: false,
+  });
+
+  function createGateway(loader: MCPOperationsLoader) {
+    return createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: (ctx) => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url, init) => upstream.fetch(url, init),
+        ),
+        useMCP(ctx, {
+          name: 'loader-test',
+          version: '1.0.0',
+          loader,
+        }),
+      ],
+    });
+  }
+
+  async function mcpRequest(
+    gateway: ReturnType<typeof createGatewayRuntime>,
+    body: Record<string, unknown>,
+  ) {
+    // Warm the schema so the registry is built
+    await gateway.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: '{ __typename }' }),
+    });
+    return gateway.fetch('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, ...body }),
+    });
+  }
+
   let gateway: ReturnType<typeof createGatewayRuntime> | null = null;
 
-  afterEach(() => {
-    gateway?.[Symbol.asyncDispose]?.();
-    gateway = null;
+  afterEach(async () => {
+    if (gateway) {
+      await gateway[Symbol.asyncDispose]?.();
+      gateway = null;
+    }
   });
 
   it('load() provides operations that register as tools via @mcpTool', async () => {
@@ -95,24 +97,10 @@ describe('MCPOperationsLoader lifecycle', () => {
   });
 
   it('load() rejection is caught and plugin continues without loader tools', async () => {
-    gateway = createGatewayRuntime({
-      logging: false,
-      proxy: { endpoint: 'http://upstream:4000/graphql' },
-      plugins: (ctx) => [
-        useCustomFetch(
-          // @ts-expect-error MeshFetch type mismatch
-          (url, init) => upstream.fetch(url, init),
-        ),
-        useMCP(ctx, {
-          name: 'loader-test',
-          version: '1.0.0',
-          loader: {
-            async load() {
-              throw new Error('network failure');
-            },
-          },
-        }),
-      ],
+    gateway = createGateway({
+      async load() {
+        throw new Error('network failure');
+      },
     });
 
     // Should not throw, plugin continues without loader tools
@@ -199,8 +187,7 @@ describe('MCPOperationsLoader lifecycle', () => {
 
   it('onDispose calls the cleanup function from onUpdate', async () => {
     const cleanupSpy = vi.fn();
-
-    gateway = createGateway({
+    const localGateway = createGateway({
       async load() {
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
@@ -214,47 +201,44 @@ describe('MCPOperationsLoader lifecycle', () => {
     });
 
     // Warm up so load() resolves
-    await mcpRequest(gateway, { method: 'tools/list' });
+    await mcpRequest(localGateway, { method: 'tools/list' });
 
     expect(cleanupSpy).not.toHaveBeenCalled();
-    await gateway[Symbol.asyncDispose]();
-    expect(cleanupSpy).toHaveBeenCalledOnce();
-
-    // Prevent afterEach from double-disposing
-    gateway = null;
+    await localGateway[Symbol.asyncDispose]?.();
+    expect(cleanupSpy).toHaveBeenCalledTimes(1);
   });
 
   it('onDispose before load() resolves does not leak subscription', async () => {
     const onUpdateSpy = vi.fn();
-    let resolveLoad: (value: string) => void;
+    let resolveLoad!: (value: string) => void;
     const loadPromise = new Promise<string>((r) => {
       resolveLoad = r;
     });
 
-    gateway = createGateway({
+    const localGateway = createGateway({
       load: () => loadPromise,
       onUpdate: onUpdateSpy,
     });
 
     // Dispose immediately, before load resolves
-    await gateway[Symbol.asyncDispose]();
-    gateway = null;
+    await localGateway[Symbol.asyncDispose]?.();
 
-    // Now resolve load -- onUpdate should NOT be called because plugin is disposed
-    resolveLoad!(
+    // Now resolve load; the plugin's .then handler will run but must short-circuit
+    resolveLoad(
       `query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
         weather(location: $location) { temperature }
       }`,
     );
 
-    // Give the microtask queue time to flush
-    await new Promise((r) => setTimeout(r, 10));
+    // Allow the resolved promise's .then handler to run
+    await loadPromise;
+    await Promise.resolve();
 
     expect(onUpdateSpy).not.toHaveBeenCalled();
   });
 
   it('onDispose catches cleanup function that throws', async () => {
-    gateway = createGateway({
+    const localGateway = createGateway({
       async load() {
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
@@ -270,11 +254,10 @@ describe('MCPOperationsLoader lifecycle', () => {
     });
 
     // Warm up so load resolves and onUpdate registers
-    await mcpRequest(gateway, { method: 'tools/list' });
+    await mcpRequest(localGateway, { method: 'tools/list' });
 
     // Should not throw
-    await gateway[Symbol.asyncDispose]();
-    gateway = null;
+    await localGateway[Symbol.asyncDispose]?.();
   });
 
   it('tools/call works with loader-sourced operations', async () => {
