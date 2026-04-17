@@ -1,0 +1,38 @@
+{
+  "name": "weather-api",
+  "version": "1.0.0",
+  "path": "/mcp",
+  "tools": [
+    {
+      "name": "get_weather",
+      "source": {
+        "type": "inline",
+        "query": "query GetWeather($location: String!) { weather(location: $location) { temperature conditions humidity location } }"
+      },
+      "tool": {
+        "title": "Current Weather",
+        "descriptionProvider": {
+          "type": "langfuse",
+          "prompt": "get_weather_description"
+        }
+      }
+    },
+    {
+      "name": "get_forecast",
+      "source": {
+        "type": "inline",
+        "query": "query GetForecast($location: String!, $days: Int) { forecast(location: $location, days: $days) { date high low conditions } }"
+      },
+      "tool": {
+        "title": "Weather Forecast",
+        "descriptionProvider": {
+          "type": "langfuse",
+          "prompt": "get_forecast_description"
+        }
+      }
+    }
+  ],
+  "providers": {
+    "langfuse": {}
+  }
+}
