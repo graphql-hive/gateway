@@ -5198,6 +5198,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-mesh/string-interpolation@patch:@graphql-mesh/string-interpolation@npm%3A^0.5.16#~/.yarn/patches/@graphql-mesh-string-interpolation-npm-0.5.16-date-iso.patch":
+  version: 0.5.16
+  resolution: "@graphql-mesh/string-interpolation@patch:@graphql-mesh/string-interpolation@npm%3A0.5.16#~/.yarn/patches/@graphql-mesh-string-interpolation-npm-0.5.16-date-iso.patch::version=0.5.16&hash=b06d17"
+  dependencies:
+    dayjs: "npm:^1.11.20"
+    json-pointer: "npm:^0.6.2"
+    lodash.get: "npm:^4.4.2"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  checksum: 10c0/adaa2e646e48754f46816151c206ac8817f2a3eb76dab883b4de528d9f2f1ee0d5772d9b19aa826c6f2e7b2e465a16c20583a122945b53768ea6f4534b26872d
+  languageName: node
+  linkType: hard
+
 "@graphql-mesh/transport-common@npm:^1.0.15, @graphql-mesh/transport-common@workspace:^, @graphql-mesh/transport-common@workspace:packages/transports/common":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"

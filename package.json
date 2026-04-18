@@ -70,6 +70,7 @@
     "@apollo/server": "^5.4.0",
     "@apollo/subgraph": "^2.13.3",
     "@graphql-mesh/types": "^0.104.27",
+    "@graphql-mesh/string-interpolation@npm:^0.5.16": "patch:@graphql-mesh/string-interpolation@npm%3A^0.5.16#~/.yarn/patches/@graphql-mesh-string-interpolation-npm-0.5.16-date-iso.patch",
     "@graphql-mesh/utils": "^0.104.35",
     "@graphql-tools/delegate": "workspace:^",
     "@isaacs/brace-expansion": "^5.0.1",

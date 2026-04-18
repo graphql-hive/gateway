@@ -1,0 +1,38 @@
+diff --git a/cjs/interpolator.js b/cjs/interpolator.js
+index 964feecbbc1f4f985f099fd95c55f833d0516186..af47f3498cac5586d4d4d275ef2f48ec634e6f9a 100644
+--- a/cjs/interpolator.js
++++ b/cjs/interpolator.js
+@@ -107,6 +107,14 @@ class Interpolator {
+         }
+         if (dataToReplace !== undefined) {
+             const modifiedData = this.applyModifiers(rule.modifiers, dataToReplace, data);
++            if (modifiedData instanceof Date) {
++                const serializedDate = modifiedData.toISOString();
++                // If the entire string is just the placeholder, return the value
++                if (str === rule.replace) {
++                    return serializedDate;
++                }
++                return str.replace(rule.replace, serializedDate);
++            }
+             // If the entire string is just the placeholder, return the value
+             if (str === rule.replace) {
+                 return modifiedData;
+diff --git a/esm/interpolator.js b/esm/interpolator.js
+index d2cb6a4ba8d4c619de7fd79056ca9f3f31f88495..bb8be9f50cbc67612e652516ff9f669dad6fcb18 100644
+--- a/esm/interpolator.js
++++ b/esm/interpolator.js
+@@ -103,6 +103,14 @@ export class Interpolator {
+         }
+         if (dataToReplace !== undefined) {
+             const modifiedData = this.applyModifiers(rule.modifiers, dataToReplace, data);
++            if (modifiedData instanceof Date) {
++                const serializedDate = modifiedData.toISOString();
++                // If the entire string is just the placeholder, return the value
++                if (str === rule.replace) {
++                    return serializedDate;
++                }
++                return str.replace(rule.replace, serializedDate);
++            }
+             // If the entire string is just the placeholder, return the value
+             if (str === rule.replace) {
+                 return modifiedData;
