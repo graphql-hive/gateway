@@ -1,0 +1,9 @@
+{
+  "name": "@e2e/cache-control",
+  "private": true,
+  "dependencies": {
+    "@apollo/subgraph": "^2.13.3",
+    "@graphql-mesh/cache-inmemory-lru": "^0.8.32",
+    "graphql": "^16.12.0"
+  }
+}

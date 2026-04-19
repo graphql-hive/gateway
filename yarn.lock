@@ -2866,6 +2866,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/cache-control@workspace:e2e/cache-control":
+  version: 0.0.0-use.local
+  resolution: "@e2e/cache-control@workspace:e2e/cache-control"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.13.3"
+    "@graphql-mesh/cache-inmemory-lru": "npm:^0.8.32"
+    graphql: "npm:^16.12.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers":
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
