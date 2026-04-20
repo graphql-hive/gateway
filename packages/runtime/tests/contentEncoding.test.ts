@@ -269,31 +269,25 @@ describe('contentEncoding with SSE subscriptions', () => {
       });
 
       const msgs: unknown[] = [];
-      const result = await Promise.race([
-        (async () => {
-          for await (const msg of sub) {
-            msgs.push(msg);
-            if (msgs.length >= 4) {
-              break;
-            }
-          }
-          return 'ok' as const;
-        })(),
-        new Promise<'timeout'>((resolve) =>
-          setTimeout(() => resolve('timeout'), 5_000),
-        ),
-      ]);
+      for await (const msg of sub) {
+        msgs.push(msg);
+        if (msgs.length >= 4) {
+          break;
+        }
+      }
 
       // If this fails, gzip compression is buffering small SSE events
       // and never flushing them to the client.
-      expect(result).toBe('ok');
       expect(msgs).toEqual([
         { data: { countdown: 3 } },
         { data: { countdown: 2 } },
         { data: { countdown: 1 } },
         { data: { countdown: 0 } },
       ]);
+
+      client.dispose();
+
+      return gateway.dispose();
     },
-    10_000,
   );
 });
