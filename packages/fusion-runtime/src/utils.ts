@@ -14,6 +14,7 @@ import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   delegateToSchema,
   DelegationPlanBuilder,
+  MergedTypeEntryPoint,
   MergedTypeResolver,
   Subschema,
   SubschemaConfig,
@@ -22,6 +23,7 @@ import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
+  memoize1,
   mergeDeep,
   parseSelectionSet,
   printSchemaWithDirectives,
@@ -775,6 +777,28 @@ export function checkIfDataSatisfiesSelectionSet(
   return true;
 }
 
+type EntrypointWithSelectionSet = MergedTypeEntryPoint<
+  any,
+  any,
+  Record<string, any>
+> & { selectionSet: string };
+
+function isEntrypointWithSelectionSet(
+  entryPoint: MergedTypeEntryPoint<any, any, Record<string, any>>,
+): entryPoint is EntrypointWithSelectionSet {
+  return entryPoint.selectionSet != null;
+}
+
+const getParsedEntrypointSelectionSet = memoize1(
+  (
+    entryPoint: MergedTypeEntryPoint<any, any, Record<string, any>> & {
+      selectionSet: string;
+    },
+  ) => {
+    return parseSelectionSet(entryPoint.selectionSet, { noLocation: true });
+  },
+);
+
 export function resolveRepresentation(
   subschemaConfig: SubschemaConfig,
   representation: any,
@@ -787,15 +811,14 @@ export function resolveRepresentation(
   const typeName = representation.__typename;
   const mergeConfig = subschemaConfig.merge?.[typeName];
   const returnType = wrapSchema(subschemaConfig).getType(typeName);
-  const entryPoints = mergeConfig?.entryPoints || [mergeConfig];
+  const entryPoints: MergedTypeEntryPoint<any, any, any>[] =
+    mergeConfig?.entryPoints || (mergeConfig ? [mergeConfig] : []);
   const satisfiedEntryPoint =
     entryPoints?.length === 1
       ? entryPoints[0]
       : entryPoints.find((entryPoint) => {
-          if (entryPoint?.selectionSet) {
-            const selectionSet = parseSelectionSet(entryPoint.selectionSet, {
-              noLocation: true,
-            });
+          if (isEntrypointWithSelectionSet(entryPoint)) {
+            const selectionSet = getParsedEntrypointSelectionSet(entryPoint);
             return checkIfDataSatisfiesSelectionSet(
               selectionSet,
               representation,

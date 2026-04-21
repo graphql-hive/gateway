@@ -116,7 +116,11 @@ export function onSubgraphExecuteWithTransforms(
     const jobs: Promise<void>[] = [];
     for (const [key, resolveFns] of resolveFnByKey) {
       const finalResult: any[] = (data[key] = []);
-      for (let representationIndex = 0; representationIndex < resolveFns.length; representationIndex++) {
+      for (
+        let representationIndex = 0;
+        representationIndex < resolveFns.length;
+        representationIndex++
+      ) {
         const resolveFn = resolveFns[representationIndex];
         if (resolveFn != null) {
           const job$ = handleMaybePromise(
