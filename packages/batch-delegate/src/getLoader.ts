@@ -14,15 +14,12 @@ const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
 function createBatchFn<K = any>(options: BatchDelegateOptions) {
   const argsFromKeys = options.argsFromKeys ?? DEFAULT_ARGS_FROM_KEYS;
   const fieldName = options.fieldName ?? options.info?.fieldName;
-  const operationName =
-    options.operationName ?? options.info?.operation.name?.value;
   const { valuesFromResults, lazyOptionsFn } = options;
 
   return function batchFn(keys: ReadonlyArray<K>) {
     return fakePromise()
       .then(() =>
         delegateToSchema({
-          operationName,
           returnType: new GraphQLList(
             getNamedType(options.returnType || options.info?.returnType),
           ),
