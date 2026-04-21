@@ -1,4 +1,3 @@
-import { isPromise } from 'node:util/types';
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
 import { resolveRepresentation } from '@graphql-mesh/fusion-runtime';
 import type {
@@ -15,6 +14,7 @@ import {
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
+  isPromise,
   mapAsyncIterator,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
