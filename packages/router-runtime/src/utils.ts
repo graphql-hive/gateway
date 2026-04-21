@@ -22,7 +22,6 @@ import {
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  print,
   valueFromASTUntyped,
   visit,
 } from 'graphql';

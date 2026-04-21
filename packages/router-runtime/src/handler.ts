@@ -218,7 +218,7 @@ const isDefaultExecution = memoize3(function isDefaultExecutionFn(
   additionalResolvers: IResolvers[],
 ): boolean {
   const typeInfo = getTypeInfo(schema);
-  let onlyQueryTypenameFields = false;
+  let onlyQueryTypenameFields = true;
   let containsIntrospectionField = false;
   let containsAdditionalDef = false;
   visit(
@@ -227,9 +227,7 @@ const isDefaultExecution = memoize3(function isDefaultExecutionFn(
       Field(node) {
         const fieldDef = typeInfo.getFieldDef();
         if (fieldDef) {
-          if (fieldDef === TypeNameMetaFieldDef) {
-            onlyQueryTypenameFields = true;
-          } else {
+          if (fieldDef !== TypeNameMetaFieldDef) {
             onlyQueryTypenameFields = false;
             if (fieldDef.name === '__schema' || fieldDef.name === '__type') {
               containsIntrospectionField = true;
