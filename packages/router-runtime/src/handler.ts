@@ -219,48 +219,77 @@ const isDefaultExecution = memoize3(function isDefaultExecutionFn(
 ): boolean {
   const typeInfo = getTypeInfo(schema);
   let onlyQueryTypenameFields = true;
+  let hasTopLevelQueryFields = false;
   let containsIntrospectionField = false;
   let containsAdditionalDef = false;
+  let operationIsQuery = false;
+  let queryFieldDepth = 0;
   visit(
     document,
     visitWithTypeInfo(typeInfo, {
-      Field(node) {
-        const fieldDef = typeInfo.getFieldDef();
-        if (fieldDef) {
-          if (fieldDef !== TypeNameMetaFieldDef) {
-            onlyQueryTypenameFields = false;
+      OperationDefinition: {
+        enter(node) {
+          operationIsQuery = node.operation === 'query';
+          queryFieldDepth = 0;
+        },
+        leave() {
+          operationIsQuery = false;
+          queryFieldDepth = 0;
+        },
+      },
+      Field: {
+        enter(node) {
+          if (operationIsQuery) {
+            queryFieldDepth++;
+          }
+          const fieldDef = typeInfo.getFieldDef();
+          if (fieldDef) {
             if (fieldDef.name === '__schema' || fieldDef.name === '__type') {
               containsIntrospectionField = true;
               return BREAK;
             }
+            if (operationIsQuery && queryFieldDepth === 1) {
+              hasTopLevelQueryFields = true;
+              if (fieldDef !== TypeNameMetaFieldDef) {
+                onlyQueryTypenameFields = false;
+              }
+            }
+            const directives = getDirectiveExtensions(fieldDef, schema);
+            if (directives['additionalField'] || directives['resolveTo']) {
+              containsAdditionalDef = true;
+              return BREAK;
+            }
           }
-          const directives = getDirectiveExtensions(fieldDef, schema);
-          if (directives['additionalField'] || directives['resolveTo']) {
-            containsAdditionalDef = true;
-            return BREAK;
-          }
-        }
-        const typeDef = typeInfo.getParentType();
-        if (typeDef) {
-          for (const additionalResolverObj of additionalResolvers) {
-            const typeResolvers = additionalResolverObj[typeDef.name];
-            if (typeResolvers) {
-              // @ts-expect-error - we know it is there
-              const fieldResolver = typeResolvers[node.name.value];
-              if (fieldResolver) {
-                containsAdditionalDef = true;
-                return BREAK;
+          const typeDef = typeInfo.getParentType();
+          if (typeDef) {
+            for (const additionalResolverObj of additionalResolvers) {
+              const typeResolvers = additionalResolverObj[typeDef.name];
+              if (typeResolvers) {
+                // @ts-expect-error - we know it is there
+                const fieldResolver = typeResolvers[node.name.value];
+                if (fieldResolver) {
+                  containsAdditionalDef = true;
+                  return BREAK;
+                }
               }
             }
           }
-        }
-        return node;
+          return node;
+        },
+        leave() {
+          if (operationIsQuery) {
+            queryFieldDepth--;
+          }
+          if (queryFieldDepth < 0) {
+            queryFieldDepth = 0;
+          }
+        },
       },
     }),
   );
   return (
     containsIntrospectionField ||
-    onlyQueryTypenameFields ||
+    (hasTopLevelQueryFields && onlyQueryTypenameFields) ||
     containsAdditionalDef
   );
 });

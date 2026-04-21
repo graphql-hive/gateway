@@ -34,8 +34,7 @@ import {
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
-import { Subschema } from './Subschema.js';
-import { DelegationContext, StitchingInfo } from './types.js';
+import { DelegationContext } from './types.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,

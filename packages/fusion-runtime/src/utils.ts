@@ -799,6 +799,10 @@ const getParsedEntrypointSelectionSet = memoize1(
   },
 );
 
+const getWrappedSchema = memoize1((subschemaConfig: SubschemaConfig) =>
+  wrapSchema(subschemaConfig),
+);
+
 export function resolveRepresentation(
   subschemaConfig: SubschemaConfig,
   representation: any,
@@ -810,7 +814,10 @@ export function resolveRepresentation(
 ) {
   const typeName = representation.__typename;
   const mergeConfig = subschemaConfig.merge?.[typeName];
-  const returnType = wrapSchema(subschemaConfig).getType(typeName);
+  const returnType = getWrappedSchema(subschemaConfig).getType(typeName);
+  if (returnType == null) {
+    return representation;
+  }
   const entryPoints: MergedTypeEntryPoint<any, any, any>[] =
     mergeConfig?.entryPoints || (mergeConfig ? [mergeConfig] : []);
   const satisfiedEntryPoint =

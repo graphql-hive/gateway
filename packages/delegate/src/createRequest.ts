@@ -20,7 +20,6 @@ import {
   NameNode,
   OperationDefinitionNode,
   OperationTypeNode,
-  print,
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';

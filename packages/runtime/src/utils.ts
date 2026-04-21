@@ -7,7 +7,7 @@ import {
 } from '@graphql-tools/utils';
 import type { ExtractPersistedOperationId } from '@graphql-yoga/plugin-persisted-operations';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
-import type { GraphQLSchema, SelectionSetNode } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
   OnCacheDeleteHook,
