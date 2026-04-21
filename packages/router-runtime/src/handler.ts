@@ -234,6 +234,7 @@ const isDefaultExecution = memoize3(function isDefaultExecutionFn(
         },
         leave() {
           operationIsQuery = false;
+          queryFieldDepth = 0;
         },
       },
       Field: {

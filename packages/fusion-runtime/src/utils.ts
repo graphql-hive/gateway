@@ -799,9 +799,16 @@ const getParsedEntrypointSelectionSet = memoize1(
   },
 );
 
-const getWrappedSchema = memoize1((subschemaConfig: SubschemaConfig) =>
-  wrapSchema(subschemaConfig),
-);
+const wrappedSchemaBySubschemaConfig = new WeakMap<SubschemaConfig, GraphQLSchema>();
+function getWrappedSchema(subschemaConfig: SubschemaConfig): GraphQLSchema {
+  const existingWrappedSchema = wrappedSchemaBySubschemaConfig.get(subschemaConfig);
+  if (existingWrappedSchema) {
+    return existingWrappedSchema;
+  }
+  const wrappedSchema = wrapSchema(subschemaConfig);
+  wrappedSchemaBySubschemaConfig.set(subschemaConfig, wrappedSchema);
+  return wrappedSchema;
+}
 
 export function resolveRepresentation(
   subschemaConfig: SubschemaConfig,
