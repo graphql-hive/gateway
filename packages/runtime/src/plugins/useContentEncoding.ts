@@ -7,11 +7,29 @@ export interface UseContentEncodingOpts {
   subgraphs?: string[];
 }
 
+function createContentEncodingPlugin<TContext extends Record<string, any>>() {
+  const origPlugin = useOrigContentEncoding();
+  return {
+    ...origPlugin,
+    onResponse(
+      payload: Parameters<NonNullable<typeof origPlugin.onResponse>>[0],
+    ) {
+      // Skip compression for SSE responses — CompressionStream buffers small
+      // events and never flushes them, breaking real-time delivery.
+      const contentType = payload.response.headers.get('content-type');
+      if (contentType?.includes('text/event-stream')) {
+        return;
+      }
+      return origPlugin.onResponse?.(payload);
+    },
+  } as GatewayPlugin<TContext>;
+}
+
 export function useContentEncoding<TContext extends Record<string, any>>({
   subgraphs,
 }: UseContentEncodingOpts = {}): GatewayPlugin<TContext> {
   if (!subgraphs?.length) {
-    return useOrigContentEncoding();
+    return createContentEncodingPlugin();
   }
   const compressionAlgorithm: CompressionFormat = 'gzip';
   let fetchAPI: FetchAPI;
@@ -22,7 +40,7 @@ export function useContentEncoding<TContext extends Record<string, any>>({
     },
     onPluginInit({ addPlugin }) {
       // @ts-ignore - this is flakey
-      addPlugin(useOrigContentEncoding());
+      addPlugin(createContentEncodingPlugin());
     },
     onSubgraphExecute({ subgraphName, executionRequest }) {
       if (subgraphs.includes(subgraphName) || subgraphs.includes('*')) {

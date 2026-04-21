@@ -1,8 +1,10 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getSupportedEncodings, useContentEncoding } from '@whatwg-node/server';
+import { createClient as createSSEClient } from 'graphql-sse';
 import {
   createSchema,
   createYoga,
+  Repeater,
   type FetchAPI,
   type YogaInitialContext,
 } from 'graphql-yoga';
@@ -192,4 +194,100 @@ describe('contentEncoding', () => {
       },
     });
   });
+});
+
+describe('contentEncoding with SSE subscriptions', () => {
+  const subgraphSchema = createSchema({
+    typeDefs: /* GraphQL */ `
+      type Query {
+        hello: String
+      }
+
+      type Subscription {
+        countdown(from: Int!): Int
+      }
+    `,
+    resolvers: {
+      Query: {
+        hello: () => 'world',
+      },
+      Subscription: {
+        countdown: {
+          subscribe: (_, { from }: { from: number }) =>
+            new Repeater(async (push, stop) => {
+              for (let i = from; i >= 0; i--) {
+                push(i);
+                await new Promise((resolve) => setTimeout(resolve, 50));
+              }
+              stop();
+            }),
+          resolve: (value: number) => value,
+        },
+      },
+    },
+  });
+  const subgraphServer = createYoga({
+    schema: subgraphSchema,
+  });
+  const gateway = createGatewayRuntime({
+    supergraph() {
+      return getUnifiedGraphGracefully([
+        {
+          name: 'subgraph',
+          schema: subgraphSchema,
+          url: 'http://localhost:4001/graphql',
+        },
+      ]);
+    },
+    contentEncoding: true,
+    plugins: () => [
+      useCustomFetch(
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        subgraphServer.fetch,
+      ),
+    ],
+  });
+  const firstSupportedEncoding = getSupportedEncodings(gateway.fetchAPI)[0];
+  const skipIfNoEncodingSupport = firstSupportedEncoding ? it : it.skip;
+  skipIfNoEncodingSupport(
+    'should deliver SSE subscription events to the client',
+    async () => {
+      const client = createSSEClient({
+        url: 'http://localhost:4000/graphql',
+        fetchFn: gateway.fetch,
+        headers: {
+          'Accept-Encoding': 'gzip',
+        },
+      });
+
+      const sub = client.iterate({
+        query: /* GraphQL */ `
+          subscription {
+            countdown(from: 3)
+          }
+        `,
+      });
+
+      const msgs: unknown[] = [];
+      for await (const msg of sub) {
+        msgs.push(msg);
+        if (msgs.length >= 4) {
+          break;
+        }
+      }
+
+      // If this fails, gzip compression is buffering small SSE events
+      // and never flushing them to the client.
+      expect(msgs).toEqual([
+        { data: { countdown: 3 } },
+        { data: { countdown: 2 } },
+        { data: { countdown: 1 } },
+        { data: { countdown: 0 } },
+      ]);
+
+      client.dispose();
+
+      return gateway.dispose();
+    },
+  );
 });
