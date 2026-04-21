@@ -280,9 +280,6 @@ const isDefaultExecution = memoize3(function isDefaultExecutionFn(
           if (operationIsQuery) {
             queryFieldDepth--;
           }
-          if (queryFieldDepth < 0) {
-            queryFieldDepth = 0;
-          }
         },
       },
     }),
