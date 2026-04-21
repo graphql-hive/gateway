@@ -5,13 +5,25 @@ import {
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import { getTypeInfo } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
+import { getRngFromEnv } from '@graphql-tools/federation';
 import {
-  getRngFromEnv,
-} from '@graphql-tools/federation';
-import { getDirectiveExtensions, IResolvers, memoize3, type ExecutionRequest, type ExecutionResult } from '@graphql-tools/utils';
+  getDirectiveExtensions,
+  IResolvers,
+  memoize3,
+  type ExecutionRequest,
+  type ExecutionResult,
+} from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, GraphQLSchema, TypeNameMetaFieldDef, visit, visitWithTypeInfo } from 'graphql';
+import {
+  BREAK,
+  DocumentNode,
+  GraphQLSchema,
+  TypeNameMetaFieldDef,
+  visit,
+  visitWithTypeInfo,
+} from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
   addEntityResolutionFieldsForPubsubPublish,
@@ -26,7 +38,6 @@ import {
   onSubgraphExecuteWithTransforms,
   queryPlanForExecutionRequestContext,
 } from './utils';
-import { getTypeInfo } from '@graphql-tools/delegate';
 
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -58,7 +69,8 @@ export async function unifiedGraphHandler(
     opts.unifiedGraph,
     entityResolutionMap,
   );
-  const { getSubschema, unifiedGraph, inContextSDK, additionalResolvers } = handleFederationSupergraph(opts);
+  const { getSubschema, unifiedGraph, inContextSDK, additionalResolvers } =
+    handleFederationSupergraph(opts);
   const defaultExecutor = createDefaultExecutor(unifiedGraph);
 
   function calculateCacheKeyForDocument(
@@ -135,7 +147,13 @@ export async function unifiedGraphHandler(
       return getSubschema(subgraphName).schema;
     },
     executor(executionRequest) {
-      if (isDefaultExecution(unifiedGraph, executionRequest.document, additionalResolvers)) {
+      if (
+        isDefaultExecution(
+          unifiedGraph,
+          executionRequest.document,
+          additionalResolvers,
+        )
+      ) {
         return defaultExecutor(executionRequest);
       }
       // Prepare pubsub metadata for this request
@@ -194,17 +212,18 @@ export async function unifiedGraphHandler(
  * - checking if it only queries for __typename fields on the Query type.
  * - checking if there is an additional type definition
  */
-const isDefaultExecution = memoize3(
-  function isDefaultExecutionFn(
-    schema: GraphQLSchema,
-    document: DocumentNode,
-    additionalResolvers: IResolvers[],
-  ): boolean {
-    const typeInfo = getTypeInfo(schema);
-    let onlyQueryTypenameFields = false;
-    let containsIntrospectionField = false;
-    let containsAdditionalDef = false;
-    visit(document, visitWithTypeInfo(typeInfo, {
+const isDefaultExecution = memoize3(function isDefaultExecutionFn(
+  schema: GraphQLSchema,
+  document: DocumentNode,
+  additionalResolvers: IResolvers[],
+): boolean {
+  const typeInfo = getTypeInfo(schema);
+  let onlyQueryTypenameFields = false;
+  let containsIntrospectionField = false;
+  let containsAdditionalDef = false;
+  visit(
+    document,
+    visitWithTypeInfo(typeInfo, {
       Field(node) {
         const fieldDef = typeInfo.getFieldDef();
         if (fieldDef) {
@@ -236,11 +255,14 @@ const isDefaultExecution = memoize3(
               }
             }
           }
-        } 
+        }
         return node;
-      }
-    }));
-    return containsIntrospectionField || onlyQueryTypenameFields || containsAdditionalDef;
-  }
-)
-
+      },
+    }),
+  );
+  return (
+    containsIntrospectionField ||
+    onlyQueryTypenameFields ||
+    containsAdditionalDef
+  );
+});

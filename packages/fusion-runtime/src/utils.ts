@@ -30,6 +30,7 @@ import {
   type Maybe,
   type MaybePromise,
 } from '@graphql-tools/utils';
+import { wrapSchema } from '@graphql-tools/wrap';
 import {
   handleMaybePromise,
   mapAsyncIterator,
@@ -41,7 +42,6 @@ import {
   GraphQLError,
   isEnumType,
   OperationTypeNode,
-  print,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -54,7 +54,6 @@ import {
   Instrumentation,
   TransportEntryAdditions,
 } from './unifiedGraphManager';
-import { wrapSchema } from '@graphql-tools/wrap';
 
 export type {
   TransportEntry,
@@ -789,15 +788,21 @@ export function resolveRepresentation(
   const mergeConfig = subschemaConfig.merge?.[typeName];
   const returnType = wrapSchema(subschemaConfig).getType(typeName);
   const entryPoints = mergeConfig?.entryPoints || [mergeConfig];
-  const satisfiedEntryPoint = entryPoints?.length === 1 ? entryPoints[0] : entryPoints.find((entryPoint) => {
-    if (entryPoint?.selectionSet) {
-      const selectionSet = parseSelectionSet(entryPoint.selectionSet, {
-        noLocation: true,
-      });
-      return checkIfDataSatisfiesSelectionSet(selectionSet, representation);
-    }
-    return true;
-  });
+  const satisfiedEntryPoint =
+    entryPoints?.length === 1
+      ? entryPoints[0]
+      : entryPoints.find((entryPoint) => {
+          if (entryPoint?.selectionSet) {
+            const selectionSet = parseSelectionSet(entryPoint.selectionSet, {
+              noLocation: true,
+            });
+            return checkIfDataSatisfiesSelectionSet(
+              selectionSet,
+              representation,
+            );
+          }
+          return true;
+        });
   if (satisfiedEntryPoint) {
     if (satisfiedEntryPoint.key) {
       return handleMaybePromise(

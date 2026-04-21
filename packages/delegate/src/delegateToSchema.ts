@@ -57,7 +57,9 @@ export function delegateToSchema<
     schema,
     rootValue = (schema as SubschemaConfig).rootValue ?? info?.rootValue,
     operationName = info?.operation.name?.value,
-    operation = info ? getDelegatingOperation(info.parentType, info.schema) : OperationTypeNode.QUERY,
+    operation = info
+      ? getDelegatingOperation(info.parentType, info.schema)
+      : OperationTypeNode.QUERY,
     fieldName = info?.fieldName,
     selectionSet,
     fieldNodes = info?.fieldNodes,

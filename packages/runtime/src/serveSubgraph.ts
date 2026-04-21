@@ -183,7 +183,14 @@ export function serveSubgraph<TContext extends Record<string, any>>(
                   [queryTypeName]: {
                     _entities(_root, args, context, info) {
                       if (Array.isArray(args.representations)) {
-                        return args.representations.map((representation: any) => resolveRepresentation(subschemaConfig, representation, context, info));
+                        return args.representations.map((representation: any) =>
+                          resolveRepresentation(
+                            subschemaConfig,
+                            representation,
+                            context,
+                            info,
+                          ),
+                        );
                       }
                       return [];
                     },

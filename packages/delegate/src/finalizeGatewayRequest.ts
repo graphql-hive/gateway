@@ -164,47 +164,37 @@ function finalizeGatewayDocument<TContext>(
     definitions: [...newOperations, ...newFragments],
   };
 
-  const stitchingInfo = delegationContext.info?.schema?.extensions?.[
-    'stitchingInfo'
-  ] as StitchingInfo;
-  if (stitchingInfo != null) {
-    const typeInfo = getTypeInfo(targetSchema);
-    newDocument = visit(
-      newDocument,
-      visitWithTypeInfo(typeInfo, {
-        [Kind.FIELD](fieldNode) {
-          const parentType = typeInfo.getParentType();
-          if (parentType) {
-            const parentTypeName = parentType.name;
-            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
-            if (typeConfig) {
-              const providedSelectionsByField =
-                typeConfig?.providedSelectionsByField?.get(
-                  delegationContext.subschema as Subschema,
-                );
-              if (providedSelectionsByField) {
-                const providedSelection =
-                  providedSelectionsByField[fieldNode.name.value];
-                if (providedSelection) {
-                  return {
-                    ...fieldNode,
-                    selectionSet: {
-                      kind: Kind.SELECTION_SET,
-                      selections: [
-                        ...providedSelection.selections,
-                        ...(fieldNode.selectionSet?.selections ?? []),
-                      ],
-                    },
-                  };
-                }
-              }
+  const typeInfo = getTypeInfo(targetSchema);
+  newDocument = visit(
+    newDocument,
+    visitWithTypeInfo(typeInfo, {
+      [Kind.FIELD](fieldNode) {
+        const parentType = typeInfo.getParentType();
+        if (parentType) {
+          const parentTypeName = parentType.name;
+          const typeConfig =
+            delegationContext?.subschemaConfig?.merge?.[parentTypeName];
+          if (typeConfig) {
+            const providedSelection =
+              typeConfig.fields?.[fieldNode.name.value]?.provides;
+            if (providedSelection) {
+              return {
+                ...fieldNode,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: [
+                    ...providedSelection.selections,
+                    ...(fieldNode.selectionSet?.selections ?? []),
+                  ],
+                },
+              };
             }
           }
-          return fieldNode;
-        },
-      }),
-    );
-  }
+        }
+        return fieldNode;
+      },
+    }),
+  );
 
   return {
     usedVariables,

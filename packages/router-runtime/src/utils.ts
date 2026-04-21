@@ -1,3 +1,4 @@
+import { isPromise } from 'node:util/types';
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
 import { resolveRepresentation } from '@graphql-mesh/fusion-runtime';
 import type {
@@ -17,9 +18,15 @@ import {
   mapAsyncIterator,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, FieldNode, FragmentDefinitionNode, print, valueFromASTUntyped, visit } from 'graphql';
+import {
+  DocumentNode,
+  FieldNode,
+  FragmentDefinitionNode,
+  print,
+  valueFromASTUntyped,
+  visit,
+} from 'graphql';
 import { GraphQLError } from 'graphql/error';
-import { isPromise } from 'node:util/types';
 
 export const queryPlanForExecutionRequestContext = new WeakMap<
   any,
@@ -63,7 +70,9 @@ export function getLazyFactory<T extends (...args: any) => any>(
   } as T;
 }
 
-const getEntityResolutionNodes = memoize1(function isEntityResolutionRequest(document: DocumentNode): FieldNode[] {
+const getEntityResolutionNodes = memoize1(function isEntityResolutionRequest(
+  document: DocumentNode,
+): FieldNode[] {
   const entityResolutionNodes: FieldNode[] = [];
   visit(document, {
     Field(node) {
@@ -71,17 +80,26 @@ const getEntityResolutionNodes = memoize1(function isEntityResolutionRequest(doc
         entityResolutionNodes.push(node);
       }
       return node;
-    }
+    },
   });
   return entityResolutionNodes;
 });
 
-const hasCustomMerging = memoize1(function hasCustomMerging(subschema: SubschemaConfig): boolean {
-  return subschema.merge != null && subschema.schema.getQueryType()?.getFields()['_entities'] != null;
-})
+const hasCustomMerging = memoize1(function hasCustomMerging(
+  subschema: SubschemaConfig,
+): boolean {
+  return (
+    subschema.merge != null &&
+    subschema.schema.getQueryType()?.getFields()['_entities'] != null
+  );
+});
 
-const getFragments = memoize1(function getFragments(document: DocumentNode): FragmentDefinitionNode[] {
-  return document.definitions.filter(def => def.kind === 'FragmentDefinition') as FragmentDefinitionNode[];
+const getFragments = memoize1(function getFragments(
+  document: DocumentNode,
+): FragmentDefinitionNode[] {
+  return document.definitions.filter(
+    (def) => def.kind === 'FragmentDefinition',
+  ) as FragmentDefinitionNode[];
 });
 
 export function onSubgraphExecuteWithTransforms(
@@ -94,13 +112,17 @@ export function onSubgraphExecuteWithTransforms(
   getSubschema: (subgraphName: string) => SubschemaConfig,
 ) {
   const subschema = getSubschema(subgraphName);
-  const entityResolutionNodes = getEntityResolutionNodes(executionRequest.document);
+  const entityResolutionNodes = getEntityResolutionNodes(
+    executionRequest.document,
+  );
   if (hasCustomMerging(subschema) && entityResolutionNodes.length > 0) {
     const resolveFnByKey = new Map<string, (() => any)[]>();
     for (const node of entityResolutionNodes) {
       for (const arg of node.arguments ?? []) {
         if (arg.name.value === 'representations') {
-          const representations = asArray(valueFromASTUntyped(arg.value, executionRequest.variables));
+          const representations = asArray(
+            valueFromASTUntyped(arg.value, executionRequest.variables),
+          );
           if (representations != null) {
             const responseKey = node.alias ? node.alias.value : node.name.value;
             let resolveFns = resolveFnByKey.get(responseKey);
@@ -110,9 +132,17 @@ export function onSubgraphExecuteWithTransforms(
             }
             for (const representation of representations) {
               const fragments = getFragments(executionRequest.document);
-              resolveFns.push(
-                () => resolveRepresentation(subschema, representation, executionRequest.context, executionRequest.info, [node], node.selectionSet, fragments),
-              )
+              resolveFns.push(() =>
+                resolveRepresentation(
+                  subschema,
+                  representation,
+                  executionRequest.context,
+                  executionRequest.info,
+                  [node],
+                  node.selectionSet,
+                  fragments,
+                ),
+              );
             }
           }
         }
@@ -122,15 +152,19 @@ export function onSubgraphExecuteWithTransforms(
     const errors: GraphQLError[] = [];
     const jobs: Promise<void>[] = [];
     for (const [key, resolveFns] of resolveFnByKey) {
-      const finalResult: any[] = data[key] = [];
+      const finalResult: any[] = (data[key] = []);
       for (const representationIndex in resolveFns) {
         const resolveFn = resolveFns[representationIndex];
         if (resolveFn != null) {
-          const job$ = handleMaybePromise(resolveFn, (result) => {
-            finalResult[representationIndex] = result;
-          }, error => {
-            errors.push(error);
-          });
+          const job$ = handleMaybePromise(
+            resolveFn,
+            (result) => {
+              finalResult[representationIndex] = result;
+            },
+            (error) => {
+              errors.push(error);
+            },
+          );
           if (isPromise(job$)) {
             jobs.push(job$);
           }
@@ -144,10 +178,7 @@ export function onSubgraphExecuteWithTransforms(
       };
     }
     if (jobs.length > 0) {
-      return handleMaybePromise(
-        () => Promise.all(jobs),
-        handleExecutionResult,
-      );
+      return handleMaybePromise(() => Promise.all(jobs), handleExecutionResult);
     }
     return handleExecutionResult();
   }
