@@ -52,7 +52,13 @@ const hasCustomMerging = memoize1(function hasCustomMerging(
 ): boolean {
   return (
     subschema.merge != null &&
-    subschema.schema.getQueryType()?.getFields()['_entities'] != null
+    Object.values(subschema.merge).some(
+      (mergeConfig) =>
+        mergeConfig.fieldName !== '_entities' &&
+        mergeConfig.entryPoints?.some(
+          (entryPoint) => entryPoint.fieldName !== '_entities',
+        ),
+    )
   );
 });
 
