@@ -54,10 +54,10 @@ const hasCustomMerging = memoize1(function hasCustomMerging(
     subschema.merge != null &&
     Object.values(subschema.merge).some(
       (mergeConfig) =>
-        mergeConfig.fieldName !== '_entities' &&
+        mergeConfig.fieldName !== '_entities' ||
         mergeConfig.entryPoints?.some(
           (entryPoint) => entryPoint.fieldName !== '_entities',
-        ),
+        ) === true,
     )
   );
 });
