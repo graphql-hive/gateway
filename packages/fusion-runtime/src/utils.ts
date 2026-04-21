@@ -799,17 +799,6 @@ const getParsedEntrypointSelectionSet = memoize1(
   },
 );
 
-const wrappedSchemaBySubschemaConfig = new WeakMap<SubschemaConfig, GraphQLSchema>();
-function getWrappedSchema(subschemaConfig: SubschemaConfig): GraphQLSchema {
-  const existingWrappedSchema = wrappedSchemaBySubschemaConfig.get(subschemaConfig);
-  if (existingWrappedSchema) {
-    return existingWrappedSchema;
-  }
-  const wrappedSchema = wrapSchema(subschemaConfig);
-  wrappedSchemaBySubschemaConfig.set(subschemaConfig, wrappedSchema);
-  return wrappedSchema;
-}
-
 export function resolveRepresentation(
   subschemaConfig: SubschemaConfig,
   representation: any,
@@ -821,7 +810,8 @@ export function resolveRepresentation(
 ) {
   const typeName = representation.__typename;
   const mergeConfig = subschemaConfig.merge?.[typeName];
-  const returnType = getWrappedSchema(subschemaConfig).getType(typeName);
+  // `wrapSchema` is already memoized in `@graphql-tools/wrap`, so we can call it here without worrying about performance
+  const returnType = wrapSchema(subschemaConfig).getType(typeName);
   if (returnType == null) {
     return representation;
   }
