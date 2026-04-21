@@ -754,7 +754,7 @@ export function checkIfDataSatisfiesSelectionSet(
           if (
             !checkIfDataSatisfiesSelectionSet(
               field.selectionSet,
-              data[field.name.value],
+              data[responseKey],
             )
           ) {
             return false;
