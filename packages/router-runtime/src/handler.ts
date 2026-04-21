@@ -7,12 +7,11 @@ import {
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
-  filterInternalFieldsAndTypes,
   getRngFromEnv,
 } from '@graphql-tools/federation';
-import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
+import { getDirectiveExtensions, IResolvers, memoize3, type ExecutionRequest, type ExecutionResult } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, visit } from 'graphql';
+import { BREAK, DocumentNode, GraphQLSchema, TypeNameMetaFieldDef, visit, visitWithTypeInfo } from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
   addEntityResolutionFieldsForPubsubPublish,
@@ -23,23 +22,16 @@ import {
   handleResultWithPubSubPublish,
 } from './pubsubDirectives';
 import {
-  getLazyFactory,
-  getLazyValue,
   handleMaybePromiseMaybeAsyncIterable,
   onSubgraphExecuteWithTransforms,
   queryPlanForExecutionRequestContext,
 } from './utils';
+import { getTypeInfo } from '@graphql-tools/delegate';
 
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
-  const getSubschema = getLazyFactory(
-    () => getHandledFederationSupergraph().getSubschema,
-  );
-  const getHandledFederationSupergraph = getLazyValue(() =>
-    handleFederationSupergraph(opts),
-  );
 
   const moduleName = '@graphql-hive/router-query-planner';
   const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
@@ -66,10 +58,8 @@ export async function unifiedGraphHandler(
     opts.unifiedGraph,
     entityResolutionMap,
   );
-  const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
-  const defaultExecutor = getLazyFactory(() =>
-    createDefaultExecutor(supergraphSchema),
-  );
+  const { getSubschema, unifiedGraph, inContextSDK, additionalResolvers } = handleFederationSupergraph(opts);
+  const defaultExecutor = createDefaultExecutor(unifiedGraph);
 
   function calculateCacheKeyForDocument(
     activeLabels: Set<string>,
@@ -140,12 +130,12 @@ export async function unifiedGraphHandler(
   }
 
   return {
-    unifiedGraph: supergraphSchema,
+    unifiedGraph,
     getSubgraphSchema(subgraphName: string) {
       return getSubschema(subgraphName).schema;
     },
     executor(executionRequest) {
-      if (isIntrospection(executionRequest.document)) {
+      if (isDefaultExecution(unifiedGraph, executionRequest.document, additionalResolvers)) {
         return defaultExecutor(executionRequest);
       }
       // Prepare pubsub metadata for this request
@@ -158,13 +148,13 @@ export async function unifiedGraphHandler(
             queryPlan,
           );
           return executeQueryPlan({
-            supergraphSchema,
+            supergraphSchema: unifiedGraph,
             executionRequest,
             onSubgraphExecute: (subgraphName, executionRequest) =>
               handlePubsubOperationField(
-                supergraphSchema,
+                unifiedGraph,
                 addEntityResolutionFieldsForPubsubPublish(
-                  supergraphSchema,
+                  unifiedGraph,
                   executionRequest,
                   subgraphName,
                   pubsubPublishMetadataMap,
@@ -181,7 +171,7 @@ export async function unifiedGraphHandler(
                       ),
                     (executionResult: ExecutionResult) =>
                       handleResultWithPubSubPublish(
-                        supergraphSchema,
+                        unifiedGraph,
                         pubsubPublishMetadataMap,
                         executionRequest,
                         executionResult,
@@ -194,34 +184,63 @@ export async function unifiedGraphHandler(
       );
     },
     overrideLabels: queryPlanner.overrideLabels,
+    inContextSDK,
   };
 }
 
 /**
- * Decides if the query is an introspection query by:
+ * Decides if the query should be executed with the default executor by:
  * - checking if it contains __schema or __type fields or;
  * - checking if it only queries for __typename fields on the Query type.
+ * - checking if there is an additional type definition
  */
-function isIntrospection(document: DocumentNode): boolean {
-  let onlyQueryTypenameFields = false;
-  let containsIntrospectionField = false;
-  visit(document, {
-    OperationDefinition(node) {
-      for (const sel of node.selectionSet.selections) {
-        if (sel.kind !== 'Field') return BREAK;
-        if (sel.name.value === '__schema' || sel.name.value === '__type') {
-          containsIntrospectionField = true;
-          return BREAK;
+const isDefaultExecution = memoize3(
+  function isDefaultExecutionFn(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+    additionalResolvers: IResolvers[],
+  ): boolean {
+    const typeInfo = getTypeInfo(schema);
+    let onlyQueryTypenameFields = false;
+    let containsIntrospectionField = false;
+    let containsAdditionalDef = false;
+    visit(document, visitWithTypeInfo(typeInfo, {
+      Field(node) {
+        const fieldDef = typeInfo.getFieldDef();
+        if (fieldDef) {
+          if (fieldDef === TypeNameMetaFieldDef) {
+            onlyQueryTypenameFields = true;
+          } else {
+            onlyQueryTypenameFields = false;
+            if (fieldDef.name === '__schema' || fieldDef.name === '__type') {
+              containsIntrospectionField = true;
+              return BREAK;
+            }
+          }
+          const directives = getDirectiveExtensions(fieldDef, schema);
+          if (directives['additionalField'] || directives['resolveTo']) {
+            containsAdditionalDef = true;
+            return BREAK;
+          }
         }
-        if (sel.name.value === '__typename') {
-          onlyQueryTypenameFields = true;
-        } else {
-          onlyQueryTypenameFields = false;
-          return BREAK;
-        }
+        const typeDef = typeInfo.getParentType();
+        if (typeDef) {
+          for (const additionalResolverObj of additionalResolvers) {
+            const typeResolvers = additionalResolverObj[typeDef.name];
+            if (typeResolvers) {
+              // @ts-expect-error - we know it is there
+              const fieldResolver = typeResolvers[node.name.value];
+              if (fieldResolver) {
+                containsAdditionalDef = true;
+                return BREAK;
+              }
+            }
+          }
+        } 
+        return node;
       }
-      return;
-    },
-  });
-  return containsIntrospectionField || onlyQueryTypenameFields;
-}
+    }));
+    return containsIntrospectionField || onlyQueryTypenameFields || containsAdditionalDef;
+  }
+)
+

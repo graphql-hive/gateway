@@ -87,6 +87,7 @@ export interface IDelegateToSchemaOptions<
   targetSchema?: GraphQLSchema;
   validateRequest?: boolean;
   skipTypeMerging?: boolean;
+  fragments?: FragmentDefinitionNode[];
 }
 
 export interface IDelegateRequestOptions<

@@ -19,6 +19,7 @@ it('should execute', async () => {
       with: 'mesh',
       services: [petstore, await service('vaccination')],
     },
+    pipeLogs: true,
   });
   await expect(
     execute({

@@ -9,17 +9,21 @@ import {
   type TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
 import { isDisposable, iterateAsync } from '@graphql-mesh/utils';
+import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
+  delegateToSchema,
   DelegationPlanBuilder,
   MergedTypeResolver,
   Subschema,
+  SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
   mergeDeep,
+  parseSelectionSet,
   printSchemaWithDirectives,
   type ExecutionRequest,
   type Executor,
@@ -32,9 +36,12 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
 import {
+  FieldNode,
   FragmentDefinitionNode,
   GraphQLError,
   isEnumType,
+  OperationTypeNode,
+  print,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -47,6 +54,7 @@ import {
   Instrumentation,
   TransportEntryAdditions,
 } from './unifiedGraphManager';
+import { wrapSchema } from '@graphql-tools/wrap';
 
 export type {
   TransportEntry,
@@ -727,4 +735,124 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
     }
   }
   return transportEntryMap;
+}
+
+export function checkIfDataSatisfiesSelectionSet(
+  selectionSet: SelectionSetNode,
+  data: any,
+): boolean {
+  if (Array.isArray(data)) {
+    return data.every((item) =>
+      checkIfDataSatisfiesSelectionSet(selectionSet, item),
+    );
+  }
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === 'Field') {
+      const field = selection;
+      const responseKey = field.alias?.value || field.name.value;
+      if (data[responseKey] != null) {
+        if (field.selectionSet) {
+          if (
+            !checkIfDataSatisfiesSelectionSet(
+              field.selectionSet,
+              data[field.name.value],
+            )
+          ) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    } else if (selection.kind === 'InlineFragment') {
+      const inlineFragment = selection;
+      if (
+        !checkIfDataSatisfiesSelectionSet(inlineFragment.selectionSet, data)
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function resolveRepresentation(
+  subschemaConfig: SubschemaConfig,
+  representation: any,
+  context: any,
+  info?: GraphQLResolveInfo,
+  fieldNodes?: FieldNode[],
+  selectionSet?: SelectionSetNode,
+  fragments?: FragmentDefinitionNode[],
+) {
+  const typeName = representation.__typename;
+  const mergeConfig = subschemaConfig.merge?.[typeName];
+  const returnType = wrapSchema(subschemaConfig).getType(typeName);
+  const entryPoints = mergeConfig?.entryPoints || [mergeConfig];
+  const satisfiedEntryPoint = entryPoints?.length === 1 ? entryPoints[0] : entryPoints.find((entryPoint) => {
+    if (entryPoint?.selectionSet) {
+      const selectionSet = parseSelectionSet(entryPoint.selectionSet, {
+        noLocation: true,
+      });
+      return checkIfDataSatisfiesSelectionSet(selectionSet, representation);
+    }
+    return true;
+  });
+  if (satisfiedEntryPoint) {
+    if (satisfiedEntryPoint.key) {
+      return handleMaybePromise(
+        () =>
+          batchDelegateToSchema({
+            schema: subschemaConfig,
+            operation: OperationTypeNode.QUERY,
+            ...(satisfiedEntryPoint.fieldName
+              ? {
+                  fieldName: satisfiedEntryPoint.fieldName,
+                }
+              : {}),
+            key: satisfiedEntryPoint.key!(representation),
+            ...(satisfiedEntryPoint.argsFromKeys
+              ? {
+                  argsFromKeys: satisfiedEntryPoint.argsFromKeys,
+                }
+              : {}),
+            ...(satisfiedEntryPoint.valuesFromResults
+              ? {
+                  valuesFromResults: satisfiedEntryPoint.valuesFromResults,
+                }
+              : {}),
+            context: context,
+            info: info as GraphQLResolveInfo,
+            fieldNodes,
+            selectionSet,
+            returnType: returnType as GraphQLOutputType,
+            fragments,
+          }),
+        (res) => mergeDeep([representation, res]),
+      );
+    }
+    if (satisfiedEntryPoint.args) {
+      return handleMaybePromise(
+        () =>
+          delegateToSchema({
+            schema: subschemaConfig,
+            operation: OperationTypeNode.QUERY,
+            ...(satisfiedEntryPoint.fieldName
+              ? {
+                  fieldName: satisfiedEntryPoint.fieldName,
+                }
+              : {}),
+            args: satisfiedEntryPoint.args!(representation),
+            context,
+            info: info as GraphQLResolveInfo,
+            fieldNodes,
+            selectionSet,
+            returnType: returnType as GraphQLOutputType,
+            fragments,
+          }),
+        (res) => mergeDeep([representation, res]),
+      );
+    }
+  }
+  return representation;
 }

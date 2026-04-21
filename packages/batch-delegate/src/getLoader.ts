@@ -13,15 +13,17 @@ const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
 
 function createBatchFn<K = any>(options: BatchDelegateOptions) {
   const argsFromKeys = options.argsFromKeys ?? DEFAULT_ARGS_FROM_KEYS;
-  const fieldName = options.fieldName ?? options.info.fieldName;
+  const fieldName = options.fieldName ?? options.info?.fieldName;
+  const operationName = options.operationName ?? options.info?.operation.name?.value;
   const { valuesFromResults, lazyOptionsFn } = options;
 
   return function batchFn(keys: ReadonlyArray<K>) {
     return fakePromise()
       .then(() =>
         delegateToSchema({
+          operationName,
           returnType: new GraphQLList(
-            getNamedType(options.returnType || options.info.returnType),
+            getNamedType(options.returnType || options.info?.returnType),
           ),
           onLocatedError: (originalError) => {
             if (originalError.path == null) {
@@ -89,7 +91,7 @@ export function getLoader<K = any, V = any, C = K>(
     info,
     fieldName = info.fieldName,
     dataLoaderOptions,
-    fieldNodes = info.fieldNodes[0] && getActualFieldNodes(info.fieldNodes[0]),
+    fieldNodes = info?.fieldNodes?.[0] && getActualFieldNodes(info.fieldNodes[0]),
     selectionSet = fieldNodes?.[0]?.selectionSet,
     returnType = info.returnType,
     argsFromKeys = DEFAULT_ARGS_FROM_KEYS,

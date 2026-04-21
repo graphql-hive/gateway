@@ -6,16 +6,15 @@ import {
   handleFederationSubschema,
   handleResolveToDirectives,
   OnSubgraphExecuteHook,
+  resolveRepresentation,
   restoreExtraDirectives,
   TransportEntry,
 } from '@graphql-mesh/fusion-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import { OnDelegateHook } from '@graphql-mesh/types';
 import { getInContextSDK } from '@graphql-mesh/utils';
-import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
   defaultMergedResolver,
-  delegateToSchema,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
@@ -23,8 +22,6 @@ import {
   getDirectiveExtensions,
   IResolvers,
   isDocumentNode,
-  mergeDeep,
-  parseSelectionSet,
   printSchemaWithDirectives,
   TypeSource,
 } from '@graphql-tools/utils';
@@ -48,7 +45,6 @@ import {
   GatewayConfigSubgraph,
   GatewayPlugin,
 } from './types';
-import { checkIfDataSatisfiesSelectionSet } from './utils';
 
 export function serveSubgraph<TContext extends Record<string, any>>(
   config: GatewayConfigSubgraph<TContext>,
@@ -187,88 +183,7 @@ export function serveSubgraph<TContext extends Record<string, any>>(
                   [queryTypeName]: {
                     _entities(_root, args, context, info) {
                       if (Array.isArray(args.representations)) {
-                        return args.representations.map(
-                          (representation: any) => {
-                            const typeName = representation.__typename;
-                            const mergeConfig =
-                              subschemaConfig.merge?.[typeName];
-                            const entryPoints = mergeConfig?.entryPoints || [
-                              mergeConfig,
-                            ];
-                            const satisfiedEntryPoint = entryPoints.find(
-                              (entryPoint) => {
-                                if (entryPoint?.selectionSet) {
-                                  const selectionSet = parseSelectionSet(
-                                    entryPoint.selectionSet,
-                                    {
-                                      noLocation: true,
-                                    },
-                                  );
-                                  return checkIfDataSatisfiesSelectionSet(
-                                    selectionSet,
-                                    representation,
-                                  );
-                                }
-                                return true;
-                              },
-                            );
-                            if (satisfiedEntryPoint) {
-                              if (satisfiedEntryPoint.key) {
-                                return handleMaybePromise(
-                                  () =>
-                                    batchDelegateToSchema({
-                                      schema: subschemaConfig,
-                                      ...(satisfiedEntryPoint.fieldName
-                                        ? {
-                                            fieldName:
-                                              satisfiedEntryPoint.fieldName,
-                                          }
-                                        : {}),
-                                      key: satisfiedEntryPoint.key!(
-                                        representation,
-                                      ),
-                                      ...(satisfiedEntryPoint.argsFromKeys
-                                        ? {
-                                            argsFromKeys:
-                                              satisfiedEntryPoint.argsFromKeys,
-                                          }
-                                        : {}),
-                                      ...(satisfiedEntryPoint.valuesFromResults
-                                        ? {
-                                            valuesFromResults:
-                                              satisfiedEntryPoint.valuesFromResults,
-                                          }
-                                        : {}),
-                                      context,
-                                      info,
-                                    }),
-                                  (res) => mergeDeep([representation, res]),
-                                );
-                              }
-                              if (satisfiedEntryPoint.args) {
-                                return handleMaybePromise(
-                                  () =>
-                                    delegateToSchema({
-                                      schema: subschemaConfig,
-                                      ...(satisfiedEntryPoint.fieldName
-                                        ? {
-                                            fieldName:
-                                              satisfiedEntryPoint.fieldName,
-                                          }
-                                        : {}),
-                                      args: satisfiedEntryPoint.args!(
-                                        representation,
-                                      ),
-                                      context,
-                                      info,
-                                    }),
-                                  (res) => mergeDeep([representation, res]),
-                                );
-                              }
-                            }
-                            return representation;
-                          },
-                        );
+                        return args.representations.map((representation: any) => resolveRepresentation(subschemaConfig, representation, context, info));
                       }
                       return [];
                     },
