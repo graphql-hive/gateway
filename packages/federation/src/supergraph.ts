@@ -297,12 +297,15 @@ export function getStitchingOptionsFromSupergraphSdl(
                 (field) => field.name.value === 'as',
               );
               if (nameField?.value?.kind === Kind.STRING && urlStr) {
-                directiveImports.set(nameField.value.value, {
+                const originalName = nameField.value.value;
+                const localName =
+                  asField?.value?.kind === Kind.STRING
+                    ? asField.value.value
+                    : originalName;
+                directiveImports.set(localName, {
                   url: urlStr,
                   originalName:
-                    asField?.value?.kind === Kind.STRING
-                      ? asField.value.value
-                      : undefined,
+                    localName !== originalName ? originalName : undefined,
                 });
               }
             }
@@ -1412,8 +1415,10 @@ export function getStitchingOptionsFromSupergraphSdl(
       });
     }
 
-    // @ts-expect-error - we know it is writable
-    schemaAst.definitions.unshift(...extraDefinitions);
+    schemaAst = {
+      ...schemaAst,
+      definitions: [...extraDefinitions, ...schemaAst.definitions],
+    };
 
     if (opts.onSubgraphAST) {
       schemaAst = opts.onSubgraphAST(subgraphName, schemaAst);

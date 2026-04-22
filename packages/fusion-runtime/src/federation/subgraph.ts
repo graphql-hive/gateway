@@ -58,7 +58,7 @@ export interface HandleFederationSubschemaOpts {
 
 function getMeshSourceDirectiveName(
   schemaExtensions: Record<string, any>,
-): string {
+): string | undefined {
   // Find Mesh source directive name from schema extensions
   const linkDirectives = schemaExtensions?.['directives']?.link;
   if (linkDirectives) {
@@ -70,13 +70,17 @@ function getMeshSourceDirectiveName(
           if (importInfo === '@source') {
             return 'source';
           } else if (importInfo.name === '@source') {
-            return importInfo.as.slice(1);
+            const alias = importInfo.as;
+            if (typeof alias === 'string') {
+              return alias.startsWith('@') ? alias.slice(1) : undefined;
+            }
+            return undefined;
           }
         }
       }
     }
   }
-  return 'mesh__source';
+  return undefined;
 }
 
 export function handleFederationSubschema({
@@ -186,21 +190,23 @@ export function handleFederationSubschema({
         }
         entitiesWithKeys.add([type.name, keys]);
       }
-      const sourceDirectives = typeDirectives[
-        meshSourceDirectiveName
-      ] as SourceDirective[];
-      const sourceDirective = sourceDirectives?.find((directive) =>
-        compareSubgraphNames(directive.subgraph, subgraphName),
-      );
-      if (sourceDirective != null) {
-        const realName = sourceDirective.name || type.name;
-        if (type.name !== realName) {
-          renameTypeNames[realName] = type.name;
-          renameTypeNamesReversed[type.name] = realName;
-          return new (Object.getPrototypeOf(type).constructor)({
-            ...type.toConfig(),
-            name: realName,
-          });
+      if (meshSourceDirectiveName) {
+        const sourceDirectives = typeDirectives[meshSourceDirectiveName] as
+          | SourceDirective[]
+          | undefined;
+        const sourceDirective = sourceDirectives?.find((directive) =>
+          compareSubgraphNames(directive.subgraph, subgraphName),
+        );
+        if (sourceDirective != null) {
+          const realName = sourceDirective.name || type.name;
+          if (type.name !== realName) {
+            renameTypeNames[realName] = type.name;
+            renameTypeNamesReversed[type.name] = realName;
+            return new (Object.getPrototypeOf(type).constructor)({
+              ...type.toConfig(),
+              name: realName,
+            });
+          }
         }
       }
     },
@@ -238,9 +244,9 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = fieldDirectives[
-        meshSourceDirectiveName
-      ] as SourceDirective[];
+      const sourceDirectives = meshSourceDirectiveName
+        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
+        : undefined;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -290,9 +296,9 @@ export function handleFederationSubschema({
           const argConfig: GraphQLArgumentConfig = fieldConfig.args[argName]!;
           const argDirectives =
             getDirectiveExtensions<ArgDirectives>(argConfig);
-          const argSourceDirectives = argDirectives[
-            meshSourceDirectiveName
-          ] as SourceDirective[];
+          const argSourceDirectives = meshSourceDirectiveName
+            ? (argDirectives[meshSourceDirectiveName] as SourceDirective[])
+            : undefined;
           const argSourceDirective = argSourceDirectives?.find((directive) =>
             compareSubgraphNames(directive.subgraph, subgraphName),
           );
@@ -345,9 +351,9 @@ export function handleFederationSubschema({
     [MapperKind.INPUT_OBJECT_FIELD]: (fieldConfig, fieldName, typeName) => {
       const fieldDirectives =
         getDirectiveExtensions<FieldDirectives>(fieldConfig);
-      const sourceDirectives = fieldDirectives[
-        meshSourceDirectiveName
-      ] as SourceDirective[];
+      const sourceDirectives = meshSourceDirectiveName
+        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
+        : undefined;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -404,9 +410,9 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = fieldDirectives[
-        meshSourceDirectiveName
-      ] as SourceDirective[];
+      const sourceDirectives = meshSourceDirectiveName
+        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
+        : undefined;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -430,9 +436,9 @@ export function handleFederationSubschema({
       externalValue,
     ) => {
       const enumDirectives = getDirectiveExtensions(enumValueConfig);
-      const sourceDirectives = enumDirectives[
-        meshSourceDirectiveName
-      ] as SourceDirective[];
+      const sourceDirectives = meshSourceDirectiveName
+        ? (enumDirectives[meshSourceDirectiveName] as SourceDirective[])
+        : undefined;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
