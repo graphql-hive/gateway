@@ -1,5 +1,21 @@
 # @graphql-hive/gateway-runtime
 
+## 2.8.9
+### Patch Changes
+
+
+
+- [#1932](https://github.com/graphql-hive/gateway/pull/1932) [`9177415`](https://github.com/graphql-hive/gateway/commit/9177415b347d055450f4fdc7acae6b32f7c71539) Thanks [@adambenhassen](https://github.com/adambenhassen)! - dependencies updates:
+  
+  - Updated dependency [`graphql-yoga@^5.21.0` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.0) (from `^5.16.2`, in `dependencies`)
+
+
+- [#2260](https://github.com/graphql-hive/gateway/pull/2260) [`8650db2`](https://github.com/graphql-hive/gateway/commit/8650db2fa1dd849af9afa96921075d5c880b90be) Thanks [@valurhrafn](https://github.com/valurhrafn)! - Disable compression for SSE responses due to the limitations of buffering in WHATWG Compression Stream
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/fusion-runtime@1.8.9
+
 ## 2.8.8
 ### Patch Changes
 
