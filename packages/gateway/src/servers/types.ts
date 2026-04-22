@@ -41,7 +41,7 @@ export interface ServerConfig {
    * Sets the number of milliseconds to wait before timing out a
    * connection due to inactivity in Node's HTTP server
    *
-   * This settings has no effect in Run, use {@link requestTimeout} instead.
+   * This setting has no effect in Bun, use {@link requestTimeout} instead.
    *
    * @default "Node's default (5 seconds)"
    */
