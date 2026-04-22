@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.5.26
+### Patch Changes
+
+
+
+- [#2264](https://github.com/graphql-hive/gateway/pull/2264) [`d844b9e`](https://github.com/graphql-hive/gateway/commit/d844b9e60ecc7eb4a9acc8827367e7e35d4b5a7b) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+
+
+- [#2278](https://github.com/graphql-hive/gateway/pull/2278) [`b525338`](https://github.com/graphql-hive/gateway/commit/b525338b6d046685674bcd3982087ba7e3376afd) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep alive timeout setting for Node server
+
+- Updated dependencies [[`9177415`](https://github.com/graphql-hive/gateway/commit/9177415b347d055450f4fdc7acae6b32f7c71539), [`d844b9e`](https://github.com/graphql-hive/gateway/commit/d844b9e60ecc7eb4a9acc8827367e7e35d4b5a7b), [`6be0696`](https://github.com/graphql-hive/gateway/commit/6be0696b5084e20cb7621ce4cd9474eff60f76d8), [`8650db2`](https://github.com/graphql-hive/gateway/commit/8650db2fa1dd849af9afa96921075d5c880b90be)]:
+  - @graphql-hive/gateway-runtime@2.8.9
+  - @graphql-hive/plugin-opentelemetry@1.4.20
+  - @graphql-hive/plugin-aws-sigv4@2.0.41
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/plugin-prometheus@2.1.39
+
 ## 2.5.25
 ### Patch Changes
 
