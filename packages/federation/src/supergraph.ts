@@ -1290,6 +1290,27 @@ export function getStitchingOptionsFromSupergraphSdl(
       as: string;
     }
 
+    function collectTransitiveDeps(
+      typeNames: Set<string>,
+      into: Set<DefinitionNode>,
+    ): void {
+      const queue = [...typeNames];
+      while (queue.length > 0) {
+        const typeName = queue.shift()!;
+        const def = inputDefinitions.get(typeName);
+        if (!def || into.has(def)) continue;
+        into.add(def);
+        if (def.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION && def.fields) {
+          for (const field of def.fields) {
+            const fieldTypeName = getNamedTypeNode(field.type).name.value;
+            if (!specifiedTypeNames.includes(fieldTypeName)) {
+              queue.push(fieldTypeName);
+            }
+          }
+        }
+      }
+    }
+
     const linkImports = new Map<string, LinkImport[]>();
     const extraDefinitions = new Set<DefinitionNode>();
 
@@ -1302,12 +1323,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           const extraDefinitionsForDirective =
             directiveExtraDefinitions.get(directiveName);
           if (extraDefinitionsForDirective) {
-            for (const extraDefName of extraDefinitionsForDirective) {
-              const extraDef = inputDefinitions.get(extraDefName);
-              if (extraDef) {
-                extraDefinitions.add(extraDef);
-              }
-            }
+            collectTransitiveDeps(extraDefinitionsForDirective, extraDefinitions);
           }
           const directiveNameInImport = `@${directiveName}`;
           const directiveImport = directiveImports.get(directiveNameInImport);
@@ -1402,12 +1418,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       }
       const linkDirectiveExtraDefs = directiveExtraDefinitions.get('link');
       if (linkDirectiveExtraDefs) {
-        for (const extraDefName of linkDirectiveExtraDefs) {
-          const extraDef = inputDefinitions.get(extraDefName);
-          if (extraDef) {
-            extraDefinitions.add(extraDef);
-          }
-        }
+        collectTransitiveDeps(linkDirectiveExtraDefs, extraDefinitions);
       }
       extraDefinitions.add({
         kind: Kind.SCHEMA_EXTENSION,
