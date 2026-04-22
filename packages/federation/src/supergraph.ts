@@ -40,7 +40,11 @@ import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
 import {
   buildASTSchema,
+  ConstArgumentNode,
+  ConstDirectiveNode,
   DefinitionNode,
+  DirectiveDefinitionNode,
+  DirectiveNode,
   DocumentNode,
   EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
@@ -65,6 +69,7 @@ import {
   parseType,
   print,
   ScalarTypeDefinitionNode,
+  SchemaExtensionNode,
   SelectionNode,
   SelectionSetNode,
   TypeDefinitionNode,
@@ -233,6 +238,13 @@ export function getStitchingOptionsFromSupergraphSdl(
 
   // To detect unresolvable interface fields
   const subgraphExternalFieldMap = new Map<string, Map<string, Set<string>>>();
+  const directiveImports = new Map<
+    string,
+    { url: string; originalName?: string }
+  >();
+  const directiveDefinitions = new Map<string, DirectiveDefinitionNode>();
+  const inputDefinitions = new Map<string, DefinitionNode>();
+  const directiveExtraDefinitions: Map<string, Set<string>> = new Map();
 
   // TODO: Temporary fix to add missing join__type directives to Query
   const subgraphNames: string[] = [];
@@ -242,6 +254,61 @@ export function getStitchingOptionsFromSupergraphSdl(
         node.values?.forEach((valueNode) => {
           subgraphNames.push(valueNode.name.value);
         });
+      }
+      inputDefinitions.set(node.name.value, node);
+    },
+    DirectiveDefinition(node) {
+      directiveDefinitions.set(node.name.value, node);
+      if (node.arguments?.length) {
+        const extraDefinitions = new Set<string>();
+        for (const arg of node.arguments) {
+          const argTypeNode = getNamedTypeNode(arg.type);
+          if (!specifiedTypeNames.includes(argTypeNode.name.value)) {
+            extraDefinitions.add(argTypeNode.name.value);
+          }
+        }
+        if (extraDefinitions.size > 0) {
+          directiveExtraDefinitions.set(node.name.value, extraDefinitions);
+        }
+      }
+    },
+    ScalarTypeDefinition(node) {
+      inputDefinitions.set(node.name.value, node);
+    },
+    InputObjectTypeDefinition(node) {
+      inputDefinitions.set(node.name.value, node);
+    },
+    Directive(node) {
+      if (node.name.value === 'link') {
+        const importedDirectives = node.arguments?.find(
+          (arg) => arg.name.value === 'import',
+        );
+        const urlArg = node.arguments?.find((arg) => arg.name.value === 'url');
+        const urlStr =
+          urlArg?.value?.kind === Kind.STRING ? urlArg.value.value : undefined;
+        if (urlStr && importedDirectives?.value?.kind === Kind.LIST) {
+          for (const importedDirective of importedDirectives.value.values) {
+            if (importedDirective.kind === Kind.STRING) {
+              directiveImports.set(importedDirective.value, { url: urlStr });
+            } else if (importedDirective.kind === Kind.OBJECT) {
+              const nameField = importedDirective.fields.find(
+                (field) => field.name.value === 'name',
+              );
+              const asField = importedDirective.fields.find(
+                (field) => field.name.value === 'as',
+              );
+              if (nameField?.value?.kind === Kind.STRING && urlStr) {
+                directiveImports.set(nameField.value.value, {
+                  url: urlStr,
+                  originalName:
+                    asField?.value?.kind === Kind.STRING
+                      ? asField.value.value
+                      : undefined,
+                });
+              }
+            }
+          }
+        }
       }
     },
   });
@@ -1215,6 +1282,140 @@ export function getStitchingOptionsFromSupergraphSdl(
         anyTypeDefinitionNode,
       ],
     };
+
+    interface LinkImport {
+      name: string;
+      as: string;
+    }
+
+    const linkImports = new Map<string, LinkImport[]>();
+    const extraDefinitions = new Set<DefinitionNode>();
+
+    visit(schemaAst, {
+      Directive(node) {
+        const directiveName = node.name.value;
+        const directiveDefinition = directiveDefinitions.get(directiveName);
+        if (directiveDefinition && !extraDefinitions.has(directiveDefinition)) {
+          extraDefinitions.add(directiveDefinition);
+          const extraDefinitionsForDirective =
+            directiveExtraDefinitions.get(directiveName);
+          if (extraDefinitionsForDirective) {
+            for (const extraDefName of extraDefinitionsForDirective) {
+              const extraDef = inputDefinitions.get(extraDefName);
+              if (extraDef) {
+                extraDefinitions.add(extraDef);
+              }
+            }
+          }
+          const directiveNameInImport = `@${directiveName}`;
+          const directiveImport = directiveImports.get(directiveNameInImport);
+          if (directiveImport) {
+            let urlImports = linkImports.get(directiveImport.url);
+            if (!urlImports) {
+              urlImports = [];
+              linkImports.set(directiveImport.url, urlImports);
+            }
+            urlImports.push({
+              name: directiveImport.originalName || directiveNameInImport,
+              as: directiveNameInImport,
+            });
+          }
+        }
+      },
+    });
+
+    const linkDirectiveNodes: DirectiveNode[] = [];
+    for (const [url, linkImportsForUrl] of linkImports) {
+      const urlArg: ConstArgumentNode = {
+        kind: Kind.ARGUMENT,
+        name: {
+          kind: Kind.NAME,
+          value: 'url',
+        },
+        value: {
+          kind: Kind.STRING,
+          value: url,
+        },
+      };
+      const importArg: ConstArgumentNode = {
+        kind: Kind.ARGUMENT,
+        name: {
+          kind: Kind.NAME,
+          value: 'import',
+        },
+        value: {
+          kind: Kind.LIST,
+          values: linkImportsForUrl.map((linkImport) => {
+            if (linkImport.name === linkImport.as) {
+              return {
+                kind: Kind.STRING,
+                value: linkImport.name,
+              };
+            } else {
+              return {
+                kind: Kind.OBJECT,
+                fields: [
+                  {
+                    kind: Kind.OBJECT_FIELD,
+                    name: {
+                      kind: Kind.NAME,
+                      value: 'name',
+                    },
+                    value: {
+                      kind: Kind.STRING,
+                      value: linkImport.name,
+                    },
+                  },
+                  {
+                    kind: Kind.OBJECT_FIELD,
+                    name: {
+                      kind: Kind.NAME,
+                      value: 'as',
+                    },
+                    value: {
+                      kind: Kind.STRING,
+                      value: linkImport.as,
+                    },
+                  },
+                ],
+              };
+            }
+          }),
+        },
+      };
+      linkDirectiveNodes.push({
+        kind: Kind.DIRECTIVE,
+        name: {
+          kind: Kind.NAME,
+          value: 'link',
+        },
+        arguments: [urlArg, importArg],
+      });
+    }
+
+    if (linkDirectiveNodes.length > 0) {
+      const linkDirectiveDef = directiveDefinitions.get('link');
+      if (linkDirectiveDef) {
+        extraDefinitions.add(linkDirectiveDef);
+      }
+      const linkDirectiveExtraDefs = directiveExtraDefinitions.get('link');
+      if (linkDirectiveExtraDefs) {
+        for (const extraDefName of linkDirectiveExtraDefs) {
+          const extraDef = inputDefinitions.get(extraDefName);
+          if (extraDef) {
+            extraDefinitions.add(extraDef);
+          }
+        }
+      }
+      extraDefinitions.add({
+        kind: Kind.SCHEMA_EXTENSION,
+        directives: [...linkDirectiveNodes] as ConstDirectiveNode[],
+      });
+    }
+
+    // @ts-expect-error - we know it is writable
+    schemaAst.definitions.unshift(...extraDefinitions);
+
     if (opts.onSubgraphAST) {
       schemaAst = opts.onSubgraphAST(subgraphName, schemaAst);
     }

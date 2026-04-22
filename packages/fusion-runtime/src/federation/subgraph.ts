@@ -56,6 +56,29 @@ export interface HandleFederationSubschemaOpts {
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
 }
 
+function getMeshSourceDirectiveName(
+  schemaExtensions: Record<string, any>,
+): string {
+  // Find Mesh source directive name from schema extensions
+  const linkDirectives = schemaExtensions?.['directives']?.link;
+  if (linkDirectives) {
+    for (const linkDirective of linkDirectives) {
+      if (
+        linkDirective.url === 'https://the-guild.dev/graphql/mesh/spec/v1.0'
+      ) {
+        for (const importInfo of linkDirective.import || []) {
+          if (importInfo === '@source') {
+            return 'source';
+          } else if (importInfo.name === '@source') {
+            return importInfo.as.slice(1);
+          }
+        }
+      }
+    }
+  }
+  return 'mesh__source';
+}
+
 export function handleFederationSubschema({
   subschemaConfig,
   unifiedGraphDirectives,
@@ -95,6 +118,9 @@ export function handleFederationSubschema({
   const subgraphExtensions: Record<string, unknown> =
     (subschemaConfig.schema.extensions ||= {});
   subgraphExtensions['directives'] = subgraphDirectives;
+
+  const meshSourceDirectiveName =
+    getMeshSourceDirectiveName(subgraphExtensions);
 
   interface TypeDirectives {
     source: SourceDirective;
@@ -160,7 +186,9 @@ export function handleFederationSubschema({
         }
         entitiesWithKeys.add([type.name, keys]);
       }
-      const sourceDirectives = typeDirectives.source;
+      const sourceDirectives = typeDirectives[
+        meshSourceDirectiveName
+      ] as SourceDirective[];
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -210,7 +238,9 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = fieldDirectives.source;
+      const sourceDirectives = fieldDirectives[
+        meshSourceDirectiveName
+      ] as SourceDirective[];
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -260,7 +290,9 @@ export function handleFederationSubschema({
           const argConfig: GraphQLArgumentConfig = fieldConfig.args[argName]!;
           const argDirectives =
             getDirectiveExtensions<ArgDirectives>(argConfig);
-          const argSourceDirectives = argDirectives.source;
+          const argSourceDirectives = argDirectives[
+            meshSourceDirectiveName
+          ] as SourceDirective[];
           const argSourceDirective = argSourceDirectives?.find((directive) =>
             compareSubgraphNames(directive.subgraph, subgraphName),
           );
@@ -313,7 +345,9 @@ export function handleFederationSubschema({
     [MapperKind.INPUT_OBJECT_FIELD]: (fieldConfig, fieldName, typeName) => {
       const fieldDirectives =
         getDirectiveExtensions<FieldDirectives>(fieldConfig);
-      const sourceDirectives = fieldDirectives.source;
+      const sourceDirectives = fieldDirectives[
+        meshSourceDirectiveName
+      ] as SourceDirective[];
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -370,7 +404,9 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = fieldDirectives.source;
+      const sourceDirectives = fieldDirectives[
+        meshSourceDirectiveName
+      ] as SourceDirective[];
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
@@ -393,10 +429,10 @@ export function handleFederationSubschema({
       _schema,
       externalValue,
     ) => {
-      const enumDirectives = getDirectiveExtensions<{
-        source: SourceDirective;
-      }>(enumValueConfig);
-      const sourceDirectives = enumDirectives.source;
+      const enumDirectives = getDirectiveExtensions(enumValueConfig);
+      const sourceDirectives = enumDirectives[
+        meshSourceDirectiveName
+      ] as SourceDirective[];
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
