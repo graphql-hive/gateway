@@ -69,7 +69,6 @@ import {
   parseType,
   print,
   ScalarTypeDefinitionNode,
-  SchemaExtensionNode,
   SelectionNode,
   SelectionSetNode,
   TypeDefinitionNode,
