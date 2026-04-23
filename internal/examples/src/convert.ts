@@ -21,6 +21,7 @@ const j = jscodeshift.withParser(parser);
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const __project = path.resolve(__dirname, '..', '..', '..');
+const TIMEOUT = 60_000 * 5; // 5 minutes
 
 /**
  * Published packages from changesets. Matches `publishedPackages` output in:
@@ -548,7 +549,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         const [proc, waitForExit] = await spawn(
           {
             cwd: exampleDir,
-            signal: background ? undefined : AbortSignal.timeout(60_000),
+            signal: background ? undefined : AbortSignal.timeout(TIMEOUT),
           },
           ...cmdAndArgs(task),
         );
@@ -566,7 +567,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           await spawn(
             {
               cwd: exampleDir,
-              signal: AbortSignal.timeout(60_000),
+              signal: AbortSignal.timeout(TIMEOUT),
             },
             ...cmdAndArgs(background.wait),
           );

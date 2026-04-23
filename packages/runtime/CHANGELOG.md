@@ -1,5 +1,215 @@
 # @graphql-hive/gateway-runtime
 
+## 2.8.9
+### Patch Changes
+
+
+
+- [#1932](https://github.com/graphql-hive/gateway/pull/1932) [`9177415`](https://github.com/graphql-hive/gateway/commit/9177415b347d055450f4fdc7acae6b32f7c71539) Thanks [@adambenhassen](https://github.com/adambenhassen)! - dependencies updates:
+  
+  - Updated dependency [`graphql-yoga@^5.21.0` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.0) (from `^5.16.2`, in `dependencies`)
+
+
+- [#2260](https://github.com/graphql-hive/gateway/pull/2260) [`8650db2`](https://github.com/graphql-hive/gateway/commit/8650db2fa1dd849af9afa96921075d5c880b90be) Thanks [@valurhrafn](https://github.com/valurhrafn)! - Disable compression for SSE responses due to the limitations of buffering in WHATWG Compression Stream
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/fusion-runtime@1.8.9
+
+## 2.8.8
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.13) (from `^0.4.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.42` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.42) (from `^0.104.34`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.27` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.27) (from `^0.104.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.35) (from `^0.104.16`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-mesh/fusion-runtime@1.8.9
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/transport-common@1.0.16
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [[`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163)]:
+  - @graphql-tools/delegate@12.0.14
+  - @graphql-mesh/fusion-runtime@1.8.8
+  - @graphql-tools/batch-delegate@10.0.20
+  - @graphql-tools/federation@4.3.7
+  - @graphql-tools/stitch@10.1.18
+  - @graphql-tools/wrap@11.1.14
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.6
+### Patch Changes
+
+
+
+- [#2238](https://github.com/graphql-hive/gateway/pull/2238) [`994a292`](https://github.com/graphql-hive/gateway/commit/994a2927aa16d16c96d1e0ebd0c4c9884a331662) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Added dependency [`@whatwg-node/fetch@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.13) (to `dependencies`)
+
+
+- [#2236](https://github.com/graphql-hive/gateway/pull/2236) [`66e83ed`](https://github.com/graphql-hive/gateway/commit/66e83edc2beccbdacecc53e50fad8017c3651495) Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug where `fetch` function is not available in `GatewayConfigContext` while initializing the plugins
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.5
+### Patch Changes
+
+
+
+- [#2219](https://github.com/graphql-hive/gateway/pull/2219) [`95ea66e`](https://github.com/graphql-hive/gateway/commit/95ea66e020d7b3d487e991468406964303e98e86) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.16.0) (from `^0.14.0`, in `dependencies`)
+- Updated dependencies [[`3645fe7`](https://github.com/graphql-hive/gateway/commit/3645fe7930fc026c33aea6d70aaf66cfd0f61d38)]:
+  - @graphql-mesh/fusion-runtime@1.8.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [[`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6)]:
+  - @graphql-tools/executor-http@3.2.1
+  - @graphql-tools/federation@4.3.6
+  - @graphql-mesh/fusion-runtime@1.8.6
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [[`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95)]:
+  - @graphql-tools/executor-http@3.2.0
+  - @graphql-tools/delegate@12.0.13
+  - @graphql-mesh/fusion-runtime@1.8.5
+  - @graphql-tools/federation@4.3.5
+  - @graphql-tools/batch-delegate@10.0.19
+  - @graphql-tools/stitch@10.1.17
+  - @graphql-tools/wrap@11.1.13
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.2
+### Patch Changes
+
+
+
+- [#2204](https://github.com/graphql-hive/gateway/pull/2204) [`9b1ef30`](https://github.com/graphql-hive/gateway/commit/9b1ef30e914bc9a449977cf9be295a68df8a9d49) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.14.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.14.0) (from `^0.13.0`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-mesh/fusion-runtime@1.8.4
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [[`f9d2f0e`](https://github.com/graphql-hive/gateway/commit/f9d2f0ea9e7f172b8270c17961a98bc52a7ba49d)]:
+  - @graphql-tools/executor-http@3.1.4
+  - @graphql-tools/federation@4.3.4
+  - @graphql-mesh/fusion-runtime@1.8.4
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.8.0
+### Minor Changes
+
+
+
+- [#2179](https://github.com/graphql-hive/gateway/pull/2179) [`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d) Thanks [@ardatan](https://github.com/ardatan)! - # Gateway-level Inflight Request Deduplication
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    inboundInflightRequestDeduplication: true,
+  });
+  ```
+  
+  When enabled, if multiple identical requests are received by the gateway while the first one is still being processed,
+  only the first request will be executed and the rest will wait for its result,
+  which will then be shared among all identical requests.
+  
+  This can be useful to reduce the load on the gateway and the subgraphs in case of high traffic and identical requests.
+  
+  By default it includes;
+  - HTTP Request Method (e.g. GET, POST)
+  - Request URL
+  - Selected Request Headers (e.g. Authorization, Client-Name, etc...)
+  - GraphQL Operation AST
+  - GraphQL Operation Name
+  - GraphQL Operation Variables
+  
+  By default it takes all headers into account, but you can provide a list of headers to include or exclude from the deduplication key calculation.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    inboundInflightRequestDeduplication: {
+      // Only include the "authorization" header in the deduplication key calculation
+      shouldIncludeHeader: headerName => headerName === 'authorization'
+    },
+  });
+  ```
+
+### Patch Changes
+
+
+
+- [#2187](https://github.com/graphql-hive/gateway/pull/2187) [`04caeff`](https://github.com/graphql-hive/gateway/commit/04caeff1d6a6df68720d4ab0b87d20a486ed115a) Thanks [@ardatan](https://github.com/ardatan)! - Fix header propagation for non-GraphQL sources
+
+- Updated dependencies [[`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d)]:
+  - @graphql-tools/executor-http@3.1.3
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-tools/federation@4.3.3
+  - @graphql-mesh/fusion-runtime@1.8.3
+
+## 2.7.11
+### Patch Changes
+
+- Updated dependencies [[`f85a9fe`](https://github.com/graphql-hive/gateway/commit/f85a9fe11dc88a7fa8397c5372ef24f9e91b638e)]:
+  - @graphql-tools/executor-http@3.1.2
+  - @graphql-tools/federation@4.3.2
+  - @graphql-mesh/fusion-runtime@1.8.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.7.10
+### Patch Changes
+
+
+
+- [#2141](https://github.com/graphql-hive/gateway/pull/2141) [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.34` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.34) (from `^0.104.18`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.7.9
+### Patch Changes
+
+
+
+- [#2127](https://github.com/graphql-hive/gateway/pull/2127) [`6e15d41`](https://github.com/graphql-hive/gateway/commit/6e15d4107159c931aa65f075278104832f3f64a8) Thanks [@ardatan](https://github.com/ardatan)! - When a plugin like Defer/Stream plugin updates the schema, the gateway considers the original schema as a new schema then tries to overwrite it.
+  After the overwrite, the external plugin tries to update it again on each request. So this causes extra schema changes on each request which causes extra resource consumption.
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.7.8
+### Patch Changes
+
+- Updated dependencies [[`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e)]:
+  - @graphql-tools/federation@4.3.1
+  - @graphql-tools/delegate@12.0.12
+  - @graphql-mesh/fusion-runtime@1.8.1
+  - @graphql-tools/batch-delegate@10.0.18
+  - @graphql-tools/stitch@10.1.16
+  - @graphql-tools/wrap@11.1.12
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
 ## 2.7.7
 ### Patch Changes
 

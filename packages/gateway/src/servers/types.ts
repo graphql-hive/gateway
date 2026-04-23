@@ -37,6 +37,15 @@ export interface ServerConfig {
    * @default 300000 (5 minutes)
    */
   requestTimeout?: number;
+  /**
+   * Sets the number of milliseconds to wait before timing out a
+   * connection due to inactivity in Node's HTTP server
+   *
+   * This setting has no effect in Bun, use {@link requestTimeout} instead.
+   *
+   * @default "Node's default (5 seconds)"
+   */
+  keepAliveTimeout?: number;
 }
 
 export interface ServerConfigSSLCredentials {

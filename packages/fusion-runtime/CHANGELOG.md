@@ -1,5 +1,80 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.8.9
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.13) (from `^0.4.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.27` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.27) (from `^0.104.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.35) (from `^0.104.16`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-mesh/transport-common@1.0.16
+
+## 1.8.8
+### Patch Changes
+
+- Updated dependencies [[`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163)]:
+  - @graphql-tools/delegate@12.0.14
+  - @graphql-tools/federation@4.3.7
+  - @graphql-tools/stitch@10.1.18
+  - @graphql-tools/stitching-directives@4.0.20
+  - @graphql-tools/wrap@11.1.14
+
+## 1.8.7
+### Patch Changes
+
+
+
+- [#2225](https://github.com/graphql-hive/gateway/pull/2225) [`3645fe7`](https://github.com/graphql-hive/gateway/commit/3645fe7930fc026c33aea6d70aaf66cfd0f61d38) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Inject the @resolveTo directive definition when not present in the composed supergraph SDL
+
+## 1.8.6
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.3.6
+
+## 1.8.5
+### Patch Changes
+
+- Updated dependencies [[`d2bf6af`](https://github.com/graphql-hive/gateway/commit/d2bf6af899b21e5faee5f8436f39e50fd594ab7a)]:
+  - @graphql-tools/batch-execute@10.0.8
+  - @graphql-tools/delegate@12.0.13
+  - @graphql-tools/federation@4.3.5
+  - @graphql-tools/stitch@10.1.17
+  - @graphql-tools/stitching-directives@4.0.19
+  - @graphql-tools/wrap@11.1.13
+
+## 1.8.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.3.4
+
+## 1.8.3
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.3.3
+
+## 1.8.2
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.3.2
+
+## 1.8.1
+### Patch Changes
+
+- Updated dependencies [[`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e)]:
+  - @graphql-tools/federation@4.3.1
+  - @graphql-tools/delegate@12.0.12
+  - @graphql-tools/stitch@10.1.16
+  - @graphql-tools/stitching-directives@4.0.18
+  - @graphql-tools/wrap@11.1.12
+
 ## 1.8.0
 ### Minor Changes
 

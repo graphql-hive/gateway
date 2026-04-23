@@ -1,5 +1,82 @@
 # @graphql-tools/executor-http
 
+## 3.2.1
+### Patch Changes
+
+
+
+- [`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6) Thanks [@ardatan](https://github.com/ardatan)! - Do not recursively return HTTP extensions
+
+## 3.2.0
+### Minor Changes
+
+
+
+- [#2211](https://github.com/graphql-hive/gateway/pull/2211) [`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95) Thanks [@ardatan](https://github.com/ardatan)! - Add `exposeHTTPDetailsInExtensions` flag to get `Response` details in the result extensions.
+  
+  ```ts
+  import { buildHTTPExecutor } from '@graphql-tools/executor-http';
+  
+  const executor = buildHTTPExecutor({
+    exposeHTTPDetailsInExtensions: true,
+  });
+  ```
+  
+  Then in the result;
+  
+  ```ts
+  {
+      "data": {
+          "hello": "world"
+      },
+      "extensions": {
+          "request": {
+              "url": "http://localhost:4000/graphql",
+              "method": "POST",
+              "headers": {
+                  "content-type": "application/json"
+              },
+              "body": "{\"query\":\"{ hello }\"}"
+          },
+          "response": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                  "content-type": "application/json"
+              }
+          }
+      }
+  }
+
+## 3.1.4
+### Patch Changes
+
+
+
+- [#2194](https://github.com/graphql-hive/gateway/pull/2194) [`f9d2f0e`](https://github.com/graphql-hive/gateway/commit/f9d2f0ea9e7f172b8270c17961a98bc52a7ba49d) Thanks [@ManrajSingh6](https://github.com/ManrajSingh6)! - Prevent reusing the cached inflight requests
+
+## 3.1.3
+### Patch Changes
+
+
+
+- [#2179](https://github.com/graphql-hive/gateway/pull/2179) [`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d) Thanks [@ardatan](https://github.com/ardatan)! - Exclude mutations for deduplication
+
+## 3.1.2
+### Patch Changes
+
+
+
+- [#2185](https://github.com/graphql-hive/gateway/pull/2185) [`f85a9fe`](https://github.com/graphql-hive/gateway/commit/f85a9fe11dc88a7fa8397c5372ef24f9e91b638e) Thanks [@elliotvilhelm](https://github.com/elliotvilhelm)! - Fix SSE data parsing when JSON payload contains literal "data:" substrings
+  
+  The SSE event parser used `msg.split('data:')` to extract the data field, which
+  incorrectly splits on `data:` substrings inside the JSON payload (e.g., OAuth
+  scopes like `file_metadata:read`, data URIs like `data:image/png`). This caused
+  `JSON.parse` to fail with "Unterminated string in JSON" errors.
+  
+  The fix uses line-based parsing per the SSE spec: split on newlines first, then
+  find the line starting with `data:`.
+
 ## 3.1.1
 ### Patch Changes
 

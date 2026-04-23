@@ -1,5 +1,58 @@
 # @graphql-tools/federation
 
+## 4.3.7
+### Patch Changes
+
+- Updated dependencies [[`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163)]:
+  - @graphql-tools/delegate@12.0.14
+  - @graphql-tools/stitch@10.1.18
+  - @graphql-tools/wrap@11.1.14
+
+## 4.3.6
+### Patch Changes
+
+- Updated dependencies [[`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6)]:
+  - @graphql-tools/executor-http@3.2.1
+
+## 4.3.5
+### Patch Changes
+
+- Updated dependencies [[`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95)]:
+  - @graphql-tools/executor-http@3.2.0
+  - @graphql-tools/delegate@12.0.13
+  - @graphql-tools/stitch@10.1.17
+  - @graphql-tools/wrap@11.1.13
+
+## 4.3.4
+### Patch Changes
+
+- Updated dependencies [[`f9d2f0e`](https://github.com/graphql-hive/gateway/commit/f9d2f0ea9e7f172b8270c17961a98bc52a7ba49d)]:
+  - @graphql-tools/executor-http@3.1.4
+
+## 4.3.3
+### Patch Changes
+
+- Updated dependencies [[`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d)]:
+  - @graphql-tools/executor-http@3.1.3
+
+## 4.3.2
+### Patch Changes
+
+- Updated dependencies [[`f85a9fe`](https://github.com/graphql-hive/gateway/commit/f85a9fe11dc88a7fa8397c5372ef24f9e91b638e)]:
+  - @graphql-tools/executor-http@3.1.2
+
+## 4.3.1
+### Patch Changes
+
+
+
+- [#2106](https://github.com/graphql-hive/gateway/pull/2106) [`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e) Thanks [@ardatan](https://github.com/ardatan)! - - Optimizations to select ONLY required fields when fetching the missing fields from other subgraphs
+  - Do not try to resolve types from the subschemas which only have the stub types, for example if a subgraph only has `id` field as a stub, do not use that subgraph as a target subgraph for resolving the type, because it will not have any other fields than `id`.
+- Updated dependencies [[`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e)]:
+  - @graphql-tools/delegate@12.0.12
+  - @graphql-tools/stitch@10.1.16
+  - @graphql-tools/wrap@11.1.12
+
 ## 4.3.0
 ### Minor Changes
 

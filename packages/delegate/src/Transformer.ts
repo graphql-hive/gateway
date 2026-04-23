@@ -34,9 +34,7 @@ export class Transformer<
       ...originalRequest,
       document: prepareGatewayDocument(
         originalRequest.document,
-        this.delegationContext.transformedSchema,
-        this.delegationContext.returnType,
-        this.delegationContext.info?.schema,
+        this.delegationContext,
       ),
     };
 

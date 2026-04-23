@@ -7,11 +7,14 @@
   },
   "devDependencies": {
     "@apollo/server": "^5.4.0",
-    "@apollo/subgraph": "^2.11.3",
+    "@apollo/subgraph": "^2.13.3",
     "@as-integrations/express5": "^1.1.2",
+    "@graphql-mesh/compose-cli": "^1.5.30",
+    "@omnigraph/openapi": "^0.109.49",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "cors": "^2.8.5",
-    "express": "^5.0.0"
+    "express": "^5.0.0",
+    "fets": "^0.8.6"
   }
 }

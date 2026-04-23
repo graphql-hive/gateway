@@ -44,7 +44,7 @@ RUN set -eux; \
     echo "Error: Could not determine architecture." >&2; \
     exit 1; \
   fi; \
-  openssl_version="3.5.4-1~deb13u2"; \
+  openssl_version="3.5.5-1~deb13u2"; \
   for pkg in openssl libssl3t64 openssl-provider-legacy; do \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
@@ -52,9 +52,23 @@ RUN set -eux; \
   done
 
 # Install security update for libgnutls30t64
-RUN wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
-RUN dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
-RUN rm -f "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
+RUN set -eux; \
+  if [ -z "${TARGETARCH:-}" ]; then \
+    if ! command -v dpkg >/dev/null 2>&1; then \
+      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture for libgnutls30t64." >&2; \
+      exit 1; \
+    fi; \
+    arch="$(dpkg --print-architecture)"; \
+  else \
+    arch="${TARGETARCH}"; \
+  fi; \
+  if [ -z "$arch" ]; then \
+    echo "Error: Could not determine architecture for libgnutls30t64." >&2; \
+    exit 1; \
+  fi; \
+  wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
+  dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
+  rm -f "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \

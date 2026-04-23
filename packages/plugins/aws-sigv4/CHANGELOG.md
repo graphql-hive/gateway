@@ -1,5 +1,59 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 2.0.41
+### Patch Changes
+
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-mesh/fusion-runtime@1.8.9
+
+## 2.0.40
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.8
+
+## 2.0.39
+### Patch Changes
+
+- Updated dependencies [[`3645fe7`](https://github.com/graphql-hive/gateway/commit/3645fe7930fc026c33aea6d70aaf66cfd0f61d38)]:
+  - @graphql-mesh/fusion-runtime@1.8.7
+
+## 2.0.38
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.6
+
+## 2.0.37
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.5
+
+## 2.0.36
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.4
+
+## 2.0.35
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.3
+
+## 2.0.34
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.2
+
+## 2.0.33
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.8.1
+
 ## 2.0.32
 ### Patch Changes
 

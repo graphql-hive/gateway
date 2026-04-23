@@ -44,7 +44,7 @@ RUN set -eux; \
     echo "Error: Could not determine architecture." >&2; \
     exit 1; \
   fi; \
-  openssl_version="3.5.4-1~deb13u2"; \
+  openssl_version="3.5.5-1~deb13u2"; \
   for pkg in openssl libssl3t64 openssl-provider-legacy; do \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
@@ -125,6 +125,15 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 # fix minimatch vulnerability by updating it to the latest version ^10.2.4
 RUN npm install minimatch@^10.2.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
+
+# fix brace-expansion vulnerability by updating it to the latest version ^5.0.4
+RUN npm install brace-expansion@^5.0.4 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion 
+
+# fix picomatch  vulnerability by updating it to the latest version ^4.0.4
+RUN npm install picomatch@^4.0.4 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch 
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]

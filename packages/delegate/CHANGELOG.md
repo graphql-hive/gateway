@@ -1,5 +1,28 @@
 # @graphql-tools/delegate
 
+## 12.0.14
+### Patch Changes
+
+
+
+- [#2243](https://github.com/graphql-hive/gateway/pull/2243) [`dff525f`](https://github.com/graphql-hive/gateway/commit/dff525f214d3525434c5a73a5b3fb22c46550163) Thanks [@qsona](https://github.com/qsona)! - Fix redundant type merging calls when subschemas have no explicit name.
+  
+  The fallback name-based matching in `resolveExternalValue` (introduced in [#1557](https://github.com/graphql-hive/gateway/issues/1557)) incorrectly matched unrelated subschemas when neither had an explicit `name` set, because `undefined === undefined` evaluated to `true`. This caused type merging to trigger even when fetching a type directly from its source subschema, resulting in a redundant second call.
+
+## 12.0.13
+### Patch Changes
+
+- Updated dependencies [[`d2bf6af`](https://github.com/graphql-hive/gateway/commit/d2bf6af899b21e5faee5f8436f39e50fd594ab7a)]:
+  - @graphql-tools/batch-execute@10.0.8
+
+## 12.0.12
+### Patch Changes
+
+
+
+- [#2106](https://github.com/graphql-hive/gateway/pull/2106) [`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e) Thanks [@ardatan](https://github.com/ardatan)! - - Optimizations to select ONLY required fields when fetching the missing fields from other subgraphs
+  - Do not try to resolve types from the subschemas which only have the stub types, for example if a subgraph only has `id` field as a stub, do not use that subgraph as a target subgraph for resolving the type, because it will not have any other fields than `id`.
+
 ## 12.0.11
 ### Patch Changes
 

@@ -7,12 +7,12 @@
     "start": "tsx ./src/bin.ts"
   },
   "devDependencies": {
-    "@apollo/rover": "0.37.0",
+    "@apollo/rover": "0.38.0",
     "@babel/parser": "^7.28.5",
     "@types/jscodeshift": "^17.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
     "dedent": "^1.7.0",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.0",
     "glob": "^13.0.0",
     "jscodeshift": "^17.1.1",
     "tsx": "4.21.0",

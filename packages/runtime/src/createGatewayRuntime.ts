@@ -34,6 +34,29 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import {
+  Blob,
+  btoa,
+  CompressionStream,
+  crypto,
+  DecompressionStream,
+  fetch,
+  File,
+  FormData,
+  Headers,
+  ReadableStream,
+  Request,
+  Response,
+  TextDecoder,
+  TextDecoderStream,
+  TextEncoder,
+  TextEncoderStream,
+  TransformStream,
+  URL,
+  URLPattern,
+  URLSearchParams,
+  WritableStream,
+} from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
@@ -47,6 +70,7 @@ import {
 import {
   chain,
   createYoga,
+  FetchAPI,
   isAsyncIterable,
   useExecutionCancellation,
   useReadinessCheck,
@@ -77,6 +101,7 @@ import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
+import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
@@ -117,7 +142,38 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  let fetchAPI = config.fetchAPI;
+  const fetchAPI: FetchAPI = {
+    fetch,
+    Request,
+    Response,
+    Headers,
+    FormData,
+    ReadableStream,
+    WritableStream,
+    TransformStream,
+    CompressionStream,
+    DecompressionStream,
+    TextDecoderStream,
+    TextEncoderStream,
+    Blob,
+    File,
+    crypto,
+    btoa,
+    TextEncoder,
+    TextDecoder,
+    URLPattern,
+    URL,
+    URLSearchParams,
+  };
+  if (config?.fetchAPI) {
+    for (const key in config.fetchAPI) {
+      const fetchAPIKey = key as keyof FetchAPI;
+      if (config.fetchAPI[fetchAPIKey]) {
+        // @ts-expect-error - types don't match somehow
+        fetchAPI[fetchAPIKey] = config.fetchAPI[fetchAPIKey];
+      }
+    }
+  }
   const log = createLoggerFromLogging(config.logging);
 
   let instrumentation: GatewayPlugin['instrumentation'];
@@ -126,11 +182,14 @@ export function createGatewayRuntime<
   const onCacheGetHooks: OnCacheGetHook[] = [];
   const onCacheSetHooks: OnCacheSetHook[] = [];
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
+
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
     log,
     () => instrumentation,
+    fetchAPI.fetch,
   );
+
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
         cache: config.cache,
@@ -335,6 +394,7 @@ export function createGatewayRuntime<
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
+                replaceSchema(unifiedGraph);
               }
               continuePolling();
               return true;
@@ -377,6 +437,7 @@ export function createGatewayRuntime<
                   assumeValidSDL: true,
                 });
               }
+              replaceSchema(unifiedGraph);
               continuePolling();
               return true;
             },
@@ -396,6 +457,7 @@ export function createGatewayRuntime<
               }),
             (schema) => {
               unifiedGraph = schema;
+              replaceSchema(unifiedGraph);
               continuePolling();
               return true;
             },
@@ -464,6 +526,7 @@ export function createGatewayRuntime<
       () => unifiedGraph,
       (newUnifiedGraph) => {
         unifiedGraph = newUnifiedGraph;
+        replaceSchema(newUnifiedGraph);
       },
       onSubgraphExecuteHooks,
       onDelegateHooks,
@@ -626,15 +689,8 @@ export function createGatewayRuntime<
   });
 
   const defaultGatewayPlugin: GatewayPlugin = {
-    onFetch({ setFetchFn }) {
-      if (fetchAPI?.fetch) {
-        setFetchFn(fetchAPI.fetch);
-      }
-    },
     onRequestParse() {
-      return handleMaybePromise(getSchema, (schema) => {
-        replaceSchema(schema);
-      });
+      return handleMaybePromise(getSchema, () => {});
     },
     onPluginInit({ plugins, setSchema }) {
       replaceSchema = setSchema;
@@ -950,6 +1006,16 @@ export function createGatewayRuntime<
     useCacheDebug({ log: configContext.log }),
   );
 
+  const appendPlugins = [];
+
+  if (config.inboundInflightRequestDeduplication) {
+    const opts =
+      typeof config.inboundInflightRequestDeduplication === 'object'
+        ? config.inboundInflightRequestDeduplication
+        : undefined;
+    appendPlugins.push(useInboundInflightReqDedupeForYoga(opts));
+  }
+
   const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
@@ -960,6 +1026,7 @@ export function createGatewayRuntime<
       ...basePlugins,
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
+      ...appendPlugins,
     ],
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
@@ -986,8 +1053,6 @@ export function createGatewayRuntime<
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
   });
-
-  fetchAPI ||= yoga.fetchAPI;
 
   Object.defineProperties(yoga, {
     version: {

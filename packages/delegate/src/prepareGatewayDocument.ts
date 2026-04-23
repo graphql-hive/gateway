@@ -9,8 +9,10 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLInterfaceType,
   GraphQLNamedOutputType,
   GraphQLNamedType,
+  GraphQLObjectType,
   GraphQLOutputType,
   GraphQLSchema,
   InlineFragmentNode,
@@ -27,14 +29,17 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
-import { StitchingInfo } from './types.js';
+import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
+import { DelegationContext, StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(
   originalDocument: DocumentNode,
-  transformedSchema: GraphQLSchema,
-  returnType: GraphQLOutputType,
-  infoSchema?: GraphQLSchema,
+  delegationContext: DelegationContext<any>,
 ): DocumentNode {
+  const transformedSchema = delegationContext.transformedSchema;
+  const returnType = delegationContext.returnType;
+  const infoSchema = delegationContext.info?.schema;
+
   const wrappedConcreteTypesDocument = wrapConcreteTypes(
     returnType,
     transformedSchema,
@@ -73,6 +78,13 @@ export function prepareGatewayDocument(
     definitions: [...operations, ...fragments, ...expandedFragments],
   };
 
+  const fragmentMap = Object.create(null);
+  for (const fragment of expandedDocument.definitions) {
+    if (fragment.kind === Kind.FRAGMENT_DEFINITION) {
+      fragmentMap[fragment.name.value] = fragment;
+    }
+  }
+
   const visitorKeyMap: ASTVisitorKeyMap = {
     Document: ['definitions'],
     OperationDefinition: ['selectionSet'],
@@ -99,6 +111,8 @@ export function prepareGatewayDocument(
           dynamicSelectionSetsByField,
           infoSchema,
           visitedSelections,
+          fragmentMap,
+          delegationContext,
         ),
     }),
     // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
@@ -167,11 +181,40 @@ function visitSelectionSet(
   // TODO: Refactor here later for Federation compat
   infoSchema: GraphQLSchema,
   visitedSelections: WeakSet<SelectionNode>,
+  fragmentMap: Record<string, FragmentDefinitionNode>,
+  delegationContext: DelegationContext,
 ): SelectionSetNode {
   const newSelections = new Set<SelectionNode>();
   const maybeType = typeInfo.getParentType();
   if (maybeType != null) {
     const parentType: GraphQLNamedType = getNamedType(maybeType);
+    if (
+      isSelectionSetSatisfiedBySchema(
+        transformedSchema,
+        parentType,
+        node,
+        fragmentMap,
+        infoSchema,
+        delegationContext,
+      )
+    ) {
+      if (isAbstractType(delegationContext.returnType)) {
+        addSelectionNodeToSelections(newSelections, {
+          kind: Kind.FIELD,
+          name: {
+            kind: Kind.NAME,
+            value: '__typename',
+          },
+        });
+      }
+      for (const selection of node.selections) {
+        addSelectionNodeToSelections(newSelections, selection);
+      }
+      return {
+        ...node,
+        selections: Array.from(newSelections),
+      };
+    }
     const parentTypeName = parentType.name;
 
     const fieldNodes = fieldNodesByType[parentTypeName];
@@ -401,6 +444,139 @@ function isFieldNodeSatisfiedBySelections(
     }
   }
   return false;
+}
+
+export function isSelectionSetSatisfiedBySchema(
+  schema: GraphQLSchema,
+  type: GraphQLNamedType,
+  selectionSet: SelectionSetNode,
+  fragmentsMap: Record<string, FragmentDefinitionNode>,
+  infoSchema: GraphQLSchema,
+  delegationContext: DelegationContext,
+) {
+  const namedType = getNamedType(type);
+  if (isLeafType(namedType)) {
+    return true;
+  }
+  const fields =
+    isObjectType(namedType) || isInterfaceType(namedType)
+      ? namedType.getFields()
+      : null;
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.FIELD) {
+      if (isAbstractType(namedType)) {
+        return false;
+      }
+      const fieldName = selection.name.value;
+      if (fieldName === '__typename') {
+        continue;
+      }
+      if (fields) {
+        const field = fields[fieldName];
+        if (!field) {
+          return false;
+        }
+        const typeInInfoSchema = infoSchema.getType(namedType.name) as
+          | GraphQLObjectType
+          | GraphQLInterfaceType;
+        const fieldInInfoSchema = typeInInfoSchema?.getFields?.()?.[fieldName];
+        const resolverInInfoSchema = fieldInInfoSchema?.resolve;
+        // Is additional field?
+        if (
+          resolverInInfoSchema != null &&
+          resolverInInfoSchema.name !== 'defaultMergedResolver' &&
+          resolverInInfoSchema.name !== 'defaultFieldResolver'
+        ) {
+          return false;
+        }
+        if (delegationContext.info) {
+          const overrideHandler =
+            delegationContext.subschemaConfig?.merge?.[namedType.name]
+              ?.fields?.[field.name]?.override;
+          if (overrideHandler != null) {
+            const overridden = handleOverrideByDelegation(
+              delegationContext.info,
+              delegationContext.context,
+              overrideHandler,
+            );
+            if (!overridden) {
+              return false;
+            }
+          }
+        }
+        if (selection.selectionSet) {
+          const fieldType = getNamedType(field.type);
+          const satisfied = isSelectionSetSatisfiedBySchema(
+            schema,
+            fieldType,
+            selection.selectionSet,
+            fragmentsMap,
+            infoSchema,
+            delegationContext,
+          );
+          if (!satisfied) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+      if (selection.typeCondition) {
+        const typeConditionName = selection.typeCondition.name.value;
+        const typeCondition = schema.getType(typeConditionName);
+        if (!typeCondition) {
+          return false;
+        }
+        const satisfied = isSelectionSetSatisfiedBySchema(
+          schema,
+          typeCondition,
+          selection.selectionSet,
+          fragmentsMap,
+          infoSchema,
+          delegationContext,
+        );
+        if (!satisfied) {
+          return false;
+        }
+      } else {
+        const satisfied = isSelectionSetSatisfiedBySchema(
+          schema,
+          type,
+          selection.selectionSet,
+          fragmentsMap,
+          infoSchema,
+          delegationContext,
+        );
+        if (!satisfied) {
+          return false;
+        }
+      }
+    } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = selection.name.value;
+      const fragment = fragmentsMap[fragmentName];
+      if (!fragment) {
+        return false;
+      }
+      const typeConditionName = fragment.typeCondition.name.value;
+      const typeCondition = schema.getType(typeConditionName);
+      if (!typeCondition) {
+        return false;
+      }
+      const satisfied = isSelectionSetSatisfiedBySchema(
+        schema,
+        typeCondition,
+        fragment.selectionSet,
+        fragmentsMap,
+        infoSchema,
+        delegationContext,
+      );
+      if (!satisfied) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function isSelectionSetSatisfied({

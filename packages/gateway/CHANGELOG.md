@@ -1,5 +1,227 @@
 # @graphql-hive/gateway
 
+## 2.5.26
+### Patch Changes
+
+
+
+- [#2264](https://github.com/graphql-hive/gateway/pull/2264) [`d844b9e`](https://github.com/graphql-hive/gateway/commit/d844b9e60ecc7eb4a9acc8827367e7e35d4b5a7b) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.215.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.215.0) (from `^0.214.0`, in `dependencies`)
+
+
+- [#2278](https://github.com/graphql-hive/gateway/pull/2278) [`b525338`](https://github.com/graphql-hive/gateway/commit/b525338b6d046685674bcd3982087ba7e3376afd) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep alive timeout setting for Node server
+
+- Updated dependencies [[`9177415`](https://github.com/graphql-hive/gateway/commit/9177415b347d055450f4fdc7acae6b32f7c71539), [`d844b9e`](https://github.com/graphql-hive/gateway/commit/d844b9e60ecc7eb4a9acc8827367e7e35d4b5a7b), [`6be0696`](https://github.com/graphql-hive/gateway/commit/6be0696b5084e20cb7621ce4cd9474eff60f76d8), [`8650db2`](https://github.com/graphql-hive/gateway/commit/8650db2fa1dd849af9afa96921075d5c880b90be)]:
+  - @graphql-hive/gateway-runtime@2.8.9
+  - @graphql-hive/plugin-opentelemetry@1.4.20
+  - @graphql-hive/plugin-aws-sigv4@2.0.41
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/plugin-prometheus@2.1.39
+
+## 2.5.25
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.105.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.105.35) (from `^0.105.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.36` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.36) (from `^0.105.17`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.105.22` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.105.22) (from `^0.105.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.1.31` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.1.31) (from `^0.1.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.13) (from `^0.4.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.37` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.37) (from `^0.105.17`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.2.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.2.35) (from `^0.2.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.106.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.106.14) (from `^0.106.8`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.36` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.36) (from `^0.104.30`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.27` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.27) (from `^0.104.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.35` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.35) (from `^0.104.16`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079), [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-hive/gateway-runtime@2.8.8
+  - @graphql-hive/plugin-opentelemetry@1.4.19
+  - @graphql-mesh/hmac-upstream-signature@2.0.11
+  - @graphql-mesh/plugin-jwt-auth@2.0.10
+  - @graphql-mesh/plugin-prometheus@2.1.38
+  - @graphql-mesh/transport-http@1.0.24
+  - @graphql-mesh/transport-http-callback@1.0.19
+  - @graphql-mesh/transport-ws@2.0.19
+  - @graphql-hive/plugin-aws-sigv4@2.0.41
+
+## 2.5.24
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.7
+  - @graphql-hive/plugin-aws-sigv4@2.0.40
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.18
+  - @graphql-mesh/plugin-prometheus@2.1.37
+
+## 2.5.23
+### Patch Changes
+
+
+
+- [#2244](https://github.com/graphql-hive/gateway/pull/2244) [`82af7d7`](https://github.com/graphql-hive/gateway/commit/82af7d718ea487e5dd3cca55e371ac7297e5098b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Importable @grpc/grpc-js in Docker bundle
+
+- Updated dependencies [[`994a292`](https://github.com/graphql-hive/gateway/commit/994a2927aa16d16c96d1e0ebd0c4c9884a331662), [`66e83ed`](https://github.com/graphql-hive/gateway/commit/66e83edc2beccbdacecc53e50fad8017c3651495)]:
+  - @graphql-hive/gateway-runtime@2.8.6
+  - @graphql-hive/plugin-aws-sigv4@2.0.39
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.17
+  - @graphql-mesh/plugin-prometheus@2.1.36
+
+## 2.5.22
+### Patch Changes
+
+
+
+- [#2228](https://github.com/graphql-hive/gateway/pull/2228) [`36840e6`](https://github.com/graphql-hive/gateway/commit/36840e69b532b0465fcf1dec706e31f4e7706297) Thanks [@ardatan](https://github.com/ardatan)! - Update OpenSSL packages (libssl3t64, openssl, openssl-provider-legacy) in the Docker image to fix the security vulnerability alert (CVE-2026-31790)
+
+## 2.5.21
+### Patch Changes
+
+- Updated dependencies [[`95ea66e`](https://github.com/graphql-hive/gateway/commit/95ea66e020d7b3d487e991468406964303e98e86)]:
+  - @graphql-hive/gateway-runtime@2.8.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.39
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.16
+  - @graphql-mesh/plugin-prometheus@2.1.35
+
+## 2.5.20
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.4
+  - @graphql-mesh/transport-http@1.0.23
+  - @graphql-hive/plugin-aws-sigv4@2.0.38
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.15
+  - @graphql-mesh/plugin-prometheus@2.1.34
+
+## 2.5.19
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.3
+  - @graphql-mesh/transport-http@1.0.22
+  - @graphql-hive/plugin-aws-sigv4@2.0.37
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.14
+  - @graphql-mesh/plugin-prometheus@2.1.33
+
+## 2.5.18
+### Patch Changes
+
+- Updated dependencies [[`9b1ef30`](https://github.com/graphql-hive/gateway/commit/9b1ef30e914bc9a449977cf9be295a68df8a9d49)]:
+  - @graphql-hive/gateway-runtime@2.8.2
+  - @graphql-hive/plugin-aws-sigv4@2.0.36
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.13
+  - @graphql-mesh/plugin-prometheus@2.1.32
+
+## 2.5.17
+### Patch Changes
+
+
+
+- [#2197](https://github.com/graphql-hive/gateway/pull/2197) [`e28a4f7`](https://github.com/graphql-hive/gateway/commit/e28a4f727791bf2fb32a3d9f3343068d67214cf9) Thanks [@ardatan](https://github.com/ardatan)! - Bump internal dependencies of NPM to fix Docker image vulnerability alerts
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.1
+  - @graphql-mesh/transport-http@1.0.21
+  - @graphql-hive/plugin-aws-sigv4@2.0.36
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.12
+  - @graphql-mesh/plugin-prometheus@2.1.31
+
+## 2.5.16
+### Patch Changes
+
+- Updated dependencies [[`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d), [`04caeff`](https://github.com/graphql-hive/gateway/commit/04caeff1d6a6df68720d4ab0b87d20a486ed115a)]:
+  - @graphql-hive/gateway-runtime@2.8.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.35
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.11
+  - @graphql-mesh/plugin-prometheus@2.1.30
+  - @graphql-mesh/transport-http@1.0.20
+
+## 2.5.15
+### Patch Changes
+
+
+
+- [#2173](https://github.com/graphql-hive/gateway/pull/2173) [`21c44cb`](https://github.com/graphql-hive/gateway/commit/21c44cb15c6b90960b5ccc48920c561e276f1e86) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.214.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.214.0) (from `^0.213.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.214.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.214.0) (from `^0.213.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.214.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.214.0) (from `^0.213.0`, in `dependencies`)
+- Updated dependencies [[`21c44cb`](https://github.com/graphql-hive/gateway/commit/21c44cb15c6b90960b5ccc48920c561e276f1e86)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.10
+  - @graphql-hive/gateway-runtime@2.7.11
+  - @graphql-mesh/transport-http@1.0.19
+  - @graphql-hive/plugin-aws-sigv4@2.0.34
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-mesh/plugin-prometheus@2.1.29
+
+## 2.5.14
+### Patch Changes
+
+
+
+- [#2162](https://github.com/graphql-hive/gateway/pull/2162) [`c2ebe02`](https://github.com/graphql-hive/gateway/commit/c2ebe025d2905c2b517c19dbfee0e09f61cc2036) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Bundle the REST transport into the Docker image
+
+## 2.5.13
+### Patch Changes
+
+- Updated dependencies [[`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce), [`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce), [`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce)]:
+  - @graphql-mesh/transport-http@1.0.18
+  - @graphql-mesh/transport-http-callback@1.0.18
+  - @graphql-mesh/transport-ws@2.0.18
+
+## 2.5.12
+### Patch Changes
+
+
+
+- [#2141](https://github.com/graphql-hive/gateway/pull/2141) [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.105.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.105.16) (from `^0.105.2`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.106.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.106.8) (from `^0.106.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.30` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.30) (from `^0.104.16`, in `dependencies`)
+- Updated dependencies [[`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613), [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613), [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613), [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613)]:
+  - @graphql-hive/gateway-runtime@2.7.10
+  - @graphql-mesh/transport-http@1.0.17
+  - @graphql-mesh/transport-http-callback@1.0.17
+  - @graphql-mesh/transport-ws@2.0.17
+  - @graphql-hive/plugin-aws-sigv4@2.0.33
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.9
+  - @graphql-mesh/plugin-prometheus@2.1.28
+
+## 2.5.11
+### Patch Changes
+
+- Updated dependencies [[`6e15d41`](https://github.com/graphql-hive/gateway/commit/6e15d4107159c931aa65f075278104832f3f64a8)]:
+  - @graphql-hive/gateway-runtime@2.7.9
+  - @graphql-hive/plugin-aws-sigv4@2.0.33
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.8
+  - @graphql-mesh/plugin-prometheus@2.1.27
+
+## 2.5.10
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.8
+  - @graphql-hive/plugin-aws-sigv4@2.0.33
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.7
+  - @graphql-mesh/plugin-prometheus@2.1.26
+
 ## 2.5.9
 ### Patch Changes
 

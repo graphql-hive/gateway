@@ -63,6 +63,8 @@ const deps = {
     '../transports/common/src/index.ts',
   'node_modules/@graphql-mesh/transport-http/index':
     '../transports/http/src/index.ts',
+  'node_modules/@graphql-mesh/transport-rest/index':
+    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js',
   'node_modules/@graphql-mesh/transport-ws/index':
     '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
@@ -84,6 +86,18 @@ const deps = {
     '../plugins/opentelemetry/src/async-context-manager.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
+  // sometimes the grpc exporter needs to use insecure credentials (e.g. to bypass TLS
+  // certificate validation in private networks by using plain gRPC instead).
+  //
+  // for example:
+  // import { credentials } from '@grpc/grpc-js';
+  // import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+  // const exporter = new OTLPTraceExporter({
+  //   url: '<url of grpc>',
+  //   credentials: credentials.createInsecure(),
+  // });
+  'node_modules/@grpc/grpc-js/index':
+    '../../node_modules/@grpc/grpc-js/build/src/index.js',
   'node_modules/@opentelemetry/sdk-node/index':
     '../plugins/opentelemetry/src/sdk-node.ts',
   'node_modules/@opentelemetry/auto-instrumentations-node/index':
@@ -94,6 +108,7 @@ const deps = {
     '../plugins/opentelemetry/src/api.ts',
   'node_modules/@graphql-hive/plugin-opentelemetry/attributes':
     '../plugins/opentelemetry/src/attributes.ts',
+  'node_modules/@graphql-hive/plugin-mcp/index': '../plugins/mcp/src/index.ts',
   // Enable the Rust Query Planner in the Docker image without installing an extra package by bundling it in the node_modules.
   // The module is dynamically imported, so it needs to be in the node_modules to be found.
   'node_modules/@graphql-hive/router-runtime/index':
@@ -140,8 +155,6 @@ if (
   console.warn('⚠️ Bundling extra modules for e2e tests!');
   deps['e2e/node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
-  deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
-    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
   deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }

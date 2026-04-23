@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/federation",
-  "version": "4.3.0",
+  "version": "4.3.7",
   "type": "module",
   "description": "Useful tools to create and manipulate GraphQL schemas.",
   "repository": {
@@ -54,14 +54,16 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@apollo/gateway": "^2.11.3",
+    "@apollo/gateway": "^2.13.3",
     "@apollo/server": "^5.4.0",
     "@apollo/server-gateway-interface": "^2.0.0",
-    "@apollo/subgraph": "^2.11.3",
+    "@apollo/subgraph": "^2.13.3",
     "@graphql-hive/federation-gateway-audit": "0.0.2",
+    "@graphql-yoga/plugin-defer-stream": "^3.20.0",
     "@types/lodash": "4.17.24",
     "change-case": "^5.4.4",
     "graphql": "^16.12.0",
+    "graphql-yoga": "^5.21.0",
     "pkgroll": "2.27.0"
   },
   "sideEffects": false

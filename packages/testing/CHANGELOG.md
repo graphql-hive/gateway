@@ -1,5 +1,108 @@
 # @graphql-hive/gateway-testing
 
+## 7.0.9
+### Patch Changes
+
+- Updated dependencies [[`9177415`](https://github.com/graphql-hive/gateway/commit/9177415b347d055450f4fdc7acae6b32f7c71539), [`8650db2`](https://github.com/graphql-hive/gateway/commit/8650db2fa1dd849af9afa96921075d5c880b90be)]:
+  - @graphql-hive/gateway-runtime@2.8.9
+
+## 7.0.8
+### Patch Changes
+
+
+
+- [#2249](https://github.com/graphql-hive/gateway/pull/2249) [`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/fusion-composition@^0.8.46` ↗︎](https://www.npmjs.com/package/@graphql-mesh/fusion-composition/v/0.8.46) (from `^0.8.20`, in `dependencies`)
+- Updated dependencies [[`6ac955d`](https://github.com/graphql-hive/gateway/commit/6ac955d2910fba67f5177681262dcd9b7ef3f079)]:
+  - @graphql-hive/gateway-runtime@2.8.8
+
+## 7.0.7
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.8.7
+
+## 7.0.6
+### Patch Changes
+
+- Updated dependencies [[`994a292`](https://github.com/graphql-hive/gateway/commit/994a2927aa16d16c96d1e0ebd0c4c9884a331662), [`66e83ed`](https://github.com/graphql-hive/gateway/commit/66e83edc2beccbdacecc53e50fad8017c3651495)]:
+  - @graphql-hive/gateway-runtime@2.8.6
+
+## 7.0.5
+### Patch Changes
+
+- Updated dependencies [[`95ea66e`](https://github.com/graphql-hive/gateway/commit/95ea66e020d7b3d487e991468406964303e98e86)]:
+  - @graphql-hive/gateway-runtime@2.8.5
+
+## 7.0.4
+### Patch Changes
+
+- Updated dependencies [[`786e06f`](https://github.com/graphql-hive/gateway/commit/786e06f4e3d74c76a7274bbbc69100a7d30549e6)]:
+  - @graphql-tools/executor-http@3.2.1
+  - @graphql-hive/gateway-runtime@2.8.4
+
+## 7.0.3
+### Patch Changes
+
+- Updated dependencies [[`59ef8f7`](https://github.com/graphql-hive/gateway/commit/59ef8f733d4fced3416bc95d323f00fb46e69b95)]:
+  - @graphql-tools/executor-http@3.2.0
+  - @graphql-hive/gateway-runtime@2.8.3
+
+## 7.0.2
+### Patch Changes
+
+- Updated dependencies [[`9b1ef30`](https://github.com/graphql-hive/gateway/commit/9b1ef30e914bc9a449977cf9be295a68df8a9d49)]:
+  - @graphql-hive/gateway-runtime@2.8.2
+
+## 7.0.1
+### Patch Changes
+
+- Updated dependencies [[`f9d2f0e`](https://github.com/graphql-hive/gateway/commit/f9d2f0ea9e7f172b8270c17961a98bc52a7ba49d)]:
+  - @graphql-tools/executor-http@3.1.4
+  - @graphql-hive/gateway-runtime@2.8.1
+
+## 7.0.0
+### Patch Changes
+
+- Updated dependencies [[`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d), [`323626f`](https://github.com/graphql-hive/gateway/commit/323626ff877f50e509e45cc56ce82602d5118a1d), [`04caeff`](https://github.com/graphql-hive/gateway/commit/04caeff1d6a6df68720d4ab0b87d20a486ed115a)]:
+  - @graphql-hive/gateway-runtime@2.8.0
+  - @graphql-tools/executor-http@3.1.3
+
+## 6.0.12
+### Patch Changes
+
+- Updated dependencies [[`f85a9fe`](https://github.com/graphql-hive/gateway/commit/f85a9fe11dc88a7fa8397c5372ef24f9e91b638e)]:
+  - @graphql-tools/executor-http@3.1.2
+  - @graphql-hive/gateway-runtime@2.7.11
+
+## 6.0.11
+### Patch Changes
+
+
+
+- [#2152](https://github.com/graphql-hive/gateway/pull/2152) [`3d318b4`](https://github.com/graphql-hive/gateway/commit/3d318b493bbd4c73544a1295da69a8b3e72ff188) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - dependencies updates:
+  
+  - Updated dependency [`@apollo/subgraph@^2.13.3` ↗︎](https://www.npmjs.com/package/@apollo/subgraph/v/2.13.3) (from `^2.11.3`, in `dependencies`)
+
+## 6.0.10
+### Patch Changes
+
+- Updated dependencies [[`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613)]:
+  - @graphql-hive/gateway-runtime@2.7.10
+
+## 6.0.9
+### Patch Changes
+
+- Updated dependencies [[`6e15d41`](https://github.com/graphql-hive/gateway/commit/6e15d4107159c931aa65f075278104832f3f64a8)]:
+  - @graphql-hive/gateway-runtime@2.7.9
+
+## 6.0.8
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.8
+
 ## 6.0.7
 ### Patch Changes
 
