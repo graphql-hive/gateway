@@ -51,6 +51,7 @@ export default defineConfig({
                   '!**/e2e/distributed-subscriptions-webhooks',
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
+                  '!**/e2e/edfs-mesh-defs-with-entity-resolution',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
@@ -71,6 +72,7 @@ export default defineConfig({
                   '!**/e2e/type-merging-batching', // has custom type merging (using @merge and @resolveTo)
                   '!**/e2e/openapi-javascript-wiki', // has additional resolvers
                   '!**/e2e/cloudflare-workers', // runs gateway in proxy mode
+                  '!**/e2e/edfs-mesh-defs-with-entity-resolution', // entity resolution through additional resolvers subscriptions
                 ]
               : []),
           ],
