@@ -1,6 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
 import { createTenv, dockerHostName } from '@internal/e2e';
-import { connect as natsConnect } from '@nats-io/transport-node';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 import { beforeAll, expect, it } from 'vitest';

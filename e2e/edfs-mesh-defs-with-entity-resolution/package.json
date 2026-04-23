@@ -1,5 +1,5 @@
 {
-  "name": "@e2e/edfs-mesh-defs",
+  "name": "@e2e/edfs-mesh-defs-with-entity-resolution",
   "private": true,
   "dependencies": {
     "@nats-io/transport-node": "^3.2.0",
