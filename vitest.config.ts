@@ -51,6 +51,7 @@ export default defineConfig({
                   '!**/e2e/distributed-subscriptions-webhooks',
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
+                  '!**/e2e/edfs-mesh-defs-with-entity-resolution',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
