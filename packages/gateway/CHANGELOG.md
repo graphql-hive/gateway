@@ -1,5 +1,28 @@
 # @graphql-hive/gateway
 
+## 2.5.27
+### Patch Changes
+
+
+
+- [#2285](https://github.com/graphql-hive/gateway/pull/2285) [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.36` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.36) (from `^0.104.35`, in `dependencies`)
+
+
+- [#2285](https://github.com/graphql-hive/gateway/pull/2285) [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Resolve entities from other subgraphs when using subscriptions in additional resolvers
+
+- Updated dependencies [[`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb), [`e5bf019`](https://github.com/graphql-hive/gateway/commit/e5bf01939712eae423f94642469cebb0b69ac4eb)]:
+  - @graphql-hive/gateway-runtime@2.8.10
+  - @graphql-hive/plugin-opentelemetry@1.4.21
+  - @graphql-mesh/hmac-upstream-signature@2.0.12
+  - @graphql-mesh/plugin-jwt-auth@2.0.11
+  - @graphql-mesh/plugin-prometheus@2.1.40
+  - @graphql-mesh/transport-http@1.0.25
+  - @graphql-mesh/transport-http-callback@1.0.20
+  - @graphql-mesh/transport-ws@2.0.20
+  - @graphql-hive/plugin-aws-sigv4@2.0.42
+
 ## 2.5.26
 ### Patch Changes
 

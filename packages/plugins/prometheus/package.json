@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/plugin-prometheus",
-  "version": "2.1.39",
+  "version": "2.1.40",
   "type": "module",
   "repository": {
     "type": "git",
