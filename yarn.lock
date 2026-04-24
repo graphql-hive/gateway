@@ -3507,6 +3507,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/skip-default-input-fields@workspace:e2e/skip-default-input-fields":
+  version: 0.0.0-use.local
+  resolution: "@e2e/skip-default-input-fields@workspace:e2e/skip-default-input-fields"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation"
