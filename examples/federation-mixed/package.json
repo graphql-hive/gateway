@@ -9,11 +9,11 @@
     "@apollo/server": "^5.4.0",
     "@apollo/subgraph": "^2.13.3",
     "fets": "^0.8.4",
-    "@graphql-hive/gateway": "^2.5.26"
+    "@graphql-hive/gateway": "^2.5.27"
   },
   "devDependencies": {
     "tsx": "^4.20.3",
-    "@apollo/rover": "^0.38.0"
+    "@apollo/rover": "^0.38.1"
   },
   "overrides": {
     "esbuild": "^0.25.12",
