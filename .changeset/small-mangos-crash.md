@@ -8,11 +8,22 @@ We’ve upgraded the default GraphQL experience in Hive Gateway by replacing Gra
 
 You can always switch back to GraphiQL by updating the config:
 
+```
 import { defineConfig } from '@graphql-hive/gateway';
-import { renderGraphiQL } from 'graphql-yoga';
 
 export const gatewayConfig = defineConfig({
-
-  renderGraphiQL: renderGraphiQL,
-
+  renderLegacyLaboratory: true
 });
+```
+
+Or via CLI option
+
+```
+hive-gateway --render-legacy-laboratory
+```
+
+Or via env variable
+
+```
+RENDER_LEGACY_LABORATORY=TRUE hive-gateway
+```

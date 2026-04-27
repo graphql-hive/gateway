@@ -72,6 +72,7 @@ import {
   createYoga,
   FetchAPI,
   isAsyncIterable,
+  renderGraphiQL,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -1016,6 +1017,8 @@ export function createGatewayRuntime<
     appendPlugins.push(useInboundInflightReqDedupeForYoga(opts));
   }
 
+  console.log('config.renderLegacyLaboratory', config.renderLegacyLaboratory);
+
   const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
@@ -1044,7 +1047,9 @@ export function createGatewayRuntime<
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
-    renderGraphiQL: config.renderGraphiQL,
+    renderGraphiQL: config.renderLegacyLaboratory
+      ? renderGraphiQL
+      : config.renderGraphiQL,
     batching: config.batching,
     graphqlEndpoint: config.graphqlEndpoint,
     maskedErrors: config.maskedErrors,

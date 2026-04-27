@@ -52,6 +52,12 @@ export type GatewayCLIConfig<
      * @default 10_000
      */
     pollingInterval?: number;
+    /**
+     * Whether to render the legacy GraphiQL interface.
+     *
+     * @default false
+     */
+    renderLegacyLaboratory?: boolean;
   } & GatewayCLIBuiltinPluginConfig;
 
 export interface GatewayCLISupergraphConfig<
@@ -352,6 +358,12 @@ let cli = new Command()
         }
         return interval;
       }),
+  )
+  .addOption(
+    new Option(
+      '--render-legacy-laboratory',
+      'render the legacy GraphiQL based Laboratory interface (default: false)',
+    ).env('RENDER_LEGACY_LABORATORY'),
   )
   .option('--no-masked-errors', "don't mask unexpected errors in responses")
   .option(
