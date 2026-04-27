@@ -1017,8 +1017,6 @@ export function createGatewayRuntime<
     appendPlugins.push(useInboundInflightReqDedupeForYoga(opts));
   }
 
-  console.log('config.renderLegacyLaboratory', config.renderLegacyLaboratory);
-
   const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
