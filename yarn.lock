@@ -272,16 +272,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:0.38.0":
-  version: 0.38.0
-  resolution: "@apollo/rover@npm:0.38.0"
+"@apollo/rover@npm:0.38.1":
+  version: 0.38.1
+  resolution: "@apollo/rover@npm:0.38.1"
   dependencies:
     detect-libc: "npm:2.1.2"
     tar: "npm:^7.0.0"
     undici: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/18f40af2c688550aa43afc2914ea72ec33afe02730605aefbfcd0778a968cdc999f07d7cfd8740a5e33fa150175a8c99ce718c3ffc79d09a0e47e34be639719a
+  checksum: 10c0/dd170de5af612e98b3591ff79be709efadf0f4271927b5e475b1f9608a5d3f8d57934f018ed5eef3f9cc9dd3eb3ca9a4372b5b5dbe47d05efcc41b8116f72be7
   languageName: node
   linkType: hard
 
@@ -6823,7 +6823,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:0.38.0"
+    "@apollo/rover": "npm:0.38.1"
     "@babel/parser": "npm:^7.28.5"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
