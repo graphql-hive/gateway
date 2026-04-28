@@ -7,8 +7,9 @@ import {
 import { Subschema } from '@graphql-tools/delegate';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { usingHiveRouterRuntime } from '~internal/env';
-import { GraphQLSchema, Kind, parse, print } from 'graphql';
+import { buildSchema, GraphQLSchema, Kind, parse, print } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
+import { handleFederationSubschema } from '../src/federation/subgraph';
 import { composeAndGetExecutor } from './utils';
 
 describe('handleFederationSubschema', () => {
@@ -145,6 +146,106 @@ describe('handleFederationSubschema', () => {
         },
       ],
     });
+  });
+
+  it('applies Mesh @source renames when @source is imported directly', () => {
+    const schema = buildSchema(/* GraphQL */ `
+      directive @link(
+        url: String
+        as: String
+        for: link__Purpose
+        import: [link__Import]
+      ) repeatable on SCHEMA
+
+      scalar link__Import
+      enum link__Purpose {
+        SECURITY
+        EXECUTION
+      }
+
+      directive @source(
+        subgraph: String!
+        name: String
+        type: String
+      ) repeatable on OBJECT | FIELD_DEFINITION
+
+      extend schema
+        @link(
+          url: "https://the-guild.dev/graphql/mesh/spec/v1.0"
+          import: ["@source"]
+        )
+
+      type Query {
+        me: User @source(subgraph: "users", name: "myMe")
+      }
+
+      type User @source(subgraph: "users", name: "MyUser") {
+        id: ID!
+      }
+    `);
+
+    const handled = handleFederationSubschema({
+      subschemaConfig: {
+        name: 'users',
+        schema,
+      },
+      additionalTypeDefs: [],
+      stitchingDirectivesTransformer: (subschemaConfig) => subschemaConfig,
+      onSubgraphExecute: async () => ({ data: null }),
+    });
+
+    expect(handled.schema.getType('MyUser')).toBeDefined();
+    expect(handled.schema.getQueryType()?.getFields()['myMe']).toBeDefined();
+  });
+
+  it('applies Mesh @source renames when @source is imported with alias', () => {
+    const schema = buildSchema(/* GraphQL */ `
+      directive @link(
+        url: String
+        as: String
+        for: link__Purpose
+        import: [link__Import]
+      ) repeatable on SCHEMA
+
+      scalar link__Import
+      enum link__Purpose {
+        SECURITY
+        EXECUTION
+      }
+
+      directive @mesh__source(
+        subgraph: String!
+        name: String
+        type: String
+      ) repeatable on OBJECT | FIELD_DEFINITION
+
+      extend schema
+        @link(
+          url: "https://the-guild.dev/graphql/mesh/spec/v1.0"
+          import: [{ name: "@source", as: "@mesh__source" }]
+        )
+
+      type Query {
+        me: User @mesh__source(subgraph: "users", name: "myMe")
+      }
+
+      type User @mesh__source(subgraph: "users", name: "MyUser") {
+        id: ID!
+      }
+    `);
+
+    const handled = handleFederationSubschema({
+      subschemaConfig: {
+        name: 'users',
+        schema,
+      },
+      additionalTypeDefs: [],
+      stitchingDirectivesTransformer: (subschemaConfig) => subschemaConfig,
+      onSubgraphExecute: async () => ({ data: null }),
+    });
+
+    expect(handled.schema.getType('MyUser')).toBeDefined();
+    expect(handled.schema.getQueryType()?.getFields()['myMe']).toBeDefined();
   });
 });
 
