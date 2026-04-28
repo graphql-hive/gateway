@@ -370,7 +370,7 @@ export function filterDirectivesByGraph(
     }
     if (directiveNode.name.value === 'join__directive') {
       const parsed = parseJoinDirective(directiveNode);
-      if (parsed && parsed.graphNames.includes(graphName)) {
+      if (parsed?.graphNames.includes(graphName)) {
         subgraphSpecificDirectives.push(parsed.directive);
       }
       return false;
