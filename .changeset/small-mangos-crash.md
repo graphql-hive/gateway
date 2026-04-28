@@ -12,18 +12,18 @@ You can always switch back to GraphiQL by updating the config:
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-  renderLegacyLaboratory: true
+  renderLegacyGraphiQL: true
 });
 ```
 
 Or via CLI option
 
 ```
-hive-gateway --render-legacy-laboratory
+hive-gateway --render-legacy-graphiql
 ```
 
 Or via env variable
 
 ```
-RENDER_LEGACY_LABORATORY=TRUE hive-gateway
+RENDER_LEGACY_GRAPHIQL=TRUE hive-gateway
 ```

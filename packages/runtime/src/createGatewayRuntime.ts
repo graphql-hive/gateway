@@ -1045,7 +1045,7 @@ export function createGatewayRuntime<
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
-    renderGraphiQL: config.renderLegacyLaboratory
+    renderGraphiQL: config.renderLegacyGraphiQL
       ? renderGraphiQL
       : config.renderGraphiQL,
     batching: config.batching,

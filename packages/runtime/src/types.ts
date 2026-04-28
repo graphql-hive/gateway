@@ -600,11 +600,11 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    */
   cors?: YogaServerOptions<unknown, GatewayContext & TContext>['cors'];
   /**
-   * Whether to render the legacy GraphiQL based Laboratory interface.
+   * Whether to render the legacy GraphiQL interface.
    *
    * @default false
    */
-  renderLegacyLaboratory?: boolean;
+  renderLegacyGraphiQL?: boolean;
   /**
    * Show, hide or configure GraphiQL.
    */

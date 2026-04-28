@@ -57,7 +57,7 @@ export type GatewayCLIConfig<
      *
      * @default false
      */
-    renderLegacyLaboratory?: boolean;
+    renderLegacyGraphiQL?: boolean;
   } & GatewayCLIBuiltinPluginConfig;
 
 export interface GatewayCLISupergraphConfig<
@@ -293,6 +293,13 @@ export const defaultOptions: {
   renderGraphiQL: renderLaboratory,
 };
 
+const renderLegacyGraphiQLOption = new Option(
+  '--render-legacy-graphiql',
+  'render the legacy GraphiQL interface (default: false)',
+).env('RENDER_LEGACY_GRAPHIQL');
+
+renderLegacyGraphiQLOption.attributeName = () => 'renderLegacyGraphiQL';
+
 /** Root cli for the gateway. */
 let cli = new Command()
   .configureHelp({
@@ -359,12 +366,7 @@ let cli = new Command()
         return interval;
       }),
   )
-  .addOption(
-    new Option(
-      '--render-legacy-laboratory',
-      'render the legacy GraphiQL based Laboratory interface (default: false)',
-    ).env('RENDER_LEGACY_LABORATORY'),
-  )
+  .addOption(renderLegacyGraphiQLOption)
   .option('--no-masked-errors', "don't mask unexpected errors in responses")
   .option(
     '--masked-errors',
