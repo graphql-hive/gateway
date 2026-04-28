@@ -13,7 +13,6 @@ import {
   ConstObjectValueNode,
   GraphQLSchema,
   Kind,
-  NameNode,
   SelectionSetNode,
   TypeNode,
 } from 'graphql';
@@ -296,84 +295,92 @@ export function extractPercentageFromLabel(label: string): number | undefined {
   return undefined;
 }
 
+/**
+ * Parses a `@join__directive` AST node into a concrete directive node and the
+ * list of subgraph names it applies to.  Returns `null` when the input is not a
+ * `@join__directive`, when the required `name` or `graphs` arguments are absent,
+ * or when `graphs` contains no entries.
+ */
+export function parseJoinDirective(
+  directiveNode: ConstDirectiveNode,
+): { graphNames: string[]; directive: ConstDirectiveNode } | null {
+  if (directiveNode.name.value !== 'join__directive') {
+    return null;
+  }
+  if (directiveNode.arguments == null) {
+    return null;
+  }
+  let directiveName: string | undefined;
+  let directiveArgsAst: ConstObjectValueNode | undefined;
+  const graphNames: string[] = [];
+  for (const argumentNode of directiveNode.arguments) {
+    if (
+      argumentNode.name.value === 'name' &&
+      argumentNode.value.kind === Kind.STRING
+    ) {
+      directiveName = argumentNode.value.value;
+    } else if (
+      argumentNode.name.value === 'args' &&
+      argumentNode.value.kind === Kind.OBJECT
+    ) {
+      directiveArgsAst = argumentNode.value;
+    } else if (
+      argumentNode.name.value === 'graphs' &&
+      argumentNode.value.kind === Kind.LIST
+    ) {
+      for (const graphNameNode of argumentNode.value.values) {
+        if (graphNameNode.kind === Kind.ENUM) {
+          graphNames.push(graphNameNode.value);
+        }
+      }
+    }
+  }
+  if (!directiveName || graphNames.length === 0) {
+    return null;
+  }
+  const args: ConstArgumentNode[] | undefined = directiveArgsAst
+    ? directiveArgsAst.fields.map((field) => ({
+        kind: Kind.ARGUMENT as const,
+        name: field.name,
+        value: field.value,
+      }))
+    : undefined;
+  return {
+    graphNames,
+    directive: {
+      kind: Kind.DIRECTIVE,
+      name: { kind: Kind.NAME, value: directiveName },
+      arguments: args,
+    },
+  };
+}
+
 export function filterDirectivesByGraph(
   graphName: string,
   directives: readonly ConstDirectiveNode[] | undefined,
   filterDirectives: string[],
-) {
+): readonly ConstDirectiveNode[] | undefined {
   if (!directives) {
     return directives;
   }
   const subgraphSpecificDirectives: ConstDirectiveNode[] = [];
-  const filteredDirectives = directives?.filter((directiveNode) => {
+  const filteredDirectives = directives.filter((directiveNode) => {
     if (filterDirectives.includes(directiveNode.name.value)) {
       return false;
     }
     if (directiveNode.name.value === 'join__directive') {
-      let directiveName: string | undefined;
-      let directiveArgsAst: ConstObjectValueNode | undefined;
-      if (directiveNode.arguments == null) {
-        return false;
-      }
-      for (const joinDirectiveArg of directiveNode.arguments) {
-        if (
-          joinDirectiveArg.name.value === 'name' &&
-          joinDirectiveArg.value.kind === Kind.STRING
-        ) {
-          directiveName = joinDirectiveArg.value.value;
-        } else if (
-          joinDirectiveArg.name.value === 'args' &&
-          joinDirectiveArg.value.kind === Kind.OBJECT
-        ) {
-          directiveArgsAst = joinDirectiveArg.value;
-        } else if (
-          joinDirectiveArg.name.value === 'graphs' &&
-          joinDirectiveArg.value.kind === Kind.LIST
-        ) {
-          let graphMatches = false;
-          for (const graphAst of joinDirectiveArg.value.values) {
-            if (graphAst.kind === Kind.ENUM && graphAst.value === graphName) {
-              graphMatches = true;
-            }
-          }
-          if (!graphMatches) {
-            return false;
-          }
-        }
-      }
-      if (directiveName) {
-        const nameNode: NameNode = {
-          kind: Kind.NAME,
-          value: directiveName,
-        };
-        let args: ConstArgumentNode[] | undefined;
-        if (directiveArgsAst) {
-          args = [];
-          for (const argField of directiveArgsAst.fields) {
-            args.push({
-              kind: Kind.ARGUMENT,
-              name: argField.name,
-              value: argField.value,
-            });
-          }
-        }
-        subgraphSpecificDirectives.push({
-          kind: Kind.DIRECTIVE,
-          name: nameNode,
-          arguments: args,
-        });
+      const parsed = parseJoinDirective(directiveNode);
+      if (parsed && parsed.graphNames.includes(graphName)) {
+        subgraphSpecificDirectives.push(parsed.directive);
       }
       return false;
     }
     return true;
   });
-  const allDirectives = [];
-  if (filteredDirectives) {
-    allDirectives.push(...filteredDirectives);
-  }
-  if (subgraphSpecificDirectives.length > 0) {
-    allDirectives.push(...subgraphSpecificDirectives);
-  }
+  const allDirectives: ConstDirectiveNode[] = [
+    ...filteredDirectives,
+    ...subgraphSpecificDirectives,
+  ];
   if (allDirectives.length === 0) {
     return undefined;
   }

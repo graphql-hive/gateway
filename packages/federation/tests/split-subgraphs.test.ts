@@ -17,7 +17,7 @@ it('split subgraphs correctly', () => {
       return subgraphAST;
     },
   });
-  for (const subgraphName in subgraphAstMap) {
+  for (const subgraphName of Object.keys(subgraphAstMap).sort()) {
     const subgraphAst = subgraphAstMap[subgraphName]!;
     expect(print(subgraphAst)).toMatchSnapshot(subgraphName);
   }

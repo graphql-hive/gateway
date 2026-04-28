@@ -42,7 +42,6 @@ import {
   buildASTSchema,
   ConstArgumentNode,
   ConstDirectiveNode,
-  ConstObjectValueNode,
   DefinitionNode,
   DirectiveDefinitionNode,
   DirectiveNode,
@@ -63,7 +62,6 @@ import {
   isObjectType,
   Kind,
   NamedTypeNode,
-  NameNode,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
   OperationTypeNode,
@@ -86,6 +84,7 @@ import {
   getCacheKeyFnFromKey,
   getKeyFnForFederation,
   getNamedTypeNode,
+  parseJoinDirective,
   ProgressiveOverrideHandler,
   progressiveOverridePossibilityHandler,
 } from './utils.js';
@@ -1020,64 +1019,19 @@ export function getStitchingOptionsFromSupergraphSdl(
     if (definition.kind === Kind.SCHEMA_DEFINITION) {
       if (definition.directives) {
         for (const directiveNode of definition.directives) {
-          if (directiveNode.name.value === 'join__directive') {
-            if (directiveNode.arguments) {
-              let directiveName: string | undefined = undefined;
-              let directiveArgsAst: ConstObjectValueNode | undefined =
-                undefined;
-              let graphNames: string[] = [];
-              for (const argumentNode of directiveNode.arguments) {
-                if (argumentNode.name.value === 'name') {
-                  if (argumentNode.value.kind === Kind.STRING) {
-                    directiveName = argumentNode.value.value;
-                  }
-                } else if (argumentNode.name.value === 'args') {
-                  if (argumentNode.value.kind === Kind.OBJECT) {
-                    directiveArgsAst = argumentNode.value;
-                  }
-                } else if (
-                  argumentNode.name.value === 'graphs' &&
-                  argumentNode.value.kind === Kind.LIST
-                ) {
-                  for (const graphNameNode of argumentNode.value.values) {
-                    if (graphNameNode.kind === Kind.ENUM) {
-                      graphNames.push(graphNameNode.value);
-                    }
-                  }
-                }
+          const parsed = parseJoinDirective(directiveNode);
+          if (parsed) {
+            for (const graphName of parsed.graphNames) {
+              let subgraphSchemaLevelDefs =
+                subgraphSchemaDefinitionDirectives.get(graphName);
+              if (!subgraphSchemaLevelDefs) {
+                subgraphSchemaLevelDefs = [];
+                subgraphSchemaDefinitionDirectives.set(
+                  graphName,
+                  subgraphSchemaLevelDefs,
+                );
               }
-              if (directiveName && graphNames.length > 0) {
-                for (const graphName of graphNames) {
-                  let subgraphSchemaLevelDefs =
-                    subgraphSchemaDefinitionDirectives.get(graphName);
-                  if (!subgraphSchemaLevelDefs) {
-                    subgraphSchemaLevelDefs = [];
-                    subgraphSchemaDefinitionDirectives.set(
-                      graphName,
-                      subgraphSchemaLevelDefs,
-                    );
-                  }
-                  let args: ConstArgumentNode[] | undefined = undefined;
-                  if (directiveArgsAst) {
-                    args = directiveArgsAst.fields.map((field) => ({
-                      kind: Kind.ARGUMENT,
-                      name: {
-                        kind: Kind.NAME,
-                        value: field.name.value,
-                      },
-                      value: field.value,
-                    }));
-                  }
-                  subgraphSchemaLevelDefs.push({
-                    kind: Kind.DIRECTIVE,
-                    name: {
-                      kind: Kind.NAME,
-                      value: directiveName,
-                    },
-                    arguments: args,
-                  });
-                }
-              }
+              subgraphSchemaLevelDefs.push(parsed.directive);
             }
           }
         }
