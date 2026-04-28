@@ -42,6 +42,7 @@ import {
   buildASTSchema,
   ConstArgumentNode,
   ConstDirectiveNode,
+  ConstObjectValueNode,
   DefinitionNode,
   DirectiveDefinitionNode,
   DirectiveNode,
@@ -62,6 +63,7 @@ import {
   isObjectType,
   Kind,
   NamedTypeNode,
+  NameNode,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
   OperationTypeNode,
@@ -78,6 +80,7 @@ import {
 } from 'graphql';
 import {
   extractPercentageFromLabel,
+  filterDirectivesByGraph,
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
@@ -221,6 +224,10 @@ export function getStitchingOptionsFromSupergraphSdl(
     Map<string, ProgressiveOverrideInfoOpposite[]>
   >();
   const overrideLabels = new Set<string>();
+  const subgraphSchemaDefinitionDirectives = new Map<
+    string,
+    ConstDirectiveNode[]
+  >();
 
   for (const definition of supergraphAst.definitions) {
     if ('fields' in definition) {
@@ -440,9 +447,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                   fieldDefinitionNodesOfSubgraph.push({
                     ...fieldNode,
                     type: typeNode,
-                    directives: fieldNode.directives?.filter(
-                      (directiveNode) =>
-                        directiveNode.name.value !== 'join__field',
+                    directives: filterDirectivesByGraph(
+                      graphName,
+                      fieldNode.directives,
+                      ['join__field'],
                     ),
                   });
                 }
@@ -661,8 +669,10 @@ export function getStitchingOptionsFromSupergraphSdl(
             if (!joinFieldDirectives?.length) {
               fieldDefinitionNodesOfSubgraph.push({
                 ...fieldNode,
-                directives: fieldNode.directives?.filter(
-                  (directiveNode) => directiveNode.name.value !== 'join__field',
+                directives: filterDirectivesByGraph(
+                  graphName,
+                  fieldNode.directives,
+                  ['join__field'],
                 ),
               });
             } else if (
@@ -673,8 +683,10 @@ export function getStitchingOptionsFromSupergraphSdl(
             ) {
               fieldDefinitionNodesOfSubgraph.push({
                 ...fieldNode,
-                directives: fieldNode.directives?.filter(
-                  (directiveNode) => directiveNode.name.value !== 'join__field',
+                directives: filterDirectivesByGraph(
+                  graphName,
+                  fieldNode.directives,
+                  ['join__field'],
                 ),
               });
             }
@@ -769,12 +781,11 @@ export function getStitchingOptionsFromSupergraphSdl(
           ...typeNode,
           interfaces,
           fields: fieldDefinitionNodesOfSubgraph,
-          directives: typeNode.directives?.filter(
-            (directiveNode) =>
-              directiveNode.name.value !== 'join__type' &&
-              directiveNode.name.value !== 'join__owner' &&
-              directiveNode.name.value !== 'join__implements',
-          ),
+          directives: filterDirectivesByGraph(graphName, typeNode.directives, [
+            'join__type',
+            'join__owner',
+            'join__implements',
+          ]),
         };
         let subgraphTypes = subgraphTypesMap.get(graphName);
         if (!subgraphTypes) {
@@ -809,8 +820,10 @@ export function getStitchingOptionsFromSupergraphSdl(
               }
               subgraphTypes.push({
                 ...node,
-                directives: node.directives?.filter(
-                  (directiveNode) => directiveNode.name.value !== 'join__type',
+                directives: filterDirectivesByGraph(
+                  graphName,
+                  node.directives,
+                  ['join__type'],
                 ),
               });
             }
@@ -839,8 +852,10 @@ export function getStitchingOptionsFromSupergraphSdl(
               }
               subgraphTypes.push({
                 ...node,
-                directives: node.directives?.filter(
-                  (directiveNode) => directiveNode.name.value !== 'join__type',
+                directives: filterDirectivesByGraph(
+                  graphName,
+                  node.directives,
+                  ['join__type'],
                 ),
               });
             }
@@ -896,10 +911,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                 subgraphTypes.push({
                   ...node,
                   types: unionMembers,
-                  directives: node.directives?.filter(
-                    (directiveNode) =>
-                      directiveNode.name.value !== 'join__type' &&
-                      directiveNode.name.value !== 'join__unionMember',
+                  directives: filterDirectivesByGraph(
+                    graphName,
+                    node.directives,
+                    ['join__type', 'join__unionMember'],
                   ),
                 });
               }
@@ -977,8 +992,10 @@ export function getStitchingOptionsFromSupergraphSdl(
               });
               const enumTypedDefNodeForSubgraph: EnumTypeDefinitionNode = {
                 ...node,
-                directives: node.directives?.filter(
-                  (directiveNode) => directiveNode.name.value !== 'join__type',
+                directives: filterDirectivesByGraph(
+                  graphName,
+                  node.directives,
+                  ['join__type'],
                 ),
                 values: enumValueNodes,
               };
@@ -998,6 +1015,77 @@ export function getStitchingOptionsFromSupergraphSdl(
     },
     ObjectTypeDefinition: TypeWithFieldsVisitor,
   });
+  // Get schema-level subgraph specific directives
+  for (const definition of supergraphAst.definitions) {
+    if (definition.kind === Kind.SCHEMA_DEFINITION) {
+      if (definition.directives) {
+        for (const directiveNode of definition.directives) {
+          if (directiveNode.name.value === 'join__directive') {
+            if (directiveNode.arguments) {
+              let directiveName: string | undefined = undefined;
+              let directiveArgsAst: ConstObjectValueNode | undefined =
+                undefined;
+              let graphNames: string[] = [];
+              for (const argumentNode of directiveNode.arguments) {
+                if (argumentNode.name.value === 'name') {
+                  if (argumentNode.value.kind === Kind.STRING) {
+                    directiveName = argumentNode.value.value;
+                  }
+                } else if (argumentNode.name.value === 'args') {
+                  if (argumentNode.value.kind === Kind.OBJECT) {
+                    directiveArgsAst = argumentNode.value;
+                  }
+                } else if (
+                  argumentNode.name.value === 'graphs' &&
+                  argumentNode.value.kind === Kind.LIST
+                ) {
+                  for (const graphNameNode of argumentNode.value.values) {
+                    if (graphNameNode.kind === Kind.ENUM) {
+                      graphNames.push(graphNameNode.value);
+                    }
+                  }
+                }
+              }
+              if (directiveName && graphNames.length > 0) {
+                for (const graphName of graphNames) {
+                  let subgraphSchemaLevelDefs =
+                    subgraphSchemaDefinitionDirectives.get(graphName);
+                  if (!subgraphSchemaLevelDefs) {
+                    subgraphSchemaLevelDefs = [];
+                    subgraphSchemaDefinitionDirectives.set(
+                      graphName,
+                      subgraphSchemaLevelDefs,
+                    );
+                  }
+                  let args: ConstArgumentNode[] | undefined = undefined;
+                  if (directiveArgsAst) {
+                    args = directiveArgsAst.fields.map((field) => ({
+                      kind: Kind.ARGUMENT,
+                      name: {
+                        kind: Kind.NAME,
+                        value: field.name.value,
+                      },
+                      value: field.value,
+                    }));
+                  }
+                  subgraphSchemaLevelDefs.push({
+                    kind: Kind.DIRECTIVE,
+                    name: {
+                      kind: Kind.NAME,
+                      value: directiveName,
+                    },
+                    arguments: args,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      continue;
+    }
+  }
   const subschemas: SubschemaConfig[] = [];
   for (const [subgraphName, endpoint] of subgraphEndpointMap) {
     const mergeConfig: SubschemaConfig['merge'] = {};
@@ -1426,6 +1514,14 @@ export function getStitchingOptionsFromSupergraphSdl(
       extraDefinitions.add({
         kind: Kind.SCHEMA_EXTENSION,
         directives: [...linkDirectiveNodes] as ConstDirectiveNode[],
+      });
+    }
+    const schemaDefDirectives =
+      subgraphSchemaDefinitionDirectives.get(subgraphName);
+    if (schemaDefDirectives) {
+      extraDefinitions.add({
+        kind: Kind.SCHEMA_EXTENSION,
+        directives: schemaDefDirectives,
       });
     }
 
