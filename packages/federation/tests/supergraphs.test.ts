@@ -56,7 +56,8 @@ describe('transitive directive type dependencies', () => {
       scalar join__FieldSet
 
       enum join__Graph {
-        PRODUCTS @join__graph(name: "products", url: "http://products:4000/graphql")
+        PRODUCTS
+          @join__graph(name: "products", url: "http://products:4000/graphql")
       }
 
       scalar link__Import

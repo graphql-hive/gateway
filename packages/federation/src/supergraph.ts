@@ -1323,7 +1323,10 @@ export function getStitchingOptionsFromSupergraphSdl(
           const extraDefinitionsForDirective =
             directiveExtraDefinitions.get(directiveName);
           if (extraDefinitionsForDirective) {
-            collectTransitiveDeps(extraDefinitionsForDirective, extraDefinitions);
+            collectTransitiveDeps(
+              extraDefinitionsForDirective,
+              extraDefinitions,
+            );
           }
           const directiveNameInImport = `@${directiveName}`;
           const directiveImport = directiveImports.get(directiveNameInImport);
