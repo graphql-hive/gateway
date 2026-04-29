@@ -9,32 +9,22 @@ export function startServerForRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(
   runtime: GatewayRuntime<TContext>,
-  {
-    log,
-    host = defaultOptions.host,
-    port = defaultOptions.port,
-    sslCredentials,
-    maxHeaderSize = 16_384,
-    disableWebsockets = false,
-  }: ServerForRuntimeOptions,
+  opts: ServerForRuntimeOptions,
 ): MaybePromise<void> {
   process.on('message', (message) => {
     if (message === 'invalidateUnifiedGraph') {
-      log.info('Invalidating Supergraph');
+      opts.log.info('Invalidating Supergraph');
       runtime.invalidateUnifiedGraph();
     }
   });
 
-  const serverOpts: ServerForRuntimeOptions = {
-    log,
-    host,
-    port,
-    maxHeaderSize,
-    disableWebsockets,
-    ...(sslCredentials ? { sslCredentials } : {}),
-  };
-
   const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
 
-  return startServer(runtime, serverOpts);
+  return startServer(runtime, {
+    host: defaultOptions.host,
+    port: defaultOptions.port,
+    maxHeaderSize: 16_384,
+    disableWebsockets: false,
+    ...opts,
+  });
 }
