@@ -72,6 +72,7 @@ import {
   createYoga,
   FetchAPI,
   isAsyncIterable,
+  renderGraphiQL,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -1044,7 +1045,9 @@ export function createGatewayRuntime<
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
-    renderGraphiQL: config.renderGraphiQL,
+    renderGraphiQL: config.renderLegacyGraphiQL
+      ? renderGraphiQL
+      : config.renderGraphiQL,
     batching: config.batching,
     graphqlEndpoint: config.graphqlEndpoint,
     maskedErrors: config.maskedErrors,
