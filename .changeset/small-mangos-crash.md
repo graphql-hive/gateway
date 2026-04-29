@@ -8,7 +8,7 @@ We’ve upgraded the default GraphQL experience in Hive Gateway by replacing Gra
 
 You can always switch back to GraphiQL by updating the config:
 
-```
+```ts
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
@@ -18,12 +18,12 @@ export const gatewayConfig = defineConfig({
 
 Or via CLI option
 
-```
+```sh
 hive-gateway --render-legacy-graphiql
 ```
 
 Or via env variable
 
-```
-RENDER_LEGACY_GRAPHIQL=TRUE hive-gateway
+```sh
+RENDER_LEGACY_GRAPHIQL=true hive-gateway
 ```
