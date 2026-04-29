@@ -51,6 +51,7 @@ export default defineConfig({
                   '!**/e2e/distributed-subscriptions-webhooks',
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
+                  '!**/e2e/edfs-mesh-defs-with-entity-resolution',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
@@ -59,6 +60,7 @@ export default defineConfig({
                   '!**/e2e/federation-batching-plan', // uses stitching plan
                   '!**/e2e/hoist-and-prefix-transform', // has transforms
                   '!**/e2e/cloudflare-workers', // runs gateway in proxy mode
+                  '!**/e2e/edfs-mesh-defs-with-entity-resolution', // entity resolution through additional resolvers subscriptions
                 ]
               : []),
           ],

@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/router-runtime",
-  "version": "1.4.1",
+  "version": "1.4.3",
   "type": "module",
   "repository": {
     "type": "git",
@@ -46,7 +46,7 @@
     "@graphql-hive/router-query-planner": "^0.0.23",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/utils": "^0.104.35",
+    "@graphql-mesh/utils": "^0.104.36",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor": "^1.4.13",
     "@graphql-tools/executor-common": "workspace:^",
