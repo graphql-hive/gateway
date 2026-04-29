@@ -484,16 +484,6 @@ let cli = new Command()
     // variable, and not whether it is truthy (JIT=0 would be still true)
     // TODO: this should be done in commanderjs itself, raise an issue
     this.setOptionValueWithSource('jit', getEnvBool('JIT'), 'env');
-  })
-  .on('optionEnv:render-legacy-graphiql', function (this: Command) {
-    // we need this because commanderjs only checks for the existence of the
-    // variable, and not whether it is truthy (JIT=0 would be still true)
-    // TODO: this should be done in commanderjs itself, raise an issue
-    this.setOptionValueWithSource(
-      'renderLegacyGraphiQL',
-      getEnvBool('RENDER_LEGACY_GRAPHIQL'),
-      'env',
-    );
   });
 
 export async function run(userCtx: Partial<CLIContext>) {
