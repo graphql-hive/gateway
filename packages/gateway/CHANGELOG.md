@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 2.5.28
+### Patch Changes
+
+
+
+- [#2296](https://github.com/graphql-hive/gateway/pull/2296) [`5b5cce1`](https://github.com/graphql-hive/gateway/commit/5b5cce1791f2aa3cf892f206eea5a6967b7a82db) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Forward HTTP timeouts to the underlying server
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.43
+  - @graphql-hive/gateway-runtime@2.8.11
+  - @graphql-mesh/hmac-upstream-signature@2.0.12
+  - @graphql-hive/plugin-opentelemetry@1.4.22
+  - @graphql-mesh/plugin-prometheus@2.1.41
+
 ## 2.5.27
 ### Patch Changes
 
