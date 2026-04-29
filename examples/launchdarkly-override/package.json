@@ -12,7 +12,7 @@
   "overrides": {
     "tmp": "0.2.4",
     "esbuild": "^0.25.12",
-    "minimatch": "^10.2.4"
+    "minimatch": "^10.2.5"
   },
   "installConfig": {
     "hoistingLimits": "dependencies"
