@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@graphql-codegen/cli": "^7.0.0",
-    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript": "^6.0.0",
     "@graphql-codegen/typescript-resolvers": "^6.0.0",
     "@graphql-hive/gateway": "workspace:*",
     "@graphql-mesh/compose-cli": "^1.5.30",
