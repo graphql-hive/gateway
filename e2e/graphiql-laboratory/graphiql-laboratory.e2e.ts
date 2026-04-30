@@ -30,7 +30,6 @@ describe('GraphiQL / Laboratory options', () => {
         const { port, protocol } = await gateway({
           [mode]: url,
           args: ['--render-legacy-graphiql'],
-          pipeLogs: true,
         });
         const hostname = await getLocalhost(port, protocol);
         const response = await fetch(`${hostname}:${port}/graphql`, {
