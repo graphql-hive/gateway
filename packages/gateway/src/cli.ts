@@ -361,10 +361,12 @@ let cli = new Command()
         return interval;
       }),
   )
-  .addOption(new Option(
-    '--render-legacy-graphiql',
-    'render the legacy GraphiQL interface (default: false)',
-  ).env('RENDER_LEGACY_GRAPHIQL'))
+  .addOption(
+    new Option(
+      '--render-legacy-graphiql',
+      'render the legacy GraphiQL interface (default: false)',
+    ).env('RENDER_LEGACY_GRAPHIQL'),
+  )
   .option('--no-masked-errors', "don't mask unexpected errors in responses")
   .option(
     '--masked-errors',

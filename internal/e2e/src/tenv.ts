@@ -113,7 +113,7 @@ export interface GatewayOptions extends ProcOptions {
         subgraphName: string;
         services?: Service[];
         pipeLogs?: boolean | string;
-  };
+      };
   proxy?: string;
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
