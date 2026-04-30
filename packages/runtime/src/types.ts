@@ -600,12 +600,6 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    */
   cors?: YogaServerOptions<unknown, GatewayContext & TContext>['cors'];
   /**
-   * Whether to render the legacy GraphiQL interface.
-   *
-   * @default false
-   */
-  renderLegacyGraphiQL?: boolean;
-  /**
    * Show, hide or configure GraphiQL.
    */
   graphiql?: YogaServerOptions<unknown, GatewayContext & TContext>['graphiql'];
@@ -708,6 +702,11 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * The logo of the product.
    */
   productLogo?: string;
+
+  /**
+   * The name of the playground.
+   */
+  playgroundName?: string;
 
   /**
    * The link to the product website

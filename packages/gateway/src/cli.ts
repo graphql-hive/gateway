@@ -280,6 +280,7 @@ export const defaultOptions: {
   port: number;
   pollingInterval: number;
   renderGraphiQL: GraphiQLRenderer;
+  playgroundName: string;
 } = {
   fork: 1,
   host:
@@ -291,14 +292,8 @@ export const defaultOptions: {
   port: 4000,
   pollingInterval: 10_000,
   renderGraphiQL: renderLaboratory,
+  playgroundName: 'Laboratory',
 };
-
-const renderLegacyGraphiQLOption = new Option(
-  '--render-legacy-graphiql',
-  'render the legacy GraphiQL interface (default: false)',
-).env('RENDER_LEGACY_GRAPHIQL');
-
-renderLegacyGraphiQLOption.attributeName = () => 'renderLegacyGraphiQL';
 
 /** Root cli for the gateway. */
 let cli = new Command()
@@ -366,7 +361,10 @@ let cli = new Command()
         return interval;
       }),
   )
-  .addOption(renderLegacyGraphiQLOption)
+  .addOption(new Option(
+    '--render-legacy-graphiql',
+    'render the legacy GraphiQL interface (default: false)',
+  ).env('RENDER_LEGACY_GRAPHIQL'))
   .option('--no-masked-errors', "don't mask unexpected errors in responses")
   .option(
     '--masked-errors',

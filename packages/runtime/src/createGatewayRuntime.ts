@@ -72,7 +72,6 @@ import {
   createYoga,
   FetchAPI,
   isAsyncIterable,
-  renderGraphiQL,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -771,6 +770,7 @@ export function createGatewayRuntime<
     config.productPackageName || '@graphql-hive/gateway';
   const productLink =
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
+  const playgroundName = config.playgroundName || 'GraphiQL';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
   const graphiqlLogo = `<div style="height: 20px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
@@ -826,7 +826,8 @@ export function createGatewayRuntime<
     landingPageRenderer = (opts) =>
       new opts.fetchAPI.Response(
         landingPageHtml
-          .replace(/__GRAPHIQL_PATHNAME__/g, opts.graphqlEndpoint)
+          .replace(/__PLAYGROUND_NAME__/g, opts.graphqlEndpoint)
+          .replace(/__PLAYGROUND_PATHNAME__/g, playgroundName)
           .replace(/__REQUEST_PATHNAME__/g, opts.url.pathname)
           .replace(/__GRAPHQL_URL__/g, opts.url.origin + opts.graphqlEndpoint)
           .replaceAll(/__PRODUCT_NAME__/g, productName)
@@ -1045,9 +1046,7 @@ export function createGatewayRuntime<
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
-    renderGraphiQL: config.renderLegacyGraphiQL
-      ? renderGraphiQL
-      : config.renderGraphiQL,
+    renderGraphiQL: config.renderGraphiQL,
     batching: config.batching,
     graphqlEndpoint: config.graphqlEndpoint,
     maskedErrors: config.maskedErrors,

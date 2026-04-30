@@ -3118,6 +3118,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/graphiql-laboratory@workspace:e2e/graphiql-laboratory":
+  version: 0.0.0-use.local
+  resolution: "@e2e/graphiql-laboratory@workspace:e2e/graphiql-laboratory"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/graphos-polling@workspace:e2e/graphos-polling":
   version: 0.0.0-use.local
   resolution: "@e2e/graphos-polling@workspace:e2e/graphos-polling"
