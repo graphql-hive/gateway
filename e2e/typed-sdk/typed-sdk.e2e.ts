@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import { runCli } from '@graphql-codegen/cli';
 import { createTenv, Service } from '@internal/e2e';
 import { createDeferredPromise, getLocalhost } from '@internal/testing';
