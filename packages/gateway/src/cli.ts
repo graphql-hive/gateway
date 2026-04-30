@@ -508,7 +508,7 @@ let cli = new Command()
   })
   .on('optionEnv:render-legacy-graphiql', function (this: Command) {
     this.setOptionValueWithSource(
-      'renderLegacyGraphiQL',
+      'renderLegacyGraphiql',
       getEnvBool('RENDER_LEGACY_GRAPHIQL'),
       'env',
     );

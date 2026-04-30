@@ -163,7 +163,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ...defaultOptions,
         ...loadedConfig,
         ...opts,
-        renderLegacyGraphiQL: opts.renderLegacyGraphiql,
         pollingInterval:
           opts.polling ||
           ('pollingInterval' in loadedConfig

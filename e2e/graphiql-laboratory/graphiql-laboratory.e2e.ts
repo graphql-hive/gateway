@@ -9,7 +9,8 @@ describe('GraphiQL / Laboratory options', () => {
     proxy: 'https://federation-demo.theguild.workers.dev/users',
   } as const;
   const { gateway } = createTenv(__dirname);
-  for (const [mode, url] of Object.entries(opts)) {
+  for (const mode of Object.keys(opts) as (keyof typeof opts)[]) {
+    const url = opts[mode];
     describe(mode, () => {
       it('renders Laboratory by default', async () => {
         const { port, protocol } = await gateway({
