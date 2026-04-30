@@ -1,6 +1,6 @@
 import { createTenv } from "@internal/e2e";
 import { getLocalhost } from "@internal/testing";
-import { describe, expect, it } from "vitest";
+import { describe, it } from "vitest";
 
 describe('GraphiQL / Laboratory options', () => {
     const opts = {
