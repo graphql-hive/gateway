@@ -2,7 +2,7 @@
   "name": "@e2e/typed-sdk",
   "private": true,
   "scripts": {
-    "codegen": "graphql-codegen --config codegen.config.ts"
+    "codegen": "graphql-codegen"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^7.0.0",

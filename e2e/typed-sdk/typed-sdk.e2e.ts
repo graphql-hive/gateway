@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { runCli } from '@graphql-codegen/cli';
 import { createTenv, Service } from '@internal/e2e';
 import { createDeferredPromise, getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
@@ -18,10 +19,14 @@ describe('Typed SDK', () => {
       output: 'graphql',
     });
     // Run codegen to generate the SDK using the workspace-installed CLI
-    execSync(`yarn graphql-codegen --config ./codegen.config.ts`, {
-      cwd: __dirname,
-      env: { ...process.env, SUPERGRAPH_PATH: output },
-    });
+    const oldVal = process.env['SUPERGRAPH_PATH'];
+    process.env['SUPERGRAPH_PATH'] = output;
+    // Mock process.cwd to make sure it uses the correct config file
+    const originalCwd = process.cwd;
+    process.cwd = () => __dirname;
+    await runCli('');
+    process.env['SUPERGRAPH_PATH'] = oldVal;
+    process.cwd = originalCwd;
     sdkService = await service('sdk', {
       env: { ...process.env, SUPERGRAPH_PATH: output },
     });

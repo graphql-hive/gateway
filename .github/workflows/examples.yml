@@ -55,9 +55,9 @@ jobs:
           - type-merging-batching
           - operation-field-permissions
           - launchdarkly-override
+          - typed-sdk
           # TODO: support containers before enabling (we use nats image in e2e)
           # - event-driven-federated-subscriptions
-          - typed-sdk
     name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:
