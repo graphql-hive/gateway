@@ -1108,9 +1108,10 @@ function createSdkRequesterForRuntime<TContext extends Record<string, any>>(
       let iterator$ = fakePromise()
         .then(() => runtime.getSchema())
         .then(() => {
-          const { subscribe, schema, contextFactory } =
-            runtime.getEnveloped(context);
-          return fakePromise(contextFactory(context))
+          const { subscribe, schema, contextFactory } = runtime.getEnveloped(
+            context || {},
+          );
+          return fakePromise(contextFactory())
             .then((contextValue) =>
               subscribe({
                 schema,
@@ -1168,9 +1169,10 @@ function createSdkRequesterForRuntime<TContext extends Record<string, any>>(
       return fakePromise()
         .then(() => runtime.getSchema())
         .then(() => {
-          const { execute, schema, contextFactory } =
-            runtime.getEnveloped(context);
-          return fakePromise(contextFactory(context))
+          const { execute, schema, contextFactory } = runtime.getEnveloped(
+            context || {},
+          );
+          return fakePromise(contextFactory())
             .then((contextValue) =>
               execute({
                 schema,

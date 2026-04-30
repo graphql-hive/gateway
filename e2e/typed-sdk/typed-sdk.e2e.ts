@@ -17,8 +17,8 @@ describe('Typed SDK', () => {
       services: [subgraph],
       output: 'graphql',
     });
-    // Run codegen to generate the SDK
-    execSync(`npx graphql-codegen --config ./codegen.config.ts`, {
+    // Run codegen to generate the SDK using the workspace-installed CLI
+    execSync(`yarn graphql-codegen --config ./codegen.config.ts`, {
       cwd: __dirname,
       env: { ...process.env, SUPERGRAPH_PATH: output },
     });
@@ -51,11 +51,6 @@ describe('Typed SDK', () => {
     // Stop and return the first result that comes in
     const listenDeferred = createDeferredPromise();
     const eventSource = new EventSource(`${sdkUrl}/subscription`);
-    console.log(
-      'Created EventSource for subscription',
-      eventSource.readyState,
-      eventSource.url,
-    );
     eventSource.onopen = async () => {
       // Trigger the subscription by adding a new todo
       await fetch(`${sdkUrl}/mutation`);

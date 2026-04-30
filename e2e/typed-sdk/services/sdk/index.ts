@@ -40,6 +40,7 @@ createServer(
       path: '/subscription',
       async handler() {
         let pingInterval: ReturnType<typeof setInterval> | null = null;
+        let iterator: AsyncIterator<unknown> | null = null;
         return new Response(
           new ReadableStream({
             start(controller) {
@@ -53,7 +54,13 @@ createServer(
                       ),
                     );
                   }, 1000);
-                  for await (const result of sdk.TodoAdded()) {
+                  const iterable = sdk.TodoAdded();
+                  iterator = iterable[Symbol.asyncIterator]();
+                  while (true) {
+                    const { value: result, done } = await iterator.next();
+                    if (done) {
+                      break;
+                    }
                     console.log('Received subscription result:', result);
                     controller.enqueue(
                       Buffer.from(
@@ -77,6 +84,11 @@ createServer(
             cancel() {
               if (pingInterval) {
                 clearInterval(pingInterval);
+              }
+              // Stop the underlying GraphQL subscription so the upstream
+              // execution doesn't keep running after the client disconnects.
+              if (iterator?.return) {
+                iterator.return();
               }
             },
           }),

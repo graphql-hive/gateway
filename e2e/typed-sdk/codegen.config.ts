@@ -8,7 +8,6 @@ export default {
       schema: supergraphPath,
       documents: 'services/sdk/operations.graphql',
       plugins: [
-        'typescript',
         'typescript-operations',
         'typescript-generic-sdk',
       ],
