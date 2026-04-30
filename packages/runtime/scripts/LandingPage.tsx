@@ -20,7 +20,7 @@ export interface LandingPageProps {
   productLink?: string;
   productPackageName?: string;
   playgroundName?: string;
-  playgroundPathname?: string;
+  graphiqlPathname?: string;
   graphqlUrl?: string;
   requestPathname?: string;
 }
@@ -32,7 +32,7 @@ export function LandingPage(props: LandingPageProps) {
     productLink = '__PRODUCT_LINK__',
     productPackageName = '__PRODUCT_PACKAGE_NAME__',
     playgroundName = '__PLAYGROUND_NAME__',
-    playgroundPathname = '__PLAYGROUND_PATHNAME__',
+    graphiqlPathname = '__GRAPHIQL_PATHNAME__',
     graphqlUrl = '__GRAPHQL_URL__',
     requestPathname = '__REQUEST_PATHNAME__',
   } = props;
@@ -91,7 +91,7 @@ export function LandingPage(props: LandingPageProps) {
               <a href={productLink} className="button">
                 📚 Read the Documentation
               </a>
-              <a href={playgroundPathname} className="button accent">
+              <a href={graphiqlPathname} className="button accent">
                 🗃️ Visit {playgroundName}
               </a>
             </div>
@@ -132,8 +132,8 @@ export const gatewayConfig = defineConfig({
               to configure Hive Gateway.
               <br />
               Currently, the GraphQL route is configured to be on{' '}
-              <a href={playgroundPathname}>
-                {playgroundPathname}
+              <a href={graphiqlPathname} className="graphiql">
+                {graphiqlPathname}
               </a>
               .
             </p>

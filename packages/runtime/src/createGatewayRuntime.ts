@@ -827,7 +827,7 @@ export function createGatewayRuntime<
       new opts.fetchAPI.Response(
         landingPageHtml
           .replace(/__PLAYGROUND_NAME__/g, opts.graphqlEndpoint)
-          .replace(/__PLAYGROUND_PATHNAME__/g, playgroundName)
+          .replace(/__GRAPHIQL_PATHNAME__/g, playgroundName)
           .replace(/__REQUEST_PATHNAME__/g, opts.url.pathname)
           .replace(/__GRAPHQL_URL__/g, opts.url.origin + opts.graphqlEndpoint)
           .replaceAll(/__PRODUCT_NAME__/g, productName)
