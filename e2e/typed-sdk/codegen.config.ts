@@ -7,10 +7,7 @@ export default {
     'services/sdk/generated.ts': {
       schema: supergraphPath,
       documents: 'services/sdk/operations.graphql',
-      plugins: [
-        'typescript-operations',
-        'typescript-generic-sdk',
-      ],
+      plugins: ['typescript-operations', 'typescript-generic-sdk'],
     },
   },
 } satisfies CodegenConfig;
