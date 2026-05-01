@@ -73,6 +73,7 @@ export default defineConfig({
                   '!**/e2e/openapi-javascript-wiki', // has additional resolvers
                   '!**/e2e/cloudflare-workers', // runs gateway in proxy mode
                   '!**/e2e/edfs-mesh-defs-with-entity-resolution', // entity resolution through additional resolvers subscriptions
+                  '!**/e2e/typed-sdk', // nothing to do with the runtime
                 ]
               : []),
           ],

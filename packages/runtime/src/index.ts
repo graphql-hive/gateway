@@ -9,6 +9,7 @@ export * from './plugins/usePropagateHeaders';
 export * from '@whatwg-node/disposablestack';
 export type { ResolveUserFn, ValidateUserFn } from '@envelop/generic-auth';
 export * from '@graphql-mesh/hmac-upstream-signature';
+// TODO: Drop these later on in favor of new SDK Requester
 export {
   getSdkRequesterForUnifiedGraph,
   getExecutorForUnifiedGraph,

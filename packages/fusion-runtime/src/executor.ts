@@ -7,6 +7,7 @@ import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   Executor,
   isAsyncIterable,
+  MaybeAsyncIterable,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
@@ -124,16 +125,25 @@ export function getSdkRequesterForUnifiedGraph(
             : unifiedGraphExecutor;
         return handleMaybePromise(
           () => executor(executionRequest),
-          (result) => {
-            if (isAsyncIterable(result)) {
-              return mapAsyncIterator(result, extractDataOrThrowErrors);
-            }
-            return extractDataOrThrowErrors(result);
-          },
+          handleMaybePromiseMaybeAsyncIterableResult,
         );
       },
     );
   };
+}
+
+export function handleMaybePromiseMaybeAsyncIterableResult<T>(
+  result: MaybePromise<MaybeAsyncIterable<ExecutionResult<T>>>,
+): MaybePromise<MaybeAsyncIterable<T | null>> {
+  return handleMaybePromise(
+    () => result,
+    (resolvedResult) => {
+      if (isAsyncIterable(resolvedResult)) {
+        return mapAsyncIterator(resolvedResult, extractDataOrThrowErrors);
+      }
+      return extractDataOrThrowErrors(resolvedResult);
+    },
+  );
 }
 
 function extractDataOrThrowErrors<T>(result: ExecutionResult<T>): T | null {

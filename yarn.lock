@@ -3634,6 +3634,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/typed-sdk@workspace:e2e/typed-sdk":
+  version: 0.0.0-use.local
+  resolution: "@e2e/typed-sdk@workspace:e2e/typed-sdk"
+  dependencies:
+    "@graphql-codegen/cli": "npm:^7.0.0"
+    "@graphql-codegen/typescript": "npm:^6.0.0"
+    "@graphql-codegen/typescript-generic-sdk": "npm:^5.0.1"
+    "@graphql-codegen/typescript-operations": "npm:^6.0.0"
+    "@graphql-mesh/compose-cli": "npm:^1.5.30"
+    graphql: "npm:16.13.2"
+    graphql-tag: "npm:^2.12.6"
+    graphql-yoga: "npm:^5.16.2"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/usage-reporting-persisted-operations@workspace:e2e/usage-reporting-persisted-operations":
   version: 0.0.0-use.local
   resolution: "@e2e/usage-reporting-persisted-operations@workspace:e2e/usage-reporting-persisted-operations"
@@ -4464,6 +4480,21 @@ __metadata:
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/98eea6d3e03c7a640c6c4f2127f1f15fe97bba8cffb6e5455fd0d014c258d74fd3948e17f6b75e449e6906ddd5e7a1ef7df7868fc1cfc314efd39e926f4a3421
+  languageName: node
+  linkType: hard
+
+"@graphql-codegen/typescript-generic-sdk@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "@graphql-codegen/typescript-generic-sdk@npm:5.0.1"
+  dependencies:
+    "@graphql-codegen/plugin-helpers": "npm:^6.3.0"
+    "@graphql-codegen/visitor-plugin-common": "npm:^6.3.0"
+    auto-bind: "npm:~4.0.0"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    graphql-tag: ^2.0.0
+  checksum: 10c0/3d3ae2f32591eb3f2c8da25793943a0c75e3da3a26e40d9c6f0070944f31881efd8258018abb681408784351c644680de70eaf0686e6ac0199afbeb1d6e9216d
   languageName: node
   linkType: hard
 
@@ -15148,10 +15179,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"convert-source-map@npm:^2.0.0":
+"convert-source-map@npm:2.0.0":
   version: 2.0.0
   resolution: "convert-source-map@npm:2.0.0"
   checksum: 10c0/8f2f7a27a1a011cc6cc88cc4da2d7d0cfa5ee0369508baae3d98c260bb3ac520691464e5bbe4ae7cdf09860c1d69ecc6f70c63c6e7c7f7e3f18ec08484dc7d9b
+  languageName: node
+  linkType: hard
+
+"convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch":
+  version: 2.0.0
+  resolution: "convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch::version=2.0.0&hash=0dffc5"
+  checksum: 10c0/ee2c98f0fcf7fea84bfa2c30ae4aa757ec6c992a96c889e18196f0d5077ecdab257f5fc4eafb0403d226e6fc0751884bf37429491b7e8f6ce94ff60e050b573c
   languageName: node
   linkType: hard
 
@@ -17675,7 +17713,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-tag@npm:2.12.6, graphql-tag@npm:^2.11.0":
+"graphql-tag@npm:2.12.6, graphql-tag@npm:^2.11.0, graphql-tag@npm:^2.12.6":
   version: 2.12.6
   resolution: "graphql-tag@npm:2.12.6"
   dependencies:

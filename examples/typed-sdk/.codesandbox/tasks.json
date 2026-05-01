@@ -1,0 +1,46 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Run codegen",
+      "command": "npm run codegen"
+    },
+    {
+      "name": "Run compose",
+      "command": "npm run compose"
+    },
+    {
+      "name": "Start service subgraph",
+      "command": "nohup npm run service:subgraph &> service-subgraph.out &"
+    },
+    {
+      "name": "Wait for service subgraph",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
+    },
+    {
+      "name": "Start service sdk",
+      "command": "nohup npm run service:sdk &> service-sdk.out &"
+    },
+    {
+      "name": "Wait for service sdk",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}
