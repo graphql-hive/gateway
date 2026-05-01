@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "codegen": "npm run compose && graphql-codegen",
-    "compose": "mesh-compose -o supergraph.graphql"
+    "compose": "mesh-compose -o supergraph.graphql",
+    "example": "tsx example.ts"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^7.0.0",
