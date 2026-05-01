@@ -15180,8 +15180,8 @@ __metadata:
 
 "convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch":
   version: 2.0.0
-  resolution: "convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch::version=2.0.0&hash=b9a7c8"
-  checksum: 10c0/e8a769b7302d52ca894f694d902e7069c504b267b64e70a2703bcb77147cffcead1e73abd83d27b1a87061ef0e308464e29e34069af571dcef835447fcdb4f43
+  resolution: "convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch::version=2.0.0&hash=0dffc5"
+  checksum: 10c0/ee2c98f0fcf7fea84bfa2c30ae4aa757ec6c992a96c889e18196f0d5077ecdab257f5fc4eafb0403d226e6fc0751884bf37429491b7e8f6ce94ff60e050b573c
   languageName: node
   linkType: hard
 

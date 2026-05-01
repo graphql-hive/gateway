@@ -1,5 +1,5 @@
 diff --git a/index.js b/index.js
-index 2e8e916e79d66cd401fea3ca3653fc96a1703b83..86a1ae087dad442ec3fa0e65430ff22fa34b399f 100644
+index 2e8e916e79d66cd401fea3ca3653fc96a1703b83..a1442f2a8b007cfca226637008001d8581e7465c 100644
 --- a/index.js
 +++ b/index.js
 @@ -80,7 +80,12 @@ function Converter (sm, opts) {
@@ -16,13 +16,14 @@ index 2e8e916e79d66cd401fea3ca3653fc96a1703b83..86a1ae087dad442ec3fa0e65430ff22f
    }
  
    this.sourcemap = sm;
-@@ -138,7 +143,12 @@ Converter.prototype.toComment = function (options) {
+@@ -138,7 +143,13 @@ Converter.prototype.toComment = function (options) {
  
  // returns copy instead of original
  Converter.prototype.toObject = function () {
 -  return JSON.parse(this.toJSON());
++  var json = this.toJSON();
 +  try {
-+    return JSON.parse(this.toJSON());
++    return JSON.parse(json);
 +  } catch (e) {
 +    console.error('Could not parse source map', json, e);
 +    return;
