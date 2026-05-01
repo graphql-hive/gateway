@@ -10,7 +10,7 @@
     "@graphql-codegen/cli": "^7.0.0",
     "@graphql-codegen/typescript": "^6.0.0",
     "@graphql-codegen/typescript-resolvers": "^6.0.0",
-    "@graphql-hive/gateway": "^2.5.28",
+    "@graphql-hive/gateway": "^2.6.0",
     "@graphql-mesh/compose-cli": "^1.5.30",
     "@graphql-mesh/incontext-sdk-codegen": "^0.0.17",
     "@omnigraph/openapi": "^0.109.49",

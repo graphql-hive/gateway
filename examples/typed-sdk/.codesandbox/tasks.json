@@ -21,14 +21,6 @@
       "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
     },
     {
-      "name": "Start service sdk",
-      "command": "nohup npm run service:sdk &> service-sdk.out &"
-    },
-    {
-      "name": "Wait for service sdk",
-      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
-    },
-    {
       "name": "Compose",
       "command": "npm run compose"
     }

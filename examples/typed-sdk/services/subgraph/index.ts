@@ -10,8 +10,6 @@ const todos = [
 
 const pubsub = createPubSub();
 
-const port = 4001;
-
 createServer(
   createYoga({
     schema: createSchema({
@@ -37,6 +35,6 @@ createServer(
       },
     }),
   }),
-).listen(port, () => {
-  console.info(`Subgraph is running on http://localhost:${port}/graphql`);
+).listen(4001, () => {
+  console.info(`Subgraph is running on http://localhost:4001/graphql`);
 });
