@@ -259,6 +259,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
           return [...builtinPlugins, ...userPlugins];
         },
       };
+      config.renderLegacyGraphiQL ||= opts.renderLegacyGraphiql;
+      if (config.renderLegacyGraphiQL) {
+        // Setting these to undefined will make the runtime use default GraphiQL
+        config.renderGraphiQL = undefined;
+        config.playgroundName = undefined;
+      }
       if (opts.hiveRouterRuntime && !config.unifiedGraphHandler) {
         ctx.log.warn('Using Hive Router Runtime');
         try {

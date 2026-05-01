@@ -114,6 +114,7 @@ export interface GatewayOptions extends ProcOptions {
         services?: Service[];
         pipeLogs?: boolean | string;
       };
+  proxy?: string;
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -374,6 +375,7 @@ export function createTenv(cwd: string): Tenv {
         args = [],
         services,
         protocol = 'http',
+        proxy,
       } = opts || {};
 
       let proc: Proc,
@@ -428,6 +430,7 @@ export function createTenv(cwd: string): Tenv {
           createPortOpt(port),
           ...(supergraph ? ['supergraph', supergraph] : []),
           ...(subgraph ? ['subgraph', subgraph] : []),
+          ...(proxy ? ['proxy', proxy] : []),
           ...args,
           ...(services?.map(({ name, port }) =>
             createServicePortOpt(name, port),
@@ -455,6 +458,9 @@ export function createTenv(cwd: string): Tenv {
               subgraph,
               volumes,
             );
+          }
+          if (proxy) {
+            proxy = replaceLocalhostWithDockerHost(proxy);
           }
 
           for (const configfile of await glob('gateway.config.*', {

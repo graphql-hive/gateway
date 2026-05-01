@@ -19,6 +19,7 @@ export interface LandingPageProps {
   productDescription?: string;
   productLink?: string;
   productPackageName?: string;
+  playgroundName?: string;
   graphiqlPathname?: string;
   graphqlUrl?: string;
   requestPathname?: string;
@@ -30,6 +31,7 @@ export function LandingPage(props: LandingPageProps) {
     productDescription = '__PRODUCT_DESCRIPTION__',
     productLink = '__PRODUCT_LINK__',
     productPackageName = '__PRODUCT_PACKAGE_NAME__',
+    playgroundName = '__PLAYGROUND_NAME__',
     graphiqlPathname = '__GRAPHIQL_PATHNAME__',
     graphqlUrl = '__GRAPHQL_URL__',
     requestPathname = '__REQUEST_PATHNAME__',
@@ -90,7 +92,7 @@ export function LandingPage(props: LandingPageProps) {
                 📚 Read the Documentation
               </a>
               <a href={graphiqlPathname} className="button accent">
-                🗃️ Visit GraphiQL
+                🗃️ Visit {playgroundName}
               </a>
             </div>
           </section>

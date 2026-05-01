@@ -36,8 +36,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll --clean-dist",
-    "prepack": "yarn render-landing-page && yarn build",
+    "build": "yarn render-landing-page && pkgroll --clean-dist",
+    "prepack": "yarn build",
     "render-landing-page": "tsx scripts/render-landing-page.tsx",
     "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx"
   },
