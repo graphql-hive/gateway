@@ -1,9 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { createGatewayRuntime } from '@graphql-hive/gateway';
 import { Opts } from '@internal/testing';
-import { ReadableStream } from '@whatwg-node/fetch';
 import { createRouter, Response } from 'fets';
 import { getSdk } from './generated';
 
