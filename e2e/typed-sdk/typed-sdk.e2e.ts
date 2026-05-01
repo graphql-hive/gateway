@@ -1,31 +1,34 @@
+import { join } from 'path';
+import {
+  createGatewayRuntime,
+  GatewayRuntime,
+} from '@graphql-hive/gateway-runtime';
 import { createTenv, Service } from '@internal/e2e';
-import { createDeferredPromise, getLocalhost } from '@internal/testing';
-import { fetch } from '@whatwg-node/fetch';
-import { EventSource } from 'eventsource';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getSdk } from './sdk/generated';
 
 describe('Typed SDK', () => {
   const { service, composeWithMesh } = createTenv(__dirname);
-  let sdkService: Service;
   let subgraph: Service;
-  let sdkUrl: string;
+  let sdk: ReturnType<typeof getSdk>;
+  let gw: GatewayRuntime;
   beforeAll(async () => {
     // Run compose and get the path of supergraph
     subgraph = await service('subgraph', { port: 4001 });
-    const { output } = await composeWithMesh({
+    await composeWithMesh({
       services: [subgraph],
       args: ['-o', 'supergraph.graphql'],
     });
-    sdkService = await service('sdk', {
-      env: { ...process.env, SUPERGRAPH_PATH: output },
+    gw = createGatewayRuntime({
+      supergraph: join(__dirname, './supergraph.graphql'),
     });
-    sdkUrl =
-      (await getLocalhost(sdkService.port, sdkService.protocol)) +
-      `:${sdkService.port}`;
+    sdk = getSdk(gw.sdkRequester);
+  });
+  afterAll(async () => {
+    await gw.dispose();
   });
   it('works with a simple query', async () => {
-    const response = await fetch(`${sdkUrl}/query`);
-    const result = await response.json();
+    const result = await sdk.Todos();
     expect(result).toEqual({
       todos: [
         { id: '1', text: 'Learn GraphQL' },
@@ -34,33 +37,23 @@ describe('Typed SDK', () => {
     });
   });
   it('works with a mutation', async () => {
-    const response = await fetch(`${sdkUrl}/mutation`);
-    const result = await response.json();
+    const result = await sdk.AddTodo({ text: 'Write tests' });
     expect(result).toEqual({
       addTodo: { id: '3', text: 'Write tests' },
     });
   });
   it('works with a subscription', async () => {
-    // Listen the subscriptions in the background
-    // Stop and return the first result that comes in
-    const listenDeferred = createDeferredPromise();
-    const eventSource = new EventSource(`${sdkUrl}/subscription`);
-    eventSource.onopen = async () => {
-      // Trigger the subscription by adding a new todo
-      await fetch(`${sdkUrl}/mutation`);
-    };
-    eventSource.onerror = (error) => {
-      listenDeferred.reject(error);
-      eventSource.close();
-    };
-    eventSource.onmessage = (event) => {
-      const parsedData = JSON.parse(event.data);
-      listenDeferred.resolve(parsedData);
-      eventSource.close();
-    };
-    const subscriptionResult = await listenDeferred.promise;
-    expect(subscriptionResult).toEqual({
-      todoAdded: { id: '4', text: 'Write tests' },
+    const iterable = sdk.TodoAdded();
+    const iterator = iterable[Symbol.asyncIterator]();
+    // Trigger the subscription by adding a new todo
+    await sdk.AddTodo({
+      text: 'Trigger subscription',
     });
+    const subscriptionResult = await iterator.next();
+    expect(subscriptionResult).toEqual({
+      value: { todoAdded: { id: '4', text: 'Trigger subscription' } },
+      done: false,
+    });
+    await iterator.return?.();
   });
 });

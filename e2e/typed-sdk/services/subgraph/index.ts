@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
-import { Opts } from '@internal/testing';
 import { createPubSub, createSchema, createYoga } from 'graphql-yoga';
 
 const todos = [
@@ -10,8 +9,6 @@ const todos = [
 ];
 
 const pubsub = createPubSub();
-
-const port = Opts(process.argv).getServicePort('subgraph');
 
 createServer(
   createYoga({
@@ -38,6 +35,6 @@ createServer(
       },
     }),
   }),
-).listen(port, () => {
-  console.info(`Subgraph is running on http://localhost:${port}/graphql`);
+).listen(4001, () => {
+  console.info(`Subgraph is running on http://localhost:4001/graphql`);
 });

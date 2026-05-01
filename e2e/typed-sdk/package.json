@@ -11,8 +11,6 @@
     "@graphql-codegen/typescript-generic-sdk": "^5.0.1",
     "@graphql-codegen/typescript-operations": "^6.0.0",
     "@graphql-mesh/compose-cli": "^1.5.30",
-    "eventsource": "^4.1.0",
-    "fets": "^0.8.6",
     "graphql": "16.13.2",
     "graphql-tag": "^2.12.6",
     "graphql-yoga": "^5.16.2",
