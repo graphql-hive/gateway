@@ -1,5 +1,20 @@
 # @graphql-hive/gateway-runtime
 
+## 2.9.0
+### Minor Changes
+
+
+
+- [`0625f67`](https://github.com/graphql-hive/gateway/commit/0625f67b021ce7edf912cad02f40fa276cd5ffb2) Thanks [@ardatan](https://github.com/ardatan)! - Add Generic SDK support with `gateway.sdkRequester` property, see https://github.com/graphql-hive/gateway/tree/main/examples/typed-sdk
+
+
+### Patch Changes
+
+- Updated dependencies [[`0625f67`](https://github.com/graphql-hive/gateway/commit/0625f67b021ce7edf912cad02f40fa276cd5ffb2), [`7171b46`](https://github.com/graphql-hive/gateway/commit/7171b46546a8e60776f70d18d14dd6fa19d5649f)]:
+  - @graphql-mesh/fusion-runtime@1.10.0
+  - @graphql-tools/batch-delegate@10.0.21
+  - @graphql-tools/delegate@12.0.15
+
 ## 2.8.11
 ### Patch Changes
 

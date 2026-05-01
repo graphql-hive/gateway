@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-testing",
-  "version": "7.0.11",
+  "version": "8.0.0",
   "type": "module",
   "repository": {
     "type": "git",
