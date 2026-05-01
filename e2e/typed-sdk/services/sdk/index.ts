@@ -7,8 +7,7 @@ import { ReadableStream } from '@whatwg-node/fetch';
 import { createRouter, Response } from 'fets';
 import { getSdk } from './generated';
 
-const supergraphPath =
-  process.env['SUPERGRAPH_PATH'] || join(__dirname, '../../supergraph.graphql');
+const supergraphPath = join(__dirname, '../../supergraph.graphql');
 
 const runtime = createGatewayRuntime({
   supergraph: readFileSync(supergraphPath, 'utf-8'),

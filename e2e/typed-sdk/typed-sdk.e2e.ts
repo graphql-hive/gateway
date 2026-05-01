@@ -1,4 +1,3 @@
-import { runCli } from '@graphql-codegen/cli';
 import { createTenv, Service } from '@internal/e2e';
 import { createDeferredPromise, getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
@@ -12,20 +11,11 @@ describe('Typed SDK', () => {
   let sdkUrl: string;
   beforeAll(async () => {
     // Run compose and get the path of supergraph
-    subgraph = await service('subgraph');
+    subgraph = await service('subgraph', { port: 4001 });
     const { output } = await composeWithMesh({
       services: [subgraph],
-      output: 'graphql',
+      args: ['-o', 'supergraph.graphql'],
     });
-    // Run codegen to generate the SDK using the workspace-installed CLI
-    const oldVal = process.env['SUPERGRAPH_PATH'];
-    process.env['SUPERGRAPH_PATH'] = output;
-    // Mock process.cwd to make sure it uses the correct config file
-    const originalCwd = process.cwd;
-    process.cwd = () => __dirname;
-    await runCli('');
-    process.env['SUPERGRAPH_PATH'] = oldVal;
-    process.cwd = originalCwd;
     sdkService = await service('sdk', {
       env: { ...process.env, SUPERGRAPH_PATH: output },
     });

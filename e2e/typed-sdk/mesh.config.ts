@@ -2,15 +2,12 @@ import {
   defineConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
-import { Opts } from '@internal/testing';
-
-const opts = Opts(process.argv);
 
 export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadGraphQLHTTPSubgraph('subgraph', {
-        endpoint: `http://localhost:${opts.getServicePort('subgraph')}/graphql`,
+        endpoint: 'http://localhost:4001/graphql',
         source: './services/subgraph/schema.graphql',
       }),
     },

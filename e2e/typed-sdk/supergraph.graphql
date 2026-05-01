@@ -85,7 +85,7 @@ schema
   
   
 enum join__Graph {
-  SUBGRAPH @join__graph(name: "subgraph", url: "http://localhost:41590/graphql") 
+  SUBGRAPH @join__graph(name: "subgraph", url: "http://localhost:4001/graphql") 
 }
 
 directive @merge(
