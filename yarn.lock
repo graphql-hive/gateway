@@ -3633,8 +3633,6 @@ __metadata:
     "@graphql-codegen/typescript-generic-sdk": "npm:^5.0.1"
     "@graphql-codegen/typescript-operations": "npm:^6.0.0"
     "@graphql-mesh/compose-cli": "npm:^1.5.30"
-    eventsource: "npm:^4.1.0"
-    fets: "npm:^0.8.6"
     graphql: "npm:16.13.2"
     graphql-tag: "npm:^2.12.6"
     graphql-yoga: "npm:^5.16.2"
@@ -16474,22 +16472,6 @@ __metadata:
   version: 3.3.0
   resolution: "events@npm:3.3.0"
   checksum: 10c0/d6b6f2adbccbcda74ddbab52ed07db727ef52e31a61ed26db9feb7dc62af7fc8e060defa65e5f8af9449b86b52cc1a1f6a79f2eafcf4e62add2b7a1fa4a432f6
-  languageName: node
-  linkType: hard
-
-"eventsource-parser@npm:^3.0.1":
-  version: 3.0.8
-  resolution: "eventsource-parser@npm:3.0.8"
-  checksum: 10c0/3a73eee85311f33b12fa558381a477c1bdcf8c024a429a9d48f87b043e328c26d24ed280fd7ca92e2fdd4c8c37f749b758420c1533778aaca2beabf895024efa
-  languageName: node
-  linkType: hard
-
-"eventsource@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "eventsource@npm:4.1.0"
-  dependencies:
-    eventsource-parser: "npm:^3.0.1"
-  checksum: 10c0/5d8f0f60fdafc5a3b4ce5d53f6a6c75cf07fbec250cfb870c44ea38d9689b9996e4a6f3779e520a6e7d32fbf398f42ea011a2c10772a9bc932fb419accede73e
   languageName: node
   linkType: hard
 
