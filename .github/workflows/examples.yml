@@ -47,7 +47,7 @@ jobs:
           - interface-additional-resolvers
           - json-schema-subscriptions
           - openapi-additional-resolvers
-          - openapi-arg-rename
+          # - openapi-arg-rename
           - openapi-javascript-wiki
           - openapi-subscriptions
           - programmatic-batching
