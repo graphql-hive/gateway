@@ -1,4 +1,9 @@
 {
   "name": "@e2e/graphiql-laboratory",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@graphql-mesh/compose-cli": "^1.5.30",
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.16.2"
+  }
 }

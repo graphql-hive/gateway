@@ -459,6 +459,9 @@ export function createTenv(cwd: string): Tenv {
               volumes,
             );
           }
+          if (proxy) {
+            proxy = replaceLocalhostWithDockerHost(proxy);
+          }
 
           for (const configfile of await glob('gateway.config.*', {
             cwd,

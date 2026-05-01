@@ -2,13 +2,19 @@ import { createTenv } from '@internal/e2e';
 import { getLocalhost } from '@internal/testing';
 import { describe, it } from 'vitest';
 
-describe('GraphiQL / Laboratory options', () => {
+describe('GraphiQL / Laboratory options', async () => {
+  const { gateway, service, composeWithMesh } = createTenv(__dirname);
+  const api = await service('api');
+  const { output: supergraph } = await composeWithMesh({
+    services: [api],
+    output: 'graphql',
+  });
+  const proxyUrl = `http://localhost:${api.port}/graphql`;
+
   const opts = {
-    supergraph:
-      'https://federation-demo.theguild.workers.dev/supergraph.graphql',
-    proxy: 'https://federation-demo.theguild.workers.dev/users',
+    supergraph,
+    proxy: proxyUrl,
   } as const;
-  const { gateway } = createTenv(__dirname);
   for (const mode of Object.keys(opts) as (keyof typeof opts)[]) {
     const url = opts[mode];
     describe(mode, () => {
