@@ -37,10 +37,6 @@ Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/typed-sdk](https://
    ```sh
    npm run service:subgraph
    ```
-1. Start service sdk
-   ```sh
-   npm run service:sdk
-   ```
 1. Compose
    ```sh
    npm run compose
