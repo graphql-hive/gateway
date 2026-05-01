@@ -1,5 +1,54 @@
 # @graphql-hive/gateway
 
+## 2.6.0
+### Minor Changes
+
+
+
+- [#2006](https://github.com/graphql-hive/gateway/pull/2006) [`5bf4b06`](https://github.com/graphql-hive/gateway/commit/5bf4b0617dc43cacf6abe0169b7bcfb7bf7e0843) Thanks [@mskorokhodov](https://github.com/mskorokhodov)! - Hive Laboratory is now the default editor
+  
+  We’ve upgraded the default GraphQL experience in Hive Gateway by replacing GraphiQL with Hive Laboratory — a more powerful, editor-style interface built for modern workflows.
+  
+  You can always switch back to GraphiQL by updating the config:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    renderLegacyGraphiQL: true
+  });
+  ```
+  
+  Or via CLI option
+  
+  ```sh
+  hive-gateway --render-legacy-graphiql
+  ```
+  
+  Or via env variable
+  
+  ```sh
+  RENDER_LEGACY_GRAPHIQL=true hive-gateway
+  ```
+
+### Patch Changes
+
+
+
+- [#2006](https://github.com/graphql-hive/gateway/pull/2006) [`5bf4b06`](https://github.com/graphql-hive/gateway/commit/5bf4b0617dc43cacf6abe0169b7bcfb7bf7e0843) Thanks [@mskorokhodov](https://github.com/mskorokhodov)! - dependencies updates:
+  
+  - Added dependency [`@graphql-hive/render-laboratory@^0.1.6` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.6) (to `dependencies`)
+
+
+- [#2300](https://github.com/graphql-hive/gateway/pull/2300) [`c465844`](https://github.com/graphql-hive/gateway/commit/c4658441933e7ec2e81d6fa3dfbf97615618d604) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.216.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.216.0) (from `^0.215.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.216.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.216.0) (from `^0.215.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.216.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.216.0) (from `^0.215.0`, in `dependencies`)
+- Updated dependencies [[`c465844`](https://github.com/graphql-hive/gateway/commit/c4658441933e7ec2e81d6fa3dfbf97615618d604), [`0625f67`](https://github.com/graphql-hive/gateway/commit/0625f67b021ce7edf912cad02f40fa276cd5ffb2)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.23
+  - @graphql-hive/gateway-runtime@2.9.0
+
 ## 2.5.28
 ### Patch Changes
 
