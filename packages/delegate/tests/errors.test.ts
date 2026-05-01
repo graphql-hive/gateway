@@ -1,6 +1,10 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { createGraphQLError, ExecutionResult, relocatedError } from '@graphql-tools/utils';
+import {
+  createGraphQLError,
+  ExecutionResult,
+  relocatedError,
+} from '@graphql-tools/utils';
 import {
   graphql,
   GraphQLError,
@@ -637,7 +641,8 @@ describe('Errors', () => {
                 onLocatedError: (originalError) => {
                   if (originalError.path == null) return originalError;
                   const [fieldName, pathIndex, ...rest] = originalError.path;
-                  if (typeof pathIndex !== 'number') return originalError;
+                  if (fieldName == null || typeof pathIndex !== 'number')
+                    return originalError;
                   return relocatedError(originalError, [fieldName, ...rest]);
                 },
               }),
