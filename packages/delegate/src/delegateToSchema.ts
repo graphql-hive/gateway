@@ -290,6 +290,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
     transformedSchema: transformedSchema ?? subschemaOrSubschemaConfig,
     skipTypeMerging,
     onLocatedError,
+    args,
   };
 }
 
