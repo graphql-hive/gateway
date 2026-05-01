@@ -15171,10 +15171,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"convert-source-map@npm:^2.0.0":
+"convert-source-map@npm:2.0.0":
   version: 2.0.0
   resolution: "convert-source-map@npm:2.0.0"
   checksum: 10c0/8f2f7a27a1a011cc6cc88cc4da2d7d0cfa5ee0369508baae3d98c260bb3ac520691464e5bbe4ae7cdf09860c1d69ecc6f70c63c6e7c7f7e3f18ec08484dc7d9b
+  languageName: node
+  linkType: hard
+
+"convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch":
+  version: 2.0.0
+  resolution: "convert-source-map@patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch::version=2.0.0&hash=5901fb"
+  checksum: 10c0/478442750764ae13fbea9af7b57deca2b21ee3c7c36daeaf04ab40bbb2ceaf1a07f2299afe905695a707ed4ce7a6074695a0f8d78392141bb2b4dc7af6c3cd99
   languageName: node
   linkType: hard
 

@@ -101,6 +101,7 @@
     "tmp": "^0.2.4",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
     "undici": "^7.24.0",
-    "vite": "^8.0.0"
+    "vite": "^8.0.0",
+    "convert-source-map@npm:^2.0.0": "patch:convert-source-map@npm%3A2.0.0#~/.yarn/patches/convert-source-map-npm-2.0.0-7ab664dc4e.patch"
   }
 }
