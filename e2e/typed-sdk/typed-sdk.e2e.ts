@@ -4,9 +4,8 @@ import { fetch } from '@whatwg-node/fetch';
 import { EventSource } from 'eventsource';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const { service, composeWithMesh, gatewayRunner } = createTenv(__dirname);
-
-describe.skipIf(gatewayRunner === 'bin')('Typed SDK', () => {
+describe('Typed SDK', () => {
+  const { service, composeWithMesh } = createTenv(__dirname);
   let sdkService: Service;
   let subgraph: Service;
   let sdkUrl: string;
