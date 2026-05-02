@@ -8,7 +8,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 const { spawn, container, gatewayRunner } = createTenv(__dirname);
 
 describe.skipIf(
-  gatewayRunner !== 'node' || process.version.startsWith('v1') || process.version.startsWith('v20'),
+  gatewayRunner !== 'node' ||
+    process.version.startsWith('v1') ||
+    process.version.startsWith('v20'),
 )('Cloudflare Workers', () => {
   let jaeger: Container;
   let jaegerHostname: string;
@@ -38,7 +40,9 @@ describe.skipIf(
     try {
       jaegerHostname = await getLocalhost(jaeger.port);
     } catch {
-      throw new Error(`Jaeger unavailable\n${jaeger.getStd('both') || 'no output'}`);
+      throw new Error(
+        `Jaeger unavailable\n${jaeger.getStd('both') || 'no output'}`,
+      );
     }
   });
 
@@ -71,7 +75,9 @@ describe.skipIf(
         res = await fetch(url).then((r) => r.json());
         if (
           res.data.length >= expectedDataLength &&
-          res.data.some((trace) => trace.spans.some((span) => span.operationName === 'POST ' + path))
+          res.data.some((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST ' + path),
+          )
         ) {
           return res;
         }
@@ -80,7 +86,10 @@ describe.skipIf(
     return res;
   }
 
-  async function wrangler(env: { OTLP_EXPORTER_URL: string; OTEL_SERVICE_NAME: string }) {
+  async function wrangler(env: {
+    OTLP_EXPORTER_URL: string;
+    OTEL_SERVICE_NAME: string;
+  }) {
     const port = await getAvailablePort();
     const [proc] = await spawn([
       'yarn',
@@ -101,11 +110,19 @@ describe.skipIf(
     try {
       hostname = await getLocalhost(port, undefined, 30_000);
     } catch {
-      throw new Error(`Wrangler unavailable\n${proc.getStd('both') || 'no output'}`);
+      throw new Error(
+        `Wrangler unavailable\n${proc.getStd('both') || 'no output'}`,
+      );
     }
     return {
       url: `${hostname}:${port}`,
-      async execute({ query, headers }: { query: string; headers?: HeadersInit }): Promise<ExecutionResult> {
+      async execute({
+        query,
+        headers,
+      }: {
+        query: string;
+        headers?: HeadersInit;
+      }): Promise<ExecutionResult> {
         const r = await fetch(`${hostname}:${port}/graphql`, {
           method: 'POST',
           headers: {
@@ -129,7 +146,8 @@ describe.skipIf(
       OTEL_SERVICE_NAME: serviceName,
     });
 
-    await expect(execute({ query: TEST_QUERY })).resolves.toMatchInlineSnapshot(`
+    await expect(execute({ query: TEST_QUERY })).resolves
+      .toMatchInlineSnapshot(`
       {
         "data": {
           "language": {
@@ -149,15 +167,23 @@ describe.skipIf(
     expect(relevantTrace).toBeDefined();
     expect(relevantTrace?.spans.length).toBe(8);
 
-    expect(relevantTrace?.spans).toContainEqual(expect.objectContaining({ operationName: 'POST /graphql' }));
-    expect(relevantTrace?.spans).toContainEqual(expect.objectContaining({ operationName: 'graphql.parse' }));
+    expect(relevantTrace?.spans).toContainEqual(
+      expect.objectContaining({ operationName: 'POST /graphql' }),
+    );
+    expect(relevantTrace?.spans).toContainEqual(
+      expect.objectContaining({ operationName: 'graphql.parse' }),
+    );
     expect(relevantTrace?.spans).toContainEqual(
       expect.objectContaining({ operationName: 'graphql.validate' }),
     );
     expect(relevantTrace?.spans).toContainEqual(
       expect.objectContaining({ operationName: 'graphql.execute' }),
     );
-    expect(relevantTrace?.spans.filter((r) => r.operationName.includes('subgraph.execute')).length).toBe(1);
+    expect(
+      relevantTrace?.spans.filter((r) =>
+        r.operationName.includes('subgraph.execute'),
+      ).length,
+    ).toBe(1);
   });
 
   it('should report http failures', async () => {
