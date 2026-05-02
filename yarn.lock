@@ -165,29 +165,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/composition@npm:^2.13.3":
-  version: 2.13.3
-  resolution: "@apollo/composition@npm:2.13.3"
+"@apollo/composition@npm:^2.14.0":
+  version: 2.14.0
+  resolution: "@apollo/composition@npm:2.14.0"
   dependencies:
-    "@apollo/federation-internals": "npm:2.13.3"
-    "@apollo/query-graphs": "npm:2.13.3"
+    "@apollo/federation-internals": "npm:2.14.0"
+    "@apollo/query-graphs": "npm:2.14.0"
   peerDependencies:
     graphql: ^16.5.0
-  checksum: 10c0/4add796b652b98262b99507f9f0255cbdb26e69a5bb22a08365051b871575f02b4fe22d461093b07db02c4e78ca431a0b61035e04492bfc8daf0e9938ef7f8d1
-  languageName: node
-  linkType: hard
-
-"@apollo/federation-internals@npm:2.13.3":
-  version: 2.13.3
-  resolution: "@apollo/federation-internals@npm:2.13.3"
-  dependencies:
-    "@types/uuid": "npm:^9.0.0"
-    chalk: "npm:^4.1.0"
-    js-levenshtein: "npm:^1.1.6"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/296b9e293c0c639eaf8daf51e7be1514c7437da40b47decc9daaf6b6d2faa46d3fdd2f7edfa0acaccab3a344bd70cccb793bb8bed619fdd33a36653a8ac77cc9
+  checksum: 10c0/96aab129197971b677d7835e94063f7bab75921d60aeaf6b88e06058bdbae0b70ccc7616e917a6420bab193af2ec38b6b3a524dceb971a9048babf33a636698a
   languageName: node
   linkType: hard
 
@@ -263,20 +249,6 @@ __metadata:
     apollo-pbjs: bin/pbjs
     apollo-pbts: bin/pbts
   checksum: 10c0/24b08929c5216f75e3bf457cf7e132d957d6774b0feebb104e98d9b0c06e801ef3919ee23d6a63a6297fb4aa41da3491b8e9acc3481fea0909c90f41f1e5a0f6
-  languageName: node
-  linkType: hard
-
-"@apollo/query-graphs@npm:2.13.3":
-  version: 2.13.3
-  resolution: "@apollo/query-graphs@npm:2.13.3"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.13.3"
-    deep-equal: "npm:^2.0.5"
-    ts-graphviz: "npm:^1.5.4"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/7242afb6b0983bdca0b11a018c4eb967062ad953fdfd6b0fcfe6e25add3020ff3a042cb8ad5529a5d16ddaf7e5a309d2b516d91bbe5378491ea4958985bc5d34
   languageName: node
   linkType: hard
 
@@ -382,7 +354,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:^2.13.3":
+"@apollo/subgraph@npm:^2.14.0":
   version: 2.14.0
   resolution: "@apollo/subgraph@npm:2.14.0"
   dependencies:
