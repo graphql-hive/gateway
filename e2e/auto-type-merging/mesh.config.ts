@@ -22,7 +22,7 @@ export const composeConfig = defineConfig({
         createFilterTransform({
           rootFieldFilter: (typeName, fieldName) =>
             typeName === 'Query' && fieldName === 'getPetById',
-          typeFilter: type => type.name !== 'Mutation',
+          typeFilter: (type) => type.name !== 'Mutation',
         }),
       ],
     },
