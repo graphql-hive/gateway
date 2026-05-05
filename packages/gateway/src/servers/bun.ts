@@ -65,13 +65,6 @@ export async function startBunServer<TContext extends Record<string, any>>(
     request: Request,
     server: Server<WebSocketData>,
   ) {
-    if (opts.requestDeadline) {
-      server.timeout(
-        request,
-        opts.requestDeadline / 1000, // bun's timeout is in seconds
-      );
-    }
-
     if (!opts.disableWebsockets) {
       // header to check if websocket
       if (
@@ -86,6 +79,25 @@ export async function startBunServer<TContext extends Record<string, any>>(
         return undefined as unknown as Response;
       }
     }
+
+    if (opts.requestDeadline) {
+      return Promise.race([
+        gwRuntime.handleRequest(request, server),
+        new Promise<Response>((resolve) =>
+          setTimeout(
+            () =>
+              resolve(
+                new Response('Request deadline exceeded', {
+                  status: 503,
+                  headers: { Connection: 'close' },
+                }),
+              ),
+            opts.requestDeadline,
+          ),
+        ),
+      ]);
+    }
+
     return gwRuntime.handleRequest(request, server);
   };
   const server = Bun.serve(serverOptions);
