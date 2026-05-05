@@ -99,7 +99,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
         }
       }, requestDeadline);
       res.on('finish', () => clearTimeout(timer));
-      res.on('close', () => clearTimeout(timer));
+      res.once('close', () => clearTimeout(timer));
     });
   }
 
