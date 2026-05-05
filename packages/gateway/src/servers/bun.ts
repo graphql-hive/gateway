@@ -88,14 +88,18 @@ export async function startBunServer<TContext extends Record<string, any>>(
       return Promise.race([
         gwRuntime.handleRequest(requestWithDeadline, server),
         new Promise<Response>((resolve) => {
-          deadlineSignal.addEventListener('abort', () =>
+          const onAbort = () =>
             resolve(
               new Response('Request deadline exceeded', {
                 status: 503,
                 headers: { Connection: 'close' },
               }),
-            ),
-          );
+            );
+          if (deadlineSignal.aborted) {
+            onAbort();
+          } else {
+            deadlineSignal.addEventListener('abort', onAbort, { once: true });
+          }
         }),
       ]);
     }
