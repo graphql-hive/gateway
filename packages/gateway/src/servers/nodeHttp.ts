@@ -90,9 +90,13 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       const timer = setTimeout(() => {
         if (!res.headersSent) {
           res.writeHead(503, { Connection: 'close' });
-          res.end('Request deadline exceeded');
+          res.end('Request deadline exceeded', () => {
+            // wait for the response to flush before destroying the socket
+            req.socket?.destroy();
+          });
+        } else {
+          req.socket?.destroy();
         }
-        req.socket?.destroy();
       }, requestDeadline);
       res.on('finish', () => clearTimeout(timer));
       res.on('close', () => clearTimeout(timer));
