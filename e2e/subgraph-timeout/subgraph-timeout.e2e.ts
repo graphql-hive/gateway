@@ -17,8 +17,6 @@ it('should do something', async () => {
     })
     .catch((err) => err);
 
-  console.log(err);
-
   expect(err.message).toContain(
     'ResponseError: Status is not 200, got status 503 Service Unavailable',
   );
