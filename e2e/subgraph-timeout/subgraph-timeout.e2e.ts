@@ -11,15 +11,15 @@ it('should do something', async () => {
     },
   });
 
-  await expect(
-    gw.execute({
+  const err: Error = await gw
+    .execute({
       query: '{slowHello}',
-    }),
-  ).resolves.toMatchInlineSnapshot(`
-    {
-      "data": {
-        "slowHello": "world",
-      },
-    }
-  `);
+    })
+    .catch((err) => err);
+
+  console.log(err);
+
+  expect(err.message).toContain(
+    'ResponseError: Status is not 200, got status 503 Service Unavailable',
+  );
 });

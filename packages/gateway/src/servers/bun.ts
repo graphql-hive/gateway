@@ -59,17 +59,20 @@ export async function startBunServer<TContext extends Record<string, any>>(
         ...ctx.extra.socket.data,
       })),
     );
-    serverOptions.fetch = function (
-      request: Request,
-      server: Server<WebSocketData>,
-    ) {
-      if (opts.requestDeadline) {
-        server.timeout(
-          request,
-          opts.requestDeadline / 1000, // bun's timeout is in seconds
-        );
-      }
+  }
 
+  serverOptions.fetch = function (
+    request: Request,
+    server: Server<WebSocketData>,
+  ) {
+    if (opts.requestDeadline) {
+      server.timeout(
+        request,
+        opts.requestDeadline / 1000, // bun's timeout is in seconds
+      );
+    }
+
+    if (!opts.disableWebsockets) {
       // header to check if websocket
       if (
         request.headers.has('Sec-WebSocket-Key') &&
@@ -82,9 +85,9 @@ export async function startBunServer<TContext extends Record<string, any>>(
         // This is how Bun docs say to handle websockets but types are not correct
         return undefined as unknown as Response;
       }
-      return gwRuntime.handleRequest(request, server);
-    };
-  }
+    }
+    return gwRuntime.handleRequest(request, server);
+  };
   const server = Bun.serve(serverOptions);
   opts.log.info(`Listening on ${server.url}`);
   gwRuntime.disposableStack.defer(() => server[DisposableSymbols.dispose]());
