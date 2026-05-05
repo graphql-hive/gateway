@@ -4779,6 +4779,7 @@ __metadata:
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/render-laboratory": "npm:^0.1.6"
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
     "@graphql-mesh/cache-redis": "npm:^0.105.22"

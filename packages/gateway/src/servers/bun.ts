@@ -2,6 +2,7 @@ import {
   DisposableSymbols,
   getGraphQLWSOptions,
 } from '@graphql-hive/gateway-runtime';
+import { abortSignalAny } from '@graphql-hive/signal';
 import type { Server, ServerWebSocket, WebSocketOptions } from 'bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
@@ -81,20 +82,21 @@ export async function startBunServer<TContext extends Record<string, any>>(
     }
 
     if (opts.requestDeadline) {
+      const deadlineSignal = AbortSignal.timeout(opts.requestDeadline);
+      const signal = abortSignalAny([request.signal, deadlineSignal]);
+      const requestWithDeadline = new Request(request, { signal });
       return Promise.race([
-        gwRuntime.handleRequest(request, server),
-        new Promise<Response>((resolve) =>
-          setTimeout(
-            () =>
-              resolve(
-                new Response('Request deadline exceeded', {
-                  status: 503,
-                  headers: { Connection: 'close' },
-                }),
-              ),
-            opts.requestDeadline,
-          ),
-        ),
+        gwRuntime.handleRequest(requestWithDeadline, server),
+        new Promise<Response>((resolve) => {
+          deadlineSignal.addEventListener('abort', () =>
+            resolve(
+              new Response('Request deadline exceeded', {
+                status: 503,
+                headers: { Connection: 'close' },
+              }),
+            ),
+          );
+        }),
       ]);
     }
 

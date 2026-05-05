@@ -101,6 +101,7 @@
     "@graphql-hive/plugin-opentelemetry": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/render-laboratory": "^0.1.6",
+    "@graphql-hive/signal": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.35",
     "@graphql-mesh/cache-localforage": "^0.105.36",
     "@graphql-mesh/cache-redis": "^0.105.22",
