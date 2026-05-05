@@ -3584,6 +3584,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/subgraph-timeout@workspace:e2e/subgraph-timeout":
+  version: 0.0.0-use.local
+  resolution: "@e2e/subgraph-timeout@workspace:e2e/subgraph-timeout"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation"
