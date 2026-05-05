@@ -63,6 +63,13 @@ export async function startBunServer<TContext extends Record<string, any>>(
       request: Request,
       server: Server<WebSocketData>,
     ) {
+      if (opts.requestDeadline) {
+        server.timeout(
+          request,
+          opts.requestDeadline / 1000, // bun's timeout is in seconds
+        );
+      }
+
       // header to check if websocket
       if (
         request.headers.has('Sec-WebSocket-Key') &&

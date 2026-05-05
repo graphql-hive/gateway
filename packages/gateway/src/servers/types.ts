@@ -32,11 +32,25 @@ export interface ServerConfig {
    */
   disableWebsockets?: boolean;
   /**
-   * Request timeout, 0 to disable.
+   * Sets the maximum time in milliseconds allowed to receive the
+   * _entire_ request from the client (headers + body). It does not limit
+   * the total duration of the request lifecycle - once the body is fully
+   * received, this timer is cancelled and your handler can run indefinitely.
+   *
+   * For a hard end-to-end deadline, use {@link requestDeadline} instead.
    *
    * @default 300000 (5 minutes)
    */
   requestTimeout?: number;
+  /**
+   * Sets a hard end-to-end time limit in milliseconds for the
+   * entire request lifecycle — from connection to response completion.
+   *
+   * Unlike {@link requestTimeout}, this timer is NOT cancelled when the body
+   * is received; it runs until the response is finished or the socket
+   * is destroyed.
+   */
+  requestDeadline?: number;
   /**
    * Sets the number of milliseconds to wait before timing out a
    * connection due to inactivity in Node's HTTP server
