@@ -85,6 +85,9 @@ export async function startBunServer<TContext extends Record<string, any>>(
       const deadlineSignal = AbortSignal.timeout(opts.requestDeadline);
       const signal = abortSignalAny([request.signal, deadlineSignal]);
       const requestWithDeadline = new Request(request, { signal });
+      // TODO: this Promise.race only covers the time until a Response object is
+      // created. streamed responses (e.g. defer/stream) are not deadlined - the
+      // body can stream past the deadline without returning a 503 or closing the connection
       return Promise.race([
         gwRuntime.handleRequest(requestWithDeadline, server),
         new Promise<Response>((resolve) => {

@@ -49,6 +49,10 @@ export interface ServerConfig {
    * Unlike {@link requestTimeout}, this timer is NOT cancelled when the body
    * is received; it runs until the response is finished or the socket
    * is destroyed.
+   *
+   * WARNING: in Bun, streamed responses (e.g. defer/stream) are not covered by
+   * this deadline. The timer only applies until the Response object is created;
+   * once streaming begins, the body can continue past the deadline.
    */
   requestDeadline?: number;
   /**
