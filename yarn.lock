@@ -606,8 +606,8 @@ __metadata:
   linkType: hard
 
 "@aws-sdk/client-sts@npm:^3.995.0":
-  version: 3.1041.0
-  resolution: "@aws-sdk/client-sts@npm:3.1041.0"
+  version: 3.1042.0
+  resolution: "@aws-sdk/client-sts@npm:3.1042.0"
   dependencies:
     "@aws-crypto/sha256-browser": "npm:5.2.0"
     "@aws-crypto/sha256-js": "npm:5.2.0"
@@ -649,7 +649,7 @@ __metadata:
     "@smithy/util-retry": "npm:^4.3.6"
     "@smithy/util-utf8": "npm:^4.2.2"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/6c4677993f86e62fb9631ea5e7007c3893f327ed2b8f4ce2d174ee18324f90ebdfa38d9bfcb952cced77e9959d23d7b2a3c3643c453930a707117a934d03e90f
+  checksum: 10c0/dfbf1d4784e29abddfb7af9c13986259f2685c8db8b9ca28fe0022e156496ec78ac175342abf7f5a667064effd9af1301f1702d0ef8679d40f635d311ddb8c2a
   languageName: node
   linkType: hard
 
@@ -2897,9 +2897,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20251113.0":
-  version: 4.20260504.1
-  resolution: "@cloudflare/workers-types@npm:4.20260504.1"
-  checksum: 10c0/164400b0785253362ce3624510a63d3bdb6e1cd7623dbca8fe4077a54b48d793c26111d580e796e99218a9b626e18c2fa9cb69a9c8e6eaf90c5eef0b113b377e
+  version: 4.20260505.1
+  resolution: "@cloudflare/workers-types@npm:4.20260505.1"
+  checksum: 10c0/921362611487fc8fe6d2c422a7955a120e7cefe6c874aa3b6f56fea534552436ed68e10bafe2de28d0d6407c1d61e04687d4745f430890c35dbc4829658463e3
   languageName: node
   linkType: hard
 
@@ -7547,9 +7547,9 @@ __metadata:
   linkType: hard
 
 "@logtape/logtape@npm:^2.0.0":
-  version: 2.0.6
-  resolution: "@logtape/logtape@npm:2.0.6"
-  checksum: 10c0/20a82ef81d4a56a6e7d34982e0d7b609a0d123da46e865559609bad76be93393d6db98bf721910df372d3de093981a9bbcbdc0c77fa41c561dc6e34267dadfbe
+  version: 2.0.7
+  resolution: "@logtape/logtape@npm:2.0.7"
+  checksum: 10c0/86ab811018b2c092c4b6c6b8a5251b843df94b52f2a430b76da7064648d3b2b5ee9dc92964167d8b12f1a2c8106e33f57948a9db0f26bd4adb01e17b66b76fb5
   languageName: node
   linkType: hard
 
