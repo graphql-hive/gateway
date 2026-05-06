@@ -2,6 +2,7 @@ import {
   DisposableSymbols,
   getGraphQLWSOptions,
 } from '@graphql-hive/gateway-runtime';
+import { abortSignalAny } from '@graphql-hive/signal';
 import type { Server, ServerWebSocket, WebSocketOptions } from 'bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
@@ -59,10 +60,13 @@ export async function startBunServer<TContext extends Record<string, any>>(
         ...ctx.extra.socket.data,
       })),
     );
-    serverOptions.fetch = function (
-      request: Request,
-      server: Server<WebSocketData>,
-    ) {
+  }
+
+  serverOptions.fetch = function (
+    request: Request,
+    server: Server<WebSocketData>,
+  ) {
+    if (!opts.disableWebsockets) {
       // header to check if websocket
       if (
         request.headers.has('Sec-WebSocket-Key') &&
@@ -75,9 +79,36 @@ export async function startBunServer<TContext extends Record<string, any>>(
         // This is how Bun docs say to handle websockets but types are not correct
         return undefined as unknown as Response;
       }
-      return gwRuntime.handleRequest(request, server);
-    };
-  }
+    }
+
+    if (opts.requestDeadline) {
+      const deadlineSignal = AbortSignal.timeout(opts.requestDeadline);
+      const signal = abortSignalAny([request.signal, deadlineSignal]);
+      const requestWithDeadline = new Request(request, { signal });
+      // TODO: this Promise.race only covers the time until a Response object is
+      // created. streamed responses (e.g. defer/stream) are not deadlined - the
+      // body can stream past the deadline without returning a 503 or closing the connection
+      return Promise.race([
+        gwRuntime.handleRequest(requestWithDeadline, server),
+        new Promise<Response>((resolve) => {
+          const onAbort = () =>
+            resolve(
+              new Response('Request deadline exceeded', {
+                status: 503,
+                headers: { Connection: 'close' },
+              }),
+            );
+          if (deadlineSignal.aborted) {
+            onAbort();
+          } else {
+            deadlineSignal.addEventListener('abort', onAbort, { once: true });
+          }
+        }),
+      ]);
+    }
+
+    return gwRuntime.handleRequest(request, server);
+  };
   const server = Bun.serve(serverOptions);
   opts.log.info(`Listening on ${server.url}`);
   gwRuntime.disposableStack.defer(() => server[DisposableSymbols.dispose]());

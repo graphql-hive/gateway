@@ -3558,6 +3558,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/request-deadline@workspace:e2e/request-deadline":
+  version: 0.0.0-use.local
+  resolution: "@e2e/request-deadline@workspace:e2e/request-deadline"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/response-blending@workspace:e2e/response-blending":
   version: 0.0.0-use.local
   resolution: "@e2e/response-blending@workspace:e2e/response-blending"
@@ -4786,6 +4792,7 @@ __metadata:
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/render-laboratory": "npm:^0.1.6"
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
     "@graphql-mesh/cache-redis": "npm:^0.105.22"

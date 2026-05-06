@@ -1,5 +1,10 @@
 import { promises as fsPromises } from 'node:fs';
-import { createServer as createHTTPServer, type Server } from 'node:http';
+import {
+  createServer as createHTTPServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import { createServer as createHTTPSServer } from 'node:https';
 import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
@@ -21,6 +26,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     maxHeaderSize,
     disableWebsockets,
     requestTimeout,
+    requestDeadline,
     keepAliveTimeout,
   } = opts;
   let server: Server;
@@ -77,6 +83,24 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       },
       gwRuntime,
     );
+  }
+
+  if (requestDeadline) {
+    server.on('request', (req: IncomingMessage, res: ServerResponse) => {
+      const timer = setTimeout(() => {
+        if (!res.headersSent) {
+          res.writeHead(503, { Connection: 'close' });
+          res.end('Request deadline exceeded', () => {
+            // wait for the response to flush before destroying the socket
+            req.socket?.destroy();
+          });
+        } else {
+          req.socket?.destroy();
+        }
+      }, requestDeadline);
+      res.once('finish', () => clearTimeout(timer));
+      res.once('close', () => clearTimeout(timer));
+    });
   }
 
   const url = `${protocol}://${host}:${port}`.replace('0.0.0.0', 'localhost');
