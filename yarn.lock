@@ -4601,7 +4601,7 @@ __metadata:
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
-    "@graphql-mesh/cache-redis": "npm:^0.105.22"
+    "@graphql-mesh/cache-redis": "npm:0.106.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16"
     "@graphql-mesh/cache-upstash-redis": "npm:^0.1.31"
     "@graphql-mesh/cross-helpers": "npm:^0.4.13"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
@@ -4616,7 +4616,7 @@ __metadata:
     "@graphql-mesh/transport-http-callback": "workspace:^"
     "@graphql-mesh/transport-soap": "npm:^0.10.42"
     "@graphql-mesh/transport-ws": "workspace:^"
-    "@graphql-mesh/types": "npm:^0.104.28"
+    "@graphql-mesh/types": "npm:0.105.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16"
     "@graphql-mesh/utils": "npm:^0.104.38"
     "@graphql-tools/code-file-loader": "npm:^8.1.26"
     "@graphql-tools/executor": "npm:^1.4.13"
@@ -4997,21 +4997,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-redis@npm:^0.105.22":
-  version: 0.105.23
-  resolution: "@graphql-mesh/cache-redis@npm:0.105.23"
+"@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16":
+  version: 0.106.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16
+  resolution: "@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.14"
     "@graphql-mesh/string-interpolation": "npm:^0.5.16"
-    "@graphql-mesh/types": "npm:^0.104.28"
+    "@graphql-mesh/types": "npm:0.105.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16"
     "@opentelemetry/api": "npm:^1.9.1"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     ioredis: "npm:^5.10.1"
     ioredis-mock: "npm:^8.13.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
+    "@aws-sdk/credential-providers": ">=3.0.0"
+    "@smithy/signature-v4": ">=2.0.0"
     graphql: "*"
-  checksum: 10c0/0c9b78ed2dc8e940c3ac7b706cc95c05c88a3df832944a6b482db2b30ab30fb093b7f242ee9bdd1b89193e38d2254d8db79da85b268d18fac2f5e0440473fc53
+  peerDependenciesMeta:
+    "@aws-sdk/credential-providers":
+      optional: true
+    "@smithy/signature-v4":
+      optional: true
+  checksum: 10c0/c12be15cae7ab2914282d99da51d935a710074403ed604a792138d7496e1d4e884198e44d97c0bac6c3bcfe819b6caa08826e25a4eaef2e53288d8dfd51d62b2
   languageName: node
   linkType: hard
 
