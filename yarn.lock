@@ -3111,6 +3111,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/federation-stream@workspace:e2e/federation-stream":
+  version: 0.0.0-use.local
+  resolution: "@e2e/federation-stream@workspace:e2e/federation-stream"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.13.3"
+    "@graphql-hive/gateway": "workspace:*"
+    "@graphql-yoga/plugin-defer-stream": "npm:^3.16.2"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.21.0"
+    meros: "npm:^1.3.2"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough":
   version: 0.0.0-use.local
   resolution: "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough"

@@ -1,0 +1,14 @@
+{
+  "name": "@e2e/federation-stream",
+  "private": true,
+  "dependencies": {
+    "@graphql-hive/gateway": "workspace:*",
+    "graphql": "^16.12.0",
+    "meros": "^1.3.2"
+  },
+  "devDependencies": {
+    "@apollo/subgraph": "^2.13.3",
+    "@graphql-yoga/plugin-defer-stream": "^3.16.2",
+    "graphql-yoga": "^5.21.0"
+  }
+}
