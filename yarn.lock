@@ -282,19 +282,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:0.38.1":
-  version: 0.38.1
-  resolution: "@apollo/rover@npm:0.38.1"
-  dependencies:
-    detect-libc: "npm:2.1.2"
-    tar: "npm:^7.0.0"
-    undici: "npm:^7.0.0"
-  bin:
-    rover: run.js
-  checksum: 10c0/dd170de5af612e98b3591ff79be709efadf0f4271927b5e475b1f9608a5d3f8d57934f018ed5eef3f9cc9dd3eb3ca9a4372b5b5dbe47d05efcc41b8116f72be7
-  languageName: node
-  linkType: hard
-
 "@apollo/server-gateway-interface@npm:^1.1.0":
   version: 1.1.1
   resolution: "@apollo/server-gateway-interface@npm:1.1.1"
@@ -7011,7 +6998,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:0.38.1"
     "@babel/parser": "npm:^7.28.5"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -15822,7 +15808,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"detect-libc@npm:2.1.2, detect-libc@npm:^2.0.0, detect-libc@npm:^2.0.3, detect-libc@npm:^2.1.2":
+"detect-libc@npm:^2.0.0, detect-libc@npm:^2.0.3, detect-libc@npm:^2.1.2":
   version: 2.1.2
   resolution: "detect-libc@npm:2.1.2"
   checksum: 10c0/acc675c29a5649fa1fb6e255f993b8ee829e510b6b56b0910666949c80c364738833417d0edb5f90e4e46be17228b0f2b66a010513984e18b15deeeac49369c4

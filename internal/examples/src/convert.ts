@@ -296,12 +296,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
 
     if (composesWithApollo) {
-      const { version } = await import('@apollo/rover/package.json');
+      // Keep in sync with the rover version used by examples (avoid installing rover in workspace
+      // to prevent its postinstall binary download from running in CI)
+      const roverVersion = '0.38.1';
       console.log(
-        `Adding "@apollo/rover@${version}" dev dependency because composition is done with Apollo...`,
+        `Adding "@apollo/rover@${roverVersion}" dev dependency because composition is done with Apollo...`,
       );
       packageJson.devDependencies ||= {};
-      packageJson.devDependencies['@apollo/rover'] = `^${version}`;
+      packageJson.devDependencies['@apollo/rover'] = `^${roverVersion}`;
     }
 
     const { version } = await import('minimatch/package.json');
