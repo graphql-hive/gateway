@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.7.0
+### Minor Changes
+
+
+
+- [#2318](https://github.com/graphql-hive/gateway/pull/2318) [`3909859`](https://github.com/graphql-hive/gateway/commit/39098594500e37c4f5514a414e2dd9659dfb4ad2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Add `requestDeadline` option to set a hard end-to-end time limit in milliseconds for the entire request lifecycle. Unlike `requestTimeout`, this deadline is not cancelled when the request body is received - it runs until the response is finished. When exceeded, the server responds with a 503 and closes the connection.
+
+
+### Patch Changes
+
+
+
+- [#2318](https://github.com/graphql-hive/gateway/pull/2318) [`3909859`](https://github.com/graphql-hive/gateway/commit/39098594500e37c4f5514a414e2dd9659dfb4ad2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Added dependency [`@graphql-hive/signal@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/signal/v/workspace:^) (to `dependencies`)
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.44
+  - @graphql-hive/plugin-opentelemetry@1.4.24
+  - @graphql-mesh/plugin-prometheus@2.1.42
+
 ## 2.6.0
 ### Minor Changes
 
