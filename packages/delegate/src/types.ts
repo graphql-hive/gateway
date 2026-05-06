@@ -81,12 +81,13 @@ export interface IDelegateToSchemaOptions<
   selectionSet?: SelectionSetNode;
   fieldNodes?: ReadonlyArray<FieldNode>;
   context?: TContext;
-  info: GraphQLResolveInfo;
+  info?: GraphQLResolveInfo;
   rootValue?: any;
   transforms?: Array<Transform<any, TContext>>;
   targetSchema?: GraphQLSchema;
   validateRequest?: boolean;
   skipTypeMerging?: boolean;
+  fragments?: FragmentDefinitionNode[];
 }
 
 export interface IDelegateRequestOptions<

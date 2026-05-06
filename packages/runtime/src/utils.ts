@@ -7,7 +7,7 @@ import {
 } from '@graphql-tools/utils';
 import type { ExtractPersistedOperationId } from '@graphql-yoga/plugin-persisted-operations';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
-import type { GraphQLSchema, SelectionSetNode } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
   OnCacheDeleteHook,
@@ -17,45 +17,6 @@ import {
   OnCacheSetHook,
   OnCacheSetHookResult,
 } from './types';
-
-export function checkIfDataSatisfiesSelectionSet(
-  selectionSet: SelectionSetNode,
-  data: any,
-): boolean {
-  if (Array.isArray(data)) {
-    return data.every((item) =>
-      checkIfDataSatisfiesSelectionSet(selectionSet, item),
-    );
-  }
-  for (const selection of selectionSet.selections) {
-    if (selection.kind === 'Field') {
-      const field = selection;
-      const responseKey = field.alias?.value || field.name.value;
-      if (data[responseKey] != null) {
-        if (field.selectionSet) {
-          if (
-            !checkIfDataSatisfiesSelectionSet(
-              field.selectionSet,
-              data[field.name.value],
-            )
-          ) {
-            return false;
-          }
-        }
-      } else {
-        return false;
-      }
-    } else if (selection.kind === 'InlineFragment') {
-      const inlineFragment = selection;
-      if (
-        !checkIfDataSatisfiesSelectionSet(inlineFragment.selectionSet, data)
-      ) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
 
 export const defaultQueryText = /* GraphQL */ `
   # Welcome to GraphiQL

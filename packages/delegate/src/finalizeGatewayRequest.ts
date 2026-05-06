@@ -34,8 +34,7 @@ import {
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
-import { Subschema } from './Subschema.js';
-import { DelegationContext, StitchingInfo } from './types.js';
+import { DelegationContext } from './types.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
@@ -164,47 +163,39 @@ function finalizeGatewayDocument<TContext>(
     definitions: [...newOperations, ...newFragments],
   };
 
-  const stitchingInfo = delegationContext.info?.schema?.extensions?.[
-    'stitchingInfo'
-  ] as StitchingInfo;
-  if (stitchingInfo != null) {
-    const typeInfo = getTypeInfo(targetSchema);
-    newDocument = visit(
-      newDocument,
-      visitWithTypeInfo(typeInfo, {
-        [Kind.FIELD](fieldNode) {
-          const parentType = typeInfo.getParentType();
-          if (parentType) {
-            const parentTypeName = parentType.name;
-            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
-            if (typeConfig) {
-              const providedSelectionsByField =
-                typeConfig?.providedSelectionsByField?.get(
-                  delegationContext.subschema as Subschema,
-                );
-              if (providedSelectionsByField) {
-                const providedSelection =
-                  providedSelectionsByField[fieldNode.name.value];
-                if (providedSelection) {
-                  return {
-                    ...fieldNode,
-                    selectionSet: {
-                      kind: Kind.SELECTION_SET,
-                      selections: [
-                        ...providedSelection.selections,
-                        ...(fieldNode.selectionSet?.selections ?? []),
-                      ],
-                    },
-                  };
-                }
-              }
+  const typeInfo = getTypeInfo(targetSchema);
+  newDocument = visit(
+    newDocument,
+    visitWithTypeInfo(typeInfo, {
+      [Kind.FIELD](fieldNode) {
+        const parentType = typeInfo.getParentType();
+        if (parentType) {
+          const parentTypeName = parentType.name;
+          const typeConfig =
+            delegationContext?.subschemaConfig?.merge?.[parentTypeName];
+          if (typeConfig) {
+            const providedSelection =
+              typeConfig.fields?.[fieldNode.name.value]?.provides;
+            if (providedSelection) {
+              const normalizedProvidedSelection =
+                ensureSelectionSetIncludesTypename(providedSelection);
+              return {
+                ...fieldNode,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: [
+                    ...normalizedProvidedSelection.selections,
+                    ...(fieldNode.selectionSet?.selections ?? []),
+                  ],
+                },
+              };
             }
           }
-          return fieldNode;
-        },
-      }),
-    );
-  }
+        }
+        return fieldNode;
+      },
+    }),
+  );
 
   return {
     usedVariables,
@@ -274,6 +265,31 @@ function filterTypenameFields(selections: readonly SelectionNode[]): {
   return {
     hasTypeNameField,
     selections: filteredSelections,
+  };
+}
+
+function ensureSelectionSetIncludesTypename(
+  selectionSet: SelectionSetNode,
+): SelectionSetNode {
+  const hasTypeNameField = selectionSet.selections.some(
+    selection =>
+      selection.kind === Kind.FIELD && selection.name.value === '__typename',
+  );
+  if (hasTypeNameField) {
+    return selectionSet;
+  }
+  return {
+    ...selectionSet,
+    selections: [
+      ...selectionSet.selections,
+      {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: '__typename',
+        },
+      },
+    ],
   };
 }
 

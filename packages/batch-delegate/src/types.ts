@@ -1,5 +1,6 @@
 import { IDelegateToSchemaOptions } from '@graphql-tools/delegate';
 import DataLoader from 'dataloader';
+import { GraphQLResolveInfo } from 'graphql';
 
 export type BatchDelegateFn<TContext = Record<string, any>, K = any> = (
   batchDelegateOptions: BatchDelegateOptions<TContext, K>,
@@ -15,7 +16,8 @@ export interface BatchDelegateOptions<
   K = any,
   V = any,
   C = K,
-> extends Omit<IDelegateToSchemaOptions<TContext>, 'args'> {
+> extends Omit<IDelegateToSchemaOptions<TContext>, 'args' | 'info'> {
+  info?: GraphQLResolveInfo;
   dataLoaderOptions?: DataLoader.Options<K, V, C>;
   key: K;
   argsFromKeys?: (keys: ReadonlyArray<K>) => Record<string, any>;
