@@ -147,10 +147,11 @@ export function delegateRequest<
           isListType(getNullableType(delegationContext.returnType))
         ) {
           return new Repeater<ExecutionResult<any>>(async (push, stop) => {
-            // Track how many items have been pushed to avoid re-pushing accumulated
-            // items that arrive via the HTTP executor (which merges incremental results
-            // before returning them). Using an index counter instead of a WeakSet
-            // supports both object and primitive (e.g. string) list item types.
+            // Track how many items have been pushed to avoid re-pushing items that
+            // have already been delivered. Some executors (e.g. the HTTP executor)
+            // accumulate incremental results and return growing snapshots of the list
+            // rather than individual incremental parts. Using an index counter instead
+            // of a WeakSet supports both object and primitive (e.g. string) list items.
             let pushedCount = 0;
             let stopped = false;
             stop.finally(() => {
