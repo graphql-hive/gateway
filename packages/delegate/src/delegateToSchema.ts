@@ -190,8 +190,8 @@ export function delegateRequest<
                     if (stopped) {
                       break;
                     }
-                    pushedCount++;
                     await push(await transformedResult[i]);
+                    pushedCount = i + 1;
                   }
                 } else {
                   await push(await transformedResult);
