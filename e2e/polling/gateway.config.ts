@@ -8,4 +8,7 @@ export const gatewayConfig = defineConfig({
     console.log(`[${new Date().toISOString()}]`, 'Reading ' + SUPERGRAPH_PATH);
     return fs.promises.readFile(SUPERGRAPH_PATH, 'utf8');
   },
+  cache: {
+    type: 'redis',
+  },
 });
