@@ -177,12 +177,14 @@ function finalizeGatewayDocument<TContext>(
             const providedSelection =
               typeConfig.fields?.[fieldNode.name.value]?.provides;
             if (providedSelection) {
+              const normalizedProvidedSelection =
+                ensureSelectionSetIncludesTypename(providedSelection);
               return {
                 ...fieldNode,
                 selectionSet: {
                   kind: Kind.SELECTION_SET,
                   selections: [
-                    ...providedSelection.selections,
+                    ...normalizedProvidedSelection.selections,
                     ...(fieldNode.selectionSet?.selections ?? []),
                   ],
                 },
@@ -263,6 +265,31 @@ function filterTypenameFields(selections: readonly SelectionNode[]): {
   return {
     hasTypeNameField,
     selections: filteredSelections,
+  };
+}
+
+function ensureSelectionSetIncludesTypename(
+  selectionSet: SelectionSetNode,
+): SelectionSetNode {
+  const hasTypeNameField = selectionSet.selections.some(
+    selection =>
+      selection.kind === Kind.FIELD && selection.name.value === '__typename',
+  );
+  if (hasTypeNameField) {
+    return selectionSet;
+  }
+  return {
+    ...selectionSet,
+    selections: [
+      ...selectionSet.selections,
+      {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: '__typename',
+        },
+      },
+    ],
   };
 }
 

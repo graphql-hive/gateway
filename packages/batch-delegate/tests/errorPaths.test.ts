@@ -159,4 +159,20 @@ describe('preserves error path indices', () => {
     expect(getProperty).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject(expected);
   });
+
+  test('throws a clear error when info and fieldName are both missing', () => {
+    const propertiesByIdsField = subschema
+      .getQueryType()!
+      .getFields()['propertiesByIds'];
+    expect(() =>
+      batchDelegateToSchema({
+        schema: subschema,
+        key: '1',
+        argsFromKeys: ids => ({ ids }),
+        returnType: propertiesByIdsField!.type,
+      }),
+    ).toThrow(
+      'batchDelegateToSchema requires `fieldName` when `info` is not provided.',
+    );
+  });
 });

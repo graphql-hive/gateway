@@ -85,6 +85,12 @@ export function delegateToSchema<
     }
   }
 
+  if (!fieldName) {
+    throw new Error(
+      'delegateToSchema requires `fieldName` when `info` is not provided.',
+    );
+  }
+
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
     fragments,

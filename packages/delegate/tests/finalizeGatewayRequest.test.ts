@@ -3,7 +3,7 @@ import {
   bookingSchema,
   propertySchema,
 } from '@internal/testing/fixtures/schemas';
-import { buildSchema, parse, print } from 'graphql';
+import { buildSchema, FragmentDefinitionNode, parse, print } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 import { finalizeGatewayRequest } from '../src/finalizeGatewayRequest.js';
 
@@ -143,6 +143,70 @@ describe('finalizeGatewayRequest', () => {
       }
     `);
     expect(print(filteredQuery.document)).toBe(print(expected));
+  });
+
+  test('should include __typename when injecting provides selections', () => {
+    const targetSchema = buildSchema(/* GraphQL */ `
+      type Query {
+        user: User
+      }
+
+      type Friend {
+        id: ID!
+        firstName: String
+      }
+
+      type User {
+        id: ID!
+        friend: Friend
+      }
+    `);
+    const query = parse(/* GraphQL */ `
+      query {
+        user {
+          friend {
+            firstName
+          }
+        }
+      }
+    `);
+    const providesSelection = (
+      parse(/* GraphQL */ `
+        fragment _ on User {
+          id
+        }
+      `).definitions[0] as FragmentDefinitionNode
+    ).selectionSet;
+    const finalizedRequest = finalizeGatewayRequest(
+      {
+        document: query,
+      },
+      {
+        targetSchema,
+        subschemaConfig: {
+          merge: {
+            User: {
+              fields: {
+                friend: {
+                  provides: providesSelection,
+                },
+              },
+            },
+          },
+        },
+      } as unknown as DelegationContext,
+      () => {},
+    );
+
+    expect(print(finalizedRequest.document)).toBe(`{
+  user {
+    friend {
+      id
+      __typename
+      firstName
+    }
+  }
+}`);
   });
 
   describe('Spreading on unions', () => {

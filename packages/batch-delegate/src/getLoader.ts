@@ -14,15 +14,24 @@ const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
 function createBatchFn<K = any>(options: BatchDelegateOptions) {
   const argsFromKeys = options.argsFromKeys ?? DEFAULT_ARGS_FROM_KEYS;
   const fieldName = options.fieldName ?? options.info?.fieldName;
+  const returnType = options.returnType ?? options.info?.returnType;
+  if (!fieldName) {
+    throw new Error(
+      'batchDelegateToSchema requires `fieldName` when `info` is not provided.',
+    );
+  }
+  if (!returnType) {
+    throw new Error(
+      'batchDelegateToSchema requires `returnType` when `info` is not provided.',
+    );
+  }
   const { valuesFromResults, lazyOptionsFn } = options;
 
   return function batchFn(keys: ReadonlyArray<K>) {
     return fakePromise()
       .then(() =>
         delegateToSchema({
-          returnType: new GraphQLList(
-            getNamedType(options.returnType || options.info?.returnType),
-          ),
+          returnType: new GraphQLList(getNamedType(returnType)),
           onLocatedError: (originalError) => {
             if (originalError.path == null) {
               return originalError;
@@ -87,15 +96,26 @@ export function getLoader<K = any, V = any, C = K>(
     schema,
     context,
     info,
-    fieldName = info.fieldName,
     dataLoaderOptions,
-    fieldNodes = info?.fieldNodes?.[0] &&
-      getActualFieldNodes(info.fieldNodes[0]),
-    selectionSet = fieldNodes?.[0]?.selectionSet,
-    returnType = info.returnType,
     argsFromKeys = DEFAULT_ARGS_FROM_KEYS,
     key,
   } = options;
+  const fieldName = options.fieldName ?? info?.fieldName;
+  const returnType = options.returnType ?? info?.returnType;
+  const fieldNodes =
+    options.fieldNodes ??
+    (info?.fieldNodes?.[0] ? getActualFieldNodes(info.fieldNodes[0]) : undefined);
+  const selectionSet = options.selectionSet ?? fieldNodes?.[0]?.selectionSet;
+  if (!fieldName) {
+    throw new Error(
+      'batchDelegateToSchema requires `fieldName` when `info` is not provided.',
+    );
+  }
+  if (!returnType) {
+    throw new Error(
+      'batchDelegateToSchema requires `returnType` when `info` is not provided.',
+    );
+  }
   // we want to use the rootvalue because on streaming results it will be available
   // and will always change for the next value in the iterable. this makes sure
   // that the data loader does not use the same cache for each streaming value

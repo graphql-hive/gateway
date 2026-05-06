@@ -81,7 +81,7 @@ export interface IDelegateToSchemaOptions<
   selectionSet?: SelectionSetNode;
   fieldNodes?: ReadonlyArray<FieldNode>;
   context?: TContext;
-  info: GraphQLResolveInfo;
+  info?: GraphQLResolveInfo;
   rootValue?: any;
   transforms?: Array<Transform<any, TContext>>;
   targetSchema?: GraphQLSchema;
