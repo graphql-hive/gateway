@@ -135,5 +135,9 @@ RUN npm install picomatch@^4.0.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch 
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch
 
+# fix ip-address vulnerability (CVE-2026-42338) by updating to the latest version ^10.1.1
+RUN npm install ip-address@^10.1.1 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/ip-address
+
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
