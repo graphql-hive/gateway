@@ -1,5 +1,13 @@
 # @graphql-hive/router-runtime
 
+## 1.4.5
+### Patch Changes
+
+- Updated dependencies [[`deafdc0`](https://github.com/graphql-hive/gateway/commit/deafdc00e388ed195c2cdf77e98cd19e7d496d48)]:
+  - @graphql-tools/delegate@12.0.16
+  - @graphql-tools/federation@4.4.1
+  - @graphql-mesh/fusion-runtime@1.10.1
+
 ## 1.4.4
 ### Patch Changes
 
