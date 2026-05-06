@@ -2,7 +2,7 @@
 '@graphql-tools/delegate': patch
 ---
 
-Fix `@stream` not working for federated subgraphs with non-null scalar list return types.
+Fix `@stream` directive not working for federated subgraphs with non-null scalar list return types.
 
 Two bugs were addressed in `delegateRequest`:
 
