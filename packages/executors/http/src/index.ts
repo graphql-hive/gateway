@@ -80,6 +80,12 @@ export interface HTTPExecutorOptions {
    */
   useGETForQueries?: boolean;
   /**
+   * Whether to use the GET HTTP method for hashed Automatic Persisted Query requests.
+   * Full query fallbacks and mutations continue to use POST.
+   * @default false
+   */
+  useGETForHashedQueries?: boolean;
+  /**
    * Additional headers to include when querying the original schema
    */
   headers?:
@@ -212,8 +218,12 @@ export function buildHTTPExecutor(
     const operationType = operationAst.operation;
 
     if (
-      (options?.useGETForQueries || request.extensions?.useGETForQueries) &&
-      operationType === 'query'
+      ((options?.useGETForQueries || request.extensions?.useGETForQueries) &&
+        operationType === 'query') ||
+      ((options?.useGETForHashedQueries ||
+        request.extensions?.useGETForHashedQueries) &&
+        excludeQuery &&
+        operationType === 'query')
     ) {
       method = 'GET';
     }
@@ -586,6 +596,9 @@ export function buildHTTPExecutor(
       (body: SerializedExecutionRequest) => {
         switch (method) {
           case 'GET': {
+            if (!headers['content-type']) {
+              headers['content-type'] = 'application/json';
+            }
             const finalUrl = prepareGETUrl({
               baseUrl: endpoint,
               body,

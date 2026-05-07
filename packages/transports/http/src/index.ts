@@ -27,6 +27,7 @@ export type HTTPTransportOptions<
 > = Pick<
   HTTPExecutorOptions,
   | 'useGETForQueries'
+  | 'useGETForHashedQueries'
   | 'method'
   | 'timeout'
   | 'credentials'
