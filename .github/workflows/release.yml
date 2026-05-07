@@ -204,7 +204,7 @@ jobs:
         with:
           name: gateway-bundle
           path: packages/gateway/bundle
-      - name: Keep target-specific query planner from install layer
+      - name: Remove query planner from shared bundle overlay
         run: |
           node -e "require('node:fs').rmSync('packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true, force: true })"
       - name: Bake and Push
@@ -282,7 +282,8 @@ jobs:
           path: packages/gateway/bundle
       - name: Repack binary bundle with local query planner
         run: |
-          node -e "const fs = require('node:fs'); fs.rmSync('packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true, force: true }); fs.cpSync('node_modules/@graphql-hive/router-query-planner', 'packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true })"
+          node -e "require('node:fs').rmSync('packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true, force: true })"
+          node -e "require('node:fs').cpSync('node_modules/@graphql-hive/router-query-planner', 'packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true })"
           yarn workspace @graphql-hive/gateway exec rollup -c rollup.config.binary.js
       - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
