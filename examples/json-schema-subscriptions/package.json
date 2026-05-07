@@ -16,8 +16,8 @@
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "esbuild": "^0.25.5",
-    "minimatch": "^10.2.4"
+    "esbuild": "^0.25.12",
+    "minimatch": "^10.2.5"
   },
   "scripts": {
     "service:api": "tsx services/api.ts",
