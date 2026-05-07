@@ -28,6 +28,7 @@ export type HTTPTransportOptions<
   HTTPExecutorOptions,
   | 'useGETForQueries'
   | 'useGETForHashedQueries'
+  | 'useContentTypeForGETRequests'
   | 'method'
   | 'timeout'
   | 'credentials'

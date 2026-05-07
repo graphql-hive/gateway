@@ -93,6 +93,7 @@ describe('APQ to the upstream', () => {
 
   it('uses GET for hashed APQ queries when enabled', async () => {
     apolloServer = new ApolloServer({
+      csrfPrevention: false,
       typeDefs: /* GraphQL */ `
         type Query {
           hello(name: String!): String
@@ -137,9 +138,9 @@ describe('APQ to the upstream', () => {
     expect(tracedFetch.mock.calls).toHaveLength(2);
     expect(tracedFetch.mock.calls[0]?.[1]?.method).toBe('GET');
     expect(tracedFetch.mock.calls[0]?.[1]?.body).toBeUndefined();
-    expect(tracedFetch.mock.calls[0]?.[1]?.headers).toMatchObject({
-      'content-type': 'application/json',
-    });
+    expect(tracedFetch.mock.calls[0]?.[1]?.headers).not.toHaveProperty(
+      'content-type',
+    );
     const firstRequestUrl = new URL(tracedFetch.mock.calls[0]?.[0] as string);
     expect(firstRequestUrl.origin + firstRequestUrl.pathname).toBe(url);
     expect(firstRequestUrl.searchParams.get('operationName')).toBe('Hello');
@@ -188,9 +189,9 @@ describe('APQ to the upstream', () => {
     expect(tracedFetch.mock.calls).toHaveLength(1);
     expect(tracedFetch.mock.calls[0]?.[1]?.method).toBe('GET');
     expect(tracedFetch.mock.calls[0]?.[1]?.body).toBeUndefined();
-    expect(tracedFetch.mock.calls[0]?.[1]?.headers).toMatchObject({
-      'content-type': 'application/json',
-    });
+    expect(tracedFetch.mock.calls[0]?.[1]?.headers).not.toHaveProperty(
+      'content-type',
+    );
     const secondRequestUrl = new URL(tracedFetch.mock.calls[0]?.[0] as string);
     expect(secondRequestUrl.origin + secondRequestUrl.pathname).toBe(url);
     expect(secondRequestUrl.searchParams.get('operationName')).toBe('Hello');
@@ -207,5 +208,53 @@ describe('APQ to the upstream', () => {
         },
       }),
     );
+  });
+
+  it('can add content-type to GET for hashed APQ queries when enabled', async () => {
+    apolloServer = new ApolloServer({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          hello(name: String!): String
+        }
+      `,
+      resolvers: {
+        Query: {
+          hello: (_root, { name }: { name: string }) => `hello ${name}`,
+        },
+      },
+    });
+    const { url } = await startStandaloneServer(apolloServer, {
+      listen: { port: 0 },
+    });
+    const tracedFetch = vi.fn(fetch);
+    await using executor = buildHTTPExecutor({
+      endpoint: url,
+      apq: true,
+      useGETForHashedQueries: true,
+      useContentTypeForGETRequests: true,
+      fetch: tracedFetch,
+    });
+    const document = parse(/* GraphQL */ `
+      query Hello($name: String!) {
+        hello(name: $name)
+      }
+    `);
+
+    await expect(
+      executor({
+        document,
+        operationName: 'Hello',
+        variables: {
+          name: 'world',
+        },
+      }),
+    ).resolves.toEqual({
+      data: { hello: 'hello world' },
+    });
+
+    expect(tracedFetch.mock.calls[0]?.[1]?.method).toBe('GET');
+    expect(tracedFetch.mock.calls[0]?.[1]?.headers).toMatchObject({
+      'content-type': 'application/json',
+    });
   });
 });

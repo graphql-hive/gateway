@@ -86,6 +86,12 @@ export interface HTTPExecutorOptions {
    */
   useGETForHashedQueries?: boolean;
   /**
+   * Whether to set `content-type: application/json` on GET requests when one isn't already provided.
+   * This can be useful for compatibility with servers that require a preflighted GET request.
+   * @default false
+   */
+  useContentTypeForGETRequests?: boolean;
+  /**
    * Additional headers to include when querying the original schema
    */
   headers?:
@@ -596,7 +602,11 @@ export function buildHTTPExecutor(
       (body: SerializedExecutionRequest) => {
         switch (method) {
           case 'GET': {
-            if (!headers['content-type']) {
+            if (
+              (options?.useContentTypeForGETRequests ||
+                request.extensions?.useContentTypeForGETRequests) &&
+              !headers['content-type']
+            ) {
               headers['content-type'] = 'application/json';
             }
             const finalUrl = prepareGETUrl({
