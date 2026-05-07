@@ -1,5 +1,21 @@
 # @graphql-mesh/transport-http
 
+## 1.1.0
+### Minor Changes
+
+
+
+- [#2334](https://github.com/graphql-hive/gateway/pull/2334) [`0f8706c`](https://github.com/graphql-hive/gateway/commit/0f8706c54556669148de1bf74725cc8c896e5ced) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Add `useGETForHashedQueries` support for downstream APQ requests so hash-only
+  query probes can use GET while full-query fallbacks continue to use POST.
+  
+  Add the `useContentTypeForGETRequests` opt-in for GET requests that need
+  `content-type: application/json` compatibility.
+
+### Patch Changes
+
+- Updated dependencies [[`0f8706c`](https://github.com/graphql-hive/gateway/commit/0f8706c54556669148de1bf74725cc8c896e5ced)]:
+  - @graphql-tools/executor-http@3.3.0
+
 ## 1.0.25
 ### Patch Changes
 
