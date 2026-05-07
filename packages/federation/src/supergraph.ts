@@ -1099,10 +1099,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                     (arg) =>
                       arg.name.value +
                       // TODO: slow? faster hash?
-                      memoizedASTPrint(arg.value).replace(
-                        /[^a-zA-Z0-9]/g,
-                        '',
-                      ),
+                      memoizedASTPrint(arg.value).replace(/[^a-zA-Z0-9]/g, ''),
                   )
                   .join('');
                 // @ts-expect-error it's ok we're mutating consciously
@@ -1842,7 +1839,10 @@ export function getStitchingOptionsFromSupergraphSdl(
     // computed fields prevents incorrect routing.
     let mainSchema = schema;
     const additionalGroupFieldsByType = new Map<string, Set<string>>();
-    for (const { typeName, mergeTypeConfig } of pendingConflictSubschemaConfigs) {
+    for (const {
+      typeName,
+      mergeTypeConfig,
+    } of pendingConflictSubschemaConfigs) {
       for (const [fieldName, fieldConfig] of Object.entries(
         mergeTypeConfig.fields ?? {},
       )) {
@@ -1873,7 +1873,9 @@ export function getStitchingOptionsFromSupergraphSdl(
     );
     for (const [typeName, typeConfig] of Object.entries(mergeConfig)) {
       if (!typeConfig?.fields) continue;
-      for (const [fieldName, fieldConfig] of Object.entries(typeConfig.fields)) {
+      for (const [fieldName, fieldConfig] of Object.entries(
+        typeConfig.fields,
+      )) {
         if (!fieldConfig?.computed) continue;
         let set = allComputedFieldsByType.get(typeName);
         if (!set) {
@@ -1900,7 +1902,10 @@ export function getStitchingOptionsFromSupergraphSdl(
     // entity representations don't overwrite each other's aliased required fields.
     // Each group's schema is filtered to only expose its own computed fields so
     // the stitching engine never routes other groups' fields here.
-    for (const { typeName, mergeTypeConfig } of pendingConflictSubschemaConfigs) {
+    for (const {
+      typeName,
+      mergeTypeConfig,
+    } of pendingConflictSubschemaConfigs) {
       const groupOwnFields = new Set<string>(
         Object.entries(mergeTypeConfig.fields ?? {})
           .filter(([, fc]) => fc?.computed)

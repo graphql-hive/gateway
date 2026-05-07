@@ -13,7 +13,6 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
-
 import {
   buildSchema,
   getNamedType,
