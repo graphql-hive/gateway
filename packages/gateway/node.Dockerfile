@@ -4,7 +4,7 @@ FROM node:25-bookworm-slim AS install
 
 WORKDIR /install
 
-RUN npm i graphql@^16.9.0
+RUN npm i graphql@16.14.0
 
 RUN npm audit fix --force
 
