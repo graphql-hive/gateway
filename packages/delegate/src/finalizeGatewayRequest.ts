@@ -285,7 +285,7 @@ function getUnavailableProvidedSelections(
     if (selection.kind !== Kind.FIELD) {
       return false;
     }
-    return fields[selection.name.value] == null;
+    return fields[selection.name.value] === undefined;
   });
 }
 
