@@ -2,4 +2,4 @@
 "@graphql-hive/gateway": patch
 ---
 
-Fix missing macOS binaries for v2.6.x and v2.7.0 caused by an out-of-memory crash during the Rollup bundling step on GitHub Actions macOS runners. The bundle step now runs with an increased Node.js heap size (`--max-old-space-size=6144`) to prevent intermittent OOM failures.
+Fix missing macOS binaries for v2.6.x and v2.7.0: the Rollup bundling step was running on every OS in the binary matrix (including macOS), occasionally crashing with an out-of-memory error. The bundle is now built once on Linux and shared as a GitHub Actions artifact, so macOS and Windows runners only need to do the platform-specific SEA blob generation and binary packaging.

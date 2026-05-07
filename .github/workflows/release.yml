@@ -105,6 +105,31 @@ jobs:
     secrets:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
+  bundle:
+    name: Bundle
+    needs: [stable, snapshot]
+    if: always() && (
+      contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
+      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version: 25.2.0
+      - name: Bundle
+        run: yarn workspace @graphql-hive/gateway bundle
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        with:
+          name: gateway-bundle
+          path: packages/gateway/bundle
+
   ghcr:
     runs-on: ubuntu-latest
     strategy:
@@ -112,7 +137,7 @@ jobs:
       matrix:
         runtime: [Node, Bun]
     name: ${{ matrix.runtime }} Docker image
-    needs: [stable, snapshot]
+    needs: [bundle, stable, snapshot]
     if: always() && github.actor != 'dependabot[bot]' && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
@@ -155,12 +180,11 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Build
-        run: yarn build
-      - name: Bundle
-        run: yarn workspace @graphql-hive/gateway bundle
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-bundle
+          path: packages/gateway/bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
       - name: Bake and Push
@@ -191,7 +215,7 @@ jobs:
 
   bin:
     name: Binary built on ${{ matrix.os }}
-    needs: [stable, snapshot]
+    needs: [bundle, stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
@@ -231,12 +255,11 @@ jobs:
           node-version: 25.2.0
           # we skip-build on ubuntu arm because the "canvas" package wont build and there are no prebuilts
           install-command: ${{ matrix.os == 'ubuntu-24.04-arm' && 'yarn install --immutable --mode=skip-build' || '' }}
-      - name: Build
-        run: yarn build
-      - name: Bundle
-        run: yarn workspace @graphql-hive/gateway bundle
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-bundle
+          path: packages/gateway/bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version "${{ steps.ver-gateway.outputs.result }}"
       - name: Package binary
