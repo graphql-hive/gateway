@@ -316,4 +316,69 @@ describe('finalizeGatewayRequest', () => {
         `);
     });
   });
+
+  test('should not add unrequested provided fields to delegated selection sets', () => {
+    const targetSchema = buildSchema(/* GraphQL */ `
+      type Query {
+        entity: Entity
+      }
+
+      type Entity {
+        id: ID!
+        name: String
+        description: String
+      }
+    `);
+    const query = parse(/* GraphQL */ `
+      query {
+        entity {
+          id
+          name
+        }
+      }
+    `);
+    const subschema = {} as any;
+    const filteredQuery = finalizeGatewayRequest(
+      {
+        document: query,
+      },
+      {
+        targetSchema,
+        subschema,
+        info: {
+          schema: {
+            extensions: {
+              stitchingInfo: {
+                mergedTypes: {
+                  Query: {
+                    providedSelectionsByField: new Map([
+                      [
+                        subschema,
+                        {
+                          entity: (
+                            parse(/* GraphQL */ `
+                              {
+                                description
+                              }
+                            `).definitions[0] as any
+                          ).selectionSet,
+                        },
+                      ],
+                    ]),
+                  },
+                },
+              },
+            },
+          },
+        },
+      } as unknown as DelegationContext,
+      () => {},
+    );
+    expect(print(filteredQuery.document)).toBe(`{
+  entity {
+    id
+    name
+  }
+}`);
+  });
 });

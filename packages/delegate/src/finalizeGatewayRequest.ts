@@ -11,6 +11,7 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLInterfaceType,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
@@ -186,16 +187,32 @@ function finalizeGatewayDocument<TContext>(
                 const providedSelection =
                   providedSelectionsByField[fieldNode.name.value];
                 if (providedSelection) {
-                  return {
-                    ...fieldNode,
-                    selectionSet: {
-                      kind: Kind.SELECTION_SET,
-                      selections: [
-                        ...providedSelection.selections,
-                        ...(fieldNode.selectionSet?.selections ?? []),
-                      ],
-                    },
-                  };
+                  const fieldType = typeInfo.getType();
+                  const namedFieldType =
+                    fieldType != null ? getNamedType(fieldType) : null;
+                  if (
+                    namedFieldType &&
+                    (isObjectType(namedFieldType) ||
+                      isInterfaceType(namedFieldType))
+                  ) {
+                    const unavailableProvidedSelections =
+                      getUnavailableProvidedSelections(
+                        providedSelection,
+                        namedFieldType,
+                      );
+                    if (unavailableProvidedSelections.length) {
+                      return {
+                        ...fieldNode,
+                        selectionSet: {
+                          kind: Kind.SELECTION_SET,
+                          selections: [
+                            ...unavailableProvidedSelections,
+                            ...(fieldNode.selectionSet?.selections ?? []),
+                          ],
+                        },
+                      };
+                    }
+                  }
                 }
               }
             }
@@ -257,6 +274,19 @@ function isTypeNameField(selection: SelectionNode): boolean {
     !selection.alias &&
     selection.name.value === '__typename'
   );
+}
+
+function getUnavailableProvidedSelections(
+  providedSelection: SelectionSetNode,
+  type: GraphQLObjectType | GraphQLInterfaceType,
+): SelectionNode[] {
+  const fields = type.getFields();
+  return providedSelection.selections.filter((selection) => {
+    if (selection.kind !== Kind.FIELD) {
+      return true;
+    }
+    return fields[selection.name.value] == null;
+  });
 }
 
 function filterTypenameFields(selections: readonly SelectionNode[]): {
