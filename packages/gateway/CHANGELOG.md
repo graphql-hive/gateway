@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 2.7.2
+### Patch Changes
+
+
+
+- [#2341](https://github.com/graphql-hive/gateway/pull/2341) [`2ccae41`](https://github.com/graphql-hive/gateway/commit/2ccae416160689bbdb2db06d1930d5e4e6c1ecac) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.28` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.28) (from `^0.104.27`, in `dependencies`)
+- Updated dependencies [[`2ccae41`](https://github.com/graphql-hive/gateway/commit/2ccae416160689bbdb2db06d1930d5e4e6c1ecac), [`161f2a2`](https://github.com/graphql-hive/gateway/commit/161f2a224e55982f97f2ae0ef906f0b85c611a8e)]:
+  - @graphql-hive/gateway-runtime@2.9.3
+  - @graphql-hive/plugin-opentelemetry@1.4.26
+  - @graphql-hive/plugin-aws-sigv4@2.0.46
+  - @graphql-mesh/plugin-prometheus@2.1.44
+
 ## 2.7.1
 ### Patch Changes
 
