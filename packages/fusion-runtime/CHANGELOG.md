@@ -1,5 +1,16 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.10.3
+### Patch Changes
+
+
+
+- [#2341](https://github.com/graphql-hive/gateway/pull/2341) [`2ccae41`](https://github.com/graphql-hive/gateway/commit/2ccae416160689bbdb2db06d1930d5e4e6c1ecac) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.28` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.28) (from `^0.104.27`, in `dependencies`)
+- Updated dependencies [[`eeebc74`](https://github.com/graphql-hive/gateway/commit/eeebc74a1619f5f0ccc339dd3e4429c8976bdd39)]:
+  - @graphql-tools/federation@4.4.3
+
 ## 1.10.2
 ### Patch Changes
 
