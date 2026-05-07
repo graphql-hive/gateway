@@ -117,7 +117,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -156,7 +156,8 @@ jobs:
         runtime: [Node, Bun]
     name: ${{ matrix.runtime }} Docker image
     needs: [bundle, stable, snapshot]
-    if: always() && needs.bundle.result == 'success' && github.actor != 'dependabot[bot]' && (
+    if:
+      always() && needs.bundle.result == 'success' && github.actor != 'dependabot[bot]' && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
       )
