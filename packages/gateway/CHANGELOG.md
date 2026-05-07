@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 2.7.1
+### Patch Changes
+
+
+
+- [#2335](https://github.com/graphql-hive/gateway/pull/2335) [`42e915d`](https://github.com/graphql-hive/gateway/commit/42e915d02ec76414ac55be34c66c4c9fb8aa3f98) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix macOS binary builds that were intermittently failing with an out-of-memory crash during the Rollup bundling step on GitHub Actions macOS runners. The bundle is now built once on Linux and shared as a GitHub Actions artifact, so macOS and Windows runners only need to do the platform-specific SEA blob generation and binary packaging.
+
+- Updated dependencies [[`0f8706c`](https://github.com/graphql-hive/gateway/commit/0f8706c54556669148de1bf74725cc8c896e5ced)]:
+  - @graphql-mesh/transport-http@1.1.0
+  - @graphql-hive/gateway-runtime@2.9.2
+  - @graphql-hive/plugin-aws-sigv4@2.0.45
+  - @graphql-hive/plugin-opentelemetry@1.4.25
+  - @graphql-mesh/plugin-prometheus@2.1.43
+
 ## 2.7.0
 ### Minor Changes
 
