@@ -30,6 +30,8 @@ import {
 import {
   ASTVisitorKeyMap,
   createGraphQLError,
+  MapperKind,
+  mapSchema,
   memoize1,
   mergeDeep,
   parseSelectionSet,
@@ -1045,70 +1047,175 @@ export function getStitchingOptionsFromSupergraphSdl(
     const mergeConfig: SubschemaConfig['merge'] = {};
     const typeNameKeyMap = typeNameKeysBySubgraphMap.get(subgraphName);
     const unionTypeNodes: NamedTypeNode[] = [];
+    // Tracks additional merge configs needed when computed fields have conflicting @requires
+    // (same external field required with different argument values by different computed fields).
+    // Each entry results in a separate SubschemaConfig so each gets its own entity representation.
+    const pendingConflictSubschemaConfigs: Array<{
+      typeName: string;
+      mergeTypeConfig: MergedTypeConfig;
+    }> = [];
     if (typeNameKeyMap) {
       const typeNameFieldsKeyMap =
         typeNameFieldsKeyBySubgraphMap.get(subgraphName);
       for (const [typeName, keys] of typeNameKeyMap) {
         const mergedTypeConfig: MergedTypeConfig = (mergeConfig[typeName] = {});
         const fieldsKeyMap = typeNameFieldsKeyMap?.get(typeName);
+        // Main group's extraKeys (used by the primary merge config for this type)
         const extraKeys = new Set<string>();
         if (fieldsKeyMap) {
-          const fieldsConfig: Record<string, MergedFieldConfig> =
+          const mainFieldsConfig: Record<string, MergedFieldConfig> =
             (mergedTypeConfig.fields = {});
+
+          // Group computed fields to avoid conflicts. Two computed fields conflict
+          // when they @require the same external field with different argument values
+          // (e.g. price(currency:"USD") vs price(currency:"EUR")). Fields in
+          // conflicting groups need separate entity representations sent to the
+          // subgraph, so they are put into separate SubschemaConfigs.
+          type ConflictGroup = {
+            extraKeys: Set<string>;
+            fieldsConfig: Record<string, MergedFieldConfig>;
+            // Maps original field name -> alias for top-level aliased fields
+            aliasedFields: Map<string, string>;
+          };
+          const groups: ConflictGroup[] = [
+            {
+              extraKeys,
+              fieldsConfig: mainFieldsConfig,
+              aliasedFields: new Map(),
+            },
+          ];
+
+          function aliasFieldsWithArgs(
+            selectionSetNode: SelectionSetNode,
+          ): void {
+            for (const selection of selectionSetNode.selections) {
+              if (
+                selection.kind === Kind.FIELD &&
+                selection.arguments?.length
+              ) {
+                const argsHash = selection.arguments
+                  .map(
+                    (arg) =>
+                      arg.name.value +
+                      // TODO: slow? faster hash?
+                      memoizedASTPrint(arg.value).replace(
+                        /[^a-zA-Z0-9]/g,
+                        '',
+                      ),
+                  )
+                  .join('');
+                // @ts-expect-error it's ok we're mutating consciously
+                selection.alias = {
+                  kind: Kind.NAME,
+                  value: '_' + selection.name.value + '_' + argsHash,
+                };
+              }
+              if ('selectionSet' in selection && selection.selectionSet) {
+                aliasFieldsWithArgs(selection.selectionSet);
+              }
+            }
+          }
+
           for (const [fieldName, fieldNameKey] of fieldsKeyMap) {
             const selectionSetNode = parseSelectionSet(`{${fieldNameKey}}`);
-            (function aliasFieldsWithArgs(selectionSetNode: SelectionSetNode) {
-              for (const selection of selectionSetNode.selections) {
-                if (
-                  selection.kind === Kind.FIELD &&
-                  selection.arguments?.length
-                ) {
-                  const argsHash = selection.arguments
-                    .map(
-                      (arg) =>
-                        arg.name.value +
-                        // TODO: slow? faster hash?
-                        memoizedASTPrint(arg.value).replace(
-                          /[^a-zA-Z0-9]/g,
-                          '',
-                        ),
-                    )
-                    .join('');
-                  // @ts-expect-error it's ok we're mutating consciously
-                  selection.alias = {
-                    kind: Kind.NAME,
-                    value: '_' + selection.name.value + '_' + argsHash,
-                  };
-                }
-                if ('selectionSet' in selection && selection.selectionSet) {
-                  aliasFieldsWithArgs(selection.selectionSet);
-                }
-              }
-            })(selectionSetNode);
+            aliasFieldsWithArgs(selectionSetNode);
             const selectionSet = print(selectionSetNode)
               // remove new lines
               .replaceAll(/\n/g, ' ')
               // remove extra spaces (only one space between tokens)
               .replaceAll(/\s+/g, ' ');
-            extraKeys.add(
+            const extraKey =
               // remove first and last characters (curly braces)
-              selectionSet.slice(1, -1),
-            );
-            fieldsConfig[fieldName] = {
+              selectionSet.slice(1, -1);
+
+            // Collect top-level fields that received an alias (i.e. had arguments).
+            // Two computed fields conflict when they produce the same original field
+            // name but different aliases at the top level of their requires.
+            const fieldAliasedNames = new Map<string, string>(); // origName -> alias
+            for (const sel of selectionSetNode.selections) {
+              if (sel.kind === Kind.FIELD && sel.alias) {
+                fieldAliasedNames.set(sel.name.value, sel.alias.value);
+              }
+            }
+
+            // Find the first existing group that has no conflict with this field
+            let targetGroup: ConflictGroup | undefined;
+            for (const group of groups) {
+              let hasConflict = false;
+              for (const [origName, aliasName] of fieldAliasedNames) {
+                const existingAlias = group.aliasedFields.get(origName);
+                if (
+                  existingAlias !== undefined &&
+                  existingAlias !== aliasName
+                ) {
+                  hasConflict = true;
+                  break;
+                }
+              }
+              if (!hasConflict) {
+                targetGroup = group;
+                break;
+              }
+            }
+
+            if (!targetGroup) {
+              // No compatible group — create a new conflict group
+              const newExtraKeys = new Set<string>();
+              const newFieldsConfig: Record<string, MergedFieldConfig> = {};
+              targetGroup = {
+                extraKeys: newExtraKeys,
+                fieldsConfig: newFieldsConfig,
+                aliasedFields: new Map(),
+              };
+              groups.push(targetGroup);
+            }
+
+            targetGroup.extraKeys.add(extraKey);
+            targetGroup.fieldsConfig[fieldName] = {
               selectionSet,
               computed: true,
             };
+            for (const [origName, aliasName] of fieldAliasedNames) {
+              targetGroup.aliasedFields.set(origName, aliasName);
+            }
+          }
+
+          // Register additional conflict groups as pending separate SubschemaConfigs.
+          // They share the same schema/executor but have a different entity key that
+          // maps only their own required aliased fields to avoid overwriting each other.
+          for (const group of groups.slice(1)) {
+            const additionalMergeTypeConfig: MergedTypeConfig = {
+              fields: group.fieldsConfig,
+            };
+            if (typeNameCanonicalMap.get(typeName) === subgraphName) {
+              additionalMergeTypeConfig.canonical = true;
+            }
+            pendingConflictSubschemaConfigs.push({
+              typeName,
+              // Store closure-captured values for later SubschemaConfig creation
+              // by borrowing getMergedTypeConfigFromKey with the group's extraKeys.
+              mergeTypeConfig: additionalMergeTypeConfig,
+              // Attach the group's extraKeys so we can call getMergedTypeConfigFromKey later
+              _groupExtraKeys: group.extraKeys,
+            } as {
+              typeName: string;
+              mergeTypeConfig: MergedTypeConfig;
+              _groupExtraKeys: Set<string>;
+            });
           }
         }
         if (typeNameCanonicalMap.get(typeName) === subgraphName) {
           mergedTypeConfig.canonical = true;
         }
 
-        function getMergedTypeConfigFromKey(key: string) {
+        function getMergedTypeConfigFromKey(
+          key: string,
+          keysExtraKeys: Set<string> = extraKeys,
+        ) {
           return {
             selectionSet: `{ ${key} }`,
             argsFromKeys: getArgsFromKeysForFederation,
-            key: getKeyFnForFederation(typeName, [key, ...extraKeys]),
+            key: getKeyFnForFederation(typeName, [key, ...keysExtraKeys]),
             fieldName: `_entities`,
             dataLoaderOptions: {
               cacheKeyFn: getCacheKeyFnFromKey(key),
@@ -1129,6 +1236,31 @@ export function getStitchingOptionsFromSupergraphSdl(
             getMergedTypeConfigFromKey(key),
           );
           mergedTypeConfig.entryPoints = entryPoints;
+        }
+
+        // Finalize the additional merge type configs now that getMergedTypeConfigFromKey
+        // is available in scope. We attach the entity-key configuration using each
+        // conflict group's own extraKeys so their entity representations don't clash.
+        for (const pending of pendingConflictSubschemaConfigs) {
+          if (
+            pending.typeName === typeName &&
+            !('selectionSet' in pending.mergeTypeConfig) &&
+            !('entryPoints' in pending.mergeTypeConfig)
+          ) {
+            const groupExtraKeys = (
+              pending as unknown as { _groupExtraKeys: Set<string> }
+            )._groupExtraKeys;
+            if (keysArr.length === 1 && keysArr[0]) {
+              Object.assign(
+                pending.mergeTypeConfig,
+                getMergedTypeConfigFromKey(keysArr[0], groupExtraKeys),
+              );
+            } else if (keysArr.length > 1) {
+              pending.mergeTypeConfig.entryPoints = keysArr.map((key) =>
+                getMergedTypeConfigFromKey(key, groupExtraKeys),
+              );
+            }
+          }
         }
 
         unionTypeNodes.push({
@@ -1708,10 +1840,60 @@ export function getStitchingOptionsFromSupergraphSdl(
         }
       }
     }
+    // When there are conflict groups, each SubschemaConfig must only expose its
+    // own computed fields in its schema. If a conflict group's field (e.g.
+    // shippingEstimateEUR) is still present in the MAIN SubschemaConfig's schema,
+    // the stitching engine may use the main SubschemaConfig (with the wrong entity
+    // representation) to resolve it. Using mapSchema to filter out conflicting
+    // computed fields prevents incorrect routing.
+    let mainSchema = schema;
+    const additionalGroupFieldsByType = new Map<string, Set<string>>();
+    for (const { typeName, mergeTypeConfig } of pendingConflictSubschemaConfigs) {
+      for (const [fieldName, fieldConfig] of Object.entries(
+        mergeTypeConfig.fields ?? {},
+      )) {
+        if (!fieldConfig?.computed) continue;
+        let set = additionalGroupFieldsByType.get(typeName);
+        if (!set) {
+          set = new Set<string>();
+          additionalGroupFieldsByType.set(typeName, set);
+        }
+        set.add(fieldName);
+      }
+    }
+    if (additionalGroupFieldsByType.size > 0) {
+      mainSchema = mapSchema(schema, {
+        [MapperKind.OBJECT_FIELD]: (fieldConfig, fieldName, typeName) => {
+          if (additionalGroupFieldsByType.get(typeName)?.has(fieldName)) {
+            return null;
+          }
+          return fieldConfig;
+        },
+      });
+    }
+
+    // Build the full set of all computed fields across ALL conflict groups per
+    // type (main + additional). Used to compute "fields to remove" per group.
+    const allComputedFieldsByType = new Map<string, Set<string>>(
+      Array.from(additionalGroupFieldsByType, ([t, s]) => [t, new Set(s)]),
+    );
+    for (const [typeName, typeConfig] of Object.entries(mergeConfig)) {
+      if (!typeConfig?.fields) continue;
+      for (const [fieldName, fieldConfig] of Object.entries(typeConfig.fields)) {
+        if (!fieldConfig?.computed) continue;
+        let set = allComputedFieldsByType.get(typeName);
+        if (!set) {
+          set = new Set<string>();
+          allComputedFieldsByType.set(typeName, set);
+        }
+        set.add(fieldName);
+      }
+    }
+
     const subschemaConfig: FederationSubschemaConfig = {
       name: subgraphName,
       endpoint,
-      schema,
+      schema: mainSchema,
       executor,
       merge: mergeConfig,
       transforms,
@@ -1719,6 +1901,44 @@ export function getStitchingOptionsFromSupergraphSdl(
       batchingOptions: opts.batchingOptions,
     };
     subschemas.push(subschemaConfig);
+
+    // Create a separate SubschemaConfig for each conflict group so that their
+    // entity representations don't overwrite each other's aliased required fields.
+    // Each group's schema is filtered to only expose its own computed fields so
+    // the stitching engine never routes other groups' fields here.
+    for (const { typeName, mergeTypeConfig } of pendingConflictSubschemaConfigs) {
+      const groupOwnFields = new Set<string>(
+        Object.entries(mergeTypeConfig.fields ?? {})
+          .filter(([, fc]) => fc?.computed)
+          .map(([fn]) => fn),
+      );
+      const allComputedForType =
+        allComputedFieldsByType.get(typeName) ?? new Set<string>();
+      const fieldsToRemove = new Set<string>(
+        [...allComputedForType].filter((f) => !groupOwnFields.has(f)),
+      );
+      const groupSchema =
+        fieldsToRemove.size > 0
+          ? mapSchema(schema, {
+              [MapperKind.OBJECT_FIELD]: (fieldConfig, fieldName, type) => {
+                if (type === typeName && fieldsToRemove.has(fieldName)) {
+                  return null;
+                }
+                return fieldConfig;
+              },
+            })
+          : schema;
+      subschemas.push({
+        name: subgraphName,
+        endpoint,
+        schema: groupSchema,
+        executor,
+        merge: { [typeName]: mergeTypeConfig },
+        transforms,
+        batch: opts.batch,
+        batchingOptions: opts.batchingOptions,
+      } as FederationSubschemaConfig);
+    }
   }
 
   const defaultMerger = getDefaultFieldConfigMerger(true);

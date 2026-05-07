@@ -13,7 +13,7 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
-import { usingHiveRouterRuntime } from '~internal/env';
+
 import {
   buildSchema,
   getNamedType,
@@ -154,10 +154,7 @@ describe('Federation Compatibility', () => {
         );
       });
       tests.forEach((_, i) => {
-        (!usingHiveRouterRuntime() &&
-          supergraphName === 'requires-with-argument-conflict'
-          ? it.todo // fails in stitching
-          : it)(`test-query-${i}`, async () => {
+        it(`test-query-${i}`, async () => {
           const test = tests[i];
           if (!test) {
             throw new Error(`Test ${i} not found`);
