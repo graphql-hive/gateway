@@ -1098,37 +1098,57 @@ export function getStitchingOptionsFromSupergraphSdl(
 
           function aliasFieldsWithArgs(
             selectionSetNode: SelectionSetNode,
-          ): void {
-            for (const selection of selectionSetNode.selections) {
-              if (
-                selection.kind === Kind.FIELD &&
-                selection.arguments?.length
-              ) {
-                // Build a stable, unambiguous signature by sorting args by
-                // name (order-independence) and hashing the full printed
-                // representation (preserves punctuation/quoting differences).
-                const normalizedArgs = [...selection.arguments]
-                  .sort((a, b) => a.name.value.localeCompare(b.name.value))
-                  .map(
-                    (arg) => `${arg.name.value}:${memoizedASTPrint(arg.value)}`,
-                  )
-                  .join(',');
-                const argsHash = hashStringToAlphanumeric(normalizedArgs);
-                // @ts-expect-error it's ok we're mutating consciously
-                selection.alias = {
-                  kind: Kind.NAME,
-                  value: '_' + selection.name.value + '_' + argsHash,
-                };
-              }
-              if ('selectionSet' in selection && selection.selectionSet) {
-                aliasFieldsWithArgs(selection.selectionSet);
-              }
-            }
+          ): SelectionSetNode {
+            return {
+              ...selectionSetNode,
+              selections: selectionSetNode.selections.map((selection) => {
+                if (selection.kind === Kind.FIELD) {
+                  let nextSelection = selection;
+                  if (selection.arguments?.length) {
+                    // Build a stable, unambiguous signature by sorting args by
+                    // name (order-independence) and hashing the full printed
+                    // representation (preserves punctuation/quoting differences).
+                    const normalizedArgs = [...selection.arguments]
+                      .sort((a, b) => a.name.value.localeCompare(b.name.value))
+                      .map(
+                        (arg) =>
+                          `${arg.name.value}:${memoizedASTPrint(arg.value)}`,
+                      )
+                      .join(',');
+                    const argsHash = hashStringToAlphanumeric(normalizedArgs);
+                    nextSelection = {
+                      ...selection,
+                      alias: {
+                        kind: Kind.NAME,
+                        value: '_' + selection.name.value + '_' + argsHash,
+                      },
+                    };
+                  }
+                  if (nextSelection.selectionSet) {
+                    return {
+                      ...nextSelection,
+                      selectionSet: aliasFieldsWithArgs(
+                        nextSelection.selectionSet,
+                      ),
+                    };
+                  }
+                  return nextSelection;
+                }
+                if ('selectionSet' in selection && selection.selectionSet) {
+                  return {
+                    ...selection,
+                    selectionSet: aliasFieldsWithArgs(selection.selectionSet),
+                  };
+                }
+                return selection;
+              }),
+            };
           }
 
           for (const [fieldName, fieldNameKey] of fieldsKeyMap) {
-            const selectionSetNode = parseSelectionSet(`{${fieldNameKey}}`);
-            aliasFieldsWithArgs(selectionSetNode);
+            const selectionSetNode = aliasFieldsWithArgs(
+              parseSelectionSet(`{${fieldNameKey}}`),
+            );
             const selectionSet = print(selectionSetNode)
               // remove new lines
               .replaceAll(/\n/g, ' ')
@@ -1438,7 +1458,8 @@ export function getStitchingOptionsFromSupergraphSdl(
       ...extraOrphanTypesForSubgraph.values(),
     ];
     // We should add implemented objects from other subgraphs implemented by this interface
-    for (const interfaceInSubgraph of extendedSubgraphTypes) {
+    for (let i = 0; i < extendedSubgraphTypes.length; i++) {
+      const interfaceInSubgraph = extendedSubgraphTypes[i]!;
       if (interfaceInSubgraph.kind === Kind.INTERFACE_TYPE_DEFINITION) {
         let isOrphan = true;
         for (const definitionNode of supergraphAst.definitions) {
@@ -1453,8 +1474,10 @@ export function getStitchingOptionsFromSupergraphSdl(
           }
         }
         if (isOrphan) {
-          // @ts-expect-error `kind` property is a readonly field in TS definitions but it is not actually
-          interfaceInSubgraph.kind = Kind.OBJECT_TYPE_DEFINITION;
+          extendedSubgraphTypes[i] = {
+            ...interfaceInSubgraph,
+            kind: Kind.OBJECT_TYPE_DEFINITION,
+          } as ObjectTypeDefinitionNode;
         }
       }
     }

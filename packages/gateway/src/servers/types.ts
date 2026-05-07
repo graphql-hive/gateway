@@ -16,7 +16,7 @@ export interface ServerConfig {
   /**
    * SSL Credentials for the HTTPS Server.
    *
-   * If this is provided, Gateway will be over secure HTTPS instead of unsecure HTTP.
+   * If this is provided, Gateway will be over secure HTTPS instead of insecure HTTP.
    */
   sslCredentials?: ServerConfigSSLCredentials;
   /**
@@ -68,12 +68,18 @@ export interface ServerConfig {
 
 export interface ServerConfigSSLCredentials {
   key_file_name?: string;
+  keyFileName?: string;
   cert_file_name?: string;
+  certFileName?: string;
   ca_file_name?: string;
+  caFileName?: string;
   passphrase?: string;
   dh_params_file_name?: string;
+  dhParamsFileName?: string;
   ssl_ciphers?: string;
+  sslCiphers?: string;
   ssl_prefer_low_memory_usage?: boolean;
+  sslPreferLowMemoryUsage?: boolean;
 }
 
 export interface ServerForRuntimeOptions extends ServerConfig {

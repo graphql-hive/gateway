@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync } from 'fs';
 import { join } from 'path';
 import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import {
@@ -64,22 +64,7 @@ describe('Federation Compatibility', () => {
     describe(supergraphName, () => {
       let stitchedSchema: GraphQLSchema;
       let supergraphSdl: string;
-      const testFile = readFileSync(
-        join(
-          __dirname,
-          '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
-          supergraphName,
-          'test.ts',
-        ),
-        'utf-8',
-      );
-      let tests: SupergraphTestDefinition = Array<{
-        query: string;
-        expected: any;
-      }>(testFile.match(/createTest\(/g)?.length ?? 0).fill({
-        query: '',
-        expected: {},
-      });
+      let tests!: SupergraphTestDefinition;
       let gatewayRuntime: GatewayRuntime;
       beforeAll(() => {
         supergraphSdl = supergraphSdlMap.get(supergraphName)!;

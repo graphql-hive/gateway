@@ -155,7 +155,7 @@ export interface HTTPExecutorOptions {
   deduplicateInflightRequests?: boolean;
 
   /**
-   * This option allows you to include the response detauls in the result extensions when a request fails.
+   * This option allows you to include the response details in the result extensions when a request fails.
    * This can be useful for debugging and error handling purposes, as it provides additional context about the response that led to the error.
    * However, be cautious when enabling this option, as response headers may contain sensitive information.
    *

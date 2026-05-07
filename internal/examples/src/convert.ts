@@ -112,7 +112,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
   const gatewayConfigTsFile = path.join(e2eDir, 'gateway.config.ts');
   if (await exists(gatewayConfigTsFile)) {
-    console.group(`"gatway.config.ts" found, transforming service ports...`);
+    console.group(`"gateway.config.ts" found, transforming service ports...`);
     using _ = defer(() => console.groupEnd());
 
     const source = transformServicePorts(
@@ -662,7 +662,7 @@ interface Task {
   /**
    * If set, marks this task as a background task. Background tasks are ran with `nohup`.
    *
-   * The provided `wait` task definition is the task waiting for the background task's avilability.
+   * The provided `wait` task definition is the task waiting for the background task's availability.
    */
   background?: {
     service: string;
