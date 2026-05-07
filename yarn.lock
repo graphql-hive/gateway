@@ -5641,21 +5641,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/types@npm:0.104.27":
-  version: 0.104.27
-  resolution: "@graphql-mesh/types@npm:0.104.27"
+"@graphql-mesh/types@npm:0.104.28":
+  version: 0.104.28
+  resolution: "@graphql-mesh/types@npm:0.104.28"
   dependencies:
     "@graphql-hive/pubsub": "npm:^2.1.1"
-    "@graphql-tools/batch-delegate": "npm:^10.0.19"
-    "@graphql-tools/delegate": "npm:^12.0.13"
-    "@graphql-tools/utils": "npm:^11.0.1"
+    "@graphql-tools/batch-delegate": "npm:^10.0.20"
+    "@graphql-tools/delegate": "npm:^12.0.14"
+    "@graphql-tools/utils": "npm:^11.1.0"
     "@graphql-typed-document-node/core": "npm:^3.2.0"
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/24bebe04f1f36cff0ea3b24d523dbf2cf0dca0808bc223c45284e2c18840601faab41736973962adb77de6aaeab550811f57aaaa17fcf0bd38a9bb101c654535
+  checksum: 10c0/353304707d8b2e7bef3f19935b6d9691ced20b6c476243aaf006d9906d6afd8e925cf0e2df59734ec7bce03a1b7b6d736e43840efea158efcafbe89c74e2195a
   languageName: node
   linkType: hard
 
@@ -5700,7 +5700,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/batch-delegate@npm:^10.0.19, @graphql-tools/batch-delegate@npm:^10.0.20, @graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
+"@graphql-tools/batch-delegate@npm:^10.0.20, @graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/batch-delegate@workspace:packages/batch-delegate"
   dependencies:
@@ -6130,7 +6130,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/utils@npm:11.1.0, @graphql-tools/utils@npm:^11.0.0, @graphql-tools/utils@npm:^11.0.1, @graphql-tools/utils@npm:^11.1.0":
+"@graphql-tools/utils@npm:11.1.0, @graphql-tools/utils@npm:^11.0.0, @graphql-tools/utils@npm:^11.1.0":
   version: 11.1.0
   resolution: "@graphql-tools/utils@npm:11.1.0"
   dependencies:
