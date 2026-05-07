@@ -132,6 +132,8 @@ jobs:
               return core.setFailed('@graphql-hive/gateway was not published!');
             }
             return gateway.version;
+      - name: Build
+        run: yarn build
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
         env:
