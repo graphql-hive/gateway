@@ -4,7 +4,7 @@ FROM oven/bun:1.2.15-slim AS install
 
 WORKDIR /install
 
-RUN bun i graphql@^16.9.0
+RUN bun i graphql@16.14.0
 
 #
 
