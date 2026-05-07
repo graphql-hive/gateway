@@ -1086,6 +1086,16 @@ export function getStitchingOptionsFromSupergraphSdl(
             },
           ];
 
+          // Build a stable djb2 hash of a string, returned as a base-36
+          // alphanumeric string safe for use inside a GraphQL Name.
+          function hashStringToAlphanumeric(s: string): string {
+            let h = 5381;
+            for (let i = 0; i < s.length; i++) {
+              h = (Math.imul(h, 33) ^ s.charCodeAt(i)) | 0;
+            }
+            return (h >>> 0).toString(36);
+          }
+
           function aliasFieldsWithArgs(
             selectionSetNode: SelectionSetNode,
           ): void {
@@ -1094,14 +1104,16 @@ export function getStitchingOptionsFromSupergraphSdl(
                 selection.kind === Kind.FIELD &&
                 selection.arguments?.length
               ) {
-                const argsHash = selection.arguments
+                // Build a stable, unambiguous signature by sorting args by
+                // name (order-independence) and hashing the full printed
+                // representation (preserves punctuation/quoting differences).
+                const normalizedArgs = [...selection.arguments]
+                  .sort((a, b) => a.name.value.localeCompare(b.name.value))
                   .map(
-                    (arg) =>
-                      arg.name.value +
-                      // TODO: slow? faster hash?
-                      memoizedASTPrint(arg.value).replace(/[^a-zA-Z0-9]/g, ''),
+                    (arg) => `${arg.name.value}:${memoizedASTPrint(arg.value)}`,
                   )
-                  .join('');
+                  .join(',');
+                const argsHash = hashStringToAlphanumeric(normalizedArgs);
                 // @ts-expect-error it's ok we're mutating consciously
                 selection.alias = {
                   kind: Kind.NAME,
@@ -1251,6 +1263,12 @@ export function getStitchingOptionsFromSupergraphSdl(
                 getMergedTypeConfigFromKey(key, groupExtraKeys),
               );
             }
+            // Apply the same customization hook callers use for the main config
+            // so per-group merge type configs receive the same transformations.
+            opts.onMergedTypeConfig?.(
+              pending.typeName,
+              pending.mergeTypeConfig,
+            );
           }
         }
 
@@ -1917,10 +1935,18 @@ export function getStitchingOptionsFromSupergraphSdl(
         [...allComputedForType].filter((f) => !groupOwnFields.has(f)),
       );
       const groupSchema =
-        fieldsToRemove.size > 0
+        fieldsToRemove.size > 0 || allComputedFieldsByType.size > 0
           ? mapSchema(schema, {
               [MapperKind.OBJECT_FIELD]: (fieldConfig, fieldName, type) => {
                 if (type === typeName && fieldsToRemove.has(fieldName)) {
+                  return null;
+                }
+                // Also remove computed fields owned by OTHER types' conflict
+                // groups so those fields are not exposed on this subschema.
+                if (
+                  type !== typeName &&
+                  allComputedFieldsByType.get(type)?.has(fieldName)
+                ) {
                   return null;
                 }
                 return fieldConfig;
