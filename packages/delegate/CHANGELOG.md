@@ -1,5 +1,18 @@
 # @graphql-tools/delegate
 
+## 12.0.16
+### Patch Changes
+
+
+
+- [#2320](https://github.com/graphql-hive/gateway/pull/2320) [`deafdc0`](https://github.com/graphql-hive/gateway/commit/deafdc00e388ed195c2cdf77e98cd19e7d496d48) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix `@stream` directive not working for federated subgraphs with non-null scalar list return types.
+  
+  Two bugs were addressed in `delegateRequest`:
+  
+  1. `isListType` was called without first unwrapping `NonNull`, so a field typed `[String!]!` (a `NonNull(List(...))`) was not recognised as a list. The fix wraps the check with `getNullableType()`.
+  
+  2. Deduplication of already-pushed stream items used a `WeakSet`, which throws a `TypeError` for primitive values (strings, numbers, etc.). This was replaced with an integer index counter that works for both object and primitive list items.
+
 ## 12.0.15
 ### Patch Changes
 
