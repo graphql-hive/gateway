@@ -283,7 +283,7 @@ function getUnavailableProvidedSelections(
   const fields = type.getFields();
   return providedSelection.selections.filter((selection) => {
     if (selection.kind !== Kind.FIELD) {
-      return true;
+      return false;
     }
     return fields[selection.name.value] == null;
   });
