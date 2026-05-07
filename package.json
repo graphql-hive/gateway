@@ -67,7 +67,7 @@
   },
   "resolutions": {
     "@apollo/composition": "2.14.0",
-    "@apollo/server": "5.5.0",
+    "@apollo/server": "5.5.1",
     "@apollo/subgraph": "2.14.0",
     "@graphql-mesh/types": "0.104.27",
     "@graphql-mesh/utils": "0.104.36",
