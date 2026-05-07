@@ -12,6 +12,7 @@ import { graphql, OperationTypeNode, parse } from 'graphql';
 import _ from 'lodash';
 import { describe, expect, test } from 'vitest';
 import { delegateToSchema } from '../src/delegateToSchema.js';
+import { DelegationContext } from '../src/index.js';
 
 function assertSome<T>(
   input: T,
@@ -510,6 +511,85 @@ describe('delegateToSchema', () => {
     ]);
     const result = mergeIncrementalResults(values);
     expect(result).toEqual({ data: { test: ['foo', 'bar', 'baz'] } });
+  });
+
+  describe('non-SubschemaConfig delegation (plain GraphQLSchema)', () => {
+    test('args are available in delegationContext for transforms', async () => {
+      let capturedArgs: Record<string, any> | undefined;
+
+      const subschema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            user(id: ID!): User
+          }
+          type User {
+            id: ID!
+            name: String!
+          }
+        `,
+        resolvers: {
+          Query: {
+            user: (_root: any, { id }: { id: string }) => ({
+              id,
+              name: `User ${id}`,
+            }),
+          },
+        },
+      });
+
+      const captureArgsTransform = {
+        transformResult: (
+          result: ExecutionResult,
+          delegationContext: DelegationContext,
+        ) => {
+          capturedArgs = delegationContext.args;
+          return result;
+        },
+      };
+
+      const gatewaySchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            user(id: ID!): User
+          }
+          type User {
+            id: ID!
+            name: String!
+          }
+        `,
+        resolvers: {
+          Query: {
+            user: (_parent: any, _args: any, context: any, info: any) =>
+              delegateToSchema({
+                schema: subschema, // plain GraphQLSchema → non-SubschemaConfig branch
+                context,
+                info,
+                args: { id: '42' }, // override the arg so subschema sees '42'
+                transforms: [captureArgsTransform],
+              }),
+          },
+        },
+      });
+
+      const result = await graphql({
+        schema: gatewaySchema,
+        source: /* GraphQL */ `
+          {
+            user(id: "1") {
+              id
+              name
+            }
+          }
+        `,
+      });
+
+      expect(result.errors).toBeUndefined();
+      // The subschema receives id='42' (from the overridden args), not '1'.
+      expect(result.data?.['user']).toEqual({ id: '42', name: 'User 42' });
+      // Before the fix, args was not propagated to delegationContext in the
+      // non-SubschemaConfig branch, so delegationContext.args would be undefined.
+      expect(capturedArgs).toEqual({ id: '42' });
+    });
   });
 });
 

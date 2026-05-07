@@ -1,5 +1,96 @@
 # @graphql-tools/federation
 
+## 4.4.0
+### Minor Changes
+
+
+
+- [#2281](https://github.com/graphql-hive/gateway/pull/2281) [`4db5afa`](https://github.com/graphql-hive/gateway/commit/4db5afadfc3703d7f0228140f5297ed1c99df967) Thanks [@ardatan](https://github.com/ardatan)! - Support aliases in directive imports correctly specifically for `@source` of Mesh to distinguish it from Apollo's connector `@source` directive.
+
+
+
+- [#2294](https://github.com/graphql-hive/gateway/pull/2294) [`8ffdc33`](https://github.com/graphql-hive/gateway/commit/8ffdc3360ca3e9274625c50b2fb1d41d307ecc70) Thanks [@ardatan](https://github.com/ardatan)! - Support `@join__directive` while extracting subgraph definitions from the supergraph
+  
+  For example;
+  
+  ```graphql
+  type Query @join__type(graph: PRODUCTS) {
+    products: [Product]
+      @join__field(graph: PRODUCTS)
+      @join__directive(
+        graphs: [PRODUCTS]
+        name: "connect"
+        args: {
+          source: "ecomm"
+          http: { GET: "/products" }
+          selection: "$.products {\n  id\n  name\n  description\n}"
+        }
+      )
+  }
+  ```
+  should extract `products` subgraph as;
+  ```graphql
+  type Query {
+      products: @connect(
+        source: "ecomm"
+        http: { GET: "/products" }
+        selection: """
+        $.products {
+          id
+          name
+          description
+        }
+        """
+      )
+  }
+  ```
+  
+  Same goes to the schema definition level directives;
+  
+  ```graphql
+  schema
+    @join__directive(
+      graphs: [PRODUCTS]
+      name: "link"
+      args: {
+        url: "https://specs.apollo.dev/connect/v0.2"
+        import: ["@connect", "@source"]
+      }
+    )
+    @join__directive(
+      graphs: [PRODUCTS]
+      name: "source"
+      args: {
+        name: "ecomm"
+        http: { baseURL: "https://ecommerce.demo-api.apollo.dev/", headers: [] }
+      }
+    ) {
+    query: Query
+  }
+  ```
+  
+  should be extracted as;
+  
+  ```graphql
+  extend schema
+    @link( # Enable this schema to use Apollo Connectors
+      url: "https://specs.apollo.dev/connect/v0.2"
+      import: ["@connect", "@source"]
+    )
+    @source(
+      name: "ecomm"
+      # A @source directive defines a shared data source for multiple Connectors.
+      http: {
+          baseURL: "https://ecommerce.demo-api.apollo.dev/"
+          headers: [
+          # If your API requires headers, add them here and in your router.yaml file.
+          # Example:
+          # { name: "name", value: "{$config.apiKey}" }
+          ]
+      }
+    )
+  ```
+
 ## 4.3.7
 ### Patch Changes
 

@@ -1,0 +1,20 @@
+query Todos {
+  todos {
+    id
+    text
+  }
+}
+
+mutation AddTodo($text: String!) {
+  addTodo(text: $text) {
+    id
+    text
+  }
+}
+
+subscription TodoAdded {
+  todoAdded {
+    id
+    text
+  }
+}

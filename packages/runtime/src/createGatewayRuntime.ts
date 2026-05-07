@@ -12,7 +12,10 @@ import type {
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
 } from '@graphql-mesh/fusion-runtime';
-import { UnifiedGraphManager } from '@graphql-mesh/fusion-runtime';
+import {
+  handleMaybePromiseMaybeAsyncIterableResult,
+  UnifiedGraphManager,
+} from '@graphql-mesh/fusion-runtime';
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
@@ -24,6 +27,7 @@ import {
   isUrl,
 } from '@graphql-mesh/utils';
 import {
+  getOperationASTFromDocument,
   IResolvers,
   isDocumentNode,
   isValidPath,
@@ -57,12 +61,18 @@ import {
   URLSearchParams,
   WritableStream,
 } from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  fakePromise,
+  fakeRejectPromise,
+  handleMaybePromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
   buildASTSchema,
   buildSchema,
+  DocumentNode,
   GraphQLSchema,
   isSchema,
   parse,
@@ -137,6 +147,11 @@ export type GatewayRuntime<
 > = YogaServerInstance<any, TContext> & {
   invalidateUnifiedGraph(): void;
   getSchema(): MaybePromise<GraphQLSchema>;
+  sdkRequester<TData = any, TVariables = Record<string, any>>(
+    document: DocumentNode,
+    variables?: TVariables,
+    context?: TContext,
+  ): Promise<TData> | AsyncIterable<TData>;
 };
 
 export function createGatewayRuntime<
@@ -770,6 +785,7 @@ export function createGatewayRuntime<
     config.productPackageName || '@graphql-hive/gateway';
   const productLink =
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
+  const playgroundName = config.playgroundName || 'GraphiQL';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
   const graphiqlLogo = `<div style="height: 20px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
@@ -825,6 +841,7 @@ export function createGatewayRuntime<
     landingPageRenderer = (opts) =>
       new opts.fetchAPI.Response(
         landingPageHtml
+          .replace(/__PLAYGROUND_NAME__/g, playgroundName)
           .replace(/__GRAPHIQL_PATHNAME__/g, opts.graphqlEndpoint)
           .replace(/__REQUEST_PATHNAME__/g, opts.url.pathname)
           .replace(/__GRAPHQL_URL__/g, opts.url.origin + opts.graphqlEndpoint)
@@ -1068,9 +1085,105 @@ export function createGatewayRuntime<
       value: getSchema,
       configurable: true,
     },
+    sdkRequester: {
+      value: createSdkRequesterForRuntime(yoga as GatewayRuntime<TContext>),
+      configurable: true,
+    },
   });
 
   return yoga as GatewayRuntime<TContext>;
+}
+
+function createSdkRequesterForRuntime<TContext extends Record<string, any>>(
+  runtime: GatewayRuntime<TContext>,
+) {
+  return function sdkRequester<TData = any, TVariables = Record<string, any>>(
+    document: DocumentNode,
+    variableValues?: TVariables,
+    context?: TContext,
+  ): Promise<TData> | AsyncIterableIterator<TData> {
+    const operationAst = getOperationASTFromDocument(document);
+    if (operationAst.operation === 'subscription') {
+      let iterator$ = fakePromise()
+        .then(() => runtime.getSchema())
+        .then(() => {
+          const { subscribe, schema, contextFactory } = runtime.getEnveloped(
+            context || {},
+          );
+          return fakePromise(contextFactory())
+            .then((contextValue) =>
+              subscribe({
+                schema,
+                document,
+                variableValues,
+                contextValue,
+              }),
+            )
+            .then(handleMaybePromiseMaybeAsyncIterableResult)
+            .then((result) => {
+              if (isAsyncIterable(result)) {
+                return result[Symbol.asyncIterator]();
+              }
+              return {
+                [Symbol.asyncIterator]() {
+                  let done = false;
+                  return {
+                    next() {
+                      if (done) {
+                        return fakePromise({ done: true, value: undefined });
+                      }
+                      done = true;
+                      return fakePromise({ done: false, value: result });
+                    },
+                  };
+                },
+              };
+            });
+        }) as Promise<AsyncIterator<TData>>;
+      return {
+        [Symbol.asyncIterator]() {
+          return this;
+        },
+        next(...args) {
+          return iterator$.then((iterator) => iterator.next(...args));
+        },
+        return(...args) {
+          return iterator$.then((iterator) => {
+            if (iterator.return) {
+              return iterator.return(...args);
+            }
+            return { done: true, value: undefined };
+          });
+        },
+        throw(...args) {
+          return iterator$.then((iterator) => {
+            if (iterator.throw) {
+              return iterator.throw(...args);
+            }
+            return fakeRejectPromise(args[0]);
+          });
+        },
+      } as AsyncIterableIterator<TData>;
+    } else {
+      return fakePromise()
+        .then(() => runtime.getSchema())
+        .then(() => {
+          const { execute, schema, contextFactory } = runtime.getEnveloped(
+            context || {},
+          );
+          return fakePromise(contextFactory())
+            .then((contextValue) =>
+              execute({
+                schema,
+                document,
+                variableValues,
+                contextValue,
+              }),
+            )
+            .then(handleMaybePromiseMaybeAsyncIterableResult);
+        }) as Promise<TData>;
+    }
+  };
 }
 
 function isDynamicUnifiedGraphSchema(

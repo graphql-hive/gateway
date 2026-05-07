@@ -704,6 +704,11 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   productLogo?: string;
 
   /**
+   * The name of the playground.
+   */
+  playgroundName?: string;
+
+  /**
    * The link to the product website
    */
   productLink?: string;

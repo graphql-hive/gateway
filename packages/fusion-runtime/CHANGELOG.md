@@ -1,5 +1,31 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.10.0
+### Minor Changes
+
+
+
+- [`0625f67`](https://github.com/graphql-hive/gateway/commit/0625f67b021ce7edf912cad02f40fa276cd5ffb2) Thanks [@ardatan](https://github.com/ardatan)! - Add Generic SDK support with `gateway.sdkRequester` property, see https://github.com/graphql-hive/gateway/tree/main/examples/typed-sdk
+
+
+### Patch Changes
+
+- Updated dependencies [[`7171b46`](https://github.com/graphql-hive/gateway/commit/7171b46546a8e60776f70d18d14dd6fa19d5649f)]:
+  - @graphql-tools/delegate@12.0.15
+
+## 1.9.0
+### Minor Changes
+
+
+
+- [#2281](https://github.com/graphql-hive/gateway/pull/2281) [`4db5afa`](https://github.com/graphql-hive/gateway/commit/4db5afadfc3703d7f0228140f5297ed1c99df967) Thanks [@ardatan](https://github.com/ardatan)! - Support aliases in directive imports correctly specifically for `@source` of Mesh to distinguish it from Apollo's connector `@source` directive.
+
+
+### Patch Changes
+
+- Updated dependencies [[`4db5afa`](https://github.com/graphql-hive/gateway/commit/4db5afadfc3703d7f0228140f5297ed1c99df967), [`8ffdc33`](https://github.com/graphql-hive/gateway/commit/8ffdc3360ca3e9274625c50b2fb1d41d307ecc70)]:
+  - @graphql-tools/federation@4.4.0
+
 ## 1.8.10
 ### Patch Changes
 

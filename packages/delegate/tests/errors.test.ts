@@ -1,6 +1,10 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { createGraphQLError, ExecutionResult } from '@graphql-tools/utils';
+import {
+  createGraphQLError,
+  ExecutionResult,
+  relocatedError,
+} from '@graphql-tools/utils';
 import {
   graphql,
   GraphQLError,
@@ -584,6 +588,84 @@ describe('Errors', () => {
           ]
         `);
       });
+    });
+  });
+
+  describe('onLocatedError', () => {
+    test('is applied when using delegateToSchema with a plain GraphQLSchema (non-SubschemaConfig path)', async () => {
+      // Subschema with a list field. The Book.title resolver throws, so the
+      // error path from the subschema contains a numeric list index:
+      // ['books', 0, 'title'].
+      const subschema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            books: [Book!]!
+          }
+          type Book {
+            id: ID!
+            title: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            books: () => [{ id: '1' }],
+          },
+          Book: {
+            title: () => {
+              throw new Error('Title error');
+            },
+          },
+        },
+      });
+
+      // Gateway schema — delegates to the plain GraphQLSchema above (non-SubschemaConfig path).
+      // onLocatedError strips the numeric list index so the error path goes from
+      // ['books', 0, 'title'] → ['books', 'title'].
+      const gatewaySchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            books: [Book!]!
+          }
+          type Book {
+            id: ID!
+            title: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            books: (_parent, _args, context, info) =>
+              delegateToSchema({
+                schema: subschema, // plain GraphQLSchema → non-SubschemaConfig branch
+                context,
+                info,
+                onLocatedError: (originalError) => {
+                  if (originalError.path == null) return originalError;
+                  const [fieldName, pathIndex, ...rest] = originalError.path;
+                  if (fieldName == null || typeof pathIndex !== 'number')
+                    return originalError;
+                  return relocatedError(originalError, [fieldName, ...rest]);
+                },
+              }),
+          },
+        },
+      });
+
+      const result = await graphql({
+        schema: gatewaySchema,
+        source: /* GraphQL */ `
+          {
+            books {
+              title
+            }
+          }
+        `,
+      });
+
+      // Without the fix, onLocatedError was silently dropped in the non-SubschemaConfig
+      // branch of getDelegationContext, so the numeric index was NOT stripped from the path
+      // and result.errors[0].path would be ['books', 0, 'title'].
+      // With the fix, onLocatedError runs and strips the index: ['books', 'title'].
+      expect(result.errors?.[0]?.path).toEqual(['books', 'title']);
     });
   });
 });

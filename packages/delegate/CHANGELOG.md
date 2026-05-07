@@ -1,5 +1,16 @@
 # @graphql-tools/delegate
 
+## 12.0.15
+### Patch Changes
+
+
+
+- [#2306](https://github.com/graphql-hive/gateway/pull/2306) [`7171b46`](https://github.com/graphql-hive/gateway/commit/7171b46546a8e60776f70d18d14dd6fa19d5649f) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix incorrect error path when delegating a single type to a list type in a subschema.
+  
+  When using schema stitching with type merging (e.g., a supergraph `book` field delegating to a subschema `books` list field via batch delegation), errors from the subschema now correctly report the path as seen in the supergraph (e.g., `['book', 'title']`) instead of including an unexpected array index (e.g., `['book', 0, 'title']`).
+  
+  Also ensures `onLocatedError` is passed through in all branches of `getDelegationContext`.
+
 ## 12.0.14
 ### Patch Changes
 

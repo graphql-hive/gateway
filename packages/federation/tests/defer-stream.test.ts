@@ -430,3 +430,90 @@ describe('Defer/Stream', () => {
     });
   });
 });
+
+describe('Defer/Stream - scalar streaming via HTTP', () => {
+  const letters = ['a', 'b', 'c', 'd', 'e'];
+
+  // A minimal subgraph that exposes a [String!]! stream field - mirrors the
+  // issue reproduction where `alphabet: [String!]!` is streamed via @stream.
+  const alphabetSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        alphabet: [String!]!
+      }
+    `),
+    resolvers: {
+      Query: {
+        alphabet: async function* alphabet() {
+          for (const letter of letters) {
+            yield letter;
+          }
+        },
+      },
+    },
+  });
+
+  const alphabetServer = createYoga({
+    schema: alphabetSubgraph,
+    plugins: [useDeferStream()],
+  });
+
+  let schema: GraphQLSchema;
+
+  beforeAll(async () => {
+    const supergraphSdl = await composeLocalSchemasWithApollo([
+      { name: 'alphabet', schema: alphabetSubgraph },
+    ]);
+    schema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl,
+      onSubschemaConfig(subschemaConfig) {
+        const origExecutor = buildHTTPExecutor({
+          endpoint: 'http://localhost:4010/graphql',
+          fetch: alphabetServer.fetch,
+        });
+        subschemaConfig.executor = async function alphabetExecutor(execReq) {
+          const result = await origExecutor(execReq);
+          if (process.env['DEBUG']) {
+            console.log({
+              document: print(execReq.document),
+              result: inspect(result, false, Infinity),
+            });
+          }
+          return result;
+        };
+      },
+    });
+  });
+
+  it('streams [String!]! scalar list via @stream over HTTP', async () => {
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          alphabet @stream(initialCount: 1)
+        }
+      `),
+    });
+    assertAsyncIterable(result);
+    const values = [];
+    for await (const value of result) {
+      if (value.incremental?.some((v) => v.errors?.length)) {
+        throw new Error(
+          `Unexpected on incremental response: ${inspect(value, false, Infinity)}`,
+        );
+      }
+      if (value.errors) {
+        throw new Error(
+          `Unexpected error: ${inspect(value.errors, false, Infinity)}`,
+        );
+      }
+      values.push(value);
+    }
+    const mergedResult = mergeIncrementalResults(values);
+    expect(mergedResult).toEqual({
+      data: {
+        alphabet: letters,
+      },
+    });
+  });
+});

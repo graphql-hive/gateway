@@ -20,6 +20,7 @@ import {
   DocumentNode,
   FieldDefinitionNode,
   FragmentDefinitionNode,
+  getNullableType,
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLSchema,
@@ -150,10 +151,15 @@ export function delegateRequest<
         // This might be a stream
         if (
           delegationContext.operation === 'query' &&
-          isListType(delegationContext.returnType)
+          isListType(getNullableType(delegationContext.returnType))
         ) {
           return new Repeater<ExecutionResult<any>>(async (push, stop) => {
-            const pushed = new WeakSet();
+            // Track how many items have been pushed to avoid re-pushing items that
+            // have already been delivered. Some executors (e.g. the HTTP executor)
+            // accumulate incremental results and return growing snapshots of the list
+            // rather than individual incremental parts. Using an index counter instead
+            // of a WeakSet supports both object and primitive (e.g. string) list items.
+            let pushedCount = 0;
             let stopped = false;
             stop.finally(() => {
               stopped = true;
@@ -187,16 +193,12 @@ export function delegateRequest<
                   await transformer.transformResult(result);
                 // @stream needs to get the results one by one
                 if (Array.isArray(transformedResult)) {
-                  for (const individualResult$ of transformedResult) {
+                  for (let i = pushedCount; i < transformedResult.length; i++) {
                     if (stopped) {
                       break;
                     }
-                    const individualResult = await individualResult$;
-                    // Avoid pushing the same result multiple times
-                    if (!pushed.has(individualResult)) {
-                      pushed.add(individualResult);
-                      await push(individualResult);
-                    }
+                    await push(await transformedResult[i]);
+                    pushedCount = i + 1;
                   }
                 } else {
                   await push(await transformedResult);
@@ -296,6 +298,8 @@ function getDelegationContext<TContext extends Record<string, any>>({
     transforms,
     transformedSchema: transformedSchema ?? subschemaOrSubschemaConfig,
     skipTypeMerging,
+    onLocatedError,
+    args,
   };
 }
 

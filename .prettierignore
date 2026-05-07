@@ -15,6 +15,8 @@ __snapshots__
 /e2e/config-syntax-error/gateway.config.ts
 /e2e/config-syntax-error/custom-resolvers.ts
 /e2e/load-on-init/malformed.graphql
+/e2e/typed-sdk/services/sdk/generated.ts
+/e2e/typed-sdk/supergraph.graphql
 CHANGELOG.md
 /internal/heapsnapshot/dist/
 *.tar.gz

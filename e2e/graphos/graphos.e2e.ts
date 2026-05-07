@@ -5,10 +5,12 @@ import { expect, it } from 'vitest';
 try {
   process.loadEnvFile(join(__dirname, '.env'));
 } catch (e) {
-  console.error(
-    'Failed to load .env file, make sure it exists and is properly formatted',
-    e,
-  );
+  if (!process.env['CI']) {
+    console.error(
+      'Failed to load .env file, make sure it exists and is properly formatted',
+      e,
+    );
+  }
 }
 
 const { gateway } = createTenv(__dirname);

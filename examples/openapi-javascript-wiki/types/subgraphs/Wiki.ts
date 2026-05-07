@@ -16,14 +16,15 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  ObjMap: { input: any; output: any; }
+  _DirectiveExtensions: { input: any; output: any; }
+  link__Import: { input: any; output: any; }
   /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
   BigInt: { input: bigint; output: bigint; }
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: any; output: any; }
   /** A string that cannot be passed as an empty value */
   NonEmptyString: { input: string; output: string; }
-  ObjMap: { input: any; output: any; }
-  _DirectiveExtensions: { input: any; output: any; }
   _Any: { input: any; output: any; }
 };
 
@@ -37,6 +38,12 @@ export type HTTPMethod =
   | 'POST'
   | 'PUT'
   | 'TRACE';
+
+export type link__Purpose =
+  /** `EXECUTION` features provide metadata necessary for operation execution. */
+  | 'EXECUTION'
+  /** `SECURITY` features provide metadata necessary to securely resolve fields. */
+  | 'SECURITY';
 
 export type Mutation = {
   __typename: 'Mutation';
