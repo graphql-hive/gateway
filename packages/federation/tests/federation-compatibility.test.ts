@@ -1,4 +1,4 @@
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import {
@@ -64,7 +64,22 @@ describe('Federation Compatibility', () => {
     describe(supergraphName, () => {
       let stitchedSchema: GraphQLSchema;
       let supergraphSdl: string;
-      let tests!: SupergraphTestDefinition;
+      const testFile = readFileSync(
+        join(
+          __dirname,
+          '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
+          supergraphName,
+          'test.ts',
+        ),
+        'utf-8',
+      );
+      let tests: SupergraphTestDefinition = Array<{
+        query: string;
+        expected: any;
+      }>(testFile.match(/createTest\(/g)?.length ?? 0).fill({
+        query: '',
+        expected: {},
+      });
       let gatewayRuntime: GatewayRuntime;
       beforeAll(() => {
         supergraphSdl = supergraphSdlMap.get(supergraphName)!;
@@ -137,8 +152,12 @@ describe('Federation Compatibility', () => {
           printSchema(sortedInputSchema).trim(),
         );
       });
-      it('runs test queries', async () => {
-        for (const [i, test] of tests.entries()) {
+      tests.forEach((_, i) => {
+        it(`test-query-${i}`, async () => {
+          const test = tests[i];
+          if (!test) {
+            throw new Error(`Test ${i} not found`);
+          }
           const response = await gatewayRuntime.fetch(
             'http://localhost/graphql',
             {
@@ -165,13 +184,12 @@ describe('Federation Compatibility', () => {
           try {
             expect(received).toEqual(expected);
           } catch (e) {
-            console.error(`Test ${i} failed`);
             result.errors?.forEach((err) => {
               console.error(err);
             });
             throw e;
           }
-        }
+        });
       });
     });
   }
