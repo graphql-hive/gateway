@@ -62,6 +62,235 @@ describe('Optimizations', () => {
     });
     expect(serviceCallCnt['accounts']).toBe(0);
   });
+  it('should request provided fields from the providing subgraph only when they are requested', async () => {
+    const subgraphQueries: Record<string, string[]> = {};
+    const serviceInputs = getServiceInputs();
+    const schema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl: await getSupergraph(),
+      onSubschemaConfig(subschemaConfig) {
+        const subgraphName = subschemaConfig.name.toLowerCase();
+        const serviceInput = serviceInputs.find(
+          (input) => input.name === subgraphName,
+        );
+        if (!serviceInput) {
+          throw new Error(`Service ${subgraphName} not found`);
+        }
+        const executor = createDefaultExecutor(serviceInput.schema);
+        subschemaConfig.executor = (args) => {
+          (subgraphQueries[subgraphName] ||= []).push(print(args.document));
+          return executor(args);
+        };
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          topProducts {
+            reviews {
+              author {
+                username
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        topProducts: [
+          {
+            reviews: [
+              { author: { username: '@ada' } },
+              { author: { username: '@complete' } },
+            ],
+          },
+          {
+            reviews: [{ author: { username: '@ada' } }],
+          },
+          {
+            reviews: [{ author: { username: '@complete' } }],
+          },
+        ],
+      },
+    });
+    expect(subgraphQueries['accounts']).toBeUndefined();
+    expect(subgraphQueries['reviews']).toHaveLength(1);
+    expect(subgraphQueries['reviews']![0]).toContain('username');
+  });
+  it('should not request unrequested provided fields from the providing subgraph', async () => {
+    const subgraphQueries: Record<string, string[]> = {};
+    const serviceInputs = getServiceInputs();
+    const schema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl: await getSupergraph(),
+      onSubschemaConfig(subschemaConfig) {
+        const subgraphName = subschemaConfig.name.toLowerCase();
+        const serviceInput = serviceInputs.find(
+          (input) => input.name === subgraphName,
+        );
+        if (!serviceInput) {
+          throw new Error(`Service ${subgraphName} not found`);
+        }
+        const executor = createDefaultExecutor(serviceInput.schema);
+        subschemaConfig.executor = (args) => {
+          (subgraphQueries[subgraphName] ||= []).push(print(args.document));
+          return executor(args);
+        };
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          topProducts {
+            reviews {
+              body
+              author {
+                __typename
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        topProducts: [
+          {
+            reviews: [
+              { body: 'Love it!', author: { __typename: 'User' } },
+              {
+                body: 'Prefer something else.',
+                author: { __typename: 'User' },
+              },
+            ],
+          },
+          {
+            reviews: [
+              { body: 'Too expensive.', author: { __typename: 'User' } },
+            ],
+          },
+          {
+            reviews: [
+              { body: 'Could be better.', author: { __typename: 'User' } },
+            ],
+          },
+        ],
+      },
+    });
+    expect(subgraphQueries['accounts']).toBeUndefined();
+    expect(subgraphQueries['reviews']).toHaveLength(1);
+    expect(subgraphQueries['reviews']![0]).not.toContain('username');
+  });
+  it('should forward provided fields when a downstream subgraph requires them', async () => {
+    const accounts = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          _noop: Boolean
+        }
+
+        type User @key(fields: "id") {
+          id: ID!
+          username: String!
+        }
+      `),
+      resolvers: {
+        User: {
+          __resolveReference({ id }) {
+            return {
+              id,
+              username: '@ada',
+            };
+          },
+        },
+      },
+    });
+    const reviews = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          user(id: ID!): User @provides(fields: "username")
+        }
+
+        type User @key(fields: "id") {
+          id: ID!
+          username: String! @external
+        }
+      `),
+      resolvers: {
+        Query: {
+          user(_, { id }) {
+            return {
+              id,
+              username: '@ada',
+            };
+          },
+        },
+      },
+    });
+    const profiles = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type User @key(fields: "id") {
+          id: ID!
+          username: String! @external
+          handle: String! @requires(fields: "username")
+        }
+      `),
+      resolvers: {
+        User: {
+          __resolveReference({ id, username }) {
+            return {
+              id,
+              username,
+            };
+          },
+          handle(user) {
+            return `handle:${user.username}`;
+          },
+        },
+      },
+    });
+
+    const subgraphQueries: Record<string, string[]> = {};
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
+        accounts,
+        reviews,
+        profiles,
+      },
+      onSubgraphExecute(subgraphName, executionRequest) {
+        (subgraphQueries[subgraphName] ||= []).push(
+          print(executionRequest.document),
+        );
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user(id: "1") {
+            handle
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        user: {
+          handle: 'handle:@ada',
+        },
+      },
+    });
+    expect(subgraphQueries['accounts']).toBeUndefined();
+    expect(subgraphQueries['reviews']).toHaveLength(1);
+    expect(subgraphQueries['reviews']![0]).toContain('username');
+    expect(subgraphQueries['profiles']).toHaveLength(1);
+  });
   it('should do deduplication', async () => {
     const query = /* GraphQL */ `
       fragment User on User {

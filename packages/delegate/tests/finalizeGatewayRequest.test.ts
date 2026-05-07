@@ -382,7 +382,7 @@ describe('finalizeGatewayRequest', () => {
 }`);
   });
 
-  test('should add provided fields that are unavailable on delegated return type', () => {
+  test('should add requested provided fields that are unavailable on delegated return type', () => {
     const targetSchema = buildSchema(/* GraphQL */ `
       type Query {
         entity: Entity
@@ -396,6 +396,7 @@ describe('finalizeGatewayRequest', () => {
     const query = parse(/* GraphQL */ `
       query {
         entity {
+          description
           id
           name
         }

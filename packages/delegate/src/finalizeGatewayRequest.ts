@@ -40,6 +40,7 @@ import { DelegationContext, StitchingInfo } from './types.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
+  originalDocument: DocumentNode,
   fragments: FragmentDefinitionNode[],
   operations: OperationDefinitionNode[],
   onOverlappingAliases: () => void,
@@ -170,54 +171,103 @@ function finalizeGatewayDocument<TContext>(
   ] as StitchingInfo;
   if (stitchingInfo != null) {
     const typeInfo = getTypeInfo(targetSchema);
+    const originalFieldSelectionSets =
+      collectFieldSelectionSetsByPath(originalDocument);
+    const pathStack: string[] = [];
     newDocument = visit(
       newDocument,
       visitWithTypeInfo(typeInfo, {
-        [Kind.FIELD](fieldNode) {
-          const parentType = typeInfo.getParentType();
-          if (parentType) {
-            const parentTypeName = parentType.name;
-            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
-            if (typeConfig) {
-              const providedSelectionsByField =
-                typeConfig?.providedSelectionsByField?.get(
-                  delegationContext.subschema as Subschema,
-                );
-              if (providedSelectionsByField) {
-                const providedSelection =
-                  providedSelectionsByField[fieldNode.name.value];
-                if (providedSelection) {
-                  const fieldType = typeInfo.getType();
-                  const namedFieldType =
-                    fieldType != null ? getNamedType(fieldType) : null;
-                  if (
-                    namedFieldType &&
-                    (isObjectType(namedFieldType) ||
-                      isInterfaceType(namedFieldType))
-                  ) {
-                    const unavailableProvidedSelections =
-                      getUnavailableProvidedSelections(
-                        providedSelection,
-                        namedFieldType,
-                      );
-                    if (unavailableProvidedSelections.length) {
-                      return {
-                        ...fieldNode,
-                        selectionSet: {
-                          kind: Kind.SELECTION_SET,
-                          selections: [
-                            ...unavailableProvidedSelections,
-                            ...(fieldNode.selectionSet?.selections ?? []),
-                          ],
-                        },
-                      };
+        [Kind.OPERATION_DEFINITION]: {
+          enter(operationNode) {
+            pathStack.push(
+              `operation:${operationNode.operation}:${operationNode.name?.value ?? ''}`,
+            );
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FRAGMENT_DEFINITION]: {
+          enter(fragmentNode) {
+            pathStack.push(`fragment:${fragmentNode.name.value}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.INLINE_FRAGMENT]: {
+          enter(fragmentNode) {
+            pathStack.push(
+              `inline:${fragmentNode.typeCondition?.name.value ?? ''}`,
+            );
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FIELD]: {
+          enter(fieldNode) {
+            pathStack.push(fieldNode.alias?.value ?? fieldNode.name.value);
+          },
+          leave(fieldNode) {
+            try {
+              const parentType = typeInfo.getParentType();
+              if (parentType) {
+                const parentTypeName = parentType.name;
+                const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
+                if (typeConfig) {
+                  const providedSelectionsByField =
+                    typeConfig?.providedSelectionsByField?.get(
+                      delegationContext.subschema as Subschema,
+                    );
+                  if (providedSelectionsByField) {
+                    const providedSelection =
+                      providedSelectionsByField[fieldNode.name.value];
+                    if (providedSelection) {
+                      const originalSelectionSet =
+                        originalFieldSelectionSets.get(pathStack.join('>'));
+                      if (originalSelectionSet) {
+                        const requestedProvidedSelection =
+                          intersectSelectionSets(
+                            providedSelection,
+                            originalSelectionSet,
+                          );
+                        const fieldType = typeInfo.getType();
+                        const namedFieldType =
+                          fieldType != null ? getNamedType(fieldType) : null;
+                        if (
+                          namedFieldType &&
+                          (isObjectType(namedFieldType) ||
+                            isInterfaceType(namedFieldType))
+                        ) {
+                          const unavailableProvidedSelections =
+                            getUnavailableProvidedSelections(
+                              requestedProvidedSelection,
+                              namedFieldType,
+                            );
+                          if (unavailableProvidedSelections.length) {
+                            return {
+                              ...fieldNode,
+                              selectionSet: {
+                                kind: Kind.SELECTION_SET,
+                                selections: [
+                                  ...unavailableProvidedSelections,
+                                  ...(fieldNode.selectionSet?.selections ?? []),
+                                ],
+                              },
+                            };
+                          }
+                        }
+                      }
                     }
                   }
                 }
               }
+            } finally {
+              pathStack.pop();
             }
-          }
-          return fieldNode;
+            return fieldNode;
+          },
         },
       }),
     );
@@ -239,6 +289,7 @@ export function finalizeGatewayRequest<TContext>(
 
   const { usedVariables, newDocument } = finalizeGatewayDocument(
     targetSchema,
+    originalRequest.document,
     fragments,
     operations,
     onOverlappingAliases,
@@ -287,6 +338,123 @@ function getUnavailableProvidedSelections(
     }
     return fields[selection.name.value] === undefined;
   });
+}
+
+function collectFieldSelectionSetsByPath(document: DocumentNode) {
+  const selectionSetsByPath = new Map<string, SelectionSetNode>();
+  const pathStack: string[] = [];
+
+  visit(document, {
+    [Kind.OPERATION_DEFINITION]: {
+      enter(operationNode) {
+        pathStack.push(
+          `operation:${operationNode.operation}:${operationNode.name?.value ?? ''}`,
+        );
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FRAGMENT_DEFINITION]: {
+      enter(fragmentNode) {
+        pathStack.push(`fragment:${fragmentNode.name.value}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.INLINE_FRAGMENT]: {
+      enter(fragmentNode) {
+        pathStack.push(
+          `inline:${fragmentNode.typeCondition?.name.value ?? ''}`,
+        );
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FIELD]: {
+      enter(fieldNode) {
+        pathStack.push(fieldNode.alias?.value ?? fieldNode.name.value);
+        if (fieldNode.selectionSet) {
+          selectionSetsByPath.set(pathStack.join('>'), fieldNode.selectionSet);
+        }
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+  });
+
+  return selectionSetsByPath;
+}
+
+function intersectSelectionSets(
+  selectionSet: SelectionSetNode,
+  otherSelectionSet: SelectionSetNode,
+): SelectionSetNode {
+  return {
+    kind: Kind.SELECTION_SET,
+    selections: selectionSet.selections.flatMap<SelectionNode>((selection) => {
+      if (selection.kind === Kind.FIELD) {
+        const matchingSelection = otherSelectionSet.selections.find(
+          (otherSelection) =>
+            otherSelection.kind === Kind.FIELD &&
+            otherSelection.name.value === selection.name.value &&
+            otherSelection.alias?.value === selection.alias?.value,
+        );
+        if (!matchingSelection || matchingSelection.kind !== Kind.FIELD) {
+          return [];
+        }
+        if (selection.selectionSet && matchingSelection.selectionSet) {
+          const nestedIntersection = intersectSelectionSets(
+            selection.selectionSet,
+            matchingSelection.selectionSet,
+          );
+          if (!nestedIntersection.selections.length) {
+            return [];
+          }
+          return [
+            {
+              ...selection,
+              selectionSet: nestedIntersection,
+            },
+          ];
+        }
+        return [selection];
+      }
+      if (selection.kind === Kind.INLINE_FRAGMENT) {
+        const matchingSelection = otherSelectionSet.selections.find(
+          (otherSelection) =>
+            otherSelection.kind === Kind.INLINE_FRAGMENT &&
+            otherSelection.typeCondition?.name.value ===
+              selection.typeCondition?.name.value,
+        );
+        if (
+          !matchingSelection ||
+          matchingSelection.kind !== Kind.INLINE_FRAGMENT ||
+          !selection.selectionSet ||
+          !matchingSelection.selectionSet
+        ) {
+          return [];
+        }
+        const nestedIntersection = intersectSelectionSets(
+          selection.selectionSet,
+          matchingSelection.selectionSet,
+        );
+        if (!nestedIntersection.selections.length) {
+          return [];
+        }
+        return [
+          {
+            ...selection,
+            selectionSet: nestedIntersection,
+          },
+        ];
+      }
+      return [];
+    }),
+  };
 }
 
 function filterTypenameFields(selections: readonly SelectionNode[]): {

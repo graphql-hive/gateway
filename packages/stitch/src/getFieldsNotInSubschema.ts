@@ -206,6 +206,7 @@ export function getFieldsNotInSubschema(
       addMissingRequiredFields({
         fieldName,
         fields,
+        providedSelectionNode,
         fieldsNotInSchema,
         visitedFieldNames,
         onAdd: () => {
@@ -226,6 +227,7 @@ export function getFieldsNotInSubschema(
 function addMissingRequiredFields({
   fieldName,
   fields,
+  providedSelectionNode,
   fieldsNotInSchema,
   onAdd,
   fieldNodesByField,
@@ -233,6 +235,7 @@ function addMissingRequiredFields({
 }: {
   fieldName: string;
   fields: Record<string, GraphQLField<any, any>>;
+  providedSelectionNode: SelectionSetNode | undefined;
   fieldsNotInSchema: Set<FieldNode>;
   onAdd: VoidFunction;
   fieldNodesByField: Record<string, FieldNode[]>;
@@ -246,6 +249,18 @@ function addMissingRequiredFields({
   if (fieldNodesForField) {
     for (const fieldNode of fieldNodesForField) {
       if (
+        providedSelectionNode &&
+        !subtractSelectionSets(
+          {
+            kind: Kind.SELECTION_SET,
+            selections: [fieldNode],
+          },
+          providedSelectionNode,
+        )?.selections?.length
+      ) {
+        continue;
+      }
+      if (
         fieldNode.name.value !== '__typename' &&
         !fields[fieldNode.name.value]
       ) {
@@ -254,6 +269,7 @@ function addMissingRequiredFields({
         addMissingRequiredFields({
           fieldName: fieldNode.name.value,
           fields,
+          providedSelectionNode,
           fieldsNotInSchema,
           onAdd,
           fieldNodesByField,
