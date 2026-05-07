@@ -1053,6 +1053,7 @@ export function getStitchingOptionsFromSupergraphSdl(
     const pendingConflictSubschemaConfigs: Array<{
       typeName: string;
       mergeTypeConfig: MergedTypeConfig;
+      groupExtraKeys: Set<string>;
     }> = [];
     if (typeNameKeyMap) {
       const typeNameFieldsKeyMap =
@@ -1195,12 +1196,7 @@ export function getStitchingOptionsFromSupergraphSdl(
               // Store closure-captured values for later SubschemaConfig creation
               // by borrowing getMergedTypeConfigFromKey with the group's extraKeys.
               mergeTypeConfig: additionalMergeTypeConfig,
-              // Attach the group's extraKeys so we can call getMergedTypeConfigFromKey later
-              _groupExtraKeys: group.extraKeys,
-            } as {
-              typeName: string;
-              mergeTypeConfig: MergedTypeConfig;
-              _groupExtraKeys: Set<string>;
+              groupExtraKeys: group.extraKeys,
             });
           }
         }
@@ -1247,9 +1243,7 @@ export function getStitchingOptionsFromSupergraphSdl(
             !('selectionSet' in pending.mergeTypeConfig) &&
             !('entryPoints' in pending.mergeTypeConfig)
           ) {
-            const groupExtraKeys = (
-              pending as unknown as { _groupExtraKeys: Set<string> }
-            )._groupExtraKeys;
+            const groupExtraKeys = pending.groupExtraKeys;
             if (keysArr.length === 1 && keysArr[0]) {
               Object.assign(
                 pending.mergeTypeConfig,
