@@ -1088,12 +1088,12 @@ export function getStitchingOptionsFromSupergraphSdl(
 
           // Build a stable djb2 hash of a string, returned as a base-36
           // alphanumeric string safe for use inside a GraphQL Name.
-          function hashStringToAlphanumeric(s: string): string {
-            let h = 5381;
-            for (let i = 0; i < s.length; i++) {
-              h = (Math.imul(h, 33) ^ s.charCodeAt(i)) | 0;
+          function hashStringToAlphanumeric(str: string): string {
+            let hash = 5381;
+            for (let index = 0; index < str.length; index++) {
+              hash = (Math.imul(hash, 33) ^ str.charCodeAt(index)) | 0;
             }
-            return (h >>> 0).toString(36);
+            return (hash >>> 0).toString(36);
           }
 
           function aliasFieldsWithArgs(
