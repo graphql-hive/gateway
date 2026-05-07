@@ -218,12 +218,12 @@ export function buildHTTPExecutor(
     const operationType = operationAst.operation;
 
     if (
-      ((options?.useGETForQueries || request.extensions?.useGETForQueries) &&
-        operationType === 'query') ||
-      ((options?.useGETForHashedQueries ||
-        request.extensions?.useGETForHashedQueries) &&
-        excludeQuery &&
-        operationType === 'query')
+      operationType === 'query' &&
+      (options?.useGETForQueries ||
+        request.extensions?.useGETForQueries ||
+        ((options?.useGETForHashedQueries ||
+          request.extensions?.useGETForHashedQueries) &&
+          excludeQuery))
     ) {
       method = 'GET';
     }
