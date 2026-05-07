@@ -36,7 +36,9 @@ for (const dockerfilePath of repoDockerfiles) {
 
   writeFileSync(dockerfilePath, nextContent);
   changedFileCount += 1;
-  console.log(`Updated ${path.relative(repoRoot, dockerfilePath)} to graphql@${graphqlVersion}`);
+  console.log(
+    `Updated ${path.relative(repoRoot, dockerfilePath)} to graphql@${graphqlVersion}`,
+  );
 }
 
 if (changedFileCount === 0) {
@@ -44,7 +46,9 @@ if (changedFileCount === 0) {
 }
 
 function collectDockerfiles(directoryPath, dockerfiles) {
-  for (const dirent of require('node:fs').readdirSync(directoryPath, { withFileTypes: true })) {
+  for (const dirent of require('node:fs').readdirSync(directoryPath, {
+    withFileTypes: true,
+  })) {
     if (shouldSkipDirent(dirent.name)) {
       continue;
     }
@@ -67,5 +71,10 @@ function shouldSkipDirent(name) {
 }
 
 function isDockerfile(fileName) {
-  return fileName === 'Dockerfile' || fileName.startsWith('Dockerfile.') || fileName.endsWith('.Dockerfile') || fileName.endsWith('.dockerfile');
+  return (
+    fileName === 'Dockerfile' ||
+    fileName.startsWith('Dockerfile.') ||
+    fileName.endsWith('.Dockerfile') ||
+    fileName.endsWith('.dockerfile')
+  );
 }
