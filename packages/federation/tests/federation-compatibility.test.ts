@@ -137,12 +137,8 @@ describe('Federation Compatibility', () => {
           printSchema(sortedInputSchema).trim(),
         );
       });
-      tests.forEach((_, i) => {
-        it(`test-query-${i}`, async () => {
-          const test = tests[i];
-          if (!test) {
-            throw new Error(`Test ${i} not found`);
-          }
+      it('runs test queries', async () => {
+        for (const [i, test] of tests.entries()) {
           const response = await gatewayRuntime.fetch(
             'http://localhost/graphql',
             {
@@ -169,12 +165,13 @@ describe('Federation Compatibility', () => {
           try {
             expect(received).toEqual(expected);
           } catch (e) {
+            console.error(`Test ${i} failed`);
             result.errors?.forEach((err) => {
               console.error(err);
             });
             throw e;
           }
-        });
+        }
       });
     });
   }
