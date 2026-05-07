@@ -147,6 +147,7 @@ jobs:
         with:
           name: gateway-bundle
           path: packages/gateway/bundle
+          include-hidden-files: true
 
   ghcr:
     runs-on: ubuntu-latest
