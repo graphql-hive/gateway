@@ -84,14 +84,14 @@ describe('APQ to the upstream', () => {
   it('uses GET for hashed APQ queries without adding content-type by default', async () => {
     const gw = await gateway({
       env: {
-        USE_GET_FOR_HASHED_QUERIES: 1,
+        USE_GET_FOR_HASHED_QUERIES: '1',
       },
       supergraph: {
         with: 'mesh',
         services: [
           await service('greetings', {
             env: {
-              DISABLE_CSRF_PREVENTION: 1,
+              DISABLE_CSRF_PREVENTION: '1',
             },
           }),
         ],
@@ -130,8 +130,8 @@ describe('APQ to the upstream', () => {
   it('can opt into content-type for hashed GET APQ requests', async () => {
     const gw = await gateway({
       env: {
-        USE_GET_FOR_HASHED_QUERIES: 1,
-        USE_CONTENT_TYPE_FOR_GET_REQUESTS: 1,
+        USE_GET_FOR_HASHED_QUERIES: '1',
+        USE_CONTENT_TYPE_FOR_GET_REQUESTS: '1',
       },
       supergraph: {
         with: 'mesh',
