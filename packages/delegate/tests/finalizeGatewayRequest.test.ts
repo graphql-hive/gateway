@@ -381,4 +381,69 @@ describe('finalizeGatewayRequest', () => {
   }
 }`);
   });
+
+  test('should add provided fields that are unavailable on delegated return type', () => {
+    const targetSchema = buildSchema(/* GraphQL */ `
+      type Query {
+        entity: Entity
+      }
+
+      type Entity {
+        id: ID!
+        name: String
+      }
+    `);
+    const query = parse(/* GraphQL */ `
+      query {
+        entity {
+          id
+          name
+        }
+      }
+    `);
+    const subschema = {} as any;
+    const filteredQuery = finalizeGatewayRequest(
+      {
+        document: query,
+      },
+      {
+        targetSchema,
+        subschema,
+        info: {
+          schema: {
+            extensions: {
+              stitchingInfo: {
+                mergedTypes: {
+                  Query: {
+                    providedSelectionsByField: new Map([
+                      [
+                        subschema,
+                        {
+                          entity: (
+                            parse(/* GraphQL */ `
+                              {
+                                description
+                              }
+                            `).definitions[0] as any
+                          ).selectionSet,
+                        },
+                      ],
+                    ]),
+                  },
+                },
+              },
+            },
+          },
+        },
+      } as unknown as DelegationContext,
+      () => {},
+    );
+    expect(print(filteredQuery.document)).toBe(`{
+  entity {
+    description
+    id
+    name
+  }
+}`);
+  });
 });
