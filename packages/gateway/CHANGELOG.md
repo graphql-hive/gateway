@@ -1,5 +1,37 @@
 # @graphql-hive/gateway
 
+## 2.7.0
+### Minor Changes
+
+
+
+- [#2318](https://github.com/graphql-hive/gateway/pull/2318) [`3909859`](https://github.com/graphql-hive/gateway/commit/39098594500e37c4f5514a414e2dd9659dfb4ad2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Add `requestDeadline` option to set a hard end-to-end time limit in milliseconds for the entire request lifecycle. Unlike `requestTimeout`, this deadline is not cancelled when the request body is received - it runs until the response is finished. When exceeded, the server responds with a 503 and closes the connection.
+
+
+### Patch Changes
+
+
+
+- [#2318](https://github.com/graphql-hive/gateway/pull/2318) [`3909859`](https://github.com/graphql-hive/gateway/commit/39098594500e37c4f5514a414e2dd9659dfb4ad2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Added dependency [`@graphql-hive/signal@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/signal/v/workspace:^) (to `dependencies`)
+
+
+- [#2325](https://github.com/graphql-hive/gateway/pull/2325) [`c9231af`](https://github.com/graphql-hive/gateway/commit/c9231afdcc8c84dd3cddfe8bfe109900d06c1bcc) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.217.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.217.0) (from `^0.216.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.217.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.217.0) (from `^0.216.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.217.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.217.0) (from `^0.216.0`, in `dependencies`)
+
+
+- [#2324](https://github.com/graphql-hive/gateway/pull/2324) [`98553c9`](https://github.com/graphql-hive/gateway/commit/98553c9674dbd5fc61425b14411fd6765719ef88) Thanks [@dependabot](https://github.com/apps/dependabot)! - Fix CVE-2026-42338 in Node Docker image by updating `ip-address` to `^10.1.1`
+
+- Updated dependencies [[`c9231af`](https://github.com/graphql-hive/gateway/commit/c9231afdcc8c84dd3cddfe8bfe109900d06c1bcc)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.24
+  - @graphql-hive/gateway-runtime@2.9.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.44
+  - @graphql-mesh/plugin-prometheus@2.1.42
+
 ## 2.6.0
 ### Minor Changes
 
