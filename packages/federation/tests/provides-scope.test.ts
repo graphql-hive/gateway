@@ -741,4 +741,311 @@ describe('@provides only fetches client-requested fields', () => {
     expect(subgraphCalls[0]?.query).toMatch(/\bname\b/);
     expect(subgraphCalls[0]?.query).toMatch(/\bdescription\b/);
   });
+
+  // Mirrors the `nested-provides` audit case: when @provides covers fields on
+  // nested types, the gateway should not delegate to the owning subgraphs for
+  // those nested fields.
+  it('does not delegate to the owner subgraphs for nested fields covered by @provides', async () => {
+    const owner = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Product @key(fields: "id") {
+          id: ID!
+        }
+      `),
+      resolvers: {
+        Product: {
+          __resolveReference() {
+            throw new Error(
+              'owner subgraph should not be hit when @provides covers the request',
+            );
+          },
+        },
+      },
+    });
+
+    const provider = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable", "@external", "@provides"]
+          )
+
+        type Query {
+          products: [Product]
+            @shareable
+            @provides(
+              fields: "categories { id name subCategories { id name } }"
+            )
+        }
+
+        type Product @key(fields: "id") {
+          id: ID!
+          categories: [Category] @external
+        }
+
+        type Category @key(fields: "id") {
+          id: ID!
+          name: String!
+          subCategories: [Category] @external
+        }
+      `),
+      resolvers: {
+        Query: {
+          products() {
+            return [
+              {
+                id: 'p1',
+                categories: [
+                  {
+                    id: 'c1',
+                    name: 'Category 1',
+                    subCategories: [{ id: 'c2', name: 'Category 2' }],
+                  },
+                ],
+              },
+            ];
+          },
+        },
+        Category: {
+          __resolveReference() {
+            throw new Error(
+              'provider Category._entities should not be hit when @provides covers the request',
+            );
+          },
+        },
+      },
+    });
+
+    const subcategories = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Product @key(fields: "id") {
+          id: ID!
+          categories: [Category] @shareable
+        }
+
+        type Category @key(fields: "id") {
+          id: ID!
+          subCategories: [Category] @shareable
+        }
+      `),
+      resolvers: {
+        Product: {
+          __resolveReference() {
+            throw new Error(
+              'subcategories subgraph should not be hit when @provides covers the request',
+            );
+          },
+          categories() {
+            throw new Error(
+              'subcategories.Product.categories should not be hit when @provides covers the request',
+            );
+          },
+        },
+        Category: {
+          __resolveReference() {
+            throw new Error(
+              'subcategories.Category._entities should not be hit when @provides covers the request',
+            );
+          },
+          subCategories() {
+            throw new Error(
+              'subcategories.Category.subCategories should not be hit when @provides covers the request',
+            );
+          },
+        },
+      },
+    });
+
+    const subgraphCalls: { subgraph: string; query: string }[] = [];
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { owner, provider, subcategories },
+      onSubgraphExecute(subgraph, executionRequest: ExecutionRequest) {
+        subgraphCalls.push({
+          subgraph,
+          query: print(executionRequest.document),
+        });
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          products {
+            id
+            categories {
+              id
+              name
+              subCategories {
+                id
+                name
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        products: [
+          {
+            id: 'p1',
+            categories: [
+              {
+                id: 'c1',
+                name: 'Category 1',
+                subCategories: [{ id: 'c2', name: 'Category 2' }],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(subgraphCalls.map(({ subgraph }) => subgraph)).toEqual(['provider']);
+  });
+
+  // Mirrors the `provides-on-union` audit case: when @provides uses an inline
+  // fragment to cover a field on one concrete type, the gateway must not
+  // delegate that field to the owner subgraph.
+  it('does not delegate to the owner subgraph for fields covered by @provides on inline fragments', async () => {
+    const owner = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Book @key(fields: "id") {
+          id: ID!
+          title: String! @shareable
+        }
+
+        type Movie @key(fields: "id") {
+          id: ID!
+          title: String! @shareable
+        }
+      `),
+      resolvers: {
+        Book: {
+          __resolveReference() {
+            throw new Error(
+              'owner subgraph should not be hit for Book.title when @provides covers it',
+            );
+          },
+        },
+        Movie: {
+          __resolveReference({ id }: { id: string }) {
+            return { id, title: `Movie ${id} title from owner` };
+          },
+        },
+      },
+    });
+
+    const provider = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable", "@external", "@provides"]
+          )
+
+        union Media = Book | Movie
+
+        type Query {
+          media: [Media] @shareable @provides(fields: "... on Book { title }")
+        }
+
+        type Book @key(fields: "id") {
+          id: ID!
+          title: String! @external
+        }
+
+        type Movie @key(fields: "id") {
+          id: ID!
+        }
+      `),
+      resolvers: {
+        Query: {
+          media() {
+            return [
+              {
+                __typename: 'Book',
+                id: 'm1',
+                title: 'Book 1',
+              },
+              {
+                __typename: 'Movie',
+                id: 'm2',
+              },
+            ];
+          },
+        },
+        Book: {
+          __resolveReference({ id }: { id: string }) {
+            return { id, title: `Book ${id} from provider` };
+          },
+        },
+        Movie: {
+          __resolveReference({ id }: { id: string }) {
+            return { id };
+          },
+        },
+      },
+    });
+
+    const subgraphCalls: { subgraph: string; query: string }[] = [];
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { owner, provider },
+      onSubgraphExecute(subgraph, executionRequest: ExecutionRequest) {
+        subgraphCalls.push({
+          subgraph,
+          query: print(executionRequest.document),
+        });
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          media {
+            ... on Book {
+              id
+              title
+            }
+            ... on Movie {
+              id
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        media: [{ id: 'm1', title: 'Book 1' }, { id: 'm2' }],
+      },
+    });
+
+    // Only the providing subgraph should be hit, since @provides covers the
+    // only Book.title that the client requested and Movie.id is already
+    // satisfied by the provider's response.
+    expect(subgraphCalls.map(({ subgraph }) => subgraph)).toEqual(['provider']);
+  });
 });

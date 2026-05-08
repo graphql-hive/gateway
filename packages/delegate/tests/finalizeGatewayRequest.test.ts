@@ -324,10 +324,17 @@ describe('finalizeGatewayRequest', () => {
     function buildEntityScenario() {
       // The provided fields (`name`, `description`) are listed on `Entity`
       // here so that the finalized subgraph document remains valid against
-      // `targetSchema`; in a real federation setup the providing subgraph's
-      // schema would declare them as `@external`. Keeping them on the test
-      // schema lets the snapshots catch schema-validity regressions that
-      // would silently slip through if the type had only `id`.
+      // `targetSchema`; in a real federation setup the providing subgraph
+      // would declare them as `@external`. Because the schema-based filter
+      // now keeps the user's selection of `name`/`description`, the
+      // snapshots below show those fields **twice** - once from the user's
+      // own selection set and once from the @provides injection. That is
+      // valid GraphQL (the subgraph merges identical response keys) and
+      // matches the behavior real federation subgraphs see today; further
+      // dedup-on-injection would require recursive merging into nested
+      // selections (e.g. preserving `subCategories { name }` injection
+      // when only `subCategories { id }` is in the user's filtered set)
+      // and is intentionally out of scope for this fix.
       const targetSchema = buildSchema(/* GraphQL */ `
         type Query {
           entity: Entity
@@ -394,6 +401,7 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
+            name
             id
             name
           }
@@ -442,6 +450,7 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
+            displayName: name
             id
             displayName: name
           }
@@ -468,6 +477,8 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
+            name
+            description
             id
             name
             description
