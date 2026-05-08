@@ -46,7 +46,7 @@
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
-    "@graphql-mesh/types": "0.105.0-alpha-20260506144829-078f04bca926f506a39c0fe9481688863b6caf16",
+    "@graphql-mesh/types": "0.105.0-alpha-20260508144502-aa9e10247ea4ce2543eca32553a49fff3784bba7",
     "@graphql-tools/executor": "^1.4.13",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^11.0.0",
