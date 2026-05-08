@@ -274,12 +274,26 @@ function finalizeGatewayDocument<TContext>(
               if (!requestedProvidedSelections.length) {
                 return undefined;
               }
+              // Skip injecting selections whose response key is already
+              // present in the post-filter selection set. The user's
+              // selection has survived schema-based filtering (e.g. because
+              // the providing subgraph declares the field as `@external`)
+              // so the subgraph will already resolve it; re-injecting
+              // would only produce duplicate fields in the outgoing query.
+              const dedupedRequestedProvidedSelections =
+                dedupProvidedSelections(
+                  requestedProvidedSelections,
+                  fieldNode.selectionSet,
+                );
+              if (!dedupedRequestedProvidedSelections.length) {
+                return undefined;
+              }
               return {
                 ...fieldNode,
                 selectionSet: {
                   kind: Kind.SELECTION_SET,
                   selections: [
-                    ...requestedProvidedSelections,
+                    ...dedupedRequestedProvidedSelections,
                     ...(fieldNode.selectionSet?.selections ?? []),
                   ],
                 },
@@ -485,6 +499,37 @@ function lookupOriginalSelectionSet(
   // the field's name so we can recover them here.
   const fallback = [...pathStack.slice(0, -1), fieldNode.name.value].join('>');
   return selectionSetsByPath.get(fallback);
+}
+
+/**
+ * Drops any provided selection whose response key (alias when present,
+ * otherwise field name) already appears at the top level of the existing
+ * post-filter selection set. Inline fragments and fragment spreads are kept
+ * as-is so directive-bearing wrappers built by `intersectProvidedSelections`
+ * are not silently lost.
+ */
+function dedupProvidedSelections(
+  requestedProvidedSelections: SelectionNode[],
+  existingSelectionSet: SelectionSetNode | undefined,
+): SelectionNode[] {
+  if (!existingSelectionSet?.selections.length) {
+    return requestedProvidedSelections;
+  }
+  const existingResponseKeys = new Set<string>();
+  for (const sel of existingSelectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      existingResponseKeys.add(sel.alias?.value ?? sel.name.value);
+    }
+  }
+  if (!existingResponseKeys.size) {
+    return requestedProvidedSelections;
+  }
+  return requestedProvidedSelections.filter((sel) => {
+    if (sel.kind !== Kind.FIELD) {
+      return true;
+    }
+    return !existingResponseKeys.has(sel.alias?.value ?? sel.name.value);
+  });
 }
 
 /**
