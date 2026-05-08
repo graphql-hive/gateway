@@ -511,4 +511,234 @@ describe('@provides only fetches client-requested fields', () => {
     expect(subgraphCalls[0]?.query).not.toMatch(/\bdescription\b/);
     expect(subgraphCalls[0]?.query).toMatch(/\bname\b/);
   });
+
+  it('preserves @include / @skip directives on the fragment wrapping a @provides field', async () => {
+    const a = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          _aPlaceholder: Boolean
+        }
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          name: String!
+          description: String!
+        }
+      `),
+      resolvers: {
+        Entity: {
+          __resolveReference({ id }: { id: string }) {
+            return {
+              id,
+              name: `A:name`,
+              description: `A:description`,
+            };
+          },
+        },
+      },
+    });
+
+    const b = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          entity: Entity @provides(fields: "name description")
+        }
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          name: String! @external
+          description: String! @external
+        }
+      `),
+      resolvers: {
+        Query: {
+          entity() {
+            return {
+              id: '1',
+              name: 'B:name',
+              description: 'B:description',
+            };
+          },
+        },
+        Entity: {
+          __resolveReference({ id }: { id: string }) {
+            return {
+              id,
+              name: `B:name for ${id}`,
+              description: `B:description for ${id}`,
+            };
+          },
+        },
+      },
+    });
+
+    const subgraphCalls: { subgraph: string; query: string }[] = [];
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { a, b },
+      onSubgraphExecute(subgraph, executionRequest: ExecutionRequest) {
+        subgraphCalls.push({
+          subgraph,
+          query: print(executionRequest.document),
+        });
+      },
+    });
+
+    // `@skip(if: true)` removes the inner selection at execution time, so the
+    // gateway must keep the wrapper intact - if the directive were dropped,
+    // `name` would be eagerly fetched on every visit even though the client
+    // explicitly opted out.
+    const skipResult = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query Q($skip: Boolean!) {
+          entity {
+            id
+            ... on Entity @skip(if: $skip) {
+              name
+            }
+          }
+        }
+      `),
+      variableValues: { skip: true },
+    });
+
+    expect(skipResult).toEqual({ data: { entity: { id: '1' } } });
+    const skipCall = subgraphCalls.find(({ subgraph }) => subgraph === 'b');
+    expect(skipCall?.query).toMatch(/@skip\(if:\s*\$skip\)/);
+    expect(skipCall?.query).not.toMatch(/\bdescription\b/);
+
+    subgraphCalls.length = 0;
+
+    const includeResult = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query Q($includeName: Boolean!) {
+          entity {
+            id
+            ... on Entity @include(if: $includeName) {
+              name
+            }
+          }
+        }
+      `),
+      variableValues: { includeName: true },
+    });
+
+    expect(includeResult).toEqual({
+      data: { entity: { id: '1', name: 'B:name' } },
+    });
+    const includeCall = subgraphCalls.find(({ subgraph }) => subgraph === 'b');
+    expect(includeCall?.query).toMatch(/@include\(if:\s*\$includeName\)/);
+    expect(includeCall?.query).toMatch(/\bname\b/);
+    expect(includeCall?.query).not.toMatch(/\bdescription\b/);
+  });
+
+  it('handles multiple sibling untyped inline fragments without losing requested @provides fields', async () => {
+    // Reproduces the path-key collision risk for untyped inline fragments:
+    // each `... { ... }` sibling lives at the same nominal path in the
+    // original document but must still be fully considered when intersecting
+    // with `@provides`.
+    const a = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          _aPlaceholder: Boolean
+        }
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          name: String!
+          description: String!
+          extra: String!
+        }
+      `),
+      resolvers: {
+        Entity: {
+          __resolveReference({ id }: { id: string }) {
+            return {
+              id,
+              name: 'A:name',
+              description: 'A:description',
+              extra: 'A:extra',
+            };
+          },
+        },
+      },
+    });
+
+    const b = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          entity: Entity @provides(fields: "name description")
+        }
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          name: String! @external
+          description: String! @external
+        }
+      `),
+      resolvers: {
+        Query: {
+          entity() {
+            return {
+              id: '1',
+              name: 'B:name',
+              description: 'B:description',
+            };
+          },
+        },
+        Entity: {
+          __resolveReference({ id }: { id: string }) {
+            return {
+              id,
+              name: `B:name for ${id}`,
+              description: `B:description for ${id}`,
+            };
+          },
+        },
+      },
+    });
+
+    const subgraphCalls: { subgraph: string; query: string }[] = [];
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { a, b },
+      onSubgraphExecute(subgraph, executionRequest: ExecutionRequest) {
+        subgraphCalls.push({
+          subgraph,
+          query: print(executionRequest.document),
+        });
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            ... {
+              name
+            }
+            ... {
+              description
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        entity: {
+          id: '1',
+          name: 'B:name',
+          description: 'B:description',
+        },
+      },
+    });
+
+    expect(subgraphCalls.map(({ subgraph }) => subgraph)).toEqual(['b']);
+    expect(subgraphCalls[0]?.query).toMatch(/\bname\b/);
+    expect(subgraphCalls[0]?.query).toMatch(/\bdescription\b/);
+  });
 });
