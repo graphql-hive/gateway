@@ -135,8 +135,8 @@ jobs:
               // shorten the hash at the end to 7 chars to be 2.7.0-alpha-49e0277
               const parts = version.split('-');
               parts[parts.length - 1] = parts[parts.length - 1].slice(0, 7);
-              const tag = parts.join('-');
-              r = { version, tags: tag };
+              const shortShaVersion = parts.join('-');
+              r = { version: shortShaVersion, tags: shortShaVersion };
             } else {
               const [major, minor] = version.split('.');
               if (!major || !minor) {
