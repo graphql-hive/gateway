@@ -7,6 +7,8 @@ it('should consistently explain the query plan', async () => {
   const { execute } = await gateway({
     supergraph: await supergraph(),
   });
+  // `username` appears as `null` in this broad query because it is no longer
+  // overfetched via `@provides` when not explicitly requested at that path.
   await expect(
     execute({
       query,
