@@ -5,7 +5,7 @@ import {
   Subschema,
   subtractSelectionSets,
 } from '@graphql-tools/delegate';
-import { collectSubFields } from '@graphql-tools/utils';
+import { collectSubFields, memoize3 } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
@@ -14,6 +14,7 @@ import {
   GraphQLSchema,
   isAbstractType,
   Kind,
+  SelectionNode,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -145,9 +146,19 @@ export function getFieldsNotInSubschema(
           kind: Kind.SELECTION_SET,
           selections: subFieldNodes,
         };
+        // Flatten the @provides selection set so inline fragments matching
+        // the gateway type are lifted to the top level. Without this,
+        // `@provides(fields: "... on Book { title }")` looks like an
+        // inline fragment to `subtractSelectionSets` and the planner ends
+        // up still delegating the field to the owner subgraph.
+        const flattenedProvided = flattenSelectionsForType(
+          providedSelectionNode,
+          gatewayType,
+          schema,
+        );
         const subtracted = subtractSelectionSets(
           subFieldSelection,
-          providedSelectionNode,
+          flattenedProvided,
         );
         if (subtracted?.selections?.length) {
           fieldNotInSchema = true;
@@ -263,3 +274,54 @@ function addMissingRequiredFields({
     }
   }
 }
+
+// Flatten inline fragments (and matching fragment spreads) inside a
+// `@provides` selection set so that field-level subtraction can recognise
+// fields that were declared inside `... on TypeName { ... }`.
+//
+// The result is type-specific: when the planner is evaluating fields for a
+// concrete `gatewayType`, only inline fragments whose type condition is
+// compatible with that type are lifted up. Other inline fragments are
+// preserved as-is so that the same provided selection set can still be used
+// for other concrete types that go through the same merged-type resolver.
+const flattenSelectionsForTypeImpl = (
+  selectionSet: SelectionSetNode,
+  gatewayType: GraphQLObjectType,
+  schema: GraphQLSchema,
+): SelectionSetNode => {
+  let changed = false;
+  const flat: SelectionNode[] = [];
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
+      const condName = selection.typeCondition?.name.value;
+      const condType = condName ? schema.getType(condName) : gatewayType;
+      const matchesGatewayType =
+        condType != null &&
+        (condType.name === gatewayType.name ||
+          (isAbstractType(condType) &&
+            schema.isSubType(condType, gatewayType)));
+      if (matchesGatewayType) {
+        changed = true;
+        const inner = flattenSelectionsForType(
+          selection.selectionSet,
+          gatewayType,
+          schema,
+        );
+        for (const innerSel of inner.selections) {
+          flat.push(innerSel);
+        }
+        continue;
+      }
+    }
+    flat.push(selection);
+  }
+  if (!changed) {
+    return selectionSet;
+  }
+  return {
+    kind: Kind.SELECTION_SET,
+    selections: flat,
+  };
+};
+
+const flattenSelectionsForType = memoize3(flattenSelectionsForTypeImpl);
