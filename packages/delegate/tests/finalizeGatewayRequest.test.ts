@@ -316,4 +316,156 @@ describe('finalizeGatewayRequest', () => {
         `);
     });
   });
+
+  describe('@provides conditional injection', () => {
+    // Mirrors the @provides scenario in Federation: the gateway should
+    // only forward the @provides fields the client actually requested, never
+    // the full @provides selection set.
+    function buildEntityScenario() {
+      const targetSchema = buildSchema(/* GraphQL */ `
+        type Query {
+          entity: Entity
+        }
+
+        type Entity {
+          id: ID!
+        }
+      `);
+      const subschema = {} as any;
+      function makeContext(): DelegationContext {
+        return {
+          targetSchema,
+          subschema,
+          info: {
+            schema: {
+              extensions: {
+                stitchingInfo: {
+                  mergedTypes: {
+                    Query: {
+                      providedSelectionsByField: new Map([
+                        [
+                          subschema,
+                          {
+                            entity: (
+                              parse(/* GraphQL */ `
+                                {
+                                  name
+                                  description
+                                }
+                              `).definitions[0] as any
+                            ).selectionSet,
+                          },
+                        ],
+                      ]),
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as unknown as DelegationContext;
+      }
+      return { targetSchema, makeContext };
+    }
+
+    test('only injects the @provides fields that the client actually requested', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            name
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            name
+            id
+          }
+        }"
+      `);
+    });
+
+    test('does not inject any @provides field when none were requested', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            id
+          }
+        }"
+      `);
+    });
+
+    test('preserves the alias of the originally requested field', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            displayName: name
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            displayName: name
+            id
+          }
+        }"
+      `);
+    });
+
+    test('injects every @provides field that was requested, regardless of how many', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            name
+            description
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            name
+            description
+            id
+          }
+        }"
+      `);
+    });
+  });
 });

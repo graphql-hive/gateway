@@ -39,6 +39,7 @@ import { DelegationContext, StitchingInfo } from './types.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
+  originalDocument: DocumentNode,
   fragments: FragmentDefinitionNode[],
   operations: OperationDefinitionNode[],
   onOverlappingAliases: () => void,
@@ -168,39 +169,88 @@ function finalizeGatewayDocument<TContext>(
     'stitchingInfo'
   ] as StitchingInfo;
   if (stitchingInfo != null) {
+    // Capture the user's original selection sets keyed by path so that we can
+    // restrict the `@provides` injection below to only the fields the client
+    // actually requested. Without this, every field listed in `@provides` would
+    // be sent to the providing subgraph even when the client never asked for it.
+    const {
+      selectionSetsByPath: originalFieldSelectionSetsByPath,
+      fragments: originalFragmentsByName,
+    } = collectFieldSelectionSetsByPath(originalDocument);
     const typeInfo = getTypeInfo(targetSchema);
+    const pathStack: string[] = [];
     newDocument = visit(
       newDocument,
       visitWithTypeInfo(typeInfo, {
-        [Kind.FIELD](fieldNode) {
-          const parentType = typeInfo.getParentType();
-          if (parentType) {
-            const parentTypeName = parentType.name;
-            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
-            if (typeConfig) {
+        [Kind.OPERATION_DEFINITION]: {
+          enter(node) {
+            pathStack.push(`op:${node.operation}:${node.name?.value ?? ''}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FRAGMENT_DEFINITION]: {
+          enter(node) {
+            pathStack.push(`frag:${node.name.value}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.INLINE_FRAGMENT]: {
+          enter(node) {
+            pathStack.push(`inline:${node.typeCondition?.name.value ?? ''}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FIELD]: {
+          enter(fieldNode) {
+            pathStack.push(fieldNode.alias?.value ?? fieldNode.name.value);
+          },
+          leave(fieldNode) {
+            try {
+              const parentType = typeInfo.getParentType();
+              if (!parentType) {
+                return undefined;
+              }
+              const typeConfig = stitchingInfo?.mergedTypes?.[parentType.name];
               const providedSelectionsByField =
                 typeConfig?.providedSelectionsByField?.get(
                   delegationContext.subschema as Subschema,
                 );
-              if (providedSelectionsByField) {
-                const providedSelection =
-                  providedSelectionsByField[fieldNode.name.value];
-                if (providedSelection) {
-                  return {
-                    ...fieldNode,
-                    selectionSet: {
-                      kind: Kind.SELECTION_SET,
-                      selections: [
-                        ...providedSelection.selections,
-                        ...(fieldNode.selectionSet?.selections ?? []),
-                      ],
-                    },
-                  };
-                }
+              const providedSelection =
+                providedSelectionsByField?.[fieldNode.name.value];
+              if (!providedSelection) {
+                return undefined;
               }
+              const originalSelectionSet = originalFieldSelectionSetsByPath.get(
+                pathStack.join('>'),
+              );
+              const requestedProvidedSelections = intersectProvidedSelections(
+                providedSelection.selections,
+                originalSelectionSet,
+                originalFragmentsByName,
+              );
+              if (!requestedProvidedSelections.length) {
+                return undefined;
+              }
+              return {
+                ...fieldNode,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: [
+                    ...requestedProvidedSelections,
+                    ...(fieldNode.selectionSet?.selections ?? []),
+                  ],
+                },
+              };
+            } finally {
+              pathStack.pop();
             }
-          }
-          return fieldNode;
+          },
         },
       }),
     );
@@ -222,6 +272,7 @@ export function finalizeGatewayRequest<TContext>(
 
   const { usedVariables, newDocument } = finalizeGatewayDocument(
     targetSchema,
+    originalRequest.document,
     fragments,
     operations,
     onOverlappingAliases,
@@ -257,6 +308,175 @@ function isTypeNameField(selection: SelectionNode): boolean {
     !selection.alias &&
     selection.name.value === '__typename'
   );
+}
+
+function collectFieldSelectionSetsByPath(document: DocumentNode): {
+  selectionSetsByPath: Map<string, SelectionSetNode>;
+  fragments: Map<string, FragmentDefinitionNode>;
+} {
+  const selectionSetsByPath = new Map<string, SelectionSetNode>();
+  const fragments = new Map<string, FragmentDefinitionNode>();
+  for (const def of document.definitions) {
+    if (def.kind === Kind.FRAGMENT_DEFINITION) {
+      fragments.set(def.name.value, def);
+    }
+  }
+  const pathStack: string[] = [];
+  visit(document, {
+    [Kind.OPERATION_DEFINITION]: {
+      enter(node) {
+        pathStack.push(`op:${node.operation}:${node.name?.value ?? ''}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FRAGMENT_DEFINITION]: {
+      enter(node) {
+        pathStack.push(`frag:${node.name.value}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.INLINE_FRAGMENT]: {
+      enter(node) {
+        pathStack.push(`inline:${node.typeCondition?.name.value ?? ''}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FIELD]: {
+      enter(node) {
+        pathStack.push(node.alias?.value ?? node.name.value);
+        if (node.selectionSet) {
+          selectionSetsByPath.set(pathStack.join('>'), node.selectionSet);
+        }
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+  });
+  return { selectionSetsByPath, fragments };
+}
+
+/**
+ * Returns the subset of `@provides` selections that the client actually
+ * requested at this path. `@provides` only allows the providing subgraph to
+ * resolve the listed fields; it does NOT mean the gateway should fetch all of
+ * them on every visit. We therefore intersect with the original (pre-filter)
+ * selection set so that fields the client never asked for are not pulled in.
+ *
+ * We return the original field nodes (preserving aliases and arguments) so the
+ * subgraph response can be matched back to the user's request.
+ */
+function intersectProvidedSelections(
+  providedSelections: readonly SelectionNode[],
+  originalSelectionSet: SelectionSetNode | undefined,
+  fragments: Map<string, FragmentDefinitionNode>,
+): SelectionNode[] {
+  if (!originalSelectionSet) {
+    return [];
+  }
+  const providedFieldsByName = new Map<
+    string,
+    Extract<SelectionNode, { kind: 'Field' }>
+  >();
+  const otherProvided: SelectionNode[] = [];
+  for (const provided of providedSelections) {
+    if (provided.kind === Kind.FIELD) {
+      providedFieldsByName.set(provided.name.value, provided);
+    } else {
+      // Inline/fragment spreads in `@provides` are uncommon; if encountered we
+      // keep them as-is to match the previous behavior for those edge cases.
+      otherProvided.push(provided);
+    }
+  }
+  const result: SelectionNode[] = [];
+  const seenFieldNames = new Set<string>();
+  const seenFragmentNames = new Set<string>();
+  collectMatchingOriginalSelections(
+    originalSelectionSet,
+    providedFieldsByName,
+    fragments,
+    seenFieldNames,
+    seenFragmentNames,
+    result,
+  );
+  return [...result, ...otherProvided];
+}
+
+function collectMatchingOriginalSelections(
+  selectionSet: SelectionSetNode,
+  providedFieldsByName: Map<string, Extract<SelectionNode, { kind: 'Field' }>>,
+  fragments: Map<string, FragmentDefinitionNode>,
+  seenFieldNames: Set<string>,
+  seenFragmentNames: Set<string>,
+  result: SelectionNode[],
+): void {
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      const provided = providedFieldsByName.get(sel.name.value);
+      if (!provided) {
+        continue;
+      }
+      const dedupKey = sel.alias?.value ?? sel.name.value;
+      if (seenFieldNames.has(dedupKey)) {
+        continue;
+      }
+      seenFieldNames.add(dedupKey);
+      if (provided.selectionSet && sel.selectionSet) {
+        const nested = intersectProvidedSelections(
+          provided.selectionSet.selections,
+          sel.selectionSet,
+          fragments,
+        );
+        if (!nested.length) {
+          continue;
+        }
+        result.push({
+          ...sel,
+          selectionSet: {
+            kind: Kind.SELECTION_SET,
+            selections: nested,
+          },
+        });
+      } else {
+        // Re-add the user's original field (with alias and arguments) so the
+        // subgraph response can be merged back into the gateway response.
+        result.push(sel);
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT && sel.selectionSet) {
+      collectMatchingOriginalSelections(
+        sel.selectionSet,
+        providedFieldsByName,
+        fragments,
+        seenFieldNames,
+        seenFragmentNames,
+        result,
+      );
+    } else if (sel.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = sel.name.value;
+      if (seenFragmentNames.has(fragmentName)) {
+        continue;
+      }
+      seenFragmentNames.add(fragmentName);
+      const fragmentDef = fragments.get(fragmentName);
+      if (!fragmentDef) {
+        continue;
+      }
+      collectMatchingOriginalSelections(
+        fragmentDef.selectionSet,
+        providedFieldsByName,
+        fragments,
+        seenFieldNames,
+        seenFragmentNames,
+        result,
+      );
+    }
+  }
 }
 
 function filterTypenameFields(selections: readonly SelectionNode[]): {
