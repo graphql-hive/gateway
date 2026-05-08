@@ -3084,6 +3084,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/federation-provides@workspace:e2e/federation-provides":
+  version: 0.0.0-use.local
+  resolution: "@e2e/federation-provides@workspace:e2e/federation-provides"
+  dependencies:
+    "@apollo/subgraph": "npm:2.14.0"
+    graphql: "npm:16.14.0"
+    graphql-yoga: "npm:5.21.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting":
   version: 0.0.0-use.local
   resolution: "@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting"
