@@ -131,7 +131,9 @@ jobs:
             const { version } = gateway;
             let r;
             if (context.eventName === 'pull_request') {
-              r = { version, tags: version };
+              const shortSha = context.sha.slice(0, 7);
+              const tag = version.replace(context.sha, shortSha);
+              r = { version, tags: tag };
             } else {
               const [major, minor] = version.split('.');
               if (!major || !minor) {
