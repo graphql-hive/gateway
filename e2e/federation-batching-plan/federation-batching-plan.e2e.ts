@@ -50,7 +50,7 @@ it('should consistently explain the query plan', async () => {
                       },
                     },
                   ],
-                  "username": "@ada",
+                  "username": null,
                 },
                 "body": "Love it!",
                 "id": "1",
@@ -85,7 +85,7 @@ it('should consistently explain the query plan', async () => {
                       },
                     },
                   ],
-                  "username": "@complete",
+                  "username": null,
                 },
                 "body": "Prefer something else.",
                 "id": "4",
@@ -130,7 +130,7 @@ it('should consistently explain the query plan', async () => {
                       },
                     },
                   ],
-                  "username": "@ada",
+                  "username": null,
                 },
                 "body": "Too expensive.",
                 "id": "2",
@@ -175,7 +175,7 @@ it('should consistently explain the query plan', async () => {
                       },
                     },
                   ],
-                  "username": "@complete",
+                  "username": null,
                 },
                 "body": "Could be better.",
                 "id": "3",
@@ -229,7 +229,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@ada",
+                        "username": null,
                       },
                       "body": "Love it!",
                       "id": "1",
@@ -264,7 +264,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@complete",
+                        "username": null,
                       },
                       "body": "Prefer something else.",
                       "id": "4",
@@ -313,7 +313,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@ada",
+                        "username": null,
                       },
                       "body": "Too expensive.",
                       "id": "2",
@@ -369,7 +369,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@complete",
+                        "username": null,
                       },
                       "body": "Could be better.",
                       "id": "3",
@@ -418,7 +418,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@ada",
+                        "username": null,
                       },
                       "body": "Love it!",
                       "id": "1",
@@ -453,7 +453,7 @@ it('should consistently explain the query plan', async () => {
                             },
                           },
                         ],
-                        "username": "@complete",
+                        "username": null,
                       },
                       "body": "Prefer something else.",
                       "id": "4",
@@ -606,7 +606,6 @@ it('should consistently explain the query plan', async () => {
             __typename
             ...Review
             author {
-              username
               __typename
               __typename
               ...User
@@ -697,7 +696,6 @@ it('should consistently explain the query plan', async () => {
                 __typename
                 ...Review
                 author {
-                  username
                   __typename
                   __typename
                   ...User
@@ -754,4 +752,105 @@ it('should consistently explain the query plan', async () => {
       },
     }
   `);
+});
+
+it('should keep requested @provides fields on the providing subgraph', async () => {
+  const { execute } = await gateway({
+    supergraph: await supergraph(),
+  });
+
+  const result = await execute({
+    query: /* GraphQL */ `
+      query {
+        topProducts {
+          reviews {
+            author {
+              username
+            }
+          }
+        }
+      }
+    `,
+  });
+
+  expect(result).toMatchObject({
+    data: {
+      topProducts: [
+        {
+          reviews: [
+            { author: { username: '@ada' } },
+            { author: { username: '@complete' } },
+          ],
+        },
+        {
+          reviews: [{ author: { username: '@ada' } }],
+        },
+        {
+          reviews: [{ author: { username: '@complete' } }],
+        },
+      ],
+    },
+  });
+
+  const plan = (
+    result.extensions as {
+      plan?: Array<{ subgraphName: string; query: string }>;
+    }
+  )?.plan;
+  expect(plan).toBeDefined();
+  expect(plan?.some((step) => step.subgraphName === 'accounts')).toBe(false);
+  const reviewsStep = plan?.find((step) => step.subgraphName === 'reviews');
+  expect(reviewsStep?.query).toContain('username');
+});
+
+it('should not overfetch unrequested @provides fields', async () => {
+  const { execute } = await gateway({
+    supergraph: await supergraph(),
+  });
+
+  const result = await execute({
+    query: /* GraphQL */ `
+      query {
+        topProducts {
+          reviews {
+            body
+            author {
+              __typename
+            }
+          }
+        }
+      }
+    `,
+  });
+
+  expect(result).toMatchObject({
+    data: {
+      topProducts: [
+        {
+          reviews: [
+            { body: 'Love it!', author: { __typename: 'User' } },
+            { body: 'Prefer something else.', author: { __typename: 'User' } },
+          ],
+        },
+        {
+          reviews: [{ body: 'Too expensive.', author: { __typename: 'User' } }],
+        },
+        {
+          reviews: [
+            { body: 'Could be better.', author: { __typename: 'User' } },
+          ],
+        },
+      ],
+    },
+  });
+
+  const plan = (
+    result.extensions as {
+      plan?: Array<{ subgraphName: string; query: string }>;
+    }
+  )?.plan;
+  expect(plan).toBeDefined();
+  expect(plan?.some((step) => step.subgraphName === 'accounts')).toBe(false);
+  const reviewsStep = plan?.find((step) => step.subgraphName === 'reviews');
+  expect(reviewsStep?.query).not.toContain('username');
 });
