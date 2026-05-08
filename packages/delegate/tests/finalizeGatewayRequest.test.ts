@@ -322,6 +322,12 @@ describe('finalizeGatewayRequest', () => {
     // only forward the @provides fields the client actually requested, never
     // the full @provides selection set.
     function buildEntityScenario() {
+      // The provided fields (`name`, `description`) are listed on `Entity`
+      // here so that the finalized subgraph document remains valid against
+      // `targetSchema`; in a real federation setup the providing subgraph's
+      // schema would declare them as `@external`. Keeping them on the test
+      // schema lets the snapshots catch schema-validity regressions that
+      // would silently slip through if the type had only `id`.
       const targetSchema = buildSchema(/* GraphQL */ `
         type Query {
           entity: Entity
@@ -329,6 +335,8 @@ describe('finalizeGatewayRequest', () => {
 
         type Entity {
           id: ID!
+          name: String
+          description: String
         }
       `);
       const subschema = {} as any;
@@ -386,8 +394,8 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
-            name
             id
+            name
           }
         }"
       `);
@@ -434,8 +442,8 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
-            displayName: name
             id
+            displayName: name
           }
         }"
       `);
@@ -460,9 +468,9 @@ describe('finalizeGatewayRequest', () => {
       expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
         "{
           entity {
+            id
             name
             description
-            id
           }
         }"
       `);
