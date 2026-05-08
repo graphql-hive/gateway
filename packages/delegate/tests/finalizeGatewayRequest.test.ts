@@ -467,5 +467,122 @@ describe('finalizeGatewayRequest', () => {
         }"
       `);
     });
+
+    // When two concrete implementations of an interface declare the same
+    // field with different nullabilities, the gateway rewrites one of the
+    // two with a synthetic `_nullable_` / `_nonNullable_` alias so the
+    // outgoing subgraph query stays valid under
+    // OverlappingFieldsCanBeMerged. The `@provides` injection step must
+    // still find the user's original selection set when looking up by the
+    // post-rewrite path; otherwise the providing branch silently drops
+    // requested fields. The fallback path lookup keyed by field name (not
+    // alias) is what makes this work.
+    test('still resolves @provides when the field is rewritten with a synthetic _nullable_ alias', () => {
+      const targetSchema = buildSchema(/* GraphQL */ `
+        type Query {
+          thing: Thing
+        }
+
+        interface Thing {
+          id: ID!
+        }
+
+        type ConcreteA implements Thing {
+          id: ID!
+          entity: Entity!
+        }
+
+        type ConcreteB implements Thing {
+          id: ID!
+          entity: Entity
+        }
+
+        type Entity {
+          id: ID!
+          name: String
+          description: String
+        }
+      `);
+
+      const subschema = {} as any;
+      const providedSelectionSet = (
+        parse(/* GraphQL */ `
+          {
+            name
+            description
+          }
+        `).definitions[0] as any
+      ).selectionSet;
+      const providedSelectionsByField = new Map([
+        [
+          subschema,
+          {
+            entity: providedSelectionSet,
+          },
+        ],
+      ]);
+      const context = {
+        targetSchema,
+        subschema,
+        info: {
+          schema: {
+            extensions: {
+              stitchingInfo: {
+                mergedTypes: {
+                  ConcreteA: { providedSelectionsByField },
+                  ConcreteB: { providedSelectionsByField },
+                },
+              },
+            },
+          },
+        },
+      } as unknown as DelegationContext;
+
+      const query = parse(/* GraphQL */ `
+        query {
+          thing {
+            ... on ConcreteA {
+              entity {
+                id
+                description
+              }
+            }
+            ... on ConcreteB {
+              entity {
+                id
+                description
+              }
+            }
+          }
+        }
+      `);
+
+      let aliasRewriteCount = 0;
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        context,
+        () => {
+          aliasRewriteCount++;
+        },
+      );
+
+      // Sanity check: the alias rewrite was actually triggered, otherwise
+      // this test no longer covers the fallback path.
+      expect(aliasRewriteCount).toBeGreaterThan(0);
+
+      const printed = print(filteredQuery.document);
+      // The alias appears on the nullable branch.
+      expect(printed).toMatch(/_nullable_entity:\s*entity/);
+      // The aliased branch still receives the requested @provides field
+      // (`description`), proving the lookup found the original selection
+      // set via the field-name fallback rather than the synthetic alias.
+      const aliasMatch = printed.match(
+        /_nullable_entity:\s*entity\s*\{([^}]*)\}/,
+      );
+      expect(aliasMatch?.[1]).toMatch(/\bdescription\b/);
+      // And the unrequested @provides field (`name`) must NOT have been
+      // injected on either branch.
+      expect(printed).not.toMatch(/(?<!__type)\bname\b/);
+    });
   });
 });

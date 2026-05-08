@@ -151,4 +151,77 @@ describe('Federation @provides', () => {
     expect(BQuery).toMatch(/\bname\b/);
     expect(BQuery).not.toMatch(/\bdescription\b/);
   });
+
+  // The gateway must keep `@include` / `@skip` directives that wrap a
+  // `@provides` field intact when forwarding the query to the providing
+  // subgraph. If the wrapper were dropped, the providing subgraph would
+  // unconditionally resolve the field, defeating the client's directive.
+  it('preserves @skip / @include directives wrapping a @provides field', async () => {
+    await using serviceA = await service('a');
+    await using serviceB = await service('b');
+    await using gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [serviceA, serviceB],
+      },
+    });
+
+    const skipResult = await gw.execute({
+      query: /* GraphQL */ `
+        query Q($skipName: Boolean!) {
+          entity {
+            id
+            ... on Entity @skip(if: $skipName) {
+              name
+            }
+          }
+        }
+      `,
+      variables: { skipName: true },
+    });
+
+    expect(skipResult).toEqual({ data: { entity: { id: '1' } } });
+
+    const ALogs = serviceA.getStd('out');
+    expect(ALogs).not.toContain('received query');
+
+    const BLogs = serviceB.getStd('out');
+    const BReceivedQueries = BLogs.split('\n').filter((line) =>
+      line.includes('received query'),
+    );
+    expect(BReceivedQueries).toHaveLength(1);
+    const BQuery = BReceivedQueries[0]!;
+    // The directive itself must survive the rewrite.
+    expect(BQuery).toMatch(/@skip\(\s*if:\s*\$skipName\s*\)/);
+    // And the unrequested provides field must still not be forwarded.
+    expect(BQuery).not.toMatch(/\bdescription\b/);
+
+    const includeResult = await gw.execute({
+      query: /* GraphQL */ `
+        query Q($includeName: Boolean!) {
+          entity {
+            id
+            ... on Entity @include(if: $includeName) {
+              name
+            }
+          }
+        }
+      `,
+      variables: { includeName: true },
+    });
+
+    expect(includeResult).toEqual({
+      data: { entity: { id: '1', name: 'B:name' } },
+    });
+
+    const BLogsAfter = serviceB.getStd('out');
+    const BReceivedQueriesAfter = BLogsAfter.split('\n').filter((line) =>
+      line.includes('received query'),
+    );
+    expect(BReceivedQueriesAfter).toHaveLength(2);
+    const BQueryInclude = BReceivedQueriesAfter[1]!;
+    expect(BQueryInclude).toMatch(/@include\(\s*if:\s*\$includeName\s*\)/);
+    expect(BQueryInclude).toMatch(/\bname\b/);
+    expect(BQueryInclude).not.toMatch(/\bdescription\b/);
+  });
 });
