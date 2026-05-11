@@ -10,7 +10,14 @@
     "@graphql-hive/gateway": "^2.7.2"
   },
   "overrides": {
-    "minimatch": "^10.2.5"
+    "minimatch": "^10.2.5",
+    "fast-uri": "3.1.2",
+    "ajv": {
+      "fast-uri": "3.1.2"
+    },
+    "fast-json-stringify": {
+      "fast-uri": "3.1.2"
+    }
   },
   "scripts": {
     "compose": "mesh-compose -o supergraph.graphql",

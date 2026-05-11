@@ -2,17 +2,24 @@
   "name": "@example/file-upload",
   "private": true,
   "dependencies": {
+    "@graphql-hive/gateway": "^2.7.2",
     "@graphql-mesh/compose-cli": "^1.5.30",
     "graphql": "^16.12.0",
-    "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.7.2"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
     "esbuild": "^0.25.12",
-    "minimatch": "^10.2.5"
+    "minimatch": "^10.2.5",
+    "fast-uri": "3.1.2",
+    "ajv": {
+      "fast-uri": "3.1.2"
+    },
+    "fast-json-stringify": {
+      "fast-uri": "3.1.2"
+    }
   },
   "scripts": {
     "service:bucket": "tsx services/bucket.ts",

@@ -13,7 +13,14 @@
   },
   "overrides": {
     "esbuild": "^0.25.12",
-    "minimatch": "^10.2.5"
+    "minimatch": "^10.2.5",
+    "fast-uri": "3.1.2",
+    "ajv": {
+      "fast-uri": "3.1.2"
+    },
+    "fast-json-stringify": {
+      "fast-uri": "3.1.2"
+    }
   },
   "scripts": {
     "service:foo": "tsx services/foo.ts",

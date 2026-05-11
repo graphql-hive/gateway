@@ -12,7 +12,14 @@
   "overrides": {
     "tmp": "0.2.4",
     "esbuild": "^0.25.12",
-    "minimatch": "^10.2.5"
+    "minimatch": "^10.2.5",
+    "fast-uri": "3.1.2",
+    "ajv": {
+      "fast-uri": "3.1.2"
+    },
+    "fast-json-stringify": {
+      "fast-uri": "3.1.2"
+    }
   },
   "installConfig": {
     "hoistingLimits": "dependencies"
