@@ -13,8 +13,7 @@
   },
   "overrides": {
     "esbuild": "^0.25.12",
-    "minimatch": "^10.2.5",
-    "protobufjs": "8.0.2"
+    "minimatch": "^10.2.5"
   },
   "scripts": {
     "service:Test": "tsx services/Test.ts",

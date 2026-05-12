@@ -19,7 +19,6 @@
     "tslib": "^2.8.1"
   },
   "overrides": {
-    "minimatch": "^10.2.5",
-    "protobufjs": "8.0.2"
+    "minimatch": "^10.2.5"
   }
 }
