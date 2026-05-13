@@ -16,8 +16,10 @@
     "@apollo/rover": "^0.38.1"
   },
   "overrides": {
-    "esbuild": "^0.25.12",
-    "minimatch": "^10.2.5"
+    "minimatch": "^10.2.5",
+    "fast-uri": "^3.1.2",
+    "protobufjs": "^8.2.1",
+    "esbuild": "^0.25.12"
   },
   "scripts": {
     "service:accounts": "tsx services/accounts/index.ts",
