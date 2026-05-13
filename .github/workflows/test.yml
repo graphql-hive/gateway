@@ -74,7 +74,7 @@ jobs:
           - 20
           - 22
           - 24
-          - 25
+          - 26
         hive-router-runtime:
           - 0
           - 1
