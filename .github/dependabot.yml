@@ -27,6 +27,16 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    cooldown:
+      default-days: 3
+      exclude:
+        - '@graphql-hive/*'
+        - '@graphql-mesh/*'
+        - '@graphql-tools/*'
+        - '@envelop/*'
+        - '@graphql-yoga/*'
+        - '@whatwg-node/*'
+        - 'graphql-yoga'
     exclude-paths:
       - 'examples' # the examples are auto-generated from the e2es, whose packages we do auto-update
     versioning-strategy: increase-if-necessary
