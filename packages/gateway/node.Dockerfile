@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:25-bookworm-slim AS install
+FROM node:26-bookworm-slim AS install
 
 WORKDIR /install
 
@@ -10,7 +10,7 @@ RUN npm audit fix --force
 
 #
 
-FROM node:25-bookworm-slim
+FROM node:26-bookworm-slim
 
 # use the upcoming debian release (trixie) to get the latest security updates
 RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
