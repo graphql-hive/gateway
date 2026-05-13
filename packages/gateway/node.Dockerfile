@@ -113,7 +113,7 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 # fix glob vulnerability by updating glob to latest version ^11
 # deal with CVE-2025-64756
 RUN npm install glob@^11 -g
-# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v25
+# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v26
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
 # npm uses glob v11, so we've just bumped it to the latest
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
