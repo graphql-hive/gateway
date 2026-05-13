@@ -70,7 +70,7 @@ RUN set -eux; \
   dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
   rm -f "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"
 
-RUN echo "deb http://security.debian.org/debian-security security main" >> /etc/apt/sources.list && \
+RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
  apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy libgnutls30t64 && \
  apt-get install -f -y
@@ -113,7 +113,7 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 # fix glob vulnerability by updating glob to latest version ^11
 # deal with CVE-2025-64756
 RUN npm install glob@^11 -g
-# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v25
+# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v26
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
 # npm uses glob v11, so we've just bumped it to the latest
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
