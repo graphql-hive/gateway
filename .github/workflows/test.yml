@@ -119,12 +119,12 @@ jobs:
             gateway-runner: node
             hive-router-runtime: 0
             node-version: 24
-          - workflow-name: Node 25 on Ubuntu
+          - workflow-name: Node 26 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
             hive-router-runtime: 0
             node-version: 26
-          - workflow-name: Node 25 on Ubuntu with Router Runtime
+          - workflow-name: Node 26 on Ubuntu with Router Runtime
             os: ubuntu-latest
             gateway-runner: node
             hive-router-runtime: 1
