@@ -290,9 +290,6 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       );
       packageJson.devDependencies ||= {};
       packageJson.devDependencies['tsx'] = `^${version}`;
-      packageJson.overrides ||= {};
-      const { version: esbuildVersion } = await import('esbuild/package.json');
-      packageJson.overrides['esbuild'] = `^${esbuildVersion}`;
     }
 
     if (composesWithApollo) {
@@ -306,9 +303,13 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies['@apollo/rover'] = `^${roverVersion}`;
     }
 
-    const { version } = await import('minimatch/package.json');
-    packageJson.overrides ||= {};
-    packageJson.overrides['minimatch'] = `^${version}`;
+    const overridesPkgs = ['minimatch', 'fast-uri', 'protobufjs', 'esbuild'];
+
+    for (const pkgName of overridesPkgs) {
+      const pkgJson = await import(`${pkgName}/package.json`);
+      packageJson.overrides ||= {};
+      packageJson.overrides[pkgName] = `^${pkgJson.version}`;
+    }
 
     {
       console.group('Adding scripts and setup...');

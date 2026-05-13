@@ -4615,27 +4615,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/visitor-plugin-common@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "@graphql-codegen/visitor-plugin-common@npm:7.0.0"
-  dependencies:
-    "@graphql-codegen/plugin-helpers": "npm:^7.0.0"
-    "@graphql-tools/optimize": "npm:^2.0.0"
-    "@graphql-tools/relay-operation-optimizer": "npm:^7.1.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
-    auto-bind: "npm:^5.0.0"
-    change-case-all: "npm:^2.1.0"
-    dependency-graph: "npm:^1.0.0"
-    graphql-tag: "npm:^2.11.0"
-    parse-filepath: "npm:^1.0.2"
-    tslib: "npm:^2.8.0"
-  peerDependencies:
-    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/600dca19402b854c3e25d268055d5e3c180e03246222b63bab4daa4022b8a33954eac7eb8bc7aac642e08c99c3629b80906c98386ace2fb5fce9328eaceeebb6
-  languageName: node
-  linkType: hard
-
-"@graphql-codegen/visitor-plugin-common@npm:^7.0.1":
+"@graphql-codegen/visitor-plugin-common@npm:^7.0.0, @graphql-codegen/visitor-plugin-common@npm:^7.0.1":
   version: 7.0.1
   resolution: "@graphql-codegen/visitor-plugin-common@npm:7.0.1"
   dependencies:
@@ -7193,13 +7173,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/diff-sequences@npm:30.3.0":
-  version: 30.3.0
-  resolution: "@jest/diff-sequences@npm:30.3.0"
-  checksum: 10c0/8922c16a869b839b6c05f677023b3e5a9aa1610ad78a9c5ec8bd6654e35e8136ea1c7b60ad561910e2ad964bfdb0b09b0254ff8dcfacd4562095766f60c63d76
-  languageName: node
-  linkType: hard
-
 "@jest/diff-sequences@npm:30.4.0":
   version: 30.4.0
   resolution: "@jest/diff-sequences@npm:30.4.0"
@@ -7314,15 +7287,6 @@ __metadata:
     node-notifier:
       optional: true
   checksum: 10c0/cf5220462c6242fa564bbeb6d5988ebfd814e0351f3bddae07323b55c68c7ebd4aa4c23e717231ab4b2d63c4fc7fa4615b9dad8584be534bd44622981242dceb
-  languageName: node
-  linkType: hard
-
-"@jest/schemas@npm:30.0.5":
-  version: 30.0.5
-  resolution: "@jest/schemas@npm:30.0.5"
-  dependencies:
-    "@sinclair/typebox": "npm:^0.34.0"
-  checksum: 10c0/449dcd7ec5c6505e9ac3169d1143937e67044ae3e66a729ce4baf31812dfd30535f2b3b2934393c97cfdf5984ff581120e6b38f62b8560c8b5b7cc07f4175f65
   languageName: node
   linkType: hard
 
@@ -12445,16 +12409,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.6.0
-  resolution: "@types/node@npm:25.6.0"
-  dependencies:
-    undici-types: "npm:~7.19.0"
-  checksum: 10c0/d2d2015630ff098a201407f55f5077a20270ae4f465c739b40865cd9933b91b9c5d2b85568eadaf3db0801b91e267333ca7eb39f007428b173d1cdab4b339ac5
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.6.2":
+"@types/node@npm:*, @types/node@npm:25.6.2, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.6.2
   resolution: "@types/node@npm:25.6.2"
   dependencies:
@@ -17012,17 +16967,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.1":
-  version: 3.1.1
-  resolution: "fast-uri@npm:3.1.1"
-  checksum: 10c0/fa30e1cbc7de09be9f83a9101035910bc280c7863934e932f66480d872bcf42413f4d1f201c75432b4faa4db3377aa44cb08b1c0172574473afc60b0c0d497b0
-  languageName: node
-  linkType: hard
-
-"fast-uri@npm:^2.1.0":
-  version: 2.4.0
-  resolution: "fast-uri@npm:2.4.0"
-  checksum: 10c0/300453cfe2f7d5ec16be0f2c8dc5b280edbaca59440b2deb4ab56ac0f584637179e9ee7539d0b70ef0fce9608245ebfa75307c84fa4829b1065c3b7ef7dcf706
+"fast-uri@npm:3.1.2":
+  version: 3.1.2
+  resolution: "fast-uri@npm:3.1.2"
+  checksum: 10c0/5b35641895959f3f7ab7a7b1b5542bded159346f25ec9f256817b206d50b64eda5828e90d605a2e2fc645c90519a7259c2bab2c942ee728c88b88e5be21b090d
   languageName: node
   linkType: hard
 
@@ -19288,7 +19236,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:30.4.1":
+"jest-diff@npm:30.4.1, jest-diff@npm:^30.3.0":
   version: 30.4.1
   resolution: "jest-diff@npm:30.4.1"
   dependencies:
@@ -19297,18 +19245,6 @@ __metadata:
     chalk: "npm:^4.1.2"
     pretty-format: "npm:30.4.1"
   checksum: 10c0/787e11f0ea27e94815479d6c5415e4173da1e74bede34c1515b8515fc9d1fe053e2ad25a3c31f9998a7292c186a0e4d395ed82e0e149d57d7708ee6759b442e9
-  languageName: node
-  linkType: hard
-
-"jest-diff@npm:^30.3.0":
-  version: 30.3.0
-  resolution: "jest-diff@npm:30.3.0"
-  dependencies:
-    "@jest/diff-sequences": "npm:30.3.0"
-    "@jest/get-type": "npm:30.1.0"
-    chalk: "npm:^4.1.2"
-    pretty-format: "npm:30.3.0"
-  checksum: 10c0/573a2a1a155b95fbde547d8ee33a5375179a8d03d4586025478dac16d695e4614aef075c3afa57e0f3a96cea8f638fa68a55c1e625f6e86b4f5b9e5850311ffb
   languageName: node
   linkType: hard
 
@@ -22146,17 +22082,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:30.3.0":
-  version: 30.3.0
-  resolution: "pretty-format@npm:30.3.0"
-  dependencies:
-    "@jest/schemas": "npm:30.0.5"
-    ansi-styles: "npm:^5.2.0"
-    react-is: "npm:^18.3.1"
-  checksum: 10c0/719b27d70cd8b01013485054c5d094e1fe85e093b09ee73553e3b19302da3cf54fbd6a7ea9577d6471aeff8d372200e56979ffc4c831e2133520bd18060895fb
-  languageName: node
-  linkType: hard
-
 "pretty-format@npm:30.4.1":
   version: 30.4.1
   resolution: "pretty-format@npm:30.4.1"
@@ -22244,13 +22169,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:8.0.2":
-  version: 8.0.2
-  resolution: "protobufjs@npm:8.0.2"
+"protobufjs@npm:8.2.1":
+  version: 8.2.1
+  resolution: "protobufjs@npm:8.2.1"
   dependencies:
     "@types/node": "npm:>=13.7.0"
     long: "npm:^5.0.0"
-  checksum: 10c0/84b82b74a4c0148773315155654fb6041caac0a8f4ccbb03defbb2c249bf932c46f996a5cdce127312347a87fbc662ddeaf9ad0dc16026ba72cbf41456690f59
+  checksum: 10c0/6b3ee8f9a2388a112e462bb0d12273bb3789084f2cbc14aa1b1ab05684ef1062da2164dfff426977b7a7e59a739283a895ad8ecb0fc887a3f488ac5c2c6529fa
   languageName: node
   linkType: hard
 
@@ -22490,7 +22415,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is-18@npm:react-is@^18.3.1, react-is@npm:^18.0.0, react-is@npm:^18.3.1":
+"react-is-18@npm:react-is@^18.3.1, react-is@npm:^18.0.0":
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
   checksum: 10c0/f2f1e60010c683479e74c63f96b09fb41603527cd131a9959e2aee1e5a8b0caf270b365e5ca77d4a6b18aae659b60a86150bb3979073528877029b35aecd2072
