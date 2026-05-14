@@ -1,15 +1,18 @@
 /**
- * EXPERIMENTAL Hive App Deployment loader implemented via MCPOperationsLoader.
+ * EXPERIMENTAL: Hive App Deployment loader implemented via MCPOperationsLoader.
  *
  * Fetches persisted GraphQL documents from a Hive App Deployment at startup,
  * then polls for updates on a configurable interval. Operations that carry the
  * @mcpTool directive are automatically registered as MCP tools by the plugin.
  *
+ * This loader is experimental because the integration with Hive Console is not
+ * yet finalized. The API is subject to breaking changes without notice.
+ *
  * Usage:
  *
  * ```ts
- * import { useMCP } from '@graphql-hive/mcp-plugin';
- * import { createHiveLoader } from '@graphql-hive/mcp-plugin/experimental__hive-loader';
+ * import { useMCP } from '@graphql-hive/plugin-mcp';
+ * import { createHiveLoader } from '@graphql-hive/plugin-mcp/experimental__hive-loader';
  *
  * useMCP(ctx, {
  *   name: 'my-api',
@@ -22,8 +25,10 @@
  * ```
  */
 
-import type { PluginContext } from './types.js';
+import { buildHTTPExecutor } from '@graphql-tools/executor-http';
+import { parse } from 'graphql';
 import type { MCPOperationsLoader } from './plugin.js';
+import type { PluginContext } from './types.js';
 
 export interface HiveLoaderConfig {
   /** Hive registry access token */
@@ -52,11 +57,6 @@ interface HiveDocument {
   operationName: string | null;
 }
 
-interface GraphQLResponse<T> {
-  data?: T;
-  errors?: Array<{ message: string }>;
-}
-
 interface DocumentConnection {
   edges: Array<{ node: HiveDocument }>;
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
@@ -76,7 +76,7 @@ interface ActiveVersionsData {
   } | null;
 }
 
-const FETCH_DOCS_QUERY = `
+const FETCH_DOCS_QUERY = parse(`
   query FetchAppDeploymentDocs($reference: TargetReferenceInput!, $appName: String!, $appVersion: String!, $first: Int!, $after: String) {
     target(reference: $reference) {
       appDeployment(appName: $appName, appVersion: $appVersion) {
@@ -87,9 +87,9 @@ const FETCH_DOCS_QUERY = `
       }
     }
   }
-`;
+`);
 
-const FETCH_ACTIVE_VERSIONS_QUERY = `
+const FETCH_ACTIVE_VERSIONS_QUERY = parse(`
   query FetchActiveVersions($reference: TargetReferenceInput!, $appName: String!, $first: Int!) {
     target(reference: $reference) {
       activeAppDeployments(first: $first, filter: { name: $appName }) {
@@ -97,7 +97,7 @@ const FETCH_ACTIVE_VERSIONS_QUERY = `
       }
     }
   }
-`;
+`);
 
 function parseTarget(target: string): TargetSelector {
   const parts = target.split('/');
@@ -113,75 +113,28 @@ function parseTarget(target: string): TargetSelector {
   };
 }
 
-async function gqlRequest<T>(
-  endpoint: string,
-  token: string,
-  query: string,
-  variables: Record<string, unknown>,
-  fetchFn: typeof fetch,
-): Promise<T> {
-  const response = await fetchFn(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/graphql-response+json, application/json',
+async function resolveVersion(
+  execute: ReturnType<typeof buildHTTPExecutor>,
+  appName: string,
+  target: string,
+  targetSelector: TargetSelector,
+): Promise<string> {
+  const result = await execute({
+    document: FETCH_ACTIVE_VERSIONS_QUERY,
+    variables: {
+      reference: { bySelector: targetSelector },
+      appName,
+      first: 100,
     },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(30_000),
   });
 
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const text = await response.text();
-      if (text) detail = ` - ${text.slice(0, 500)}`;
-    } catch {
-      // response body not readable
-    }
-    throw new Error(
-      `Hive API request failed: ${response.status} ${response.statusText}${detail}`,
-    );
-  }
-
-  let result: GraphQLResponse<T>;
-  try {
-    result = (await response.json()) as GraphQLResponse<T>;
-  } catch (err) {
-    throw new Error(
-      `Hive API returned invalid JSON: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-
-  if (result.errors?.length) {
+  if ('errors' in result && result.errors?.length) {
     throw new Error(
       `Hive API error: ${result.errors.map((e) => e.message).join(', ')}`,
     );
   }
 
-  if (!result.data) {
-    throw new Error('Hive API returned no data');
-  }
-
-  return result.data;
-}
-
-async function resolveVersion(
-  endpoint: string,
-  token: string,
-  appName: string,
-  target: string,
-  targetSelector: TargetSelector,
-  fetchFn: typeof fetch,
-): Promise<string> {
-  const data = await gqlRequest<ActiveVersionsData>(
-    endpoint,
-    token,
-    FETCH_ACTIVE_VERSIONS_QUERY,
-    { reference: { bySelector: targetSelector }, appName, first: 100 },
-    fetchFn,
-  );
-
+  const data = (result as { data: ActiveVersionsData }).data;
   if (!data.target) {
     throw new Error(
       `Target "${target}" not found. Verify your hive.target configuration.`,
@@ -207,32 +160,34 @@ async function resolveVersion(
 }
 
 async function fetchDocuments(
-  endpoint: string,
-  token: string,
+  execute: ReturnType<typeof buildHTTPExecutor>,
   appName: string,
   appVersion: string,
   target: string,
   targetSelector: TargetSelector,
-  fetchFn: typeof fetch,
 ): Promise<HiveDocument[]> {
   const docs: HiveDocument[] = [];
   let cursor: string | null = null;
 
   for (let page = 0; page < 1000; page++) {
-    const data = await gqlRequest<AppDeploymentDocsData>(
-      endpoint,
-      token,
-      FETCH_DOCS_QUERY,
-      {
+    const result = await execute({
+      document: FETCH_DOCS_QUERY,
+      variables: {
         reference: { bySelector: targetSelector },
         appName,
         appVersion,
         first: 100,
         after: cursor,
       },
-      fetchFn,
-    );
+    });
 
+    if ('errors' in result && result.errors?.length) {
+      throw new Error(
+        `Hive API error: ${result.errors.map((e) => e.message).join(', ')}`,
+      );
+    }
+
+    const data = (result as { data: AppDeploymentDocsData }).data;
     if (!data.target) {
       throw new Error(
         `Target "${target}" not found. Verify your hive.target configuration.`,
@@ -274,39 +229,43 @@ async function fetchDocuments(
 /**
  * Creates an {@link MCPOperationsLoader} that fetches persisted GraphQL documents
  * from a Hive App Deployment and polls for updates on a configurable interval.
+ *
+ * @experimental Subject to breaking changes without notice.
  */
 export function createHiveLoader(
   ctx: PluginContext,
   config: HiveLoaderConfig,
 ): MCPOperationsLoader {
-  const fetchFn = (ctx.fetch ?? globalThis.fetch) as typeof fetch;
   const endpoint = config.endpoint ?? 'https://app.graphql-hive.com/graphql';
   const pollIntervalMs = config.pollIntervalMs ?? 60_000;
   const targetSelector = parseTarget(config.target);
 
+  const execute = buildHTTPExecutor({
+    endpoint,
+    fetch: ctx.fetch as typeof fetch | undefined,
+    headers: { Authorization: `Bearer ${config.token}` },
+    timeout: 30_000,
+  });
+
   // retains the docs from the last successful load() so onUpdate can seed its
-  // hash key without re-fetching, matching exactly what the original hive-loader did
+  // hash key without re-fetching
   let lastLoadedDocs: HiveDocument[] = [];
 
   async function load(): Promise<string> {
     const version =
       config.appVersion ??
       (await resolveVersion(
-        endpoint,
-        config.token,
+        execute,
         config.appName,
         config.target,
         targetSelector,
-        fetchFn,
       ));
     const docs = await fetchDocuments(
-      endpoint,
-      config.token,
+      execute,
       config.appName,
       version,
       config.target,
       targetSelector,
-      fetchFn,
     );
     lastLoadedDocs = docs;
     return docs.map((d) => d.body).join('\n');
@@ -331,21 +290,17 @@ export function createHiveLoader(
         const version =
           config.appVersion ??
           (await resolveVersion(
-            endpoint,
-            config.token,
+            execute,
             config.appName,
             config.target,
             targetSelector,
-            fetchFn,
           ));
         docs = await fetchDocuments(
-          endpoint,
-          config.token,
+          execute,
           config.appName,
           version,
           config.target,
           targetSelector,
-          fetchFn,
         );
       } catch (err) {
         ctx.log.error(

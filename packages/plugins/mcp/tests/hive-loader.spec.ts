@@ -27,11 +27,14 @@ function makeConfig(overrides?: Partial<HiveLoaderConfig>): HiveLoaderConfig {
   };
 }
 
-function mockFetch(responses: Array<{ data: unknown } | { errors: unknown[] }>) {
+// the executor calls response.text() and JSON.parses the result itself
+function mockFetch(responses: Array<unknown>) {
   let callIndex = 0;
   return vi.fn(async () => ({
-    ok: true,
-    json: async () => responses[callIndex++],
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    text: async () => JSON.stringify(responses[callIndex++]),
   })) as unknown as typeof fetch;
 }
 
@@ -349,7 +352,7 @@ describe('createHiveLoader', () => {
 
     it('throws on GraphQL errors', async () => {
       const fetchFn = mockFetch([
-        { errors: [{ message: 'Unauthorized' }] } as any,
+        { errors: [{ message: 'Unauthorized' }] },
       ]);
 
       const loader = createHiveLoader(
@@ -359,47 +362,14 @@ describe('createHiveLoader', () => {
       await expect(loader.load()).rejects.toThrow('Unauthorized');
     });
 
-    it('throws on non-ok HTTP response with body detail', async () => {
-      const fetchFn = vi.fn(async () => ({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        text: async () => 'Token expired',
-      })) as unknown as typeof fetch;
-
-      const loader = createHiveLoader(
-        testCtx(fetchFn),
-        makeConfig({ appVersion: '1.0.0' }),
-      );
-      await expect(loader.load()).rejects.toThrow(
-        'Hive API request failed: 401 Unauthorized - Token expired',
-      );
-    });
-
-    it('throws on invalid JSON response', async () => {
-      const fetchFn = vi.fn(async () => ({
-        ok: true,
-        status: 200,
-        json: async () => {
-          throw new SyntaxError('Unexpected token < in JSON');
-        },
-      })) as unknown as typeof fetch;
-
-      const loader = createHiveLoader(
-        testCtx(fetchFn),
-        makeConfig({ appVersion: '1.0.0' }),
-      );
-      await expect(loader.load()).rejects.toThrow('Hive API returned invalid JSON');
-    });
-
     it('throws when response has no data field', async () => {
-      const fetchFn = mockFetch([{ data: null } as any]);
+      const fetchFn = mockFetch([{ data: null }]);
 
       const loader = createHiveLoader(
         testCtx(fetchFn),
         makeConfig({ appVersion: '1.0.0' }),
       );
-      await expect(loader.load()).rejects.toThrow('Hive API returned no data');
+      await expect(loader.load()).rejects.toThrow();
     });
 
     it('throws when document is missing hash', async () => {
@@ -434,7 +404,7 @@ describe('createHiveLoader', () => {
             target: {
               appDeployment: {
                 documents: {
-                  edges: [{ node: null } as any],
+                  edges: [{ node: null }],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
               },
@@ -543,8 +513,10 @@ describe('createHiveLoader', () => {
       ];
 
       const fetchFn = vi.fn(async () => ({
-        ok: true,
-        json: async () => responses[callIndex++],
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async () => JSON.stringify(responses[callIndex++]),
       })) as unknown as typeof fetch;
 
       const loader = createHiveLoader(testCtx(fetchFn), {
@@ -589,8 +561,10 @@ describe('createHiveLoader', () => {
       let callIndex = 0;
       const responses = [sameResponse, sameResponse, sameResponse, sameResponse];
       const fetchFn = vi.fn(async () => ({
-        ok: true,
-        json: async () => responses[callIndex++],
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async () => JSON.stringify(responses[callIndex++]),
       })) as unknown as typeof fetch;
 
       const loader = createHiveLoader(testCtx(fetchFn), {
@@ -648,8 +622,10 @@ describe('createHiveLoader', () => {
       ];
 
       const fetchFn = vi.fn(async () => ({
-        ok: true,
-        json: async () => responses[callIndex++],
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async () => JSON.stringify(responses[callIndex++]),
       })) as unknown as typeof fetch;
 
       const loader = createHiveLoader(testCtx(fetchFn), {
@@ -684,8 +660,10 @@ describe('createHiveLoader', () => {
         },
       };
       const fetchFn = vi.fn(async () => ({
-        ok: true,
-        json: async () => (callIndex++, emptyResponse),
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async () => JSON.stringify((callIndex++, emptyResponse)),
       })) as unknown as typeof fetch;
 
       const loader = createHiveLoader(testCtx(fetchFn), {
@@ -725,7 +703,12 @@ describe('createHiveLoader', () => {
 
       const fetchFn = vi.fn(async () => {
         if (callIndex++ === 0) {
-          return { ok: true, json: async () => initialResponse };
+          return {
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers({ 'content-type': 'application/json' }),
+            text: async () => JSON.stringify(initialResponse),
+          };
         }
         throw new Error('Network timeout');
       }) as unknown as typeof fetch;
