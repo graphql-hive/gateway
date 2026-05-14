@@ -26,6 +26,7 @@
  */
 
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
+import type { AsyncExecutor, ExecutionResult } from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import type { MCPOperationsLoader } from './plugin.js';
 import type { PluginContext } from './types.js';
@@ -114,34 +115,34 @@ function parseTarget(target: string): TargetSelector {
 }
 
 async function resolveVersion(
-  execute: ReturnType<typeof buildHTTPExecutor>,
+  execute: AsyncExecutor,
   appName: string,
   target: string,
   targetSelector: TargetSelector,
 ): Promise<string> {
-  const result = await execute({
+  const result = (await execute({
     document: FETCH_ACTIVE_VERSIONS_QUERY,
     variables: {
       reference: { bySelector: targetSelector },
       appName,
       first: 100,
     },
-  });
+  })) as ExecutionResult<ActiveVersionsData>;
 
-  if ('errors' in result && result.errors?.length) {
+  if (result.errors?.length) {
     throw new Error(
-      `Hive API error: ${result.errors.map((e) => e.message).join(', ')}`,
+      `Hive API error: ${result.errors.map((e: { message: string }) => e.message).join(', ')}`,
     );
   }
 
-  const data = (result as { data: ActiveVersionsData }).data;
-  if (!data.target) {
+  const data = result.data;
+  if (!data?.target) {
     throw new Error(
       `Target "${target}" not found. Verify your hive.target configuration.`,
     );
   }
 
-  const edges = data.target.activeAppDeployments?.edges;
+  const edges = data!.target.activeAppDeployments?.edges;
   if (!edges?.length) {
     throw new Error(`No active app deployment found for "${appName}"`);
   }
@@ -160,7 +161,7 @@ async function resolveVersion(
 }
 
 async function fetchDocuments(
-  execute: ReturnType<typeof buildHTTPExecutor>,
+  execute: AsyncExecutor,
   appName: string,
   appVersion: string,
   target: string,
@@ -170,7 +171,7 @@ async function fetchDocuments(
   let cursor: string | null = null;
 
   for (let page = 0; page < 1000; page++) {
-    const result = await execute({
+    const result = (await execute({
       document: FETCH_DOCS_QUERY,
       variables: {
         reference: { bySelector: targetSelector },
@@ -179,22 +180,22 @@ async function fetchDocuments(
         first: 100,
         after: cursor,
       },
-    });
+    })) as ExecutionResult<AppDeploymentDocsData>;
 
-    if ('errors' in result && result.errors?.length) {
+    if (result.errors?.length) {
       throw new Error(
-        `Hive API error: ${result.errors.map((e) => e.message).join(', ')}`,
+        `Hive API error: ${result.errors.map((e: { message: string }) => e.message).join(', ')}`,
       );
     }
 
-    const data = (result as { data: AppDeploymentDocsData }).data;
-    if (!data.target) {
+    const data = result.data ?? undefined;
+    if (!data?.target) {
       throw new Error(
         `Target "${target}" not found. Verify your hive.target configuration.`,
       );
     }
 
-    const deployment = data.target.appDeployment;
+    const deployment: { documents: DocumentConnection } | null = data.target.appDeployment;
     if (!deployment) {
       if (docs.length === 0) {
         throw new Error(
@@ -242,7 +243,7 @@ export function createHiveLoader(
 
   const execute = buildHTTPExecutor({
     endpoint,
-    fetch: ctx.fetch as typeof fetch | undefined,
+    ...(ctx.fetch ? { fetch: ctx.fetch as typeof fetch } : {}),
     headers: { Authorization: `Bearer ${config.token}` },
     timeout: 30_000,
   });

@@ -528,7 +528,7 @@ describe('createHiveLoader', () => {
 
       const callback = vi.fn();
       vi.useFakeTimers();
-      const stop = loader.onUpdate!(callback);
+      const stop = loader.onUpdate!(callback) as () => void;
 
       // first poll: no change
       await advanceTimers(1000);
@@ -576,7 +576,7 @@ describe('createHiveLoader', () => {
 
       const callback = vi.fn();
       vi.useFakeTimers();
-      const stop = loader.onUpdate!(callback);
+      const stop = loader.onUpdate!(callback) as () => void;
 
       await advanceTimers(3000);
       expect(callback).not.toHaveBeenCalled();
@@ -637,7 +637,7 @@ describe('createHiveLoader', () => {
 
       const callback = vi.fn();
       vi.useFakeTimers();
-      const stop = loader.onUpdate!(callback);
+      const stop = loader.onUpdate!(callback) as () => void;
 
       await advanceTimers(1000);
       expect(callback).not.toHaveBeenCalled();
@@ -674,7 +674,7 @@ describe('createHiveLoader', () => {
       await loader.load();
 
       vi.useFakeTimers();
-      const stop = loader.onUpdate!(vi.fn());
+      const stop = loader.onUpdate!(vi.fn()) as () => void;
       await advanceTimers(1000);
       const callsBeforeStop = (fetchFn as any).mock.calls.length;
 
@@ -729,7 +729,7 @@ describe('createHiveLoader', () => {
       await loader.load();
 
       vi.useFakeTimers();
-      const stop = loader.onUpdate!(vi.fn());
+      const stop = loader.onUpdate!(vi.fn()) as () => void;
 
       await advanceTimers(1000);
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
