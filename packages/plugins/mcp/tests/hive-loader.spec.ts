@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createHiveLoader,
   type HiveLoaderConfig,
-} from '../examples/hive-loader.js';
+} from '../src/experimental__hive-loader.js';
 
 const logger = createLoggerFromLogging(false);
 

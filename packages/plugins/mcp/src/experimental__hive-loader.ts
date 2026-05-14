@@ -1,5 +1,5 @@
 /**
- * Example: Hive App Deployment loader implemented via MCPOperationsLoader.
+ * EXPERIMENTAL Hive App Deployment loader implemented via MCPOperationsLoader.
  *
  * Fetches persisted GraphQL documents from a Hive App Deployment at startup,
  * then polls for updates on a configurable interval. Operations that carry the
@@ -16,8 +16,8 @@
  *   });
  */
 
-import type { PluginContext } from '../src/types.js';
-import type { MCPOperationsLoader } from '../src/plugin.js';
+import type { PluginContext } from './types.js';
+import type { MCPOperationsLoader } from './plugin.js';
 
 export interface HiveLoaderConfig {
   /** Hive registry access token */
@@ -119,6 +119,7 @@ async function gqlRequest<T>(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      Accept: 'application/graphql-response+json, application/json',
     },
     body: JSON.stringify({ query, variables }),
     signal: AbortSignal.timeout(30_000),

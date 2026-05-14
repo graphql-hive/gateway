@@ -29,6 +29,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./experimental__hive-loader": {
+      "require": {
+        "types": "./dist/experimental__hive-loader.d.cts",
+        "default": "./dist/experimental__hive-loader.cjs"
+      },
+      "import": {
+        "types": "./dist/experimental__hive-loader.d.ts",
+        "default": "./dist/experimental__hive-loader.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
