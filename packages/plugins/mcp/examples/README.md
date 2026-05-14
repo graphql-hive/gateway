@@ -9,45 +9,6 @@ This example demonstrates the MCP (Model Context Protocol) plugin for Hive Gatew
 | `basic.ts` | Programmatic config with operation files and `@mcpTool` directives |
 | `full.ts`  | All features: Langfuse, hooks, resources, templates, directives    |
 
----
-
-## Hive App Deployment loader (experimental)
-
-The `@graphql-hive/plugin-mcp/experimental__hive-loader` export provides a `loader` implementation that fetches persisted GraphQL documents from a [Hive App Deployment](https://the-guild.dev/graphql/hive/docs/management/app-deployments) and polls for updates. Operations annotated with `@mcpTool` are automatically registered as MCP tools.
-
-> **Experimental.** The integration with Hive Console is not yet finalized. This loader reflects what is currently possible with the Hive API and is subject to breaking changes without notice.
-
-### Installation
-
-The loader is included in the `@graphql-hive/plugin-mcp` package. No additional install is required.
-
-### Usage
-
-```typescript
-import { useMCP } from '@graphql-hive/plugin-mcp';
-import { createHiveLoader } from '@graphql-hive/plugin-mcp/experimental__hive-loader';
-
-useMCP(ctx, {
-  name: 'my-api',
-  loader: createHiveLoader(ctx, {
-    token: process.env.HIVE_REGISTRY_TOKEN!, // Hive registry access token
-    target: 'my-org/my-project/production', // "org/project/target" slugs
-    appName: 'my-mcp-app', // App deployment name in Hive
-    // appVersion: '1.0.0',                    // Pin to a specific version (omit for latest active)
-    // pollIntervalMs: 60_000,                 // How often to poll for updates (default: 60s)
-    // endpoint: 'https://app.graphql-hive.com/graphql',  // Hive API endpoint (default)
-  }),
-});
-```
-
-### How it works
-
-- `createHiveLoader` returns an `MCPOperationsLoader` that the MCP plugin calls at startup and subscribes to for live updates.
-- On `load()`, the loader resolves the target app deployment (latest active version, or a pinned `appVersion`), fetches all persisted documents via paginated Hive API queries, and returns their bodies as a single GraphQL source string.
-- After the initial load, `onUpdate` starts a polling loop. Every `pollIntervalMs` it re-fetches the documents and compares their hashes. If the set of documents changed, the plugin is notified and rebuilds its tool registry automatically.
-- If polling fails, the error is logged and the previous tools are kept. The next poll attempt is scheduled normally.
-- Cleanup (clearing the poll timer) happens automatically when the gateway disposes.
-
 Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on `:4000`.
 
 ---
