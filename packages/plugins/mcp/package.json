@@ -63,6 +63,7 @@
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/graphql-file-loader": "^8.1.12",
     "@graphql-tools/load": "^8.1.8",
+    "@graphql-tools/utils": "^11.0.0",
     "sofa-api": "0.18.10",
     "tslib": "^2.8.1"
   },

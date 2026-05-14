@@ -26,7 +26,7 @@
  */
 
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import type { AsyncExecutor, ExecutionResult } from '@graphql-tools/utils';
+import { isAsyncIterable, type AsyncExecutor } from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import type { MCPOperationsLoader } from './plugin.js';
 import type { PluginContext } from './types.js';
@@ -120,14 +120,20 @@ async function resolveVersion(
   target: string,
   targetSelector: TargetSelector,
 ): Promise<string> {
-  const result = (await execute({
+  const result = await execute<ActiveVersionsData>({
     document: FETCH_ACTIVE_VERSIONS_QUERY,
     variables: {
       reference: { bySelector: targetSelector },
       appName,
       first: 100,
     },
-  })) as ExecutionResult<ActiveVersionsData>;
+  });
+
+  if (isAsyncIterable(result)) {
+    throw new Error(
+      `Expected single execution result for active versions query, but got async iterable`,
+    );
+  }
 
   if (result.errors?.length) {
     throw new Error(
@@ -171,7 +177,7 @@ async function fetchDocuments(
   let cursor: string | null = null;
 
   for (let page = 0; page < 1000; page++) {
-    const result = (await execute({
+    const result = await execute<AppDeploymentDocsData>({
       document: FETCH_DOCS_QUERY,
       variables: {
         reference: { bySelector: targetSelector },
@@ -180,7 +186,7 @@ async function fetchDocuments(
         first: 100,
         after: cursor,
       },
-    })) as ExecutionResult<AppDeploymentDocsData>;
+    });
 
     if (result.errors?.length) {
       throw new Error(
@@ -195,7 +201,8 @@ async function fetchDocuments(
       );
     }
 
-    const deployment: { documents: DocumentConnection } | null = data.target.appDeployment;
+    const deployment: { documents: DocumentConnection } | null =
+      data.target.appDeployment;
     if (!deployment) {
       if (docs.length === 0) {
         throw new Error(
