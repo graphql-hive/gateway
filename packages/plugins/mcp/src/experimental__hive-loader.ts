@@ -6,14 +6,20 @@
  * @mcpTool directive are automatically registered as MCP tools by the plugin.
  *
  * Usage:
- *   useMCP(ctx, {
- *     name: 'my-api',
- *     loader: createHiveLoader(ctx, {
- *       token: process.env.HIVE_REGISTRY_TOKEN!,
- *       target: 'my-org/my-project/production',
- *       appName: 'my-mcp-app',
- *     }),
- *   });
+ *
+ * ```ts
+ * import { useMCP } from '@graphql-hive/mcp-plugin';
+ * import { createHiveLoader } from '@graphql-hive/mcp-plugin/experimental__hive-loader';
+ *
+ * useMCP(ctx, {
+ *   name: 'my-api',
+ *   loader: createHiveLoader(ctx, {
+ *     token: process.env.HIVE_REGISTRY_TOKEN!,
+ *     target: 'my-org/my-project/production',
+ *     appName: 'my-mcp-app',
+ *   }),
+ * });
+ * ```
  */
 
 import type { PluginContext } from './types.js';
