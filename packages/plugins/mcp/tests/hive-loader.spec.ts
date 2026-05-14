@@ -87,7 +87,9 @@ describe('createHiveLoader', () => {
         expect.objectContaining({ Authorization: 'Bearer test-token' }),
       );
 
-      const body = JSON.parse((fetchFn as any).mock.calls[0]![1]!.body as string);
+      const body = JSON.parse(
+        (fetchFn as any).mock.calls[0]![1]!.body as string,
+      );
       expect(body.variables.reference).toEqual({
         bySelector: {
           organizationSlug: 'my-org',
@@ -105,7 +107,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
                 },
@@ -119,7 +127,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'b', body: 'query B { b }', operationName: 'B' } },
+                    {
+                      node: {
+                        hash: 'b',
+                        body: 'query B { b }',
+                        operationName: 'B',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -164,7 +178,12 @@ describe('createHiveLoader', () => {
             target: {
               activeAppDeployments: {
                 edges: [
-                  { node: { version: '2.0.0', activatedAt: '2026-03-30T00:00:00Z' } },
+                  {
+                    node: {
+                      version: '2.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
                 ],
               },
             },
@@ -176,7 +195,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'x', body: 'query X { x }', operationName: 'X' } },
+                    {
+                      node: {
+                        hash: 'x',
+                        body: 'query X { x }',
+                        operationName: 'X',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -200,7 +225,12 @@ describe('createHiveLoader', () => {
             target: {
               activeAppDeployments: {
                 edges: [
-                  { node: { version: '3.0.0', activatedAt: '2026-03-30T00:00:00Z' } },
+                  {
+                    node: {
+                      version: '3.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
                 ],
               },
             },
@@ -212,7 +242,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'p1', body: 'query P1 { p1 }', operationName: 'P1' } },
+                    {
+                      node: {
+                        hash: 'p1',
+                        body: 'query P1 { p1 }',
+                        operationName: 'P1',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: true, endCursor: 'cursor-page1' },
                 },
@@ -226,7 +262,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'p2', body: 'query P2 { p2 }', operationName: 'P2' } },
+                    {
+                      node: {
+                        hash: 'p2',
+                        body: 'query P2 { p2 }',
+                        operationName: 'P2',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -273,9 +315,24 @@ describe('createHiveLoader', () => {
             target: {
               activeAppDeployments: {
                 edges: [
-                  { node: { version: '1.0.0', activatedAt: '2026-03-28T00:00:00Z' } },
-                  { node: { version: '3.0.0', activatedAt: '2026-03-30T00:00:00Z' } },
-                  { node: { version: '2.0.0', activatedAt: '2026-03-29T00:00:00Z' } },
+                  {
+                    node: {
+                      version: '1.0.0',
+                      activatedAt: '2026-03-28T00:00:00Z',
+                    },
+                  },
+                  {
+                    node: {
+                      version: '3.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
+                  {
+                    node: {
+                      version: '2.0.0',
+                      activatedAt: '2026-03-29T00:00:00Z',
+                    },
+                  },
                 ],
               },
             },
@@ -287,7 +344,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'v3doc', body: 'query V3 { v3 }', operationName: 'V3' } },
+                    {
+                      node: {
+                        hash: 'v3doc',
+                        body: 'query V3 { v3 }',
+                        operationName: 'V3',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -321,7 +384,12 @@ describe('createHiveLoader', () => {
             target: {
               activeAppDeployments: {
                 edges: [
-                  { node: { version: '1.0.0', activatedAt: '2026-03-30T00:00:00Z' } },
+                  {
+                    node: {
+                      version: '1.0.0',
+                      activatedAt: '2026-03-30T00:00:00Z',
+                    },
+                  },
                 ],
               },
             },
@@ -351,9 +419,7 @@ describe('createHiveLoader', () => {
     });
 
     it('throws on GraphQL errors', async () => {
-      const fetchFn = mockFetch([
-        { errors: [{ message: 'Unauthorized' }] },
-      ]);
+      const fetchFn = mockFetch([{ errors: [{ message: 'Unauthorized' }] }]);
 
       const loader = createHiveLoader(
         testCtx(fetchFn),
@@ -380,7 +446,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: '', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: '',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -430,7 +502,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
                 },
@@ -471,7 +549,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -486,7 +570,13 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -501,8 +591,20 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
-                    { node: { hash: 'b', body: 'query B { b }', operationName: 'B' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
+                    {
+                      node: {
+                        hash: 'b',
+                        body: 'query B { b }',
+                        operationName: 'B',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -549,7 +651,13 @@ describe('createHiveLoader', () => {
             appDeployment: {
               documents: {
                 edges: [
-                  { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                  {
+                    node: {
+                      hash: 'a',
+                      body: 'query A { a }',
+                      operationName: 'A',
+                    },
+                  },
                 ],
                 pageInfo: { hasNextPage: false, endCursor: null },
               },
@@ -559,7 +667,12 @@ describe('createHiveLoader', () => {
       };
 
       let callIndex = 0;
-      const responses = [sameResponse, sameResponse, sameResponse, sameResponse];
+      const responses = [
+        sameResponse,
+        sameResponse,
+        sameResponse,
+        sameResponse,
+      ];
       const fetchFn = vi.fn(async () => ({
         status: 200,
         statusText: 'OK',
@@ -594,8 +707,20 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
-                    { node: { hash: 'b', body: 'query B { b }', operationName: 'B' } },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
+                    {
+                      node: {
+                        hash: 'b',
+                        body: 'query B { b }',
+                        operationName: 'B',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -610,8 +735,20 @@ describe('createHiveLoader', () => {
               appDeployment: {
                 documents: {
                   edges: [
-                    { node: { hash: 'b', body: 'query B { b }', operationName: 'B' } },
-                    { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                    {
+                      node: {
+                        hash: 'b',
+                        body: 'query B { b }',
+                        operationName: 'B',
+                      },
+                    },
+                    {
+                      node: {
+                        hash: 'a',
+                        body: 'query A { a }',
+                        operationName: 'A',
+                      },
+                    },
                   ],
                   pageInfo: { hasNextPage: false, endCursor: null },
                 },
@@ -692,7 +829,13 @@ describe('createHiveLoader', () => {
             appDeployment: {
               documents: {
                 edges: [
-                  { node: { hash: 'a', body: 'query A { a }', operationName: 'A' } },
+                  {
+                    node: {
+                      hash: 'a',
+                      body: 'query A { a }',
+                      operationName: 'A',
+                    },
+                  },
                 ],
                 pageInfo: { hasNextPage: false, endCursor: null },
               },
