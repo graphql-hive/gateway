@@ -26,8 +26,12 @@
  */
 
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import { isAsyncIterable, type AsyncExecutor } from '@graphql-tools/utils';
-import { parse } from 'graphql';
+import {
+  isAsyncIterable,
+  MaybeAsyncIterable,
+  type AsyncExecutor,
+} from '@graphql-tools/utils';
+import { ExecutionResult, parse } from 'graphql';
 import type { MCPOperationsLoader } from './plugin.js';
 import type { PluginContext } from './types.js';
 
@@ -177,7 +181,7 @@ async function fetchDocuments(
   let cursor: string | null = null;
 
   for (let page = 0; page < 1000; page++) {
-    const result = await execute<AppDeploymentDocsData>({
+    const result = (await execute({
       document: FETCH_DOCS_QUERY,
       variables: {
         reference: { bySelector: targetSelector },
@@ -186,7 +190,13 @@ async function fetchDocuments(
         first: 100,
         after: cursor,
       },
-    });
+    })) as MaybeAsyncIterable<ExecutionResult<AppDeploymentDocsData>>;
+
+    if (isAsyncIterable(result)) {
+      throw new Error(
+        `Expected single execution result for active versions query, but got async iterable`,
+      );
+    }
 
     if (result.errors?.length) {
       throw new Error(
