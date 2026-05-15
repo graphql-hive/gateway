@@ -70,9 +70,9 @@ RUN set -eux; \
   dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
   rm -f "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"
 
-RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+RUN echo "deb http://security.debian.org/debian-security trixie-security main" >> /etc/apt/sources.list && \
  apt-get update && \
- apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy libgnutls30t64 && \
+ apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy libgnutls30t64 libnghttp2-14 && \
  apt-get install -f -y
 
 # cleanup
