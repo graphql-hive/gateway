@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { parseSelectionSet } from '@graphql-tools/utils';
 import {
+  FragmentDefinitionNode,
   getOperationAST,
   isObjectType,
   Kind,
@@ -200,6 +201,147 @@ describe('extractUnavailableFields', () => {
     };
     expect(stripWhitespaces(print(extractedSelectionSet))).toBe(
       '{ category { id details } }',
+    );
+  });
+  it('preserves inline fragment wrappers when the concrete type is missing from the subschema', () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface P {
+          id: ID!
+        }
+
+        interface Account {
+          id: ID!
+        }
+
+        type Relationship implements P {
+          id: ID!
+          acct: Account
+        }
+
+        type Query {
+          relByAcct: Relationship
+        }
+      `,
+    });
+    const relationshipQuery = /* GraphQL */ `
+      query {
+        relByAcct {
+          acct {
+            ... on Card {
+              billing
+            }
+          }
+          id
+        }
+      }
+    `;
+    const relationshipQueryDoc = parse(relationshipQuery, { noLocation: true });
+    const operationAst = getOperationAST(relationshipQueryDoc, null);
+    if (!operationAst) {
+      throw new Error('Operation AST not found');
+    }
+    const selectionSet = operationAst.selectionSet;
+    const relationshipSelection = selectionSet.selections[0];
+    if (relationshipSelection?.kind !== 'Field') {
+      throw new Error('Relationship selection not found');
+    }
+    const queryType = schema.getType('Query');
+    if (!isObjectType(queryType)) {
+      throw new Error('Query type not found');
+    }
+    const relationshipField = queryType.getFields()['relByAcct'];
+    if (!relationshipField) {
+      throw new Error('Relationship field not found');
+    }
+    const unavailableFields = extractUnavailableFields(
+      schema,
+      relationshipField,
+      relationshipSelection,
+      () => true,
+    );
+    const extractedSelectionSet: SelectionSetNode = {
+      kind: Kind.SELECTION_SET,
+      selections: unavailableFields,
+    };
+    expect(stripWhitespaces(print(extractedSelectionSet))).toBe(
+      '{ acct { ... on Card { billing } } }',
+    );
+  });
+  it('preserves inline fragment wrappers from fragment spreads when the concrete type is missing from the subschema', () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface P {
+          id: ID!
+        }
+
+        interface Account {
+          id: ID!
+        }
+
+        type Relationship implements P {
+          id: ID!
+          acct: Account
+        }
+
+        type Query {
+          relByAcct: Relationship
+        }
+      `,
+    });
+    const relationshipQuery = /* GraphQL */ `
+      query {
+        relByAcct {
+          acct {
+            ...CardFields
+          }
+          id
+        }
+      }
+
+      fragment CardFields on Card {
+        billing
+      }
+    `;
+    const relationshipQueryDoc = parse(relationshipQuery, { noLocation: true });
+    const operationAst = getOperationAST(relationshipQueryDoc, null);
+    if (!operationAst) {
+      throw new Error('Operation AST not found');
+    }
+    const selectionSet = operationAst.selectionSet;
+    const relationshipSelection = selectionSet.selections[0];
+    if (relationshipSelection?.kind !== 'Field') {
+      throw new Error('Relationship selection not found');
+    }
+    const queryType = schema.getType('Query');
+    if (!isObjectType(queryType)) {
+      throw new Error('Query type not found');
+    }
+    const relationshipField = queryType.getFields()['relByAcct'];
+    if (!relationshipField) {
+      throw new Error('Relationship field not found');
+    }
+    const fragments = relationshipQueryDoc.definitions.reduce<
+      Record<string, FragmentDefinitionNode>
+    >((acc, definition) => {
+      if (definition.kind === Kind.FRAGMENT_DEFINITION) {
+        acc[definition.name.value] = definition;
+      }
+      return acc;
+    }, {});
+    const unavailableFields = extractUnavailableFields(
+      schema,
+      relationshipField,
+      relationshipSelection,
+      () => true,
+      fragments,
+    );
+    const extractedSelectionSet: SelectionSetNode = {
+      kind: Kind.SELECTION_SET,
+      selections: unavailableFields,
+    };
+    expect(stripWhitespaces(print(extractedSelectionSet))).toBe(
+      '{ acct { ... on Card { billing } } }',
     );
   });
   it('issue #6614', () => {
