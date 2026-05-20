@@ -4770,7 +4770,7 @@ __metadata:
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
-    "@graphql-hive/render-laboratory": "npm:^0.1.6"
+    "@graphql-hive/render-laboratory": "npm:^0.1.8"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
@@ -4854,9 +4854,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/laboratory@npm:0.1.7":
-  version: 0.1.7
-  resolution: "@graphql-hive/laboratory@npm:0.1.7"
+"@graphql-hive/laboratory@npm:0.1.8":
+  version: 0.1.8
+  resolution: "@graphql-hive/laboratory@npm:0.1.8"
   dependencies:
     "@base-ui/react": "npm:^1.1.0"
     "@graphql-tools/url-loader": "npm:^9.1.0"
@@ -4873,7 +4873,7 @@ __metadata:
     subscriptions-transport-ws: ^0.11.0
     tslib: ^2.8.1
     zod: ^4.1.12
-  checksum: 10c0/b3a8dd1ee1de6a901c106356fa320143a2ea8db7906b8fe84c8d3c99a740d9f4694bc67049e79aac7938f7a33f00978dea07f94889a676e31db79ea60bd56099
+  checksum: 10c0/d095fbf3953a012bd9a3a7defb0463304e095ed3c69035a84f506a6343c0e9de51defc91bfe79778792c1ca570766996d6bd7c3394d2db6f0971e71ec4e40525
   languageName: node
   linkType: hard
 
@@ -5060,13 +5060,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/render-laboratory@npm:^0.1.6":
-  version: 0.1.7
-  resolution: "@graphql-hive/render-laboratory@npm:0.1.7"
+"@graphql-hive/render-laboratory@npm:^0.1.8":
+  version: 0.1.8
+  resolution: "@graphql-hive/render-laboratory@npm:0.1.8"
   dependencies:
-    "@graphql-hive/laboratory": "npm:0.1.7"
+    "@graphql-hive/laboratory": "npm:0.1.8"
     graphql-yoga: "npm:5.13.3"
-  checksum: 10c0/494cd1761e593148d51712e902699b0f5618bd16b151b720774728c937de3b787da0ab4c73c62b6c12afd5b27aae8c15d6dc3fe8bc668fa7caa95382d7f03889
+  checksum: 10c0/421469161e38ecd1fe0b9ac006231b5ebf2b4c25fc984e7391b169b34aee751e9dff521184ac1092461ef081da986b56f9c3b108e1a076ebaed4e711d3376036
   languageName: node
   linkType: hard
 
