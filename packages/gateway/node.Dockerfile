@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:26-trixie-slim AS install
+FROM node:26-bookworm-slim AS install
 
 WORKDIR /install
 
@@ -10,7 +10,7 @@ RUN npm audit fix --force
 
 #
 
-FROM node:26-trixie-slim
+FROM node:26-bookworm-slim
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
