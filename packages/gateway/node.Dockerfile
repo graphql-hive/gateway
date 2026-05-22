@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:26-bookworm-slim AS install
+FROM node:26-trixie-slim AS install
 
 WORKDIR /install
 
@@ -10,70 +10,14 @@ RUN npm audit fix --force
 
 #
 
-FROM node:26-bookworm-slim
+FROM node:26-trixie-slim
 
-# use the upcoming debian release (trixie) to get the latest security updates
-RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
-  apt-get update
-
-# some packaged libraries are vulnerable out of the box, upgrade everything
-# we use "dist-upgrade" to ensure that the latest versions are installed even if they require new dependencies
-RUN apt-get dist-upgrade -y
-
-RUN apt-get install -y \
-  # for security updates
-  debian-security-support \
-  # for healthchecks
-  wget curl \
-  # for proper signal propagation
-  dumb-init
-
-# Install specific security updates for openssl
-ARG TARGETARCH
-RUN set -eux; \
-  if [ -z "${TARGETARCH:-}" ]; then \
-    if ! command -v dpkg >/dev/null 2>&1; then \
-      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture." >&2; \
-      exit 1; \
-    fi; \
-    arch="$(dpkg --print-architecture)"; \
-  else \
-    arch="${TARGETARCH}"; \
-  fi; \
-  if [ -z "$arch" ]; then \
-    echo "Error: Could not determine architecture." >&2; \
-    exit 1; \
-  fi; \
-  openssl_version="3.5.5-1~deb13u2"; \
-  for pkg in openssl libssl3t64 openssl-provider-legacy; do \
-    wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
-    dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
-    rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
-  done
-
-# Install security update for libgnutls30t64
-RUN set -eux; \
-  if [ -z "${TARGETARCH:-}" ]; then \
-    if ! command -v dpkg >/dev/null 2>&1; then \
-      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture for libgnutls30t64." >&2; \
-      exit 1; \
-    fi; \
-    arch="$(dpkg --print-architecture)"; \
-  else \
-    arch="${TARGETARCH}"; \
-  fi; \
-  if [ -z "$arch" ]; then \
-    echo "Error: Could not determine architecture for libgnutls30t64." >&2; \
-    exit 1; \
-  fi; \
-  wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
-  dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
-  rm -f "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"
-
-RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
- apt-get update && \
- apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy libgnutls30t64 libnghttp2-14 && \
- apt-get install -f -y
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    debian-security-support \
+    wget curl \
+    dumb-init
 
 # cleanup
 RUN apt-get autoremove -y && \
