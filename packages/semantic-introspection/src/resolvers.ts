@@ -63,6 +63,63 @@ export function lookupCoordinate(
 }
 
 /**
+ * Filter context applied to coordinate lookups in the agent-facing
+ * surface — drops deprecated members and empty-after-filter types.
+ */
+export interface LookupFilter {
+  /** True when `@deprecated` members should be dropped from results. */
+  readonly excludeDeprecated: boolean;
+  /** Names of types that are empty-after-filter and should be omitted. */
+  readonly emptyTypes: ReadonlySet<string>;
+}
+
+/**
+ * Look up a coordinate and apply the agent-facing filter:
+ *  - if the value is a `@deprecated` field / enum value / input field and
+ *    `excludeDeprecated` is true → return `null`.
+ *  - if the value is a named type whose surface would be empty after the
+ *    filter (from {@link detectEmptyAfterFilter}) → return `null`.
+ *    (Emitting `__Type` with `fields: []` would violate the introspection
+ *    validity contract.)
+ *
+ * Non-cascading: a non-deprecated field whose return type is empty-after-
+ * filter is itself returned. The agent sees the field but its type is
+ * effectively opaque (no agent-visible members).
+ */
+export function filteredLookup(
+  schema: GraphQLSchema,
+  coordinate: SchemaCoordinate,
+  filter: LookupFilter,
+): SchemaDefinitionValue | null {
+  const value = lookupCoordinate(schema, coordinate);
+  if (value === null) {
+    return null;
+  }
+
+  if (filter.excludeDeprecated && isDeprecatedMember(value)) {
+    return null;
+  }
+
+  if (isNamedType(value) && filter.emptyTypes.has(value.name)) {
+    return null;
+  }
+
+  return value;
+}
+
+/**
+ * `@deprecated` may apply to a field, enum value, input field, or argument
+ * — all of which expose `deprecationReason: string | null` in graphql-js.
+ * Named types and directives never carry it.
+ */
+function isDeprecatedMember(value: SchemaDefinitionValue): boolean {
+  const v = value as { deprecationReason?: string | null };
+  return (
+    typeof v.deprecationReason === 'string' && v.deprecationReason.length > 0
+  );
+}
+
+/**
  * Determine which member of the `__SchemaDefinition` union a runtime value
  * belongs to. Returns the type name (e.g. `'__Type'`) used by graphql-js's
  * `resolveType` for unions.

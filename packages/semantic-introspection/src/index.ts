@@ -20,6 +20,12 @@
 
 export { applySemanticIntrospection } from './apply.js';
 export type { ApplySemanticIntrospectionOptions } from './apply.js';
+export { detectEmptyAfterFilter } from './detect-empty-after-filter.js';
+export type {
+  DetectEmptyAfterFilterOptions,
+  DetectEmptyAfterFilterResult,
+  EmptyReason,
+} from './detect-empty-after-filter.js';
 export type {
   SchemaCoordinate,
   SchemaCoordinatePath,

@@ -281,6 +281,101 @@ describe('applySemanticIntrospection', () => {
     expect(data.__definitions).toHaveLength(2);
   });
 
+  describe('excludeDeprecated', () => {
+    const SDL = /* GraphQL */ `
+      type Query {
+        ok: String
+        staleRef: Stale
+      }
+      type Stale {
+        legacyA: String @deprecated(reason: "gone")
+        legacyB: Int @deprecated(reason: "gone")
+      }
+      type Healthy {
+        name: String!
+      }
+    `;
+
+    it('__definitions omits an empty-after-filter type entirely', async () => {
+      const extended = applySemanticIntrospection(buildSchema(SDL), {
+        excludeDeprecated: true,
+      });
+      const result = await execute({
+        schema: extended,
+        document: parse(`{
+          __definitions(coordinates: ["Stale", "Healthy"]) {
+            __typename
+            ... on __Type { name }
+          }
+        }`),
+      });
+      expect(result.errors).toBeUndefined();
+      // Stale is empty-after-filter → omitted. Healthy survives.
+      expect(result.data).toEqual({
+        __definitions: [{ __typename: '__Type', name: 'Healthy' }],
+      });
+    });
+
+    it('__definitions omits a coordinate whose value is a deprecated member', async () => {
+      const extended = applySemanticIntrospection(buildSchema(SDL), {
+        excludeDeprecated: true,
+      });
+      const result = await execute({
+        schema: extended,
+        document: parse(`{
+          __definitions(coordinates: ["Stale.legacyA"]) {
+            __typename
+          }
+        }`),
+      });
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({ __definitions: [] });
+    });
+
+    it('__definitions DOES return a non-deprecated field whose return type is empty-after-filter (non-cascade)', async () => {
+      // Query.staleRef returns Stale (empty after filter), but staleRef
+      // itself is not deprecated, so it stays visible. Agent sees a field
+      // with an effectively opaque return type — the locked design choice.
+      const extended = applySemanticIntrospection(buildSchema(SDL), {
+        excludeDeprecated: true,
+      });
+      const result = await execute({
+        schema: extended,
+        document: parse(`{
+          __definitions(coordinates: ["Query.staleRef"]) {
+            __typename
+            ... on __Field { name }
+          }
+        }`),
+      });
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({
+        __definitions: [{ __typename: '__Field', name: 'staleRef' }],
+      });
+    });
+
+    it('standard __schema introspection is unaffected — still returns the deprecated field', async () => {
+      const extended = applySemanticIntrospection(buildSchema(SDL), {
+        excludeDeprecated: true,
+      });
+      const result = await execute({
+        schema: extended,
+        document: parse(`{
+          __type(name: "Stale") {
+            fields(includeDeprecated: true) { name isDeprecated }
+          }
+        }`),
+      });
+      expect(result.errors).toBeUndefined();
+      const data = result.data as {
+        __type: { fields: Array<{ name: string; isDeprecated: boolean }> };
+      };
+      const names = data.__type.fields.map((f) => f.name).sort();
+      expect(names).toEqual(['legacyA', 'legacyB']);
+      expect(data.__type.fields.every((f) => f.isDeprecated)).toBe(true);
+    });
+  });
+
   it('uses a custom provider when one is supplied via options', async () => {
     const schema = buildSchema(`type Query { hello: String }`);
     const seenCalls: Array<{ method: string; args: unknown[] }> = [];

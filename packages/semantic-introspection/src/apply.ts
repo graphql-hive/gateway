@@ -4,9 +4,14 @@ import {
   type GraphQLSchema,
   type GraphQLUnionType,
 } from 'graphql';
+import { detectEmptyAfterFilter } from './detect-empty-after-filter.js';
 import type { SchemaSearchProvider, SchemaSearchResult } from './provider.js';
 import { Bm25SearchProvider } from './provider/bm25/bm25-search-provider.js';
-import { lookupCoordinate, resolveSchemaDefinitionType } from './resolvers.js';
+import {
+  filteredLookup,
+  resolveSchemaDefinitionType,
+  type LookupFilter,
+} from './resolvers.js';
 import { buildSchemaExtensionDocument } from './schema-document.js';
 
 export interface ApplySemanticIntrospectionOptions {
@@ -64,13 +69,19 @@ export function applySemanticIntrospection(
     { assumeValid: true },
   );
 
+  const excludeDeprecated = options.excludeDeprecated === true;
   const provider =
-    options.provider ??
-    new Bm25SearchProvider(extended, {
-      excludeDeprecated: options.excludeDeprecated,
-    });
+    options.provider ?? new Bm25SearchProvider(extended, { excludeDeprecated });
 
-  attachResolvers(extended, queryType.name, provider);
+  // Precompute the empty-after-filter type set once at apply time. The
+  // set is fixed by the schema + filter; resolvers consult it on each
+  // __definitions / __SearchResult.definition lookup.
+  const { emptyTypes } = detectEmptyAfterFilter(extended, {
+    excludeDeprecated,
+  });
+  const filter: LookupFilter = { excludeDeprecated, emptyTypes };
+
+  attachResolvers(extended, queryType.name, provider, filter);
 
   return extended;
 }
@@ -79,6 +90,7 @@ function attachResolvers(
   schema: GraphQLSchema,
   queryTypeName: string,
   provider: SchemaSearchProvider,
+  filter: LookupFilter,
 ): void {
   const queryType = schema.getType(queryTypeName) as GraphQLObjectType;
   const queryFields = queryType.getFields();
@@ -112,7 +124,7 @@ function attachResolvers(
     ) => {
       const results = [];
       for (const coord of args.coordinates) {
-        const def = lookupCoordinate(schema, coord);
+        const def = filteredLookup(schema, coord, filter);
         if (def !== null) {
           results.push(def);
         }
@@ -130,7 +142,7 @@ function attachResolvers(
     const definitionField = fields['definition'];
     if (definitionField) {
       definitionField.resolve = (parent: SchemaSearchResult) =>
-        lookupCoordinate(schema, parent.coordinate);
+        filteredLookup(schema, parent.coordinate, filter);
     }
     const pathsToRootField = fields['pathsToRoot'];
     if (pathsToRootField) {
