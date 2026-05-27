@@ -1,6 +1,9 @@
 import { buildSchema, execute, parse, type GraphQLUnionType } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import { applySemanticIntrospection } from '../src/index.js';
+import {
+  applySemanticIntrospection,
+  type SchemaSearchProvider,
+} from '../src/index.js';
 
 describe('applySemanticIntrospection', () => {
   it('adds __search and __definitions fields to the query type', () => {
@@ -73,9 +76,230 @@ describe('applySemanticIntrospection', () => {
     expect(after).toEqual(before);
   });
 
-  it('stub __search resolver returns an empty list (P3.3 wires the real provider)', async () => {
+  it('__search returns coordinates matching the host schema (default BM25 provider)', async () => {
+    const schema = buildSchema(`
+      type Query {
+        user(id: ID!): User
+        posts: [Post!]!
+      }
+      type User { id: ID!  email: String! }
+      type Post { id: ID!  title: String! }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __search(query: "user email") {
+          coordinate
+          score
+          cursor
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as { __search: Array<{ coordinate: string }> };
+    expect(data.__search.map((r) => r.coordinate)).toContain('User.email');
+  });
+
+  it('__search resolves nested `definition` via the __SchemaDefinition union', async () => {
+    const schema = buildSchema(`
+      type Query { user: User }
+      type User { id: ID!  email: String! }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __search(query: "User") {
+          coordinate
+          definition {
+            __typename
+            ... on __Type { name kind }
+          }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as {
+      __search: Array<{
+        coordinate: string;
+        definition: { __typename: string; name?: string; kind?: string };
+      }>;
+    };
+    const userHit = data.__search.find((r) => r.coordinate === 'User');
+    expect(userHit).toBeDefined();
+    expect(userHit!.definition.__typename).toBe('__Type');
+    expect(userHit!.definition.name).toBe('User');
+    expect(userHit!.definition.kind).toBe('OBJECT');
+  });
+
+  it('__search resolves nested `pathsToRoot` via the provider', async () => {
+    const schema = buildSchema(`
+      type Query { user(id: ID!): User }
+      type User { id: ID!  email: String! }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __search(query: "email") {
+          coordinate
+          pathsToRoot
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as {
+      __search: Array<{ coordinate: string; pathsToRoot: string[][] }>;
+    };
+    const hit = data.__search.find((r) => r.coordinate === 'User.email');
+    expect(hit).toBeDefined();
+    expect(hit!.pathsToRoot).toContainEqual(['Query.user', 'User.email']);
+  });
+
+  it('__definitions resolves a type-only coordinate to a __Type', async () => {
     const schema = buildSchema(`type Query { hello: String }`);
     const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["Query"]) {
+          __typename
+          ... on __Type { name kind }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      __definitions: [{ __typename: '__Type', name: 'Query', kind: 'OBJECT' }],
+    });
+  });
+
+  it('__definitions resolves a field coordinate to a __Field', async () => {
+    const schema = buildSchema(`
+      type Query { user(id: ID!): User }
+      type User { id: ID! }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["Query.user"]) {
+          __typename
+          ... on __Field { name  args { name } }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as {
+      __definitions: Array<{
+        __typename: string;
+        name: string;
+        args: Array<{ name: string }>;
+      }>;
+    };
+    expect(data.__definitions).toHaveLength(1);
+    expect(data.__definitions[0]!.__typename).toBe('__Field');
+    expect(data.__definitions[0]!.name).toBe('user');
+    expect(data.__definitions[0]!.args.map((a) => a.name)).toEqual(['id']);
+  });
+
+  it('__definitions resolves an enum value to a __EnumValue', async () => {
+    const schema = buildSchema(`
+      type Query { _: Boolean }
+      enum Role { ADMIN GUEST }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["Role.ADMIN"]) {
+          __typename
+          ... on __EnumValue { name }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      __definitions: [{ __typename: '__EnumValue', name: 'ADMIN' }],
+    });
+  });
+
+  it('__definitions resolves an input-object field to a __InputValue', async () => {
+    const schema = buildSchema(`
+      type Query { _: Boolean }
+      input UserFilter { name: String }
+    `);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["UserFilter.name"]) {
+          __typename
+          ... on __InputValue { name }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      __definitions: [{ __typename: '__InputValue', name: 'name' }],
+    });
+  });
+
+  it('__definitions resolves an @-prefixed coordinate to a __Directive', async () => {
+    const schema = buildSchema(`type Query { _: Boolean }`);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["@deprecated"]) {
+          __typename
+          ... on __Directive { name }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      __definitions: [{ __typename: '__Directive', name: 'deprecated' }],
+    });
+  });
+
+  it('__definitions silently skips unknown coordinates (omitted from the result list)', async () => {
+    const schema = buildSchema(`type Query { hello: String }`);
+    const extended = applySemanticIntrospection(schema);
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __definitions(coordinates: ["Query", "Bogus", "Query.hello"]) {
+          __typename
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as { __definitions: unknown[] };
+    // "Bogus" is omitted; only two valid coordinates resolve.
+    expect(data.__definitions).toHaveLength(2);
+  });
+
+  it('uses a custom provider when one is supplied via options', async () => {
+    const schema = buildSchema(`type Query { hello: String }`);
+    const seenCalls: Array<{ method: string; args: unknown[] }> = [];
+    const customProvider: SchemaSearchProvider = {
+      async search(query, first, after, minScore) {
+        seenCalls.push({
+          method: 'search',
+          args: [query, first, after, minScore],
+        });
+        return [{ coordinate: 'Custom', score: 0.42, cursor: 'cursor0' }];
+      },
+      async getPathsToRoot(coordinate) {
+        seenCalls.push({ method: 'getPathsToRoot', args: [coordinate] });
+        return [];
+      },
+    };
+    const extended = applySemanticIntrospection(schema, {
+      provider: customProvider,
+    });
     const result = await execute({
       schema: extended,
       document: parse(`{
@@ -83,20 +307,14 @@ describe('applySemanticIntrospection', () => {
       }`),
     });
     expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({ __search: [] });
-  });
-
-  it('stub __definitions resolver returns an empty list', async () => {
-    const schema = buildSchema(`type Query { hello: String }`);
-    const extended = applySemanticIntrospection(schema);
-    const result = await execute({
-      schema: extended,
-      document: parse(`{
-        __definitions(coordinates: ["Query"]) { __typename }
-      }`),
+    expect(result.data).toEqual({
+      __search: [{ coordinate: 'Custom', score: 0.42, cursor: 'cursor0' }],
     });
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({ __definitions: [] });
+    // `first` defaults to 10 per SDL default; `after`/`minScore` default to null.
+    expect(seenCalls).toContainEqual({
+      method: 'search',
+      args: ['anything', 10, null, null],
+    });
   });
 
   it('standard introspection still sees the host schema (and is unaffected by deprecated filter — for later phases)', async () => {

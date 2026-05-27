@@ -2,15 +2,18 @@ import {
   extendSchema,
   type GraphQLObjectType,
   type GraphQLSchema,
+  type GraphQLUnionType,
 } from 'graphql';
-import type { SchemaSearchProvider } from './provider.js';
+import type { SchemaSearchProvider, SchemaSearchResult } from './provider.js';
+import { Bm25SearchProvider } from './provider/bm25/bm25-search-provider.js';
+import { lookupCoordinate, resolveSchemaDefinitionType } from './resolvers.js';
 import { buildSchemaExtensionDocument } from './schema-document.js';
 
 export interface ApplySemanticIntrospectionOptions {
   /**
    * Schema search provider used to satisfy `__search` and (indirectly)
-   * `__definitions`. If omitted, a default BM25-based provider is used
-   * (added by P3.4).
+   * `__definitions`. If omitted, a default {@link Bm25SearchProvider} is
+   * constructed over the extended schema.
    */
   provider?: SchemaSearchProvider;
 
@@ -19,6 +22,10 @@ export interface ApplySemanticIntrospectionOptions {
    * agent-facing surface (`__search` and `__definitions`). The underlying
    * schema is unaffected — standard `__schema` and `__type` introspection
    * continue to return the complete schema.
+   *
+   * Forwarded to the default {@link Bm25SearchProvider}; if a custom
+   * `provider` is supplied, this flag is ignored (the custom provider is
+   * responsible for its own filtering policy).
    *
    * Default: `false` (parity with the HotChocolate reference implementation).
    */
@@ -35,15 +42,11 @@ export interface ApplySemanticIntrospectionOptions {
  * with the two new fields. The query type does not have to be literally
  * named `Query`.
  *
- * Stub resolvers return empty results until P3.3 wires them to a real
- * {@link SchemaSearchProvider}.
- *
  * @throws if the input schema has no query type.
  */
 export function applySemanticIntrospection(
   schema: GraphQLSchema,
-  // Underscore-prefixed until P3.3 consumes options for real provider wiring.
-  _options: ApplySemanticIntrospectionOptions = {},
+  options: ApplySemanticIntrospectionOptions = {},
 ): GraphQLSchema {
   const queryType = schema.getQueryType();
   if (!queryType) {
@@ -61,29 +64,86 @@ export function applySemanticIntrospection(
     { assumeValid: true },
   );
 
-  attachStubResolvers(extended, queryType.name);
+  const provider =
+    options.provider ??
+    new Bm25SearchProvider(extended, {
+      excludeDeprecated: options.excludeDeprecated,
+    });
+
+  attachResolvers(extended, queryType.name, provider);
 
   return extended;
 }
 
-/**
- * Attach placeholder resolvers to the new Query fields. Returns empty
- * arrays until P3.3 wires the real {@link SchemaSearchProvider}.
- */
-function attachStubResolvers(
+function attachResolvers(
   schema: GraphQLSchema,
   queryTypeName: string,
+  provider: SchemaSearchProvider,
 ): void {
   const queryType = schema.getType(queryTypeName) as GraphQLObjectType;
-  const fields = queryType.getFields();
+  const queryFields = queryType.getFields();
 
-  const searchField = fields['__search'];
-  const definitionsField = fields['__definitions'];
-
+  // ── Query.__search ────────────────────────────────────────────────────
+  const searchField = queryFields['__search'];
   if (searchField) {
-    searchField.resolve = async () => [];
+    searchField.resolve = (
+      _root: unknown,
+      args: {
+        query: string;
+        first: number;
+        after?: string | null;
+        minScore?: number | null;
+      },
+    ) =>
+      provider.search(
+        args.query,
+        args.first,
+        args.after ?? null,
+        args.minScore ?? null,
+      );
   }
+
+  // ── Query.__definitions ───────────────────────────────────────────────
+  const definitionsField = queryFields['__definitions'];
   if (definitionsField) {
-    definitionsField.resolve = async () => [];
+    definitionsField.resolve = (
+      _root: unknown,
+      args: { coordinates: readonly string[] },
+    ) => {
+      const results = [];
+      for (const coord of args.coordinates) {
+        const def = lookupCoordinate(schema, coord);
+        if (def !== null) {
+          results.push(def);
+        }
+      }
+      return results;
+    };
+  }
+
+  // ── __SearchResult.{definition, pathsToRoot} ──────────────────────────
+  const searchResultType = schema.getType('__SearchResult') as
+    | GraphQLObjectType
+    | undefined;
+  if (searchResultType) {
+    const fields = searchResultType.getFields();
+    const definitionField = fields['definition'];
+    if (definitionField) {
+      definitionField.resolve = (parent: SchemaSearchResult) =>
+        lookupCoordinate(schema, parent.coordinate);
+    }
+    const pathsToRootField = fields['pathsToRoot'];
+    if (pathsToRootField) {
+      pathsToRootField.resolve = (parent: SchemaSearchResult) =>
+        provider.getPathsToRoot(parent.coordinate);
+    }
+  }
+
+  // ── __SchemaDefinition union resolveType ──────────────────────────────
+  const definitionUnion = schema.getType('__SchemaDefinition') as
+    | GraphQLUnionType
+    | undefined;
+  if (definitionUnion) {
+    definitionUnion.resolveType = resolveSchemaDefinitionType;
   }
 }
