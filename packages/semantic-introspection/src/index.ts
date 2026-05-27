@@ -26,3 +26,9 @@ export type {
   SchemaSearchProvider,
   SchemaSearchResult,
 } from './provider.js';
+export {
+  Bm25SearchProvider,
+  InvalidSearchCursorError,
+  SearchQueryTooLargeError,
+} from './provider/bm25/bm25-search-provider.js';
+export type { Bm25SearchProviderOptions } from './provider/bm25/bm25-search-provider.js';
