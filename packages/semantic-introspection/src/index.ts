@@ -11,11 +11,18 @@
  * providers (e.g. embeddings) can be supplied via the
  * `SchemaSearchProvider` interface.
  *
- * Status: scaffolding. Public surface stabilizes across P3.2 – P3.7.
+ * Status: in development. Public surface stabilizes across P3.2 – P3.7.
  *
  * @packageDocumentation
  * @see https://chillicream.com/blog/2026/04/22/semantic-introspection/
  * @see https://github.com/graphql/ai-wg/blob/main/rfcs/semantic-introspection.md
  */
 
-export {};
+export { applySemanticIntrospection } from './apply.js';
+export type { ApplySemanticIntrospectionOptions } from './apply.js';
+export type {
+  SchemaCoordinate,
+  SchemaCoordinatePath,
+  SchemaSearchProvider,
+  SchemaSearchResult,
+} from './provider.js';
