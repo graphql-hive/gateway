@@ -7018,7 +7018,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/perf@workspace:internal/perf"
   dependencies:
-    "@types/k6": "npm:^1.4.0"
+    "@types/k6": "npm:^2.0.0"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     canvas: "npm:^3.2.0"
@@ -12330,10 +12330,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/k6@npm:^1.4.0":
-  version: 1.7.0
-  resolution: "@types/k6@npm:1.7.0"
-  checksum: 10c0/d8de78a7f90acf3906cf8414dc88eba181cea8768b6cb4096fad24f8efd3eb6def8f8d119f3416406cb0e7691c1ef8853abe26ffe6814bd331d3e048fa85d189
+"@types/k6@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@types/k6@npm:2.0.0"
+  checksum: 10c0/4d01ecc3eb88bf6ad9a066ea9eb7734f7726dbe83c662e1ab3e6a37e6006bf0e755abd27cd78d37e388d1ee76066301057a8a27e473b80c1fae5bff471f08d8f
   languageName: node
   linkType: hard
 
