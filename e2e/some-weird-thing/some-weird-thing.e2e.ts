@@ -5,8 +5,9 @@ const { gateway, service } = createTenv(__dirname);
 
 it('should do something', async () => {
   const gw = await gateway({
-    supergraph: {
-      with: 'apollo',
+    subgraph: {
+      with: 'mesh',
+      subgraphName: 'hello',
       services: [await service('hello')],
     },
   });
