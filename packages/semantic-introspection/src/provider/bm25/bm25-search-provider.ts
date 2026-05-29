@@ -173,14 +173,17 @@ function findPathsToRoot(
     return paths;
   }
 
-  // BFS over the reverse adjacency.
+  // BFS over the reverse adjacency. Uses a head cursor rather than
+  // `queue.shift()` (which is O(n) per dequeue → O(V²) overall) so the
+  // traversal is true O(V + E).
   const queue: { typeName: string; path: SchemaCoordinate[] }[] = [
     { typeName: startTypeName, path: [] },
   ];
+  let head = 0;
   const visited = new Set<string>([startTypeName]);
 
-  while (queue.length > 0 && paths.length < maxPaths) {
-    const { typeName: currentType, path: currentPath } = queue.shift()!;
+  while (head < queue.length && paths.length < maxPaths) {
+    const { typeName: currentType, path: currentPath } = queue[head++]!;
     const references = reverseMap.get(currentType);
     if (!references) {
       continue;
@@ -225,13 +228,14 @@ function encodeCursor(offset: number): string {
 }
 
 function decodeCursor(cursor: string, resultCount: number): number {
-  let bytes: Buffer;
-  try {
-    bytes = Buffer.from(cursor, 'base64');
-  } catch {
-    throw new InvalidSearchCursorError(cursor);
-  }
-  if (bytes.length < 4) {
+  // `Buffer.from(s, 'base64')` is lenient — it silently drops invalid
+  // characters and never throws — so a try/catch here would be dead code.
+  // Validate canonically instead: decode, require exactly 4 bytes, and
+  // re-encode to confirm the input was the canonical base64 of those bytes
+  // (this rejects garbage/non-canonical cursors that would otherwise decode
+  // to an arbitrary offset).
+  const bytes = Buffer.from(cursor, 'base64');
+  if (bytes.length !== 4 || bytes.toString('base64') !== cursor) {
     throw new InvalidSearchCursorError(cursor);
   }
   const offset = bytes.readInt32LE(0);
