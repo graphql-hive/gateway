@@ -11,6 +11,7 @@ export const composeConfig = defineConfig({
     {
       sourceHandler: loadGraphQLHTTPSubgraph('hello', {
         endpoint: `http://localhost:${opts.getServicePort('hello')}/graphql`,
+        timeout: 100, // the timeout of the request to source, also see gateway.config.ts `upstreamTimeout`
       }),
     },
   ],
