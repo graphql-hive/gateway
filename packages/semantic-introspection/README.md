@@ -136,6 +136,30 @@ Two methods, mirroring HotChocolate's `ISchemaSearchProvider`:
 
 The default `Bm25SearchProvider` indexes type names, field names on Object / Interface, enum values, and input-object fields, with text = `name + " " + description`. Introspection-namespace types (`__*`) and directives are excluded from the search index (directives remain reachable via direct `__definitions` lookup).
 
+## Using with MCP
+
+A common deployment shape is to expose `__search`, `__definitions`, and a GraphQL execution endpoint as tools on an MCP server fronting a federated graph. The MCP server's `instructions` field is a non-trivial lever for agent behavior — wording that explicitly frames the schema as federated and warns against one-field-per-call patterns yields more predictable query composition across prompts that do not include explicit workflow instructions.
+
+Recommended `instructions` text for an MCP server exposing these tools over a federated graph:
+
+```text
+This is a federated GraphQL graph — a single GraphQL operation can join
+fields from multiple subgraphs in one round trip; lean on that.
+
+Workflow:
+(1) Use `__search` (in parallel for distinct topics if helpful) to find
+    schema coordinates by intent.
+(2) Pass all coordinates of interest to ONE `__definitions` call to
+    retrieve SDL.
+(3) Construct ONE GraphQL operation that selects every field needed
+    across all topics in one composed selection, and submit it via the
+    query-execution tool.
+
+Avoid one-field-per-call patterns — they defeat the federation.
+```
+
+In a 12-trial A/B over a federated test deployment, this wording produced tightly clustered behavior on natural-language prompts (~11 MCP calls per query, always one composed operation, definitions fetched in a single batch). A workflow-only baseline that omitted the federation framing averaged fewer calls (~7) on the same prompts but admitted a pathological thrash mode in one of four trials — 63 total calls, 18 separate query operations, definitions fetched in many small batches. The small extra cost of the composition-pushing wording is worth the worst-case bound for deployments where prompt content is not under the integrator's control.
+
 ## `detectEmptyAfterFilter` utility
 
 Exported for downstream tools that need to identify which types would be empty under a given filter — for example, a schema-rewriting layer (ACL / governance) that wants to physically prune the SDL.
