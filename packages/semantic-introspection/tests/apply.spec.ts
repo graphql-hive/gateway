@@ -351,6 +351,39 @@ describe('applySemanticIntrospection', () => {
       });
     });
 
+    it('__search drops empty-after-filter coordinates so non-null `definition` never resolves null', async () => {
+      // The default indexer always indexes the type document, so `Stale`
+      // is a search candidate. With `excludeDeprecated: true` it becomes
+      // empty-after-filter, and `__SearchResult.definition` (non-null)
+      // would null-propagate without resolver-layer filtering.
+      const extended = applySemanticIntrospection(buildSchema(SDL), {
+        excludeDeprecated: true,
+      });
+      const result = await execute({
+        schema: extended,
+        document: parse(`{
+          __search(query: "Stale Healthy") {
+            coordinate
+            definition {
+              __typename
+              ... on __Type { name }
+            }
+          }
+        }`),
+      });
+      expect(result.errors).toBeUndefined();
+      const data = result.data as {
+        __search: Array<{
+          coordinate: string;
+          definition: { __typename: string; name?: string };
+        }>;
+      };
+      // `Stale` is dropped at the search-resolver layer; `Healthy` survives.
+      const coords = data.__search.map((r) => r.coordinate);
+      expect(coords).not.toContain('Stale');
+      expect(coords).toContain('Healthy');
+    });
+
     it('standard __schema introspection is unaffected — still returns the deprecated field', async () => {
       const extended = applySemanticIntrospection(buildSchema(SDL), {
         excludeDeprecated: true,
@@ -382,7 +415,7 @@ describe('applySemanticIntrospection', () => {
           method: 'search',
           args: [query, first, after, minScore],
         });
-        return [{ coordinate: 'Custom', score: 0.42, cursor: 'cursor0' }];
+        return [{ coordinate: 'Query.hello', score: 0.42, cursor: 'cursor0' }];
       },
       async getPathsToRoot(coordinate) {
         seenCalls.push({ method: 'getPathsToRoot', args: [coordinate] });
@@ -400,13 +433,47 @@ describe('applySemanticIntrospection', () => {
     });
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({
-      __search: [{ coordinate: 'Custom', score: 0.42, cursor: 'cursor0' }],
+      __search: [{ coordinate: 'Query.hello', score: 0.42, cursor: 'cursor0' }],
     });
     // `first` defaults to 10 per SDL default; `after`/`minScore` default to null.
     expect(seenCalls).toContainEqual({
       method: 'search',
       args: ['anything', 10, null, null],
     });
+  });
+
+  it('filters provider results whose coordinate does not resolve in the schema', async () => {
+    // Hardens the non-null `__SearchResult.definition` contract against
+    // misbehaving providers that return synthetic / stale coordinates.
+    const schema = buildSchema(`type Query { hello: String }`);
+    const customProvider: SchemaSearchProvider = {
+      async search() {
+        return [
+          { coordinate: 'Query.hello', score: 1, cursor: 'c0' },
+          { coordinate: 'Bogus.coord', score: 0.5, cursor: 'c1' },
+        ];
+      },
+      async getPathsToRoot() {
+        return [];
+      },
+    };
+    const extended = applySemanticIntrospection(schema, {
+      provider: customProvider,
+    });
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __search(query: "x") {
+          coordinate
+          definition { __typename }
+        }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    const data = result.data as {
+      __search: Array<{ coordinate: string }>;
+    };
+    expect(data.__search.map((r) => r.coordinate)).toEqual(['Query.hello']);
   });
 
   it('leaves standard introspection unaffected by the deprecated filter', async () => {

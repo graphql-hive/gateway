@@ -51,7 +51,7 @@ export function applySemanticIntrospection(
   });
   const filter: LookupFilter = { excludeDeprecated, emptyTypes };
 
-  attachSearchResolver(extended, queryType.name, provider);
+  attachSearchResolver(extended, queryType.name, provider, filter);
   attachDefinitionsResolver(extended, queryType.name, filter);
   attachSearchResultResolvers(extended, provider, filter);
   attachDefinitionUnionResolveType(extended);
@@ -63,11 +63,12 @@ function attachSearchResolver(
   schema: GraphQLSchema,
   queryTypeName: string,
   provider: SchemaSearchProvider,
+  filter: LookupFilter,
 ): void {
   const queryType = schema.getType(queryTypeName) as GraphQLObjectType;
   const searchField = queryType.getFields()['__search'];
   if (!searchField) return;
-  searchField.resolve = (
+  searchField.resolve = async (
     _root: unknown,
     args: {
       query: string;
@@ -75,13 +76,21 @@ function attachSearchResolver(
       after?: string | null;
       minScore?: number | null;
     },
-  ) =>
-    provider.search(
+  ) => {
+    const results = await provider.search(
       args.query,
       args.first,
       args.after ?? null,
       args.minScore ?? null,
     );
+    // Drop results whose coordinate fails the filter — the
+    // `__SearchResult.definition` resolver will return `null` for them,
+    // and `definition` is non-null in the SDL. A page can come back
+    // shorter than `first`; the cursor still advances correctly.
+    return results.filter(
+      (r) => filteredLookup(schema, r.coordinate, filter) !== null,
+    );
+  };
 }
 
 function attachDefinitionsResolver(
