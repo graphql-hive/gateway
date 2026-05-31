@@ -415,6 +415,7 @@ describe('applySemanticIntrospection', () => {
           method: 'search',
           args: [query, first, after, minScore],
         });
+        if (after !== null) return []; // single-page mock
         return [{ coordinate: 'Query.hello', score: 0.42, cursor: 'cursor0' }];
       },
       async getPathsToRoot(coordinate) {
@@ -442,12 +443,88 @@ describe('applySemanticIntrospection', () => {
     });
   });
 
+  it('keeps paginating internally when a whole provider page is filtered out', async () => {
+    // Without the loop, the resolver returns [] for the first call and
+    // the client has no cursor to advance — later valid hits are lost.
+    const schema = buildSchema(`type Query { hello: String  world: String }`);
+    let callCount = 0;
+    const customProvider: SchemaSearchProvider = {
+      async search(_query, first, after) {
+        callCount++;
+        if (after === null) {
+          // First page: all bogus, all will be filtered.
+          return [
+            { coordinate: 'Bogus.one', score: 1, cursor: 'cursor-after-1' },
+            { coordinate: 'Bogus.two', score: 0.9, cursor: 'cursor-after-2' },
+          ];
+        }
+        if (after === 'cursor-after-2') {
+          // Second page: real coordinates.
+          return [
+            { coordinate: 'Query.hello', score: 0.8, cursor: 'cursor-after-3' },
+            { coordinate: 'Query.world', score: 0.7, cursor: 'cursor-after-4' },
+          ].slice(0, first);
+        }
+        return [];
+      },
+      async getPathsToRoot() {
+        return [];
+      },
+    };
+    const extended = applySemanticIntrospection(schema, {
+      provider: customProvider,
+    });
+    const result = await execute({
+      schema: extended,
+      document: parse(`{
+        __search(query: "x", first: 2) { coordinate }
+      }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(callCount).toBeGreaterThanOrEqual(2);
+    const data = result.data as {
+      __search: Array<{ coordinate: string }>;
+    };
+    expect(data.__search.map((r) => r.coordinate)).toEqual([
+      'Query.hello',
+      'Query.world',
+    ]);
+  });
+
+  it('caps internal pagination loops so a non-advancing provider cannot hang', async () => {
+    const schema = buildSchema(`type Query { hello: String }`);
+    let callCount = 0;
+    const stuckProvider: SchemaSearchProvider = {
+      async search() {
+        callCount++;
+        // Same cursor every time — non-advancing.
+        return [{ coordinate: 'Bogus.coord', score: 1, cursor: 'same-cursor' }];
+      },
+      async getPathsToRoot() {
+        return [];
+      },
+    };
+    const extended = applySemanticIntrospection(schema, {
+      provider: stuckProvider,
+    });
+    const result = await execute({
+      schema: extended,
+      document: parse(`{ __search(query: "x") { coordinate } }`),
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({ __search: [] });
+    // Should break after the second call when it notices the cursor
+    // didn't change. Generous upper bound for resilience.
+    expect(callCount).toBeLessThanOrEqual(3);
+  });
+
   it('filters provider results whose coordinate does not resolve in the schema', async () => {
     // Hardens the non-null `__SearchResult.definition` contract against
     // misbehaving providers that return synthetic / stale coordinates.
     const schema = buildSchema(`type Query { hello: String }`);
     const customProvider: SchemaSearchProvider = {
-      async search() {
+      async search(_q, _first, after) {
+        if (after !== null) return []; // single-page mock
         return [
           { coordinate: 'Query.hello', score: 1, cursor: 'c0' },
           { coordinate: 'Bogus.coord', score: 0.5, cursor: 'c1' },

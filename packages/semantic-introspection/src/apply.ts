@@ -59,6 +59,14 @@ export function applySemanticIntrospection(
   return extended;
 }
 
+/**
+ * Maximum provider pages fetched per `__search` call when the filter
+ * keeps dropping every result. Guards against non-advancing providers
+ * and against pathological schemas where huge swaths of indexed
+ * coordinates are empty-after-filter.
+ */
+const SEARCH_MAX_PROVIDER_PAGES = 16;
+
 function attachSearchResolver(
   schema: GraphQLSchema,
   queryTypeName: string,
@@ -77,19 +85,49 @@ function attachSearchResolver(
       minScore?: number | null;
     },
   ) => {
-    const results = await provider.search(
-      args.query,
-      args.first,
-      args.after ?? null,
-      args.minScore ?? null,
-    );
-    // Drop results whose coordinate fails the filter — the
-    // `__SearchResult.definition` resolver will return `null` for them,
-    // and `definition` is non-null in the SDL. A page can come back
-    // shorter than `first`; the cursor still advances correctly.
-    return results.filter(
-      (r) => filteredLookup(schema, r.coordinate, filter) !== null,
-    );
+    const target = args.first;
+    const minScore = args.minScore ?? null;
+    const survivors: SchemaSearchResult[] = [];
+    let after = args.after ?? null;
+
+    // Loop until we have `first` survivors or the provider is exhausted.
+    // A naive single-page fetch would lose pagination entirely when a
+    // whole page is filtered out: the client gets `[]` with no cursor
+    // and can't reach later valid hits.
+    for (let page = 0; page < SEARCH_MAX_PROVIDER_PAGES; page++) {
+      const rawPage = await provider.search(
+        args.query,
+        target,
+        after,
+        minScore,
+      );
+      if (rawPage.length === 0) {
+        break;
+      }
+
+      for (const r of rawPage) {
+        if (filteredLookup(schema, r.coordinate, filter) !== null) {
+          survivors.push(r);
+          if (survivors.length >= target) {
+            break;
+          }
+        }
+      }
+
+      if (survivors.length >= target) {
+        break;
+      }
+
+      // Whole page kept fewer than `target` survivors; advance past it.
+      const lastCursor = rawPage[rawPage.length - 1]!.cursor;
+      if (lastCursor === after) {
+        // Provider isn't advancing — safety break.
+        break;
+      }
+      after = lastCursor;
+    }
+
+    return survivors;
   };
 }
 
