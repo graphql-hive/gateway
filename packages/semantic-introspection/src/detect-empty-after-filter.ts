@@ -39,7 +39,12 @@ export function detectEmptyAfterFilter(
 ): DetectEmptyAfterFilterResult {
   const excludeDeprecated = options.excludeDeprecated === true;
   if (!excludeDeprecated) {
-    return EMPTY_RESULT;
+    // Fresh instance — a module-level shared object would leak across
+    // callers if any of them mutate the returned Set/Map.
+    return {
+      emptyTypes: new Set<string>(),
+      reasons: new Map<string, EmptyReason>(),
+    };
   }
 
   const emptyTypes = new Set<string>();
@@ -109,8 +114,3 @@ export function detectEmptyAfterFilter(
 
   return { emptyTypes, reasons };
 }
-
-const EMPTY_RESULT: DetectEmptyAfterFilterResult = {
-  emptyTypes: new Set<string>(),
-  reasons: new Map<string, EmptyReason>(),
-};

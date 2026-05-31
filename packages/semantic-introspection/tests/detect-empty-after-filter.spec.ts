@@ -1,6 +1,9 @@
 import { buildSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import { detectEmptyAfterFilter } from '../src/detect-empty-after-filter.js';
+import {
+  detectEmptyAfterFilter,
+  type EmptyReason,
+} from '../src/detect-empty-after-filter.js';
 
 const FIXTURE_SDL = /* GraphQL */ `
   type Query {
@@ -51,6 +54,21 @@ const FIXTURE_SDL = /* GraphQL */ `
 `;
 
 describe('detectEmptyAfterFilter', () => {
+  it('returns a fresh result on each call (no shared mutable state)', () => {
+    const schema = buildSchema('type Query { _: Boolean }');
+    const r1 = detectEmptyAfterFilter(schema);
+    // Mutate the returned collections via type-asserted casts (the
+    // public return type is Readonly* but the runtime values are not).
+    (r1.emptyTypes as Set<string>).add('Poisoned');
+    (r1.reasons as Map<string, EmptyReason>).set(
+      'Poisoned',
+      'all-fields-deprecated',
+    );
+    const r2 = detectEmptyAfterFilter(schema);
+    expect(r2.emptyTypes.has('Poisoned')).toBe(false);
+    expect(r2.reasons.has('Poisoned')).toBe(false);
+  });
+
   it('returns an empty set when excludeDeprecated is false (or unset)', () => {
     const schema = buildSchema(FIXTURE_SDL);
     const r1 = detectEmptyAfterFilter(schema);
