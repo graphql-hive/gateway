@@ -120,10 +120,7 @@ describe('indexSchema', () => {
       expect(coords).toContain('UserFilter.name');
     });
 
-    it('does NOT skip the parent type even when all of its members are deprecated', () => {
-      // The "empty after filter" cascade (omission of the parent type) is
-      // the responsibility of `detectEmptyAfterFilter` + the `__definitions`
-      // resolver — not the indexer. The indexer only filters at member level.
+    it('does not skip the parent type when all members are deprecated', () => {
       const { documents } = indexSchema(
         buildSchema(`
           type Query { _: Boolean }

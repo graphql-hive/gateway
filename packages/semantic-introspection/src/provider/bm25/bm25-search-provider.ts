@@ -9,58 +9,22 @@ import { Bm25Index } from './bm25-index.js';
 import { indexSchema, type SchemaIndexerOptions } from './schema-indexer.js';
 import { tokenize } from './tokenizer.js';
 
-/** Maximum length, in characters, of an accepted query string. */
 const MAX_QUERY_LENGTH = 1024;
-
-/** Maximum number of paths returned by {@link Bm25SearchProvider.getPathsToRoot}. */
 const MAX_PATHS = 5;
 
-/** Thrown when a `search` query exceeds {@link MAX_QUERY_LENGTH}. */
-export class SearchQueryTooLargeError extends Error {
-  constructor(
-    public readonly maxLength: number,
-    public readonly actualLength: number,
-  ) {
-    super(
-      `Search query exceeds maximum length of ${maxLength} characters (got ${actualLength}).`,
-    );
-    this.name = 'SearchQueryTooLargeError';
-  }
-}
-
-/** Thrown when a cursor is malformed or out of range. */
-export class InvalidSearchCursorError extends Error {
-  constructor(public readonly cursor: string) {
-    super(`Invalid search cursor: ${JSON.stringify(cursor)}`);
-    this.name = 'InvalidSearchCursorError';
-  }
-}
-
-export interface Bm25SearchProviderOptions extends SchemaIndexerOptions {
-  // Reserved for future tuning (k1, b, etc.). Today: only excludeDeprecated.
-}
-
 interface SearchData {
-  readonly index: Bm25Index;
-  readonly reverseMap: ReadonlyMap<string, readonly SchemaCoordinate[]>;
-  readonly rootTypeNames: ReadonlySet<string>;
+  index: Bm25Index;
+  reverseMap: Map<string, SchemaCoordinate[]>;
+  rootTypeNames: Set<string>;
 }
 
-/**
- * Default {@link SchemaSearchProvider} — BM25 over the schema's indexed
- * documents, with BFS path-to-root via the reverse adjacency map.
- *
- * Direct port of HotChocolate's `BM25SearchProvider`. Behavior matches the
- * .NET reference, including normalization (scores rescaled into `[0, 1]`
- * by dividing through the top-ranked result's raw score) and cursor
- * encoding (little-endian int32 base64).
- */
+/** BM25 search over the schema's indexed documents, with BFS path-to-root via the reverse adjacency map. */
 export class Bm25SearchProvider implements SchemaSearchProvider {
   private searchData?: SearchData;
 
   constructor(
     private readonly schema: GraphQLSchema,
-    private readonly options: Bm25SearchProviderOptions = {},
+    private readonly options: SchemaIndexerOptions = {},
   ) {}
 
   async search(
@@ -76,10 +40,12 @@ export class Bm25SearchProvider implements SchemaSearchProvider {
       throw new RangeError('first must be a positive integer');
     }
     if (query.length > MAX_QUERY_LENGTH) {
-      throw new SearchQueryTooLargeError(MAX_QUERY_LENGTH, query.length);
+      throw new RangeError(
+        `Search query exceeds maximum length of ${MAX_QUERY_LENGTH} characters (got ${query.length}).`,
+      );
     }
     if (after !== null && after.length === 0) {
-      throw new InvalidSearchCursorError(after);
+      throw new Error(`Invalid search cursor: ${JSON.stringify(after)}`);
     }
 
     const data = this.ensureIndex();
@@ -99,9 +65,7 @@ export class Bm25SearchProvider implements SchemaSearchProvider {
       const normalized = maxRawScore > 0 ? scored.score / maxRawScore : 0;
 
       if (minScore !== null && normalized < minScore) {
-        // rawResults are sorted by score desc; everything after this will
-        // also fail the threshold.
-        break;
+        break; // rawResults sorted by score desc — everything after also fails.
       }
 
       results.push({
@@ -131,13 +95,11 @@ export class Bm25SearchProvider implements SchemaSearchProvider {
 
     const queryType = this.schema.getQueryType();
     if (!queryType) {
-      throw new Error(
-        '[@graphql-hive/semantic-introspection] Bm25SearchProvider: schema must define a query type',
-      );
+      throw new Error('Bm25SearchProvider: schema must define a query type');
     }
 
     const { documents, reverseMap } = indexSchema(this.schema, this.options);
-    const index = Bm25Index.build(documents);
+    const index = new Bm25Index(documents);
 
     const rootTypeNames = new Set<string>([queryType.name]);
     const mutation = this.schema.getMutationType();
@@ -173,9 +135,7 @@ function findPathsToRoot(
     return paths;
   }
 
-  // BFS over the reverse adjacency. Uses a head cursor rather than
-  // `queue.shift()` (which is O(n) per dequeue → O(V²) overall) so the
-  // traversal is true O(V + E).
+  // BFS over the reverse adjacency, head-indexed for O(V + E) dequeue.
   const queue: { typeName: string; path: SchemaCoordinate[] }[] = [
     { typeName: startTypeName, path: [] },
   ];
@@ -220,7 +180,7 @@ function getCoordinateTypeName(coordinate: SchemaCoordinate): string {
   return dot >= 0 ? coordinate.slice(0, dot) : coordinate;
 }
 
-/** Little-endian int32 base64, matching .NET BitConverter.GetBytes output. */
+/** Little-endian int32 base64. */
 function encodeCursor(offset: number): string {
   const buf = Buffer.alloc(4);
   buf.writeInt32LE(offset, 0);
@@ -228,19 +188,14 @@ function encodeCursor(offset: number): string {
 }
 
 function decodeCursor(cursor: string, resultCount: number): number {
-  // `Buffer.from(s, 'base64')` is lenient — it silently drops invalid
-  // characters and never throws — so a try/catch here would be dead code.
-  // Validate canonically instead: decode, require exactly 4 bytes, and
-  // re-encode to confirm the input was the canonical base64 of those bytes
-  // (this rejects garbage/non-canonical cursors that would otherwise decode
-  // to an arbitrary offset).
+  // `Buffer.from(s, 'base64')` is lenient (never throws); validate canonically.
   const bytes = Buffer.from(cursor, 'base64');
   if (bytes.length !== 4 || bytes.toString('base64') !== cursor) {
-    throw new InvalidSearchCursorError(cursor);
+    throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
   }
   const offset = bytes.readInt32LE(0);
   if (offset < 0 || offset > resultCount) {
-    throw new InvalidSearchCursorError(cursor);
+    throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
   }
   return offset;
 }

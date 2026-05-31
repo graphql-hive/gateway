@@ -1,10 +1,6 @@
 import { parse, type DocumentNode } from 'graphql';
 
-/**
- * Static SDL fragment defining the semantic-introspection types added to a
- * host schema. Matches HotChocolate's `SemanticIntrospectionSchema.cs`
- * verbatim so the wire shape is interoperable.
- */
+/** SDL for the semantic-introspection types added to a host schema. */
 export const SEMANTIC_INTROSPECTION_TYPES_SDL = /* GraphQL */ `
   type __SearchResult {
     cursor: String!
@@ -22,12 +18,7 @@ export const SEMANTIC_INTROSPECTION_TYPES_SDL = /* GraphQL */ `
     | __Directive
 `;
 
-/**
- * Field definitions for the semantic-introspection Query extensions.
- * Combined with the host schema's actual query type name in
- * {@link buildSchemaExtensionDocument} — the query type does not have to be
- * literally named `Query`.
- */
+/** SDL for the query-type extensions; spliced into the host's query type by {@link buildSchemaExtensionDocument}. */
 export const SEMANTIC_INTROSPECTION_QUERY_FIELDS_SDL = /* GraphQL */ `
   __search(
     query: String!
@@ -38,10 +29,7 @@ export const SEMANTIC_INTROSPECTION_QUERY_FIELDS_SDL = /* GraphQL */ `
   __definitions(coordinates: [String!]!): [__SchemaDefinition!]!
 `;
 
-/**
- * Build the SDL extension document tailored to a specific host schema's
- * query type name.
- */
+/** Build the SDL extension document for a host schema's query type. */
 export function buildSchemaExtensionDocument(
   queryTypeName: string,
 ): DocumentNode {

@@ -15,32 +15,21 @@ import type { SchemaCoordinate } from '../../provider.js';
 import type { Bm25Document } from './document.js';
 
 export interface SchemaIndexerOptions {
-  /**
-   * Skip `@deprecated` fields, enum values, and input fields when emitting
-   * documents. Additive enhancement over the HotChocolate reference for
-   * agent-facing surface filtering — the underlying schema is unaffected.
-   */
+  /** Skip `@deprecated` fields, enum values, and input fields when emitting documents. */
   excludeDeprecated?: boolean;
 }
 
 export interface SchemaIndexResult {
-  readonly documents: Bm25Document[];
-  /**
-   * `typeName → coordinates of fields that return this type`. Used by
-   * path-to-root traversal in the search provider.
-   */
-  readonly reverseMap: Map<string, SchemaCoordinate[]>;
+  documents: Bm25Document[];
+  /** `typeName → coordinates of fields returning this type`; used for path-to-root traversal. */
+  reverseMap: Map<string, SchemaCoordinate[]>;
 }
 
 /**
- * Walk the schema and produce BM25 documents plus a reverse adjacency map.
- * Direct port of HotChocolate's `SchemaIndexer`.
- *
- * Indexing recipe (matches the reference):
- *  - types / fields-on-complex-types / enum values / input-object fields
- *  - text per document = `name + " " + description` (or just `name`)
- *  - skip introspection types and any `__`-prefixed types/fields
- *  - do NOT index directives (they are reachable only via `__definitions`)
+ * Walk the schema and produce BM25 documents plus a reverse adjacency
+ * map. Indexes types, fields on object/interface types, enum values, and
+ * input-object fields, skipping introspection types and directives; the
+ * indexed text for each document is `name + " " + description`.
  */
 export function indexSchema(
   schema: GraphQLSchema,

@@ -8,16 +8,11 @@ import {
 } from 'graphql';
 
 export interface DetectEmptyAfterFilterOptions {
-  /**
-   * Treat `@deprecated` fields, enum values, and input fields as filtered
-   * out when deciding whether a type is empty. When `false` (default),
-   * every type is treated as non-empty (no filter is applied) and the
-   * result is an empty set.
-   */
+  /** Treat `@deprecated` members as filtered out. When `false` (default) the result is empty. */
   excludeDeprecated?: boolean;
 }
 
-/** Why a type ended up classified as empty-after-filter. */
+/** Why a type was classified as empty-after-filter. */
 export type EmptyReason =
   | 'all-fields-deprecated'
   | 'all-input-fields-deprecated'
@@ -26,34 +21,17 @@ export type EmptyReason =
   | 'all-interface-fields-deprecated';
 
 export interface DetectEmptyAfterFilterResult {
-  /** Names of types that are empty under the given filter. */
-  readonly emptyTypes: ReadonlySet<string>;
-  /** Why each empty type was so classified. */
-  readonly reasons: ReadonlyMap<string, EmptyReason>;
+  emptyTypes: ReadonlySet<string>;
+  reasons: ReadonlyMap<string, EmptyReason>;
 }
 
 /**
- * Identify the set of types that would be left empty by an agent-facing
- * filter — specifically, types whose own member content fails the GraphQL
- * spec's "≥ 1" rule for their Kind once filtered.
- *
- * Rules per Kind:
- *  - Object / Interface: zero non-deprecated fields → empty.
- *  - Input object: zero non-deprecated fields → empty.
- *  - Enum: zero non-deprecated values → empty.
- *  - Union: zero non-empty members → empty (recursive; resolved via
- *    fixed-point iteration).
- *  - Scalar: never empty.
- *
- * Used by `__definitions` to decide which coordinates to omit (returning
- * `__Type` with `fields: []` would violate the introspection validity
- * contract), and exported publicly so downstream consumers (e.g. an ACL
- * package that physically rewrites the SDL) can drive their own
- * delete-or-cascade decisions.
- *
- * Non-cascading on references: a non-deprecated field whose return type
- * is empty-after-filter is NOT itself classified as empty — that's a
- * deliberate design choice (see the locked Phase 3 design).
+ * Identify types whose own member content fails the GraphQL spec's "≥ 1"
+ * rule for their Kind once `@deprecated` members are filtered out
+ * (Object/Interface/Input zero non-deprecated fields, Enum zero
+ * non-deprecated values, Union zero non-empty members — resolved via
+ * fixed-point iteration; scalars never qualify). Non-cascading: a field
+ * whose return type is empty-after-filter is not itself classified empty.
  */
 export function detectEmptyAfterFilter(
   schema: GraphQLSchema,
@@ -71,8 +49,7 @@ export function detectEmptyAfterFilter(
     (t) => !t.name.startsWith('__'),
   );
 
-  // Fixed-point: union emptiness depends on the emptiness of its members,
-  // which may themselves get classified during this pass.
+  // fixed-point for unions
   let changed = true;
   while (changed) {
     changed = false;

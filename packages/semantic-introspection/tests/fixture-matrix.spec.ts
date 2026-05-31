@@ -2,16 +2,7 @@ import { buildSchema, execute, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { applySemanticIntrospection } from '../src/index.js';
 
-/**
- * Broad integration matrix exercising empty-after-filter behavior across
- * every Kind in a single fixture schema, plus the non-cascade reference
- * case (a non-deprecated field that references an empty-after-filter
- * type — the field stays, the type is opaque).
- *
- * Mirrors the locked design in the project memory: validity-forced
- * cascade for Object / Input / Enum / Interface / Union; non-cascade for
- * fields whose return type or arg type would be opaque.
- */
+/** Integration matrix for empty-after-filter across every Kind, plus the non-cascade reference case. */
 
 const KITCHEN_SINK_SDL = /* GraphQL */ `
   type Query {
@@ -130,16 +121,14 @@ describe('fixture matrix — empty-after-filter across all Kinds', () => {
     expect(await defs(['AllDeadInput.a'])).toEqual([]);
   });
 
-  it('keeps a non-deprecated field whose RETURN type is empty-after-filter (non-cascade)', async () => {
-    // Query.staleRef → StaleObject (empty). The field itself is not
-    // deprecated, so it remains visible; the type is just opaque to the
-    // agent. Locked design choice.
+  it('keeps a non-deprecated field whose return type is empty-after-filter', async () => {
+    // Field stays visible even though StaleObject is opaque to the agent.
     expect(await defs(['Query.staleRef'])).toEqual([
       { __typename: '__Field', fieldName: 'staleRef' },
     ]);
   });
 
-  it('keeps a non-deprecated field whose ARG type is empty-after-filter (non-cascade)', async () => {
+  it('keeps a non-deprecated field whose arg type is empty-after-filter', async () => {
     expect(await defs(['Query.deadInputUsage'])).toEqual([
       { __typename: '__Field', fieldName: 'deadInputUsage' },
     ]);

@@ -76,7 +76,7 @@ describe('applySemanticIntrospection', () => {
     expect(after).toEqual(before);
   });
 
-  it('__search returns coordinates matching the host schema (default BM25 provider)', async () => {
+  it('__search returns coordinates matching the host schema', async () => {
     const schema = buildSchema(`
       type Query {
         user(id: ID!): User
@@ -332,10 +332,7 @@ describe('applySemanticIntrospection', () => {
       expect(result.data).toEqual({ __definitions: [] });
     });
 
-    it('__definitions DOES return a non-deprecated field whose return type is empty-after-filter (non-cascade)', async () => {
-      // Query.staleRef returns Stale (empty after filter), but staleRef
-      // itself is not deprecated, so it stays visible. Agent sees a field
-      // with an effectively opaque return type — the locked design choice.
+    it('returns a non-deprecated field whose return type is empty-after-filter', async () => {
       const extended = applySemanticIntrospection(buildSchema(SDL), {
         excludeDeprecated: true,
       });
@@ -412,7 +409,7 @@ describe('applySemanticIntrospection', () => {
     });
   });
 
-  it('standard introspection still sees the host schema (and is unaffected by deprecated filter — for later phases)', async () => {
+  it('leaves standard introspection unaffected by the deprecated filter', async () => {
     const schema = buildSchema(`type Query { hello: String }`);
     const extended = applySemanticIntrospection(schema);
     const result = await execute({

@@ -2,11 +2,7 @@ import { buildSchema, execute, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { applySemanticIntrospection } from '../src/index.js';
 
-/**
- * RFC conformance tests — run the exact query shapes from Pascal Senn's
- * apidays-singapore skill prompt (case-study/prompt-graphql-skill.md) so
- * we know our wire shapes interoperate with what real agents send today.
- */
+/** RFC conformance: query shapes from the ai-wg semantic-introspection RFC examples. */
 
 const SCHEMA_SDL = /* GraphQL */ `
   type Query {
@@ -137,7 +133,7 @@ const PASCAL_DEFINITIONS_QUERY = /* GraphQL */ `
   }
 `;
 
-describe("RFC conformance — Pascal's apidays-singapore skill-prompt queries", () => {
+describe('RFC conformance', () => {
   it('executes the __search query without errors and returns ranked results', async () => {
     const extended = applySemanticIntrospection(buildSchema(SCHEMA_SDL));
     const result = await execute({

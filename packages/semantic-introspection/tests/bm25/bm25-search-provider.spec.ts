@@ -1,10 +1,6 @@
 import { buildSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import {
-  Bm25SearchProvider,
-  InvalidSearchCursorError,
-  SearchQueryTooLargeError,
-} from '../../src/provider/bm25/bm25-search-provider.js';
+import { Bm25SearchProvider } from '../../src/provider/bm25/bm25-search-provider.js';
 
 const SCHEMA_SDL = /* GraphQL */ `
   type Query {
@@ -44,9 +40,7 @@ describe('Bm25SearchProvider.search', () => {
 
   it('returns [] for a non-matching query', async () => {
     const provider = makeProvider();
-    // Use opaque, English-free tokens — graphql-js's built-in scalar
-    // descriptions (String/ID/etc.) are indexed too and contain plenty
-    // of common words that would otherwise produce stray matches.
+    // Opaque tokens — built-in scalar descriptions are indexed too.
     expect(
       await provider.search('zqzqzq qpqpqp wkwkwk', 10, null, null),
     ).toEqual([]);
@@ -103,15 +97,15 @@ describe('Bm25SearchProvider.search', () => {
     }
   });
 
-  it('throws SearchQueryTooLargeError when the query exceeds the limit', async () => {
+  it('rejects queries that exceed the maximum length', async () => {
     const provider = makeProvider();
     const huge = 'a'.repeat(1025);
-    await expect(provider.search(huge, 10, null, null)).rejects.toBeInstanceOf(
-      SearchQueryTooLargeError,
+    await expect(provider.search(huge, 10, null, null)).rejects.toThrow(
+      /maximum length/,
     );
   });
 
-  it('throws RangeError for non-positive `first`', async () => {
+  it('rejects non-positive `first`', async () => {
     const provider = makeProvider();
     await expect(provider.search('x', 0, null, null)).rejects.toBeInstanceOf(
       RangeError,
@@ -121,14 +115,14 @@ describe('Bm25SearchProvider.search', () => {
     );
   });
 
-  it('throws InvalidSearchCursorError on an empty cursor or garbage cursor', async () => {
+  it('rejects an empty or malformed cursor', async () => {
     const provider = makeProvider();
-    await expect(provider.search('x', 10, '', null)).rejects.toBeInstanceOf(
-      InvalidSearchCursorError,
+    await expect(provider.search('x', 10, '', null)).rejects.toThrow(
+      /Invalid search cursor/,
     );
     await expect(
       provider.search('email', 10, 'not-base64-int32', null),
-    ).rejects.toBeInstanceOf(InvalidSearchCursorError);
+    ).rejects.toThrow(/Invalid search cursor/);
   });
 });
 

@@ -3,7 +3,7 @@ import { Bm25Index } from '../../src/provider/bm25/bm25-index.js';
 
 describe('Bm25Index', () => {
   it('reports documentCount and resolves coordinates', () => {
-    const index = Bm25Index.build([
+    const index = new Bm25Index([
       { coordinate: 'A', text: 'alpha' },
       { coordinate: 'B', text: 'bravo' },
     ]);
@@ -13,23 +13,23 @@ describe('Bm25Index', () => {
   });
 
   it('throws on out-of-range coordinate lookup', () => {
-    const index = Bm25Index.build([{ coordinate: 'A', text: 'alpha' }]);
+    const index = new Bm25Index([{ coordinate: 'A', text: 'alpha' }]);
     expect(() => index.getCoordinate(7)).toThrow(/Invalid document id/);
   });
 
   it('returns empty results for an empty index or empty query', () => {
-    expect(Bm25Index.build([]).search(['anything'])).toEqual([]);
-    const index = Bm25Index.build([{ coordinate: 'A', text: 'alpha' }]);
+    expect(new Bm25Index([]).search(['anything'])).toEqual([]);
+    const index = new Bm25Index([{ coordinate: 'A', text: 'alpha' }]);
     expect(index.search([])).toEqual([]);
   });
 
   it('returns no results when no token matches', () => {
-    const index = Bm25Index.build([{ coordinate: 'A', text: 'alpha beta' }]);
+    const index = new Bm25Index([{ coordinate: 'A', text: 'alpha beta' }]);
     expect(index.search(['gamma'])).toEqual([]);
   });
 
   it('returns the only matching document for a single-token query', () => {
-    const index = Bm25Index.build([
+    const index = new Bm25Index([
       { coordinate: 'A', text: 'alpha' },
       { coordinate: 'B', text: 'bravo' },
     ]);
@@ -40,7 +40,7 @@ describe('Bm25Index', () => {
   });
 
   it('sorts results by score descending', () => {
-    const index = Bm25Index.build([
+    const index = new Bm25Index([
       { coordinate: 'A', text: 'alpha beta gamma' },
       { coordinate: 'B', text: 'alpha alpha alpha' }, // higher TF on `alpha`
       { coordinate: 'C', text: 'delta' },
@@ -53,7 +53,7 @@ describe('Bm25Index', () => {
   it('boosts rarer terms via IDF (a unique-term match beats a common-term match)', () => {
     // `common` appears in every doc → low IDF.
     // `rare`   appears in just one  → high IDF.
-    const index = Bm25Index.build([
+    const index = new Bm25Index([
       { coordinate: 'A', text: 'common common common' },
       { coordinate: 'B', text: 'common' },
       { coordinate: 'C', text: 'common rare' },
@@ -67,7 +67,7 @@ describe('Bm25Index', () => {
   });
 
   it('accumulates scores across multiple query tokens', () => {
-    const index = Bm25Index.build([
+    const index = new Bm25Index([
       { coordinate: 'A', text: 'alpha bravo' },
       { coordinate: 'B', text: 'alpha' },
     ]);
