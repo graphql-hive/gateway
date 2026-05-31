@@ -136,25 +136,17 @@ function findPathsToRoot(
   }
 
   // BFS over the reverse adjacency, head-indexed for O(V + E) dequeue.
-  // Each queue entry carries its own visited set so distinct paths can
-  // legitimately pass through the same intermediate or root type — a
-  // single global `visited` would collapse parallel routes (e.g. two
-  // root fields returning the same type) into one.
-  const queue: {
-    typeName: string;
-    path: SchemaCoordinate[];
-    visited: ReadonlySet<string>;
-  }[] = [
-    { typeName: startTypeName, path: [], visited: new Set([startTypeName]) },
+  // Cycle detection walks the in-flight path rather than carrying a
+  // per-branch `visited` Set — paths are short in practice (≤ schema
+  // depth) and the linear scan is cheaper than allocating + copying
+  // a Set on every branch.
+  const queue: { typeName: string; path: SchemaCoordinate[] }[] = [
+    { typeName: startTypeName, path: [] },
   ];
   let head = 0;
 
   while (head < queue.length && paths.length < maxPaths) {
-    const {
-      typeName: currentType,
-      path: currentPath,
-      visited,
-    } = queue[head++]!;
+    const { typeName: currentType, path: currentPath } = queue[head++]!;
     const references = reverseMap.get(currentType);
     if (!references) {
       continue;
@@ -162,7 +154,7 @@ function findPathsToRoot(
 
     for (const reference of references) {
       const referenceTypeName = getCoordinateTypeName(reference);
-      if (visited.has(referenceTypeName)) {
+      if (pathRevisits(referenceTypeName, currentPath, startTypeName)) {
         continue;
       }
 
@@ -177,18 +169,29 @@ function findPathsToRoot(
           break;
         }
       } else {
-        const newVisited = new Set(visited);
-        newVisited.add(referenceTypeName);
-        queue.push({
-          typeName: referenceTypeName,
-          path: newPath,
-          visited: newVisited,
-        });
+        queue.push({ typeName: referenceTypeName, path: newPath });
       }
     }
   }
 
   return paths;
+}
+
+/** True when `typeName` already appears as a source type on `path` (or is the BFS origin). */
+function pathRevisits(
+  typeName: string,
+  path: readonly SchemaCoordinate[],
+  startTypeName: string,
+): boolean {
+  if (typeName === startTypeName) {
+    return true;
+  }
+  for (const ref of path) {
+    if (getCoordinateTypeName(ref) === typeName) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getCoordinateTypeName(coordinate: SchemaCoordinate): string {
