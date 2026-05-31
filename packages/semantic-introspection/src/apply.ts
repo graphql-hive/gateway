@@ -1,5 +1,7 @@
 import {
   extendSchema,
+  Kind,
+  type DocumentNode,
   type GraphQLObjectType,
   type GraphQLSchema,
   type GraphQLUnionType,
@@ -36,24 +38,30 @@ export function applySemanticIntrospection(
     );
   }
 
-  // Collision check — `extendSchema({ assumeValid: true })` below skips
-  // validation, so a host that already defines `__search` or
-  // `__definitions` (e.g. a schema this function has already been
-  // applied to) would silently produce a duplicate-extension schema
-  // rather than failing.
+  const extensionDoc = buildSchemaExtensionDocument(queryType.name);
+
+  // Collision checks — `extendSchema({ assumeValid: true })` below skips
+  // validation, so any pre-existing field or type name we'd introduce
+  // would silently produce a duplicate-extension schema rather than
+  // failing. The type-name list is derived from the extension document
+  // so it stays in sync if the SDL grows.
   const existingFields = queryType.getFields();
   if (existingFields['__search'] || existingFields['__definitions']) {
     throw new Error(
       `applySemanticIntrospection: query type "${queryType.name}" already defines \`__search\` or \`__definitions\`; refusing to extend`,
     );
   }
+  const typeMap = schema.getTypeMap();
+  for (const name of extensionTypeNames(extensionDoc)) {
+    if (typeMap[name]) {
+      throw new Error(
+        `applySemanticIntrospection: schema already defines \`${name}\` as a type; refusing to extend`,
+      );
+    }
+  }
 
   // `assumeValid` lets graphql-js accept the `__`-prefixed names the RFC adds.
-  const extended = extendSchema(
-    schema,
-    buildSchemaExtensionDocument(queryType.name),
-    { assumeValid: true },
-  );
+  const extended = extendSchema(schema, extensionDoc, { assumeValid: true });
 
   const excludeDeprecated = options.excludeDeprecated === true;
   const provider =
@@ -69,6 +77,24 @@ export function applySemanticIntrospection(
   attachDefinitionUnionResolveType(extended);
 
   return extended;
+}
+
+/** Names of every named type the extension document defines. */
+function extensionTypeNames(doc: DocumentNode): string[] {
+  const names: string[] = [];
+  for (const def of doc.definitions) {
+    if (
+      def.kind === Kind.SCALAR_TYPE_DEFINITION ||
+      def.kind === Kind.OBJECT_TYPE_DEFINITION ||
+      def.kind === Kind.INTERFACE_TYPE_DEFINITION ||
+      def.kind === Kind.UNION_TYPE_DEFINITION ||
+      def.kind === Kind.ENUM_TYPE_DEFINITION ||
+      def.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION
+    ) {
+      names.push(def.name.value);
+    }
+  }
+  return names;
 }
 
 /**

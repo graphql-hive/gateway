@@ -55,6 +55,28 @@ describe('applySemanticIntrospection', () => {
     expect(extended.getQueryType()!.getFields()['__search']).toBeDefined();
   });
 
+  it('throws when applied to a schema that already defines __SearchResult or __SchemaDefinition as a type', () => {
+    // `assumeValid: true` is required to construct a host schema whose
+    // user-defined type uses the `__` prefix — graphql-js rejects it
+    // otherwise. Without the type-level collision guard,
+    // `extendSchema(..., { assumeValid: true })` would silently produce
+    // a duplicate-extension schema.
+    const schema = buildSchema(
+      /* GraphQL */ `
+        type Query {
+          hello: String
+        }
+        type __SearchResult {
+          coordinate: String
+        }
+      `,
+      { assumeValid: true },
+    );
+    expect(() => applySemanticIntrospection(schema)).toThrow(
+      /already defines `__SearchResult` as a type/,
+    );
+  });
+
   it('throws when applied to a schema that already has __search or __definitions', () => {
     // Most direct reproduction: double application. The second call
     // sees the already-extended schema and must refuse rather than
