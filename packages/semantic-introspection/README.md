@@ -160,6 +160,12 @@ Avoid one-field-per-call patterns — they defeat the federation.
 
 In a 12-trial A/B over a federated test deployment, this wording produced tightly clustered behavior on natural-language prompts (~11 MCP calls per query, always one composed operation, definitions fetched in a single batch). A workflow-only baseline that omitted the federation framing averaged fewer calls (~7) on the same prompts but admitted a pathological thrash mode in one of four trials — 63 total calls, 18 separate query operations, definitions fetched in many small batches. The small extra cost of the composition-pushing wording is worth the worst-case bound for deployments where prompt content is not under the integrator's control.
 
+## Security: client-controlled `first`
+
+`__search` accepts a client-controlled `first` argument with no built-in upper bound. This is a deliberate choice — like any paginated GraphQL field, the appropriate place to cap result counts and overall query cost is the gateway's standard query-complexity controls, not the library that defines the field. Deployments using `@graphql-hive/gateway` should configure [`@escape.tech/graphql-armor-max-tokens`](https://escape.tech/graphql-armor/docs/plugins/max-tokens) (or the gateway's `maxTokens` config field) and [`@escape.tech/graphql-armor-max-depth`](https://escape.tech/graphql-armor/docs/plugins/max-depth) / `maxDepth` the same way they would for any other list-returning field. The package does not enforce a page-size ceiling on its own to avoid duplicating — and potentially conflicting with — those gateway-level controls.
+
+`MAX_QUERY_LENGTH = 1024` in the default `Bm25SearchProvider` is unrelated: it bounds the per-call cost of the BM25 tokenizer over the search-query text, not the response size.
+
 ## `detectEmptyAfterFilter` utility
 
 Exported for downstream tools that need to identify which types would be empty under a given filter — for example, a schema-rewriting layer (ACL / governance) that wants to physically prune the SDL.
