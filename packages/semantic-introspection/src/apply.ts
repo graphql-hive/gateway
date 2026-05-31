@@ -36,6 +36,18 @@ export function applySemanticIntrospection(
     );
   }
 
+  // Collision check — `extendSchema({ assumeValid: true })` below skips
+  // validation, so a host that already defines `__search` or
+  // `__definitions` (e.g. a schema this function has already been
+  // applied to) would silently produce a duplicate-extension schema
+  // rather than failing.
+  const existingFields = queryType.getFields();
+  if (existingFields['__search'] || existingFields['__definitions']) {
+    throw new Error(
+      `applySemanticIntrospection: query type "${queryType.name}" already defines \`__search\` or \`__definitions\`; refusing to extend`,
+    );
+  }
+
   // `assumeValid` lets graphql-js accept the `__`-prefixed names the RFC adds.
   const extended = extendSchema(
     schema,

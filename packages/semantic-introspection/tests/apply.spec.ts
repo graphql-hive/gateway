@@ -55,6 +55,17 @@ describe('applySemanticIntrospection', () => {
     expect(extended.getQueryType()!.getFields()['__search']).toBeDefined();
   });
 
+  it('throws when applied to a schema that already has __search or __definitions', () => {
+    // Most direct reproduction: double application. The second call
+    // sees the already-extended schema and must refuse rather than
+    // silently duplicate-extending under `assumeValid: true`.
+    const schema = buildSchema(`type Query { hello: String }`);
+    const extended = applySemanticIntrospection(schema);
+    expect(() => applySemanticIntrospection(extended)).toThrow(
+      /already defines `__search` or `__definitions`/,
+    );
+  });
+
   it('throws when the input schema has no query type', () => {
     // A schema with only a mutation type has no query — invalid per spec but
     // technically constructible; we surface a clean error rather than throw
