@@ -196,21 +196,34 @@ function getCoordinateTypeName(coordinate: SchemaCoordinate): string {
   return dot >= 0 ? coordinate.slice(0, dot) : coordinate;
 }
 
-/** Little-endian int32 base64. */
+/** Little-endian int32 base64. Web APIs only — runs on Node, Bun, Deno, Workers, and the browser. */
 function encodeCursor(offset: number): string {
-  const buf = Buffer.alloc(4);
-  buf.writeInt32LE(offset, 0);
-  return buf.toString('base64');
+  const bytes = new Uint8Array(4);
+  new DataView(bytes.buffer).setInt32(0, offset, true);
+  return btoa(String.fromCharCode(...bytes));
 }
 
 function decodeCursor(cursor: string, resultCount: number): number {
-  // `Buffer.from(s, 'base64')` is lenient (never throws); validate canonically.
-  const bytes = Buffer.from(cursor, 'base64');
-  if (bytes.length !== 4 || bytes.toString('base64') !== cursor) {
+  let binary: string;
+  try {
+    binary = atob(cursor);
+  } catch {
+    // `atob` throws on malformed base64; everything else is checked below.
     throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
   }
-  const offset = bytes.readInt32LE(0);
+  if (binary.length !== 4) {
+    throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
+  }
+  const bytes = new Uint8Array(4);
+  for (let i = 0; i < 4; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const offset = new DataView(bytes.buffer).getInt32(0, true);
   if (offset < 0 || offset > resultCount) {
+    throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
+  }
+  // Reject non-canonical encodings — only the exact roundtrip is valid.
+  if (encodeCursor(offset) !== cursor) {
     throw new Error(`Invalid search cursor: ${JSON.stringify(cursor)}`);
   }
   return offset;
