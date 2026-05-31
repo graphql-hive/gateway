@@ -1,11 +1,9 @@
 /**
  * Provider abstraction for schema search and path-to-root traversal.
  *
- * Mirrors HotChocolate's `ISchemaSearchProvider` (two methods; result
- * carries just coordinate/score/cursor — `pathsToRoot` is resolver-derived
- * via a separate call so the ranker stays path-unaware).
- *
- * @see https://github.com/ChilliCream/graphql-platform/blob/main/src/HotChocolate/Core/src/Types.Abstractions/ISchemaSearchProvider.cs
+ * Two methods so the ranker stays path-unaware: search results carry
+ * just coordinate/score/cursor, and `pathsToRoot` is fetched via a
+ * separate call (resolver-derived).
  */
 
 /** A schema coordinate string, e.g. `Query.user`, `User`, `User.email`. */
