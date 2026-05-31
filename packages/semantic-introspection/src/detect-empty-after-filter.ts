@@ -63,27 +63,29 @@ export function detectEmptyAfterFilter(
 
       if (isObjectType(type)) {
         const surviving = Object.values(type.getFields()).filter(
-          (f) => !f.deprecationReason,
+          (f) => typeof f.deprecationReason !== 'string',
         );
         if (surviving.length === 0) {
           reason = 'all-fields-deprecated';
         }
       } else if (isInterfaceType(type)) {
         const surviving = Object.values(type.getFields()).filter(
-          (f) => !f.deprecationReason,
+          (f) => typeof f.deprecationReason !== 'string',
         );
         if (surviving.length === 0) {
           reason = 'all-interface-fields-deprecated';
         }
       } else if (isInputObjectType(type)) {
         const surviving = Object.values(type.getFields()).filter(
-          (f) => !f.deprecationReason,
+          (f) => typeof f.deprecationReason !== 'string',
         );
         if (surviving.length === 0) {
           reason = 'all-input-fields-deprecated';
         }
       } else if (isEnumType(type)) {
-        const surviving = type.getValues().filter((v) => !v.deprecationReason);
+        const surviving = type
+          .getValues()
+          .filter((v) => typeof v.deprecationReason !== 'string');
         if (surviving.length === 0) {
           reason = 'all-enum-values-deprecated';
         }

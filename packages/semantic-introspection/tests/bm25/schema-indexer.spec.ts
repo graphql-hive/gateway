@@ -120,6 +120,34 @@ describe('indexSchema', () => {
       expect(coords).toContain('UserFilter.name');
     });
 
+    it('skips members deprecated with an empty-string reason', () => {
+      const { documents } = indexSchema(
+        buildSchema(/* GraphQL */ `
+          type Query {
+            kept: String
+            silent: String @deprecated(reason: "")
+          }
+          enum Status {
+            ACTIVE
+            QUIET @deprecated(reason: "")
+          }
+          input Filter {
+            name: String
+            mute: String @deprecated(reason: "")
+          }
+        `),
+        { excludeDeprecated: true },
+      );
+      const coords = coordinates(documents);
+      expect(coords).not.toContain('Query.silent');
+      expect(coords).not.toContain('Status.QUIET');
+      expect(coords).not.toContain('Filter.mute');
+      // Non-deprecated peers still index.
+      expect(coords).toContain('Query.kept');
+      expect(coords).toContain('Status.ACTIVE');
+      expect(coords).toContain('Filter.name');
+    });
+
     it('does not skip the parent type when all members are deprecated', () => {
       const { documents } = indexSchema(
         buildSchema(`

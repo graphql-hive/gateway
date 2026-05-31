@@ -83,7 +83,7 @@ function indexComplexTypeFields(
       continue;
     }
 
-    if (excludeDeprecated && field.deprecationReason) {
+    if (excludeDeprecated && typeof field.deprecationReason === 'string') {
       continue;
     }
 
@@ -110,7 +110,7 @@ function indexEnumValues(
   excludeDeprecated: boolean,
 ): void {
   for (const value of enumType.getValues()) {
-    if (excludeDeprecated && value.deprecationReason) {
+    if (excludeDeprecated && typeof value.deprecationReason === 'string') {
       continue;
     }
     documents.push({
@@ -128,7 +128,7 @@ function indexInputObjectFields(
   const fields = inputType.getFields();
   for (const fieldName of Object.keys(fields)) {
     const field = fields[fieldName]!;
-    if (excludeDeprecated && field.deprecationReason) {
+    if (excludeDeprecated && typeof field.deprecationReason === 'string') {
       continue;
     }
     documents.push({

@@ -87,10 +87,11 @@ export function filteredLookup(
 }
 
 function isDeprecatedMember(value: SchemaDefinitionValue): boolean {
+  // graphql-js sets `deprecationReason` to a string whenever `@deprecated`
+  // is applied — including the explicit empty-string form
+  // `@deprecated(reason: "")`. Truthiness checks would mis-class those.
   const v = value as { deprecationReason?: string | null };
-  return (
-    typeof v.deprecationReason === 'string' && v.deprecationReason.length > 0
-  );
+  return typeof v.deprecationReason === 'string';
 }
 
 /**

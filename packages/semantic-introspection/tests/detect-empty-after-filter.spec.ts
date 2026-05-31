@@ -121,6 +121,33 @@ describe('detectEmptyAfterFilter', () => {
         expect(name.startsWith('__')).toBe(false);
       }
     });
+
+    it('treats @deprecated(reason: "") as deprecated across all Kinds', () => {
+      const r = detectEmptyAfterFilter(
+        buildSchema(/* GraphQL */ `
+          type Query {
+            _: Boolean
+          }
+          type SilentObj {
+            f: String @deprecated(reason: "")
+          }
+          interface SilentIface {
+            f: String @deprecated(reason: "")
+          }
+          input SilentInput {
+            f: String @deprecated(reason: "")
+          }
+          enum SilentEnum {
+            ONE @deprecated(reason: "")
+          }
+        `),
+        { excludeDeprecated: true },
+      );
+      expect(r.emptyTypes.has('SilentObj')).toBe(true);
+      expect(r.emptyTypes.has('SilentIface')).toBe(true);
+      expect(r.emptyTypes.has('SilentInput')).toBe(true);
+      expect(r.emptyTypes.has('SilentEnum')).toBe(true);
+    });
   });
 
   it('reaches the fixed point even with chained union dependencies', () => {
