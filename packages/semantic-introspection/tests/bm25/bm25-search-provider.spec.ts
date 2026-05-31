@@ -138,18 +138,34 @@ describe('Bm25SearchProvider.getPathsToRoot', () => {
     expect(await provider.getPathsToRoot('Query')).toEqual([]);
   });
 
-  it('finds multiple paths from a deeply reachable type, shortest first', async () => {
-    // Post can be reached via Query.posts (length 1) and via
-    // Query.user → User.bestPost (length 2).
+  it('finds every path from a deeply reachable type, shortest first', async () => {
+    // Post.title is reachable two distinct ways from Query:
+    //   Query.posts → Post.title             (length 2)
+    //   Query.user → User.bestPost → Post.title (length 3)
     const provider = makeProvider();
     const paths = await provider.getPathsToRoot('Post.title');
-    expect(paths.length).toBeGreaterThanOrEqual(1);
-    // Shortest path: ['Query.posts', 'Post.title'].
-    expect(paths[0]).toEqual(['Query.posts', 'Post.title']);
-    // Lengths are non-decreasing.
-    for (let i = 1; i < paths.length; i++) {
-      expect(paths[i]!.length).toBeGreaterThanOrEqual(paths[i - 1]!.length);
-    }
+    expect(paths).toEqual([
+      ['Query.posts', 'Post.title'],
+      ['Query.user', 'User.bestPost', 'Post.title'],
+    ]);
+  });
+
+  it('returns distinct paths when multiple root fields return the same type', async () => {
+    const schema = buildSchema(/* GraphQL */ `
+      type Query {
+        primaryUser: User
+        backupUser: User
+      }
+      type User {
+        email: String!
+      }
+    `);
+    const provider = new Bm25SearchProvider(schema);
+    const paths = await provider.getPathsToRoot('User.email');
+    expect(paths).toEqual([
+      ['Query.primaryUser', 'User.email'],
+      ['Query.backupUser', 'User.email'],
+    ]);
   });
 
   it('returns [] for an unreachable coordinate', async () => {

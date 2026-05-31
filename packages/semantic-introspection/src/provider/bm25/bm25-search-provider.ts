@@ -136,14 +136,25 @@ function findPathsToRoot(
   }
 
   // BFS over the reverse adjacency, head-indexed for O(V + E) dequeue.
-  const queue: { typeName: string; path: SchemaCoordinate[] }[] = [
-    { typeName: startTypeName, path: [] },
+  // Each queue entry carries its own visited set so distinct paths can
+  // legitimately pass through the same intermediate or root type — a
+  // single global `visited` would collapse parallel routes (e.g. two
+  // root fields returning the same type) into one.
+  const queue: {
+    typeName: string;
+    path: SchemaCoordinate[];
+    visited: ReadonlySet<string>;
+  }[] = [
+    { typeName: startTypeName, path: [], visited: new Set([startTypeName]) },
   ];
   let head = 0;
-  const visited = new Set<string>([startTypeName]);
 
   while (head < queue.length && paths.length < maxPaths) {
-    const { typeName: currentType, path: currentPath } = queue[head++]!;
+    const {
+      typeName: currentType,
+      path: currentPath,
+      visited,
+    } = queue[head++]!;
     const references = reverseMap.get(currentType);
     if (!references) {
       continue;
@@ -154,7 +165,6 @@ function findPathsToRoot(
       if (visited.has(referenceTypeName)) {
         continue;
       }
-      visited.add(referenceTypeName);
 
       const newPath: SchemaCoordinate[] = [reference, ...currentPath];
 
@@ -167,7 +177,13 @@ function findPathsToRoot(
           break;
         }
       } else {
-        queue.push({ typeName: referenceTypeName, path: newPath });
+        const newVisited = new Set(visited);
+        newVisited.add(referenceTypeName);
+        queue.push({
+          typeName: referenceTypeName,
+          path: newPath,
+          visited: newVisited,
+        });
       }
     }
   }
