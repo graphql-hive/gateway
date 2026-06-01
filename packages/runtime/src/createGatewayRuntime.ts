@@ -67,7 +67,7 @@ import {
   handleMaybePromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { ServerAdapterPlugin } from '@whatwg-node/server';
+import { ServerAdapterPlugin, useRequestDeadline } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
   buildASTSchema,
@@ -981,6 +981,16 @@ export function createGatewayRuntime<
 
   if (config.upstreamTimeout) {
     extraPlugins.push(useUpstreamTimeout(config.upstreamTimeout));
+  }
+
+  if (config.requestDeadline) {
+    extraPlugins.push(
+      useRequestDeadline({
+        timeout: config.requestDeadline,
+        response: () =>
+          new fetchAPI.Response('Request deadline exceeded', { status: 503 }),
+      }),
+    );
   }
 
   if (config.upstreamRetry) {

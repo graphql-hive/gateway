@@ -43,19 +43,6 @@ export interface ServerConfig {
    */
   requestTimeout?: number;
   /**
-   * Sets a hard end-to-end time limit in milliseconds for the
-   * entire request lifecycle — from connection to response completion.
-   *
-   * Unlike {@link requestTimeout}, this timer is NOT cancelled when the body
-   * is received; it runs until the response is finished or the socket
-   * is destroyed.
-   *
-   * WARNING: in Bun, streamed responses (e.g. defer/stream) are not covered by
-   * this deadline. The timer only applies until the Response object is created;
-   * once streaming begins, the body can continue past the deadline.
-   */
-  requestDeadline?: number;
-  /**
    * Sets the number of milliseconds to wait before timing out a
    * connection due to inactivity in Node's HTTP server
    *

@@ -824,6 +824,16 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   upstreamRetry?: UpstreamRetryPluginOptions;
 
   /**
+   * Sets a hard end-to-end time limit in milliseconds for the
+   * entire request lifecycle — from connection to response completion.
+   *
+   * Unlike Node's `requestTimeout`, this timer is NOT cancelled when the body
+   * is received; it runs until the response is finished or the socket
+   * is destroyed.
+   */
+  requestDeadline?: number;
+
+  /**
    * Configure the request ID for the gateway
    *
    * @default true
