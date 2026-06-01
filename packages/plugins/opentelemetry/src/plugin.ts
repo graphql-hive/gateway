@@ -722,23 +722,23 @@ export function useOpenTelemetry(
       },
 
       onRequest({ state, serverContext }) {
+        const requestId =
+          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+          serverContext.log?.attrs?.[
+            // @ts-expect-error even if the attrs is an array this will work
+            'requestId'
+          ];
+        if (typeof requestId === 'string') {
+          const httpCtx = state.forRequest.otel?.root;
+          const httpSpan = httpCtx && trace.getSpan(httpCtx);
+          httpSpan?.setAttribute(SEMATTRS_HIVE_REQUEST_ID, requestId);
+        }
+
         // When running in a runtime without a context manager, we have to keep track of the
         // span correlated to a log manually. For now, we just link all logs for a request to
         // the HTTP root span
-        if (traces && !useContextManager) {
-          const requestId =
-            // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
-            serverContext.log?.attrs?.[
-              // @ts-expect-error even if the attrs is an array this will work
-              'requestId'
-            ];
-
-          if (typeof requestId === 'string') {
-            const httpCtx = state.forRequest.otel?.root;
-            const httpSpan = httpCtx && trace.getSpan(httpCtx);
-            httpSpan?.setAttribute(SEMATTRS_HIVE_REQUEST_ID, requestId);
-            otelCtxForRequestId.set(requestId, getContext(state));
-          }
+        if (traces && !useContextManager && typeof requestId === 'string') {
+          otelCtxForRequestId.set(requestId, getContext(state));
         }
       },
 
