@@ -5,6 +5,8 @@ import {
   ExecutionRequest,
   getDefinedRootType,
   implementsAbstractType,
+  memoize1,
+  memoize2,
 } from '@graphql-tools/utils';
 import {
   ASTNode,
@@ -39,6 +41,7 @@ import { DelegationContext, StitchingInfo } from './types.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
+  originalDocument: DocumentNode,
   fragments: FragmentDefinitionNode[],
   operations: OperationDefinitionNode[],
   onOverlappingAliases: () => void,
@@ -167,40 +170,124 @@ function finalizeGatewayDocument<TContext>(
   const stitchingInfo = delegationContext.info?.schema?.extensions?.[
     'stitchingInfo'
   ] as StitchingInfo;
-  if (stitchingInfo != null) {
+  // Skip the (relatively expensive) `@provides` traversal entirely when the
+  // current subschema has no provided selections configured. This avoids
+  // walking the entire document twice on every delegation for non-federated
+  // subgraphs or subgraphs that do not participate in `@provides`.
+  if (
+    stitchingInfo != null &&
+    subschemaHasProvidedSelections(
+      stitchingInfo,
+      delegationContext.subschema as Subschema,
+    )
+  ) {
+    // Capture the user's original selection sets keyed by path so that we can
+    // restrict the `@provides` injection below to only the fields the client
+    // actually requested. Without this, every field listed in `@provides` would
+    // be sent to the providing subgraph even when the client never asked for it.
+    const {
+      selectionSetsByPath: originalFieldSelectionSetsByPath,
+      fragments: originalFragmentsByName,
+    } = collectFieldSelectionSetsByPath(originalDocument);
     const typeInfo = getTypeInfo(targetSchema);
+    const pathStack: string[] = [];
+    // Per-selection-set sibling counters used to disambiguate untyped or
+    // repeated inline fragments (e.g. `... { ... }` siblings) so that path
+    // keys built during the visit match the keys produced by
+    // `collectFieldSelectionSetsByPath` exactly.
+    const inlineFragmentCounterStack: Array<Map<string, number>> = [];
     newDocument = visit(
       newDocument,
       visitWithTypeInfo(typeInfo, {
-        [Kind.FIELD](fieldNode) {
-          const parentType = typeInfo.getParentType();
-          if (parentType) {
-            const parentTypeName = parentType.name;
-            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
-            if (typeConfig) {
+        [Kind.SELECTION_SET]: {
+          enter() {
+            inlineFragmentCounterStack.push(new Map());
+          },
+          leave() {
+            inlineFragmentCounterStack.pop();
+          },
+        },
+        [Kind.OPERATION_DEFINITION]: {
+          enter(node) {
+            pathStack.push(`op:${node.operation}:${node.name?.value ?? ''}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FRAGMENT_DEFINITION]: {
+          enter(node) {
+            pathStack.push(`frag:${node.name.value}`);
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.INLINE_FRAGMENT]: {
+          enter(node) {
+            // The inline fragment's own SelectionSet has not been entered yet,
+            // so the top of the stack still belongs to the enclosing selection
+            // set whose siblings we need to disambiguate.
+            pathStack.push(
+              nextInlineFragmentPathSegment(
+                node,
+                inlineFragmentCounterStack[
+                  inlineFragmentCounterStack.length - 1
+                ],
+              ),
+            );
+          },
+          leave() {
+            pathStack.pop();
+          },
+        },
+        [Kind.FIELD]: {
+          enter(fieldNode) {
+            pathStack.push(fieldNode.alias?.value ?? fieldNode.name.value);
+          },
+          leave(fieldNode) {
+            try {
+              const parentType = typeInfo.getParentType();
+              if (!parentType) {
+                return undefined;
+              }
+              const typeConfig = stitchingInfo?.mergedTypes?.[parentType.name];
               const providedSelectionsByField =
                 typeConfig?.providedSelectionsByField?.get(
                   delegationContext.subschema as Subschema,
                 );
-              if (providedSelectionsByField) {
-                const providedSelection =
-                  providedSelectionsByField[fieldNode.name.value];
-                if (providedSelection) {
-                  return {
-                    ...fieldNode,
-                    selectionSet: {
-                      kind: Kind.SELECTION_SET,
-                      selections: [
-                        ...providedSelection.selections,
-                        ...(fieldNode.selectionSet?.selections ?? []),
-                      ],
-                    },
-                  };
-                }
+              const providedSelection =
+                providedSelectionsByField?.[fieldNode.name.value];
+              if (!providedSelection) {
+                return undefined;
               }
+              const originalSelectionSet = lookupOriginalSelectionSet(
+                pathStack,
+                fieldNode,
+                originalFieldSelectionSetsByPath,
+              );
+              const requestedProvidedSelections = intersectProvidedSelections(
+                providedSelection.selections,
+                originalSelectionSet,
+                originalFragmentsByName,
+              );
+              if (!requestedProvidedSelections.length) {
+                return undefined;
+              }
+              return {
+                ...fieldNode,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: [
+                    ...requestedProvidedSelections,
+                    ...(fieldNode.selectionSet?.selections ?? []),
+                  ],
+                },
+              };
+            } finally {
+              pathStack.pop();
             }
-          }
-          return fieldNode;
+          },
         },
       }),
     );
@@ -222,6 +309,7 @@ export function finalizeGatewayRequest<TContext>(
 
   const { usedVariables, newDocument } = finalizeGatewayDocument(
     targetSchema,
+    originalRequest.document,
     fragments,
     operations,
     onOverlappingAliases,
@@ -257,6 +345,327 @@ function isTypeNameField(selection: SelectionNode): boolean {
     !selection.alias &&
     selection.name.value === '__typename'
   );
+}
+
+function collectFieldSelectionSetsByPathImpl(document: DocumentNode): {
+  selectionSetsByPath: Map<string, SelectionSetNode>;
+  fragments: Map<string, FragmentDefinitionNode>;
+} {
+  const selectionSetsByPath = new Map<string, SelectionSetNode>();
+  const fragments = new Map<string, FragmentDefinitionNode>();
+  for (const def of document.definitions) {
+    if (def.kind === Kind.FRAGMENT_DEFINITION) {
+      fragments.set(def.name.value, def);
+    }
+  }
+  const pathStack: string[] = [];
+  // Per-selection-set sibling counters used to disambiguate untyped or repeated
+  // inline fragments (e.g. `... { a } ... { b }`) so each sibling produces a
+  // unique path key.
+  const inlineFragmentCounterStack: Array<Map<string, number>> = [];
+  visit(document, {
+    [Kind.SELECTION_SET]: {
+      enter() {
+        inlineFragmentCounterStack.push(new Map());
+      },
+      leave() {
+        inlineFragmentCounterStack.pop();
+      },
+    },
+    [Kind.OPERATION_DEFINITION]: {
+      enter(node) {
+        pathStack.push(`op:${node.operation}:${node.name?.value ?? ''}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FRAGMENT_DEFINITION]: {
+      enter(node) {
+        pathStack.push(`frag:${node.name.value}`);
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.INLINE_FRAGMENT]: {
+      enter(node) {
+        pathStack.push(
+          nextInlineFragmentPathSegment(
+            node,
+            inlineFragmentCounterStack[inlineFragmentCounterStack.length - 1],
+          ),
+        );
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+    [Kind.FIELD]: {
+      enter(node) {
+        pathStack.push(node.alias?.value ?? node.name.value);
+        if (node.selectionSet) {
+          selectionSetsByPath.set(pathStack.join('>'), node.selectionSet);
+          if (node.alias) {
+            // Also index the selection set by the response key built from the
+            // field name. Some downstream transforms (e.g. the nullable/non
+            // nullable alias handling) inject synthetic aliases that the
+            // visit-time path stack would fail to find otherwise.
+            const namePath = [...pathStack.slice(0, -1), node.name.value].join(
+              '>',
+            );
+            if (!selectionSetsByPath.has(namePath)) {
+              selectionSetsByPath.set(namePath, node.selectionSet);
+            }
+          }
+        }
+      },
+      leave() {
+        pathStack.pop();
+      },
+    },
+  });
+  return { selectionSetsByPath, fragments };
+}
+
+// Memoized so the original document is only walked once across the lifetime of
+// a request even if multiple subschemas ask for the same lookup map.
+const collectFieldSelectionSetsByPath = memoize1(
+  collectFieldSelectionSetsByPathImpl,
+);
+
+function nextInlineFragmentPathSegment(
+  node: { typeCondition?: { name: { value: string } } | undefined | null },
+  counter: Map<string, number> | undefined,
+): string {
+  const typeName = node.typeCondition?.name.value ?? '';
+  if (!counter) {
+    return `inline:${typeName}:0`;
+  }
+  const idx = counter.get(typeName) ?? 0;
+  counter.set(typeName, idx + 1);
+  return `inline:${typeName}:${idx}`;
+}
+
+function subschemaHasProvidedSelectionsImpl(
+  stitchingInfo: StitchingInfo,
+  subschema: Subschema,
+): boolean {
+  const mergedTypes = stitchingInfo.mergedTypes;
+  if (!mergedTypes) {
+    return false;
+  }
+  for (const typeConfig of Object.values(mergedTypes)) {
+    if (typeConfig?.providedSelectionsByField?.has(subschema)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Memoized because both `stitchingInfo` and `subschema` are stable for the
+// lifetime of a stitched schema, so this is effectively a one-time scan per
+// (schema, subschema) pair instead of per delegation.
+const subschemaHasProvidedSelections = memoize2(
+  subschemaHasProvidedSelectionsImpl,
+);
+
+function lookupOriginalSelectionSet(
+  pathStack: string[],
+  fieldNode: { name: { value: string }; alias?: { value: string } | undefined },
+  selectionSetsByPath: Map<string, SelectionSetNode>,
+): SelectionSetNode | undefined {
+  const exact = selectionSetsByPath.get(pathStack.join('>'));
+  if (exact || !fieldNode.alias) {
+    return exact;
+  }
+  // Fallback: downstream transforms may rewrite the alias (for example to
+  // `_nullable_<fieldName>` when reconciling overlapping nullable / non-null
+  // selections). The collection step also indexes those selection sets under
+  // the field's name so we can recover them here.
+  const fallback = [...pathStack.slice(0, -1), fieldNode.name.value].join('>');
+  return selectionSetsByPath.get(fallback);
+}
+
+/**
+ * Returns the subset of `@provides` selections that the client actually
+ * requested at this path. `@provides` only allows the providing subgraph to
+ * resolve the listed fields; it does NOT mean the gateway should fetch all of
+ * them on every visit. We therefore intersect with the original (pre-filter)
+ * selection set so that fields the client never asked for are not pulled in.
+ *
+ * We return the original field nodes (preserving aliases and arguments) so the
+ * subgraph response can be matched back to the user's request. Inline fragment
+ * and fragment-spread wrappers that carry directives such as `@include` /
+ * `@skip` are preserved so client-supplied conditions are still honored.
+ */
+function intersectProvidedSelections(
+  providedSelections: readonly SelectionNode[],
+  originalSelectionSet: SelectionSetNode | undefined,
+  fragments: Map<string, FragmentDefinitionNode>,
+): SelectionNode[] {
+  if (!originalSelectionSet) {
+    return [];
+  }
+  const providedFieldsByName = new Map<
+    string,
+    Extract<SelectionNode, { kind: 'Field' }>
+  >();
+  const otherProvided: SelectionNode[] = [];
+  for (const provided of providedSelections) {
+    if (provided.kind === Kind.FIELD) {
+      providedFieldsByName.set(provided.name.value, provided);
+    } else {
+      // Inline/fragment spreads in `@provides` are uncommon; if encountered we
+      // keep them as-is to match the previous behavior for those edge cases.
+      otherProvided.push(provided);
+    }
+  }
+  const result: SelectionNode[] = [];
+  collectMatchingOriginalSelections(
+    originalSelectionSet,
+    providedFieldsByName,
+    fragments,
+    new Set<string>(),
+    new Set<string>(),
+    result,
+  );
+  return [...result, ...otherProvided];
+}
+
+function collectMatchingOriginalSelections(
+  selectionSet: SelectionSetNode,
+  providedFieldsByName: Map<string, Extract<SelectionNode, { kind: 'Field' }>>,
+  fragments: Map<string, FragmentDefinitionNode>,
+  seenFieldNames: Set<string>,
+  seenFragmentNames: Set<string>,
+  result: SelectionNode[],
+): void {
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      const provided = providedFieldsByName.get(sel.name.value);
+      if (!provided) {
+        continue;
+      }
+      const dedupKey = sel.alias?.value ?? sel.name.value;
+      if (seenFieldNames.has(dedupKey)) {
+        continue;
+      }
+      seenFieldNames.add(dedupKey);
+      if (provided.selectionSet && sel.selectionSet) {
+        const nested = intersectProvidedSelections(
+          provided.selectionSet.selections,
+          sel.selectionSet,
+          fragments,
+        );
+        if (!nested.length) {
+          continue;
+        }
+        result.push({
+          ...sel,
+          selectionSet: {
+            kind: Kind.SELECTION_SET,
+            selections: nested,
+          },
+        });
+      } else {
+        // Re-add the user's original field (with alias and arguments) so the
+        // subgraph response can be merged back into the gateway response.
+        result.push(sel);
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT && sel.selectionSet) {
+      // Wrappers that carry conditional directives (`@include` / `@skip`) or a
+      // type condition that narrows the parent type must be preserved so that
+      // the providing subgraph can still honor the client's conditions.
+      const hasDirectives = (sel.directives?.length ?? 0) > 0;
+      const hasTypeCondition = sel.typeCondition != null;
+      if (hasDirectives || hasTypeCondition) {
+        const inner: SelectionNode[] = [];
+        collectMatchingOriginalSelections(
+          sel.selectionSet,
+          providedFieldsByName,
+          fragments,
+          new Set<string>(),
+          new Set<string>(),
+          inner,
+        );
+        if (inner.length === 0) {
+          continue;
+        }
+        result.push({
+          kind: Kind.INLINE_FRAGMENT,
+          typeCondition: sel.typeCondition,
+          directives: sel.directives,
+          selectionSet: {
+            kind: Kind.SELECTION_SET,
+            selections: inner,
+          },
+        });
+      } else {
+        // Untyped, undirected inline fragment - safe to flatten into the
+        // surrounding selection set so dedup still applies.
+        collectMatchingOriginalSelections(
+          sel.selectionSet,
+          providedFieldsByName,
+          fragments,
+          seenFieldNames,
+          seenFragmentNames,
+          result,
+        );
+      }
+    } else if (sel.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentDef = fragments.get(sel.name.value);
+      if (!fragmentDef) {
+        continue;
+      }
+      const hasSpreadDirectives = (sel.directives?.length ?? 0) > 0;
+      const hasFragmentDirectives = (fragmentDef.directives?.length ?? 0) > 0;
+      if (hasSpreadDirectives || hasFragmentDirectives) {
+        // Preserve the spread (rewritten as an inline fragment) so its
+        // directives - or the fragment definition's directives - continue to
+        // gate the injected selections.
+        const inner: SelectionNode[] = [];
+        collectMatchingOriginalSelections(
+          fragmentDef.selectionSet,
+          providedFieldsByName,
+          fragments,
+          new Set<string>(),
+          new Set<string>(),
+          inner,
+        );
+        if (inner.length === 0) {
+          continue;
+        }
+        const combinedDirectives = [
+          ...(sel.directives ?? []),
+          ...(fragmentDef.directives ?? []),
+        ];
+        result.push({
+          kind: Kind.INLINE_FRAGMENT,
+          typeCondition: fragmentDef.typeCondition,
+          directives:
+            combinedDirectives.length > 0 ? combinedDirectives : undefined,
+          selectionSet: {
+            kind: Kind.SELECTION_SET,
+            selections: inner,
+          },
+        });
+      } else {
+        if (seenFragmentNames.has(sel.name.value)) {
+          continue;
+        }
+        seenFragmentNames.add(sel.name.value);
+        collectMatchingOriginalSelections(
+          fragmentDef.selectionSet,
+          providedFieldsByName,
+          fragments,
+          seenFieldNames,
+          seenFragmentNames,
+          result,
+        );
+      }
+    }
+  }
 }
 
 function filterTypenameFields(selections: readonly SelectionNode[]): {
