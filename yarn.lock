@@ -9635,6 +9635,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-windows-x64@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@oven/bun-windows-x64@npm:1.3.14"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@oxc-project/types@npm:=0.132.0":
   version: 0.132.0
   resolution: "@oxc-project/types@npm:0.132.0"
