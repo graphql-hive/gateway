@@ -988,7 +988,12 @@ export function createGatewayRuntime<
       useRequestDeadline({
         timeout: config.requestDeadline,
         response: () =>
-          new fetchAPI.Response('Request deadline exceeded', { status: 503 }),
+          new fetchAPI.Response('Request deadline exceeded', {
+            status: 503,
+            headers: {
+              Connection: 'close',
+            },
+          }),
       }),
     );
   }
