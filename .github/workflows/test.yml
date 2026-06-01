@@ -187,7 +187,7 @@ jobs:
           sudo systemctl reload docker
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -214,7 +214,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
+        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
         with:
           source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
@@ -253,7 +253,7 @@ jobs:
           echo '{"registry-mirrors":["https://mirror.gcr.io"]}' | sudo tee /etc/docker/daemon.json
           sudo systemctl reload docker
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -265,7 +265,7 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
-        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
+        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
         with:
           source: .
           # we build the e2e image because the release image cant be loaded due to annotations and platforms
