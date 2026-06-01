@@ -82,7 +82,7 @@ jobs:
         run: git checkout HEAD~1 -- .
       - name: ${{ needs.snapshot-npm-tag.outputs.value }} release
         id: changesets
-        uses: the-guild-org/changesets-snapshot-action@12ae5b6781ea75c36ece2f2e3446cee6dc093e99 # v0.0.3
+        uses: the-guild-org/changesets-snapshot-action@232ff9af22cfd043528fe2e4c403afd090ba3ed3 # v0.0.4
         with:
           tag: ${{ needs.snapshot-npm-tag.outputs.value }}
         env:
@@ -189,9 +189,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
       - name: Log in to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -209,7 +209,7 @@ jobs:
         run: |
           node -e "require('node:fs').rmSync('packages/gateway/bundle/node_modules/@graphql-hive/router-query-planner', { recursive: true, force: true })"
       - name: Bake and Push
-        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
+        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
