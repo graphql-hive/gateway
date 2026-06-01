@@ -243,7 +243,7 @@ describe('extractUnavailableFields', () => {
     }
     const selectionSet = operationAst.selectionSet;
     const relationshipSelection = selectionSet.selections[0];
-    if (relationshipSelection?.kind !== 'Field') {
+    if (relationshipSelection?.kind !== Kind.FIELD) {
       throw new Error('Relationship selection not found');
     }
     const queryType = schema.getType('Query');
