@@ -18,7 +18,7 @@
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.13",
     "@whatwg-node/promise-helpers": "^1.3.2",
-    "@whatwg-node/server": "^0.10.17",
+    "@whatwg-node/server": "0.11.0-alpha-20260601160042-ea1e0b66f84c1734009c2e7f373102ed05593b91",
     "graphql": "^16.12.0",
     "jest-leak-detector": "30.4.1",
     "ws": "^8.18.3"
