@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.8.1
+### Patch Changes
+
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/render-laboratory@^0.1.9` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.9) (from `^0.1.8`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/server@^0.11.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.11.0) (from `^0.10.17`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.21.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.1) (from `^5.16.2`, in `dependencies`)
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use `useRequestDeadline` plugin from `@whatwg-node/server` for enforcing per-request timeouts
+  
+  Read more: https://github.com/ardatan/whatwg-node/pull/3399.
+- Updated dependencies [[`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa), [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa)]:
+  - @graphql-hive/gateway-runtime@2.9.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.48
+  - @graphql-hive/plugin-opentelemetry@1.4.28
+  - @graphql-mesh/plugin-prometheus@2.1.46
+
 ## 2.8.0
 ### Minor Changes
 
