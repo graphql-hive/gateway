@@ -46,8 +46,9 @@ it('should invoke onResponse on deadline reached', async () => {
   const onResponseRawData = gw
     .getStd('both')
     .split('\n')
-    .find((line) => line.startsWith('[onResponse]'))
-    ?.replace('[onResponse]', '');
+    // we split (and not startsBy) because docker logs starts with some weird chars
+    .find((line) => line.includes('[onResponse]'))
+    ?.split('[onResponse]')[1];
   expect(onResponseRawData).toBeTruthy();
 
   const onResponseData = JSON.parse(onResponseRawData!);
