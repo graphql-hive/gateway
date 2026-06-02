@@ -65,7 +65,7 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
         // of `keys.length`, padding any missing entries with `null`.
         const dense = new Array(keys.length);
         for (let i = 0; i < keys.length; i++) {
-          dense[i] = i < values.length ? values[i] : null;
+          dense[i] = values[i] ?? null;
         }
         return dense;
       })
