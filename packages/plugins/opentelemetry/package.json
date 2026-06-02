@@ -98,7 +98,7 @@
   },
   "devDependencies": {
     "@types/opossum": "^8.1.9",
-    "@whatwg-node/server": "0.11.0-alpha-20260601161904-05f344aaf80bd89e9e8ffbe8e554a6798132f863",
+    "@whatwg-node/server": "^0.11.0",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.16.2",
     "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",
