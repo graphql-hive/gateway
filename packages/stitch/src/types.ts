@@ -59,6 +59,7 @@ export interface IStitchSchemasOptions<
   typeDefs?: TypeSource;
   types?: Array<GraphQLNamedType>;
   onTypeConflict?: OnTypeConflict<TContext>;
+  /** @deprecated Directives are always merged, this option has no effect. */
   mergeDirectives?: boolean | undefined;
   mergeTypes?: boolean | Array<string> | MergeTypeFilter<TContext>;
   typeMergingOptions?: TypeMergingOptions<TContext>;

@@ -87,7 +87,6 @@ export function stitchSchemas<
     parseOptions: rest,
     directiveMap,
     schemaDefs,
-    mergeDirectives,
   });
 
   let stitchingInfo = createStitchingInfo(

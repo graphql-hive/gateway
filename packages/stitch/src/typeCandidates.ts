@@ -53,7 +53,6 @@ export function buildTypeCandidates<
   parseOptions,
   directiveMap,
   schemaDefs,
-  mergeDirectives: isMergeDirectives,
 }: {
   subschemas: Array<Subschema<any, any, any, TContext>>;
   originalSubschemaMap: Map<
@@ -68,7 +67,6 @@ export function buildTypeCandidates<
     schemaDef: SchemaDefinitionNode;
     schemaExtensions: Array<SchemaExtensionNode>;
   };
-  mergeDirectives?: boolean | undefined;
 }): [
   Record<string, Array<MergeTypeCandidate<TContext>>>,
   Record<OperationTypeNode, string>,
@@ -120,17 +118,13 @@ export function buildTypeCandidates<
       });
     }
 
-    if (isMergeDirectives === true) {
-      for (const directive of schema.getDirectives()) {
-        let directiveCandidatesForName = directiveCandidates.get(
-          directive.name,
-        );
-        if (directiveCandidatesForName == null) {
-          directiveCandidatesForName = new Set();
-          directiveCandidates.set(directive.name, directiveCandidatesForName);
-        }
-        directiveCandidatesForName.add(directive);
+    for (const directive of schema.getDirectives()) {
+      let directiveCandidatesForName = directiveCandidates.get(directive.name);
+      if (directiveCandidatesForName == null) {
+        directiveCandidatesForName = new Set();
+        directiveCandidates.set(directive.name, directiveCandidatesForName);
       }
+      directiveCandidatesForName.add(directive);
     }
 
     const originalTypeMap = schema.getTypeMap();
