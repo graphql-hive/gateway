@@ -105,7 +105,7 @@
     "@graphql-hive/signal": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.35",
     "@graphql-mesh/cache-localforage": "^0.105.36",
-    "@graphql-mesh/cache-redis": "0.106.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf",
+    "@graphql-mesh/cache-redis": "0.106.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095",
     "@graphql-mesh/cache-upstash-redis": "^0.1.31",
     "@graphql-mesh/cross-helpers": "^0.4.13",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",

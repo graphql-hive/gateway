@@ -4608,7 +4608,7 @@ __metadata:
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
-    "@graphql-mesh/cache-redis": "npm:0.106.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf"
+    "@graphql-mesh/cache-redis": "npm:0.106.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095"
     "@graphql-mesh/cache-upstash-redis": "npm:^0.1.31"
     "@graphql-mesh/cross-helpers": "npm:^0.4.13"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
@@ -5004,13 +5004,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf":
-  version: 0.106.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf
-  resolution: "@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf"
+"@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095":
+  version: 0.106.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095
+  resolution: "@graphql-mesh/cache-redis@npm:0.106.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.14"
-    "@graphql-mesh/string-interpolation": "npm:0.5.17-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf"
-    "@graphql-mesh/types": "npm:0.105.0-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf"
+    "@graphql-mesh/string-interpolation": "npm:0.5.17-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095"
+    "@graphql-mesh/types": "npm:0.105.0-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095"
     "@opentelemetry/api": "npm:^1.9.1"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     ioredis: "npm:^5.11.0"
@@ -5034,7 +5034,7 @@ __metadata:
       optional: true
     "@smithy/signature-v4":
       optional: true
-  checksum: 10c0/a2d41df29838e91bc2007361c49b2459de0e0bedb6b0f055aba700a5ca9b5af5ade238e03a1507c6dda369d4ed2c384cedd02f5d2ab01e5668d4a66346be12ca
+  checksum: 10c0/774f9c3c1c344aad835c0b86c567f861f425fea717296a2eb6d017e5672210db3c84d498f722fae7c76e300fca12d71b34812090a417da348c0858d98da40c92
   languageName: node
   linkType: hard
 
@@ -5347,9 +5347,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/string-interpolation@npm:0.5.17-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf":
-  version: 0.5.17-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf
-  resolution: "@graphql-mesh/string-interpolation@npm:0.5.17-alpha-20260603134951-ac973f490fd21372a115e83484ed8c776b33cfbf"
+"@graphql-mesh/string-interpolation@npm:0.5.17-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095":
+  version: 0.5.17-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095
+  resolution: "@graphql-mesh/string-interpolation@npm:0.5.17-alpha-20260603143002-918423daab1445dcc24669339283ee763b851095"
   dependencies:
     dayjs: "npm:^1.11.21"
     json-pointer: "npm:^0.6.2"
@@ -5357,7 +5357,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/6dc7e5838ff94e8ec0836f20ddccfa080e8e56353492b1528b0f5fe6557c550ffc52b3f378f9869804511a01d580272b4850ba6cf63d53b240cd8f1fdb27abc9
+  checksum: 10c0/86c8d156fc952d548cd330332805349fed17cfd95c0629afc796f5f5370707ae6135838b842934995d9226af6eb7b471a08e67904bd51953fe9bf681b3e35b6a
   languageName: node
   linkType: hard
 
