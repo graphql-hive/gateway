@@ -16,6 +16,7 @@ import {
   ExecutionResult,
   getResolversFromSchema,
   IResolvers,
+  printSchemaWithDirectives,
 } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
 import {
@@ -30,6 +31,7 @@ import {
   subscriptionPubSubTrigger,
 } from '@internal/testing/fixtures/schemas';
 import {
+  buildASTSchema,
   buildSchema,
   graphql,
   GraphQLObjectType,
@@ -3845,4 +3847,40 @@ it('should be able to extend a transformed schema', async () => {
       },
     },
   ]);
+});
+
+it('stitch schemas retains schema directive usage and definitions within stitched schema result', async () => {
+  const sdl = /* GraphQL */ `
+    directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+
+    type Query @public {
+      isAnExample: Boolean @public
+    }
+  `;
+
+  const stitchedSchema = stitchSchemas({
+    subschemas: [buildASTSchema(parse(sdl))],
+  });
+  const stitchedSdl = printSchemaWithDirectives(stitchedSchema);
+  expect(
+    stitchedSchema
+      .getQueryType()
+      ?.astNode?.directives?.find((d) => d.name.value === 'public'),
+  ).toBeDefined();
+  expect(stitchedSdl).toContain(`type Query @public`);
+  expect(
+    stitchedSchema
+      .getQueryType()
+      ?.getFields()
+      ['isAnExample']?.astNode?.directives?.find(
+        (d) => d.name.value === 'public',
+      ),
+  ).toBeDefined();
+  expect(stitchedSdl).toContain(`isAnExample: Boolean @public`);
+  expect(
+    stitchedSchema.getDirectives().find((d) => d.name === 'public'),
+  ).toBeDefined();
+  expect(stitchedSdl).toContain(
+    `directive @public on SCHEMA | OBJECT | FIELD_DEFINITION`,
+  );
 });
