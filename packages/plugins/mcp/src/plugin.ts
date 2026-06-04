@@ -1,9 +1,14 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { GatewayPlugin, Logger } from '@graphql-hive/gateway-runtime';
+import type {
+  GatewayConfigContext,
+  GatewayPlugin,
+  Logger,
+} from '@graphql-hive/gateway-runtime';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadDocumentsSync } from '@graphql-tools/load';
 import type { LangfuseClientParams } from '@langfuse/client';
+import type { ServerAdapterInitialContext } from '@whatwg-node/server';
 import {
   concatAST,
   parse,
@@ -434,7 +439,10 @@ export interface MCPOperationsLoader {
    * Called on every MCP request. Return the same string to reuse the cached registry.
    * If this rejects, the plugin logs the error and falls back to the static tool registry.
    */
-  load(req: Request): Promise<string>;
+  load(payload: {
+    serverContext: GatewayConfigContext & ServerAdapterInitialContext;
+    request: Request;
+  }): Promise<string>;
 }
 
 /** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
@@ -1245,6 +1253,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     },
 
     async onRequestParse({
+      serverContext,
       request,
       url,
       setRequestParser,
@@ -1280,7 +1289,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       if (config.loader) {
         let loaderSource: string;
         try {
-          loaderSource = await config.loader.load(request);
+          loaderSource = await config.loader.load({ serverContext, request });
         } catch (err) {
           logger.error(
             `Loader failed, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,

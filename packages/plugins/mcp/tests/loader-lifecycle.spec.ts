@@ -168,8 +168,8 @@ describe('MCPOperationsLoader lifecycle', () => {
   it('load() receives the incoming Request object', async () => {
     let capturedReq: Request | null = null;
     gateway = createGateway({
-      async load(req) {
-        capturedReq = req;
+      async load({ request }) {
+        capturedReq = request;
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
             weather(location: $location) { temperature conditions }
