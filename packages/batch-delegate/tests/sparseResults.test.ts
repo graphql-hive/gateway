@@ -6,11 +6,20 @@ import { parse } from 'graphql';
 import { describe, expect, test } from 'vitest';
 
 // Regression test for DataLoader throwing
-// "did not return a Promise of an Array" when the batch resolves to a
-// sparse array. This happens when `valuesFromResults` (or the subschema
-// result) leaves a hole at the trailing slot — e.g. the last key in the
-// batch has no matching row — because DataLoader's `isArrayLike` check
-// requires `hasOwnProperty(length - 1)`.
+// "did not return a Promise of an Array" when the batch function resolves to
+// a sparse array.
+//
+// `valuesFromResults` is free to return an array with holes — e.g. when it
+// maps results back to keys by index and leaves the slot for an unmatched key
+// unset. If the *last* key in the batch is the unmatched one, the array has a
+// hole at `length - 1`. That array passes `Array.isArray`, but fails
+// DataLoader's stricter `isArrayLike` check (which requires
+// `hasOwnProperty(length - 1)`), so DataLoader throws.
+//
+// NB: a sparse array produced *inside a subschema resolver* does NOT reproduce
+// this — GraphQL list completion densifies it (holes become `null`) before it
+// reaches the batch function. The hole has to survive to the batch function's
+// return, which is why this goes through `valuesFromResults`.
 describe('sparse batch results', () => {
   const subschema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
@@ -33,22 +42,12 @@ describe('sparse batch results', () => {
       Query: {
         objects: () => [
           { id: '1', propertyId: '1' },
+          // The last object's key has no matching property in the subschema,
+          // so its slot is left as a hole by `valuesFromResults` below.
           { id: '2', propertyId: 'missing' },
         ],
-        // Returns a sparse array: only the first key is matched, the
-        // trailing slot for the unmatched key is left as a hole.
-        propertiesByIds: (_, args: { ids: string[] }) => {
-          const result: Array<{ id: string; name: string }> = [];
-          args.ids.forEach((id, index) => {
-            if (id === '1') {
-              result[index] = { id, name: 'First' };
-            }
-          });
-          // The unmatched trailing index is never assigned, leaving a hole
-          // while still reporting the expected length.
-          result.length = args.ids.length;
-          return result;
-        },
+        propertiesByIds: (_root, args: { ids: string[] }) =>
+          args.ids.map((id) => (id === '1' ? { id, name: 'First' } : null)),
       },
     },
   });
@@ -71,6 +70,27 @@ describe('sparse batch results', () => {
               key: source.propertyId,
               context,
               info,
+              // Map results back to keys by index, leaving unmatched keys as
+              // holes — producing a sparse array with a trailing hole.
+              valuesFromResults: (
+                results: Array<{ id: string; name: string } | null>,
+                keys,
+              ) => {
+                const byId = new Map(
+                  results
+                    .filter((r): r is { id: string; name: string } => r != null)
+                    .map((r) => [r.id, r]),
+                );
+                const values: Array<{ id: string; name: string }> = [];
+                keys.forEach((key, index) => {
+                  const found = byId.get(key as string);
+                  if (found) {
+                    values[index] = found;
+                  }
+                });
+                values.length = keys.length;
+                return values;
+              },
             }),
         },
       },
@@ -89,12 +109,13 @@ describe('sparse batch results', () => {
     }
   `;
 
-  test('does not throw and pads missing trailing entries with null', async () => {
+  test('does not throw and resolves unmatched trailing keys to null', async () => {
     const result = await normalizedExecutor({
       schema,
       document: parse(query),
     });
 
+    expect(result).not.toHaveProperty('errors');
     expect(result).toMatchObject({
       data: {
         objects: [
@@ -103,6 +124,5 @@ describe('sparse batch results', () => {
         ],
       },
     });
-    expect(result).not.toHaveProperty('errors');
   });
 });
