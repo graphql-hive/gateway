@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-opentelemetry",
-  "version": "1.4.27",
+  "version": "1.4.28",
   "type": "module",
   "repository": {
     "type": "git",
@@ -98,9 +98,9 @@
   },
   "devDependencies": {
     "@types/opossum": "^8.1.9",
-    "@whatwg-node/server": "^0.10.17",
+    "@whatwg-node/server": "^0.11.0",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.16.2",
+    "graphql-yoga": "^5.21.1",
     "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",
     "pkgroll": "2.27.0",
     "rimraf": "^6.1.0",
