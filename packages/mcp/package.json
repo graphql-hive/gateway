@@ -45,7 +45,7 @@
     "@graphql-hive/logger": "workspace:^",
     "@graphql-tools/graphql-file-loader": "^8.1.12",
     "@graphql-tools/load": "^8.1.8",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "2.0.0-alpha.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
