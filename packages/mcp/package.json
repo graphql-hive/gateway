@@ -1,0 +1,54 @@
+{
+  "name": "@graphql-hive/mcp",
+  "version": "0.0.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/mcp"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^16.13.0"
+  },
+  "dependencies": {
+    "@graphql-hive/logger": "workspace:^",
+    "@graphql-tools/graphql-file-loader": "^8.1.12",
+    "@graphql-tools/load": "^8.1.8"
+  },
+  "devDependencies": {
+    "graphql": "^16.13.2",
+    "pkgroll": "2.27.0"
+  },
+  "sideEffects": false
+}

@@ -4698,6 +4698,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/mcp@workspace:packages/mcp":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/mcp@workspace:packages/mcp"
+  dependencies:
+    "@graphql-hive/logger": "workspace:^"
+    "@graphql-tools/graphql-file-loader": "npm:^8.1.12"
+    "@graphql-tools/load": "npm:^8.1.8"
+    graphql: "npm:^16.13.2"
+    pkgroll: "npm:2.27.0"
+  peerDependencies:
+    graphql: ^16.13.0
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/nestjs@workspace:packages/nestjs":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/nestjs@workspace:packages/nestjs"
