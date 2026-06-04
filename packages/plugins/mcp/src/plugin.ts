@@ -422,24 +422,19 @@ export interface MCPToolConfig {
 }
 
 /**
- * A user-provided operations source that can load GraphQL documents at startup
- * and optionally push live updates. The plugin handles parsing, tool registration,
- * and registry rebuilds; the loader only fetches the raw GraphQL source strings.
+ * A user-provided operations source that loads GraphQL documents per request.
+ * The plugin handles parsing, tool registration, and per-request registry selection;
+ * the loader only fetches the raw GraphQL source string.
+ * Results are cached: if load() returns the same string as a previous call, the
+ * cached ToolRegistry is reused without rebuilding.
  */
 export interface MCPOperationsLoader {
   /**
    * Fetch the operations source as a raw GraphQL string (may contain one or more operations).
-   * Called once at startup. If this rejects, the plugin logs the error and proceeds
-   * without loader-sourced tools. Implement retry logic inside load() if you need
-   * automatic recovery.
+   * Called on every MCP request. Return the same string to reuse the cached registry.
+   * If this rejects, the plugin logs the error and falls back to the static tool registry.
    */
-  load(): Promise<string>;
-  /**
-   * Subscribe to live updates. Called once after the initial `load()` succeeds.
-   * Invoke `callback` with the full updated source whenever it changes.
-   * Optionally return a cleanup function to unsubscribe (called on plugin dispose).
-   */
-  onUpdate?(callback: (source: string) => void): (() => void) | void;
+  load(req: Request): Promise<string>;
 }
 
 /** Top-level configuration for the MCP plugin. Passed to {@link useMCP}. */
@@ -492,7 +487,7 @@ export interface MCPConfig {
   };
   /** Suppress outputSchema from all tools in tools/list responses */
   suppressOutputSchema?: boolean;
-  /** Dynamic operations source. Loaded at startup; if `onUpdate` is provided, the plugin subscribes to live changes and rebuilds tools automatically. */
+  /** Dynamic operations source. Called on every MCP request; results are cached by the returned string so identical sources reuse the same ToolRegistry. */
   loader?: MCPOperationsLoader;
 }
 
@@ -913,88 +908,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     operationsSource,
   });
 
-  // Dynamic operations loader: async init + live updates.
-  // If load() fails, the error is logged and no retry is attempted.
-  // The plugin continues without loader-sourced tools.
-  let loaderInitPromise: Promise<void> | null = null;
-  let loaderCleanup: (() => void) | void | null = null;
-  let loaderDisposed = false;
-
-  function rebuildToolsFromLoader(source: string) {
-    let loaderDoc: DocumentNode;
-    try {
-      loaderDoc = parse(source);
-    } catch (err) {
-      logger.error(
-        `Failed to parse loader operations. Keeping previous tools.`,
-        err instanceof Error ? err.message : err,
-      );
-      return;
-    }
-    const mergedDoc = operationsSource
-      ? concatAST([loaderDoc, operationsSource])
-      : loaderDoc;
-
-    let newResolvedTools: ResolvedToolConfig[];
-    try {
-      newResolvedTools = resolveToolConfigs(ctx, {
-        tools: config.tools || [],
-        operationsSource: mergedDoc,
-      });
-    } catch (err) {
-      logger.error(
-        `Failed to resolve loader operations. Keeping previous tools.`,
-        err instanceof Error ? err.message : err,
-      );
-      return;
-    }
-
-    if (schema) {
-      const previousTools = resolvedTools;
-      try {
-        const newRegistry = new ToolRegistry(ctx, newResolvedTools, schema);
-        resolvedTools = newResolvedTools;
-        const newOptions = buildHandlerOptions(newRegistry);
-        registry = newRegistry;
-        mcpHandlerOptions = newOptions;
-        logger.info(
-          `Tool registry rebuilt: ${newResolvedTools.length} tools registered`,
-        );
-      } catch (err) {
-        resolvedTools = previousTools;
-        logger.error(
-          `Failed to rebuild tool registry after loader update. Keeping previous tools.`,
-          err instanceof Error ? err.message : err,
-        );
-      }
-    } else {
-      // Schema not yet available; update resolvedTools for when onSchemaChange fires
-      resolvedTools = newResolvedTools;
-    }
-  }
-
-  if (config.loader) {
-    const loader = config.loader;
-    loaderInitPromise = loader
-      .load()
-      .then((source) => {
-        if (loaderDisposed) return;
-        rebuildToolsFromLoader(source);
-        if (loader.onUpdate) {
-          loaderCleanup = loader.onUpdate((newSource) => {
-            if (loaderDisposed) return;
-            rebuildToolsFromLoader(newSource);
-          });
-        }
-        loaderInitPromise = null;
-      })
-      .catch((err) => {
-        loaderInitPromise = null;
-        logger.error(
-          `Failed to load operations from loader: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      });
-  }
+  // per-request loader cache: source string -> { registry, tools }
+  const loaderCache = new Map<
+    string,
+    { registry: ToolRegistry; tools: ResolvedToolConfig[] }
+  >();
 
   // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
@@ -1099,24 +1017,22 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     return providersPromise;
   }
 
-  // Recomputed each time buildHandlerOptions is called so loader rebuilds are reflected
-  let providerToolConfigs: ResolvedToolConfig[] = [];
-  let fieldProviderToolConfigs: ResolvedToolConfig[] = [];
-  let outputFieldProviderToolConfigs: ResolvedToolConfig[] = [];
-
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
   let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
-  function buildHandlerOptions(reg: ToolRegistry): MCPHandlerOptions {
-    providerToolConfigs = resolvedTools.filter(
+  function buildHandlerOptions(
+    reg: ToolRegistry,
+    tools: ResolvedToolConfig[],
+  ): MCPHandlerOptions {
+    const providerToolConfigs = tools.filter(
       (t) => t.tool?.descriptionProvider,
     );
-    fieldProviderToolConfigs = resolvedTools.filter((t) =>
+    const fieldProviderToolConfigs = tools.filter((t) =>
       Object.values(t.input?.schema?.properties || {}).some(
         (p) => p.descriptionProvider,
       ),
     );
-    outputFieldProviderToolConfigs = resolvedTools.filter(
+    const outputFieldProviderToolConfigs = tools.filter(
       (t) =>
         t.output?.descriptionProviders &&
         Object.keys(t.output.descriptionProviders).length > 0,
@@ -1295,25 +1211,14 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   }
 
   return {
-    onDispose() {
-      loaderDisposed = true;
-      try {
-        loaderCleanup?.();
-      } catch (err) {
-        logger.error(
-          `Loader cleanup failed during dispose`,
-          err instanceof Error ? err.message : err,
-        );
-      }
-    },
-
     onSchemaChange({ schema: newSchema }) {
       try {
         const newRegistry = new ToolRegistry(ctx, resolvedTools, newSchema);
-        const newOptions = buildHandlerOptions(newRegistry);
+        const newOptions = buildHandlerOptions(newRegistry, resolvedTools);
         schema = newSchema;
         registry = newRegistry;
         mcpHandlerOptions = newOptions;
+        loaderCache.clear();
       } catch (err) {
         logger.error(
           registry
@@ -1350,11 +1255,6 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         return;
       }
 
-      // Wait for in-progress loader init
-      if (loaderInitPromise) {
-        await loaderInitPromise;
-      }
-
       // Schema should be ready by the time onRequestParse fires.
       // If not (e.g. startup race), return 503.
       if (!registry || !schema || !mcpHandlerOptions) {
@@ -1372,6 +1272,77 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
             { status: 503 },
           ),
         );
+      }
+
+      // per-request loader: resolve registry and handler options for this request
+      let activeRegistry = registry;
+      let activeHandlerOptions = mcpHandlerOptions;
+      if (config.loader) {
+        let loaderSource: string;
+        try {
+          loaderSource = await config.loader.load(request);
+        } catch (err) {
+          logger.error(
+            `Loader failed, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,
+          );
+          loaderSource = '';
+        }
+        if (loaderSource) {
+          let cached = loaderCache.get(loaderSource);
+          if (!cached) {
+            // cache miss: parse, resolve, build registry
+            let loaderDoc: DocumentNode | null = null;
+            try {
+              loaderDoc = parse(loaderSource);
+            } catch (err) {
+              logger.error(
+                `Failed to parse loader operations, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,
+              );
+            }
+            if (loaderDoc) {
+              const mergedDoc = operationsSource
+                ? concatAST([loaderDoc, operationsSource])
+                : loaderDoc;
+              let loaderTools: ResolvedToolConfig[] | null = null;
+              try {
+                loaderTools = resolveToolConfigs(ctx, {
+                  tools: config.tools || [],
+                  operationsSource: mergedDoc,
+                });
+              } catch (err) {
+                logger.error(
+                  `Failed to resolve loader operations, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              }
+              if (loaderTools) {
+                try {
+                  const loaderRegistry = new ToolRegistry(
+                    ctx,
+                    loaderTools,
+                    schema,
+                  );
+                  cached = { registry: loaderRegistry, tools: loaderTools };
+                  loaderCache.set(loaderSource, cached);
+                  activeRegistry = loaderRegistry;
+                  activeHandlerOptions = buildHandlerOptions(
+                    loaderRegistry,
+                    loaderTools,
+                  );
+                } catch (err) {
+                  logger.error(
+                    `Failed to build loader tool registry, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,
+                  );
+                }
+              }
+            }
+          } else {
+            activeRegistry = cached.registry;
+            activeHandlerOptions = buildHandlerOptions(
+              cached.registry,
+              cached.tools,
+            );
+          }
+        }
       }
 
       // Parse JSON-RPC body
@@ -1477,7 +1448,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           );
         }
 
-        const tool = registry.getTool(callParams.name);
+        const tool = activeRegistry.getTool(callParams.name);
 
         if (!tool) {
           return endResponse(
@@ -1617,11 +1588,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       }
       if (
         promptLabel &&
-        providerToolConfigs.length === 0 &&
-        fieldProviderToolConfigs.length === 0 &&
-        outputFieldProviderToolConfigs.length === 0 &&
-        providerResourceConfigs.length === 0 &&
-        providerTemplateConfigs.length === 0
+        !activeHandlerOptions.resolveToolDescriptions &&
+        !activeHandlerOptions.resolveFieldDescriptions &&
+        !activeHandlerOptions.resolveOutputFieldDescriptions &&
+        !activeHandlerOptions.resolveResourceDescriptions &&
+        !activeHandlerOptions.resolveTemplateDescriptions
       ) {
         logger.warn(
           `"promptLabel" query parameter was provided but no tools or resources use description providers. The parameter has no effect.`,
@@ -1635,7 +1606,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         result = await handleMCPRequest(
           ctx,
           body,
-          mcpHandlerOptions,
+          activeHandlerOptions,
           providerContext,
         );
       } catch (err) {

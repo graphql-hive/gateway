@@ -3,7 +3,7 @@ import {
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { MCPOperationsLoader } from '../src/plugin.js';
 import { useMCP } from '../src/plugin.js';
 
@@ -54,6 +54,7 @@ describe('MCPOperationsLoader lifecycle', () => {
   async function mcpRequest(
     gateway: ReturnType<typeof createGatewayRuntime>,
     body: Record<string, unknown>,
+    headers?: Record<string, string>,
   ) {
     // Warm the schema so the registry is built
     await gateway.fetch('http://localhost/graphql', {
@@ -63,7 +64,7 @@ describe('MCPOperationsLoader lifecycle', () => {
     });
     return gateway.fetch('http://localhost/mcp', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...headers },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, ...body }),
     });
   }
@@ -79,7 +80,7 @@ describe('MCPOperationsLoader lifecycle', () => {
 
   it('load() provides operations that register as tools via @mcpTool', async () => {
     gateway = createGateway({
-      async load() {
+      async load(_req) {
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
             weather(location: $location) { temperature conditions }
@@ -88,181 +89,116 @@ describe('MCPOperationsLoader lifecycle', () => {
       },
     });
 
-    const res = await mcpRequest(gateway, {
-      method: 'tools/list',
-    });
+    const res = await mcpRequest(gateway, { method: 'tools/list' });
     const json = await res.json();
     const names = json.result.tools.map((t: { name: string }) => t.name);
     expect(names).toContain('get_weather');
   });
 
-  it('load() rejection is caught and plugin continues without loader tools', async () => {
+  it('load() rejection is caught and plugin falls back to static registry', async () => {
     gateway = createGateway({
-      async load() {
+      async load(_req) {
         throw new Error('network failure');
       },
     });
 
-    // Should not throw, plugin continues without loader tools
-    const res = await mcpRequest(gateway, {
-      method: 'tools/list',
-    });
+    const res = await mcpRequest(gateway, { method: 'tools/list' });
     const json = await res.json();
     expect(json.result.tools).toEqual([]);
   });
 
-  it('onUpdate callback triggers tool rebuild', async () => {
-    let updateCallback: ((source: string) => void) | null = null;
-
+  it('load() returning the same string reuses the cached registry', async () => {
+    let callCount = 0;
     gateway = createGateway({
-      async load() {
+      async load(_req) {
+        callCount++;
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
             weather(location: $location) { temperature conditions }
           }
         `;
       },
-      onUpdate(callback) {
-        updateCallback = callback;
-        return () => {
-          updateCallback = null;
-        };
-      },
     });
 
-    // Initial load
-    let res = await mcpRequest(gateway, { method: 'tools/list' });
-    let json = await res.json();
-    let names = json.result.tools.map((t: { name: string }) => t.name);
-    expect(names).toEqual(['get_weather']);
+    // two tools/list requests with the same source
+    await mcpRequest(gateway, { method: 'tools/list' });
+    await mcpRequest(gateway, { method: 'tools/list' });
 
-    // Push an update that adds a second tool
-    updateCallback!(
-      `
-        query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
-          weather(location: $location) { temperature conditions }
-        }
-        query SayHello($name: String!) @mcpTool(name: "say_hello", description: "Greet") {
-          hello(name: $name)
-        }
-      `,
-    );
-
-    res = await mcpRequest(gateway, { method: 'tools/list' });
-    json = await res.json();
-    names = json.result.tools.map((t: { name: string }) => t.name);
-    expect(names).toContain('get_weather');
-    expect(names).toContain('say_hello');
-  });
-
-  it('onUpdate with invalid GraphQL keeps previous tools', async () => {
-    let updateCallback: ((source: string) => void) | null = null;
-
-    gateway = createGateway({
-      async load() {
-        return `
-          query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
-            weather(location: $location) { temperature conditions }
-          }
-        `;
-      },
-      onUpdate(callback) {
-        updateCallback = callback;
-      },
-    });
-
-    // Initial load
-    let res = await mcpRequest(gateway, { method: 'tools/list' });
-    let json = await res.json();
-    expect(json.result.tools).toHaveLength(1);
-
-    // Push broken GraphQL -- should not crash, should keep previous tools
-    updateCallback!('this is not valid graphql {{{');
-
-    res = await mcpRequest(gateway, { method: 'tools/list' });
-    json = await res.json();
+    // load() is called twice but registry is built only once (cache hit on second)
+    expect(callCount).toBe(2);
+    const res = await mcpRequest(gateway, { method: 'tools/list' });
+    const json = await res.json();
     expect(json.result.tools).toHaveLength(1);
     expect(json.result.tools[0].name).toBe('get_weather');
   });
 
-  it('onDispose calls the cleanup function from onUpdate', async () => {
-    const cleanupSpy = vi.fn();
-    const localGateway = createGateway({
-      async load() {
+  it('load() returning a different string builds a new registry', async () => {
+    let toggle = false;
+    gateway = createGateway({
+      async load(_req) {
+        toggle = !toggle;
+        if (toggle) {
+          return `
+            query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
+              weather(location: $location) { temperature conditions }
+            }
+          `;
+        }
         return `
-          query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
-            weather(location: $location) { temperature conditions }
+          query SayHello($name: String!) @mcpTool(name: "say_hello", description: "Greet") {
+            hello(name: $name)
           }
         `;
       },
-      onUpdate(_callback) {
-        return cleanupSpy;
-      },
     });
 
-    // Warm up so load() resolves
-    await mcpRequest(localGateway, { method: 'tools/list' });
-
-    expect(cleanupSpy).not.toHaveBeenCalled();
-    await localGateway[Symbol.asyncDispose]?.();
-    expect(cleanupSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('onDispose before load() resolves does not leak subscription', async () => {
-    const onUpdateSpy = vi.fn();
-    let resolveLoad!: (value: string) => void;
-    const loadPromise = new Promise<string>((r) => {
-      resolveLoad = r;
-    });
-
-    const localGateway = createGateway({
-      load: () => loadPromise,
-      onUpdate: onUpdateSpy,
-    });
-
-    // Dispose immediately, before load resolves
-    await localGateway[Symbol.asyncDispose]?.();
-
-    // Now resolve load; the plugin's .then handler will run but must short-circuit
-    resolveLoad(
-      `query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
-        weather(location: $location) { temperature }
-      }`,
+    const res1 = await mcpRequest(gateway, { method: 'tools/list' });
+    const json1 = await res1.json();
+    expect(json1.result.tools.map((t: { name: string }) => t.name)).toContain(
+      'get_weather',
     );
 
-    // Allow the resolved promise's .then handler to run
-    await loadPromise;
-    await Promise.resolve();
-
-    expect(onUpdateSpy).not.toHaveBeenCalled();
+    const res2 = await mcpRequest(gateway, { method: 'tools/list' });
+    const json2 = await res2.json();
+    expect(json2.result.tools.map((t: { name: string }) => t.name)).toContain(
+      'say_hello',
+    );
   });
 
-  it('onDispose catches cleanup function that throws', async () => {
-    const localGateway = createGateway({
-      async load() {
+  it('load() receives the incoming Request object', async () => {
+    let capturedReq: Request | null = null;
+    gateway = createGateway({
+      async load(req) {
+        capturedReq = req;
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
             weather(location: $location) { temperature conditions }
           }
         `;
       },
-      onUpdate(_callback) {
-        return () => {
-          throw new Error('cleanup exploded');
-        };
+    });
+
+    await mcpRequest(gateway, { method: 'tools/list' }, { 'x-tenant': 'acme' });
+    expect(capturedReq).not.toBeNull();
+    expect(capturedReq!.headers.get('x-tenant')).toBe('acme');
+  });
+
+  it('load() invalid GraphQL falls back to static registry', async () => {
+    gateway = createGateway({
+      async load(_req) {
+        return 'this is not valid graphql {{{';
       },
     });
 
-    // Warm up so load resolves and onUpdate registers
-    await mcpRequest(localGateway, { method: 'tools/list' });
-
-    // Should not throw
-    await localGateway[Symbol.asyncDispose]?.();
+    const res = await mcpRequest(gateway, { method: 'tools/list' });
+    const json = await res.json();
+    // falls back to static (empty) registry without crashing
+    expect(json.result.tools).toEqual([]);
   });
 
   it('tools/call works with loader-sourced operations', async () => {
     gateway = createGateway({
-      async load() {
+      async load(_req) {
         return `
           query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
             weather(location: $location) { temperature conditions }
