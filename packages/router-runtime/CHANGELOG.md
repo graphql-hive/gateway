@@ -1,5 +1,12 @@
 # @graphql-hive/router-runtime
 
+## 1.4.10
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.4.5
+  - @graphql-mesh/fusion-runtime@1.10.6
+
 ## 1.4.9
 ### Patch Changes
 
