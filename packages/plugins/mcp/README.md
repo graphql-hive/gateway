@@ -362,6 +362,71 @@ resources: [
 
 Agents discover resources via `resources/list` and fetch them with `resources/read`. Templates allow dynamic URIs with parameters.
 
+### Hive App Deployment loader
+
+The `createHiveLoader` function creates an `MCPOperationsLoader` that fetches persisted GraphQL documents from a [Hive App Deployment](https://the-guild.dev/graphql/hive/docs/features/app-deployments) on every MCP request.
+
+```typescript
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { useMCP } from '@graphql-hive/plugin-mcp';
+import { createHiveLoader } from '@graphql-hive/plugin-mcp/loaders/hive';
+
+const gateway = createGatewayRuntime({
+  supergraph: 'supergraph.graphql',
+  plugins: (ctx) => [
+    useMCP(ctx, {
+      name: 'my-api',
+      loader: createHiveLoader(ctx, {
+        endpoint:
+          'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+        accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+        appDeployment: {
+          appName: 'my-app',
+          appVersion: '1.0.0',
+        },
+      }),
+    }),
+  ],
+});
+```
+
+The loader resolves the app deployment manifest from the Hive CDN, then fetches every persisted document listed in that manifest. All documents are concatenated and returned as a single GraphQL operations string. The plugin parses that string, registers tools from any operations carrying `@mcpTool` directives, and caches the result so identical sources skip the rebuild.
+
+If the manifest is not found or any document cannot be resolved, the loader throws and the plugin falls back to the static tool registry.
+
+#### CDN failover
+
+Pass two CDN endpoint URLs to automatically fall back to the second if the first fails:
+
+```typescript
+createHiveLoader(ctx, {
+  endpoint: [
+    'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+    'https://cdn-mirror.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+  ],
+  accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+  appDeployment: { appName: 'my-app', appVersion: '1.0.0' },
+});
+```
+
+#### Dynamic app deployment
+
+`appDeployment` can be a function that receives `{ request, serverContext }` and returns `{ appName, appVersion }`. Use this for multi-tenant setups where the deployment varies per request (for example, driven by a request header):
+
+```typescript
+createHiveLoader(ctx, {
+  endpoint:
+    'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+  accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+  appDeployment: ({ request }) => ({
+    appName: request.headers.get('x-app-name'),
+    appVersion: request.headers.get('x-app-version'),
+  }),
+});
+```
+
+> ⚠️ When `appDeployment` is a function, the loader fetches the manifest and all persisted documents on **every** MCP request. The plugin-level string cache still applies (identical responses reuse the cached `ToolRegistry`), but if the deployment config changes frequently you should add your own caching inside the function to avoid repeated CDN round-trips.
+
 ## Dynamic operations loader
 
 Supply a custom `loader` to fetch operations from any external source at startup and optionally subscribe to live updates. The plugin handles parsing, tool registration, and registry rebuilds.
