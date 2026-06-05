@@ -59,17 +59,18 @@ export interface HiveLoaderConfig {
  * @experimental Subject to breaking changes without notice.
  */
 export function createHiveLoader(
+  ctx: GatewayConfigContext,
   config: HiveLoaderConfig,
 ): MCPOperationsLoader {
   const hive = createHive({
     enabled: false,
+    logger: ctx.log,
     persistedDocuments: {
       cdn: {
         endpoint: config.endpoint,
         accessToken: config.accessToken,
       },
     },
-    // TODO: set up cache, logging, blah blah
   });
   if (!hive.persistedDocuments) {
     // should never happen
