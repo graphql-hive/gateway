@@ -29,6 +29,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./loaders/hive": {
+      "require": {
+        "types": "./dist/loaders/hive.d.cts",
+        "default": "./dist/loaders/hive.cjs"
+      },
+      "import": {
+        "types": "./dist/loaders/hive.d.ts",
+        "default": "./dist/loaders/hive.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
