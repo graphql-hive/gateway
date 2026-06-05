@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-runtime",
-  "version": "2.9.5",
+  "version": "2.9.6",
   "type": "module",
   "repository": {
     "type": "git",
