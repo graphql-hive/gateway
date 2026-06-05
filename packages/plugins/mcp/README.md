@@ -429,32 +429,21 @@ createHiveLoader(ctx, {
 
 ## Dynamic operations loader
 
-Supply a custom `loader` to fetch operations from any external source at startup and optionally subscribe to live updates. The plugin handles parsing, tool registration, and registry rebuilds.
+Supply a custom `loader` to fetch operations from any external source on every MCP request. The plugin handles parsing, tool registration, and caching.
 
 ```typescript
 useMCP(ctx, {
   name: 'my-api',
   loader: {
-    async load() {
+    async load({ request, serverContext }) {
       const res = await fetch('https://my-cdn.example.com/operations.graphql');
       return res.text();
-    },
-    onUpdate(callback) {
-      const interval = setInterval(async () => {
-        const res = await fetch(
-          'https://my-cdn.example.com/operations.graphql',
-        );
-        callback(await res.text());
-      }, 60_000);
-      return () => clearInterval(interval);
     },
   },
 });
 ```
 
-The `load()` method is called once at startup. If `onUpdate` is provided, it is called after `load()` succeeds and should invoke the callback whenever the source changes. Optionally return a cleanup function from `onUpdate` to unsubscribe on dispose.
-
-If `load()` rejects, the error is logged and `onUpdate` is not called. The plugin continues without loader-sourced operations. Implement retry logic inside `load()` if you need automatic recovery.
+The `load()` method is called on every MCP request and receives `{ request, serverContext }`. If `load()` returns the same string as a previous call, the cached `ToolRegistry` is reused without rebuilding. If `load()` rejects, the error is logged and the plugin falls back to the static tool registry.
 
 ## Langfuse integration
 
@@ -579,7 +568,7 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 - **Resource templates**: dynamic URI-based resources with custom handlers
 - **Annotations**: tool hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and content annotations (`audience`, `priority`)
 - **Task support**: per-tool `execution.taskSupport` (`'forbidden'`, `'optional'`, `'required'`) for long-running operations
-- **Dynamic loader**: fetch operations from any external source with optional live updates
+- **Dynamic loader**: fetch operations from any external source per request with built-in string caching
 
 ## Examples
 
