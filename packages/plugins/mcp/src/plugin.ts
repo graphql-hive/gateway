@@ -919,7 +919,11 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   // per-request loader cache: source string -> { registry, tools }
   const loaderCache = new Map<
     string,
-    { registry: ToolRegistry; tools: ResolvedToolConfig[] }
+    {
+      registry: ToolRegistry;
+      tools: ResolvedToolConfig[];
+      handlerOptions: MCPHandlerOptions;
+    }
   >();
 
   // Validate that tools referencing providers have matching entries in config
@@ -1330,13 +1334,18 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                     loaderTools,
                     schema,
                   );
-                  cached = { registry: loaderRegistry, tools: loaderTools };
-                  loaderCache.set(loaderSource, cached);
-                  activeRegistry = loaderRegistry;
-                  activeHandlerOptions = buildHandlerOptions(
+                  const loaderHandlerOptions = buildHandlerOptions(
                     loaderRegistry,
                     loaderTools,
                   );
+                  cached = {
+                    registry: loaderRegistry,
+                    tools: loaderTools,
+                    handlerOptions: loaderHandlerOptions,
+                  };
+                  loaderCache.set(loaderSource, cached);
+                  activeRegistry = loaderRegistry;
+                  activeHandlerOptions = loaderHandlerOptions;
                 } catch (err) {
                   logger.error(
                     `Failed to build loader tool registry, falling back to static registry: ${err instanceof Error ? err.message : String(err)}`,
@@ -1346,10 +1355,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
             }
           } else {
             activeRegistry = cached.registry;
-            activeHandlerOptions = buildHandlerOptions(
-              cached.registry,
-              cached.tools,
-            );
+            activeHandlerOptions = cached.handlerOptions;
           }
         }
       }
