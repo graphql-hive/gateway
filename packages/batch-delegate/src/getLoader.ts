@@ -52,7 +52,22 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
               ? keys.map(() => results)
               : valuesFromResults(results, keys);
 
-        return Array.isArray(values) ? values : keys.map(() => values);
+        if (!Array.isArray(values)) {
+          return keys.map(() => values);
+        }
+
+        // DataLoader's batch function must resolve to a dense array whose
+        // length matches the keys: its `isArrayLike` check requires
+        // `hasOwnProperty(length - 1)`, so a sparse array (e.g. one whose
+        // trailing slot was never assigned because the last key had no
+        // matching row in the subschema result) makes it throw
+        // "did not return a Promise of an Array". Normalise to a dense array
+        // of `keys.length`, padding any missing entries with `null`.
+        const dense = new Array(keys.length);
+        for (let i = 0; i < keys.length; i++) {
+          dense[i] = values[i] ?? null;
+        }
+        return dense;
       })
       .catch((error) => keys.map(() => error));
   };
