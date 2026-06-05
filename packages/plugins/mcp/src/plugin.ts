@@ -916,7 +916,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     operationsSource,
   });
 
-  // per-request loader cache: source string -> { registry, tools }
+  // per-request loader cache: source string -> { registry, tools, handlerOptions }, capped at 10 entries (evicts oldest)
   const loaderCache = new Map<
     string,
     {
@@ -1343,6 +1343,9 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                     tools: loaderTools,
                     handlerOptions: loaderHandlerOptions,
                   };
+                  if (loaderCache.size >= 10) {
+                    loaderCache.delete(loaderCache.keys().next().value!);
+                  }
                   loaderCache.set(loaderSource, cached);
                   activeRegistry = loaderRegistry;
                   activeHandlerOptions = loaderHandlerOptions;

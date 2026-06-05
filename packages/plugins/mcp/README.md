@@ -390,7 +390,7 @@ const gateway = createGatewayRuntime({
 });
 ```
 
-The loader resolves the app deployment manifest from the Hive CDN, then fetches every persisted document listed in that manifest. All documents are concatenated and returned as a single GraphQL operations string. The plugin parses that string, registers tools from any operations carrying `@mcpTool` directives, and caches the result so identical sources skip the rebuild.
+The loader resolves the app deployment manifest from the Hive CDN, then fetches every persisted document listed in that manifest. All documents are concatenated and returned as a single GraphQL operations string. The plugin parses that string, registers tools from any operations carrying `@mcpTool` directives, and caches the result so identical sources skip the rebuild. The cache holds up to 10 entries; when the limit is reached the oldest entry is evicted.
 
 If the manifest is not found or any document cannot be resolved, the loader throws and the plugin falls back to the static tool registry.
 
@@ -425,7 +425,7 @@ createHiveLoader(ctx, {
 });
 ```
 
-> ⚠️ When `appDeployment` is a function, the loader fetches the manifest and all persisted documents on **every** MCP request. The plugin-level string cache still applies (identical responses reuse the cached `ToolRegistry`), but if the deployment config changes frequently you should add your own caching inside the function to avoid repeated CDN round-trips.
+> ⚠️ When `appDeployment` is a function, the loader fetches the manifest and all persisted documents on **every** MCP request. The plugin-level string cache still applies (identical responses reuse the cached registry and pre-built handler options), but if the deployment config changes frequently you should add your own caching inside the function to avoid repeated CDN round-trips.
 
 ## Dynamic operations loader
 
@@ -443,7 +443,7 @@ useMCP(ctx, {
 });
 ```
 
-The `load()` method is called on every MCP request and receives `{ request, serverContext }`. If `load()` returns the same string as a previous call, the cached `ToolRegistry` is reused without rebuilding. If `load()` rejects, the error is logged and the plugin falls back to the static tool registry.
+The `load()` method is called on every MCP request and receives `{ request, serverContext }`. If `load()` returns the same string as a previous call, the cached registry and pre-built handler options are reused without rebuilding. The cache holds up to 10 entries; when the limit is reached the oldest entry is evicted. If `load()` rejects, the error is logged and the plugin falls back to the static tool registry.
 
 ## Langfuse integration
 
