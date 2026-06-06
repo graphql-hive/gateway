@@ -1,5 +1,28 @@
 # @graphql-hive/gateway-testing
 
+## 8.0.6
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.6
+
+## 8.0.5
+### Patch Changes
+
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`graphql-yoga@^5.21.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.1) (from `^5.16.2`, in `dependencies`)
+- Updated dependencies [[`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa), [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa)]:
+  - @graphql-hive/gateway-runtime@2.9.5
+
+## 8.0.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.4
+
 ## 8.0.3
 ### Patch Changes
 

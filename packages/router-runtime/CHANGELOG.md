@@ -1,5 +1,31 @@
 # @graphql-hive/router-runtime
 
+## 1.4.10
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.4.5
+  - @graphql-mesh/fusion-runtime@1.10.6
+
+## 1.4.9
+### Patch Changes
+
+- Updated dependencies [[`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa)]:
+  - @graphql-mesh/fusion-runtime@1.10.5
+
+## 1.4.8
+### Patch Changes
+
+
+
+- [#2386](https://github.com/graphql-hive/gateway/pull/2386) [`537bb50`](https://github.com/graphql-hive/gateway/commit/537bb503189816e09dd2aa7c997ae2bc7722ff4c) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.28` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.28) (from `^0.0.24`, in `dependencies`)
+- Updated dependencies [[`3e774e0`](https://github.com/graphql-hive/gateway/commit/3e774e050bc2d3c33e0f36a258ab6a8d94bf0750)]:
+  - @graphql-tools/delegate@12.0.17
+  - @graphql-mesh/fusion-runtime@1.10.4
+  - @graphql-tools/federation@4.4.4
+
 ## 1.4.7
 ### Patch Changes
 

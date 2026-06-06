@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.0.17
+### Patch Changes
+
+
+
+- [#2382](https://github.com/graphql-hive/gateway/pull/2382) [`3e774e0`](https://github.com/graphql-hive/gateway/commit/3e774e050bc2d3c33e0f36a258ab6a8d94bf0750) Thanks [@gonzo-32](https://github.com/gonzo-32)! - Fix cross-subgraph delegation for unavailable fields selected through inline fragments or fragment spreads on interface fields.
+  
+  The fix in `extractUnavailableFieldsFromSelectionSet` within `extractUnavailableFields.ts` now preserves the fragment wrapper and type condition, so concrete-type fields do not lose their type context and get treated as missing.
+
 ## 12.0.16
 ### Patch Changes
 

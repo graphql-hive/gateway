@@ -14,6 +14,7 @@ const inline = [
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
   /@graphql-hive\/yoga/,
+  /@whatwg-node\/server/,
 ];
 
 export default defineConfig({

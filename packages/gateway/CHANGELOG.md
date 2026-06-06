@@ -1,5 +1,72 @@
 # @graphql-hive/gateway
 
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.6
+  - @graphql-hive/plugin-aws-sigv4@2.0.49
+  - @graphql-hive/plugin-opentelemetry@1.4.29
+  - @graphql-mesh/plugin-prometheus@2.1.47
+
+## 2.8.1
+### Patch Changes
+
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/render-laboratory@^0.1.9` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.9) (from `^0.1.8`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/server@^0.11.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.11.0) (from `^0.10.17`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.21.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.1) (from `^5.16.2`, in `dependencies`)
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use `useRequestDeadline` plugin from `@whatwg-node/server` for enforcing per-request timeouts
+  
+  Read more: https://github.com/ardatan/whatwg-node/pull/3399.
+- Updated dependencies [[`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa), [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa)]:
+  - @graphql-hive/gateway-runtime@2.9.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.48
+  - @graphql-hive/plugin-opentelemetry@1.4.28
+  - @graphql-mesh/plugin-prometheus@2.1.46
+
+## 2.8.0
+### Minor Changes
+
+
+
+- [#2361](https://github.com/graphql-hive/gateway/pull/2361) [`72dfa84`](https://github.com/graphql-hive/gateway/commit/72dfa840ebaaabfad277c6562f86b219dc825ba1) Thanks [@ardatan](https://github.com/ardatan)! - Update Docker image to Node 26
+
+
+### Patch Changes
+
+
+
+- [#2368](https://github.com/graphql-hive/gateway/pull/2368) [`3c06982`](https://github.com/graphql-hive/gateway/commit/3c069825e3b4a9ceda4b9a059d8466eea7570ee0) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.218.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.218.0) (from `^0.217.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.218.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.218.0) (from `^0.217.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.218.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.218.0) (from `^0.217.0`, in `dependencies`)
+
+
+- [#2373](https://github.com/graphql-hive/gateway/pull/2373) [`3f40d06`](https://github.com/graphql-hive/gateway/commit/3f40d066f03e516d552a70ab0c9c472206612fe3) Thanks [@mskorokhodov](https://github.com/mskorokhodov)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/render-laboratory@^0.1.8` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.8) (from `^0.1.6`, in `dependencies`)
+
+
+- [#2373](https://github.com/graphql-hive/gateway/pull/2373) [`3f40d06`](https://github.com/graphql-hive/gateway/commit/3f40d066f03e516d552a70ab0c9c472206612fe3) Thanks [@mskorokhodov](https://github.com/mskorokhodov)! - Hive laboratory now supports introspection headers configuration using settings
+  
+  https://the-guild.dev/graphql/hive/docs/new-laboratory/schema-support#introspection-headers
+
+
+- [#2377](https://github.com/graphql-hive/gateway/pull/2377) [`6a2b04f`](https://github.com/graphql-hive/gateway/commit/6a2b04f82d3b0521e3166bc43db1355541d6265d) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fixes security vulnerability alerts on Docker images
+
+- Updated dependencies [[`3c06982`](https://github.com/graphql-hive/gateway/commit/3c069825e3b4a9ceda4b9a059d8466eea7570ee0)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.27
+  - @graphql-hive/gateway-runtime@2.9.4
+  - @graphql-hive/plugin-aws-sigv4@2.0.47
+  - @graphql-mesh/plugin-prometheus@2.1.45
+
 ## 2.7.2
 ### Patch Changes
 
