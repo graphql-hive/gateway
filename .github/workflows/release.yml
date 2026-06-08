@@ -158,6 +158,8 @@ jobs:
       - name: Build
         run: yarn build
       - name: Bundle
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
@@ -232,6 +234,8 @@ jobs:
       - name: Build
         run: yarn build
       - name: Bundle
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version "${{ steps.ver-gateway.outputs.result }}"
