@@ -1,5 +1,14 @@
 # @graphql-hive/gateway
 
+## 2.8.3
+### Patch Changes
+
+
+
+- [#2410](https://github.com/graphql-hive/gateway/pull/2410) [`45f935d`](https://github.com/graphql-hive/gateway/commit/45f935d7a064777b5c0c2933d7fa062f4550434d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Hive Gateway images ship with Rust QP
+  
+  An accidental regression happened starting with release v2.7.1 where the Rust QP was missing from the image.
+
 ## 2.8.2
 ### Patch Changes
 
