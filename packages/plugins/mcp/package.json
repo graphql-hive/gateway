@@ -61,7 +61,7 @@
     "@opentelemetry/api": "^1.9.0",
     "graphql": "^16.13.2",
     "graphql-yoga": "^5.21.1",
-    "pkgroll": "2.27.0"
+    "pkgroll": "2.27.1"
   },
   "sideEffects": false
 }

@@ -22,7 +22,7 @@
     "@tsconfig/node18": "^18.2.5",
     "@tsconfig/recommended": "^1.0.13",
     "@types/node": "^25.0.0",
-    "pkgroll": "2.27.0",
+    "pkgroll": "2.27.1",
     "typescript": "6.0.3"
   }
 }
