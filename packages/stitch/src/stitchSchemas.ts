@@ -18,8 +18,14 @@ import { inspect, IResolvers } from '@graphql-tools/utils';
 import {
   extendSchema,
   GraphQLDirective,
+  GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isObjectType,
+  isSpecifiedDirective,
   specifiedDirectives,
 } from 'graphql';
 import {
@@ -87,6 +93,7 @@ export function stitchSchemas<
     parseOptions: rest,
     directiveMap,
     schemaDefs,
+    mergeDirectives: mergeDirectives ?? true,
   });
 
   let stitchingInfo = createStitchingInfo(
@@ -104,6 +111,10 @@ export function stitchSchemas<
     mergeTypes,
     typeMergingOptions,
   });
+
+  if (!(mergeDirectives ?? true)) {
+    stripCustomDirectiveUsages(Object.values(newTypeMap));
+  }
 
   let schema = new GraphQLSchema({
     query: newTypeMap[rootTypeNameMap.query] as GraphQLObjectType,
@@ -162,6 +173,44 @@ export function stitchSchemas<
   }
 
   return schema;
+}
+
+function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
+  for (const type of types) {
+    if (type.astNode?.directives?.length) {
+      (type.astNode as any).directives = type.astNode.directives.filter((d) =>
+        isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
+      );
+    }
+    if (isObjectType(type) || isInterfaceType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        if (field.astNode?.directives?.length) {
+          (field.astNode as any).directives = field.astNode.directives.filter(
+            (d) =>
+              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
+          );
+        }
+      }
+    } else if (isInputObjectType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        if (field.astNode?.directives?.length) {
+          (field.astNode as any).directives = field.astNode.directives.filter(
+            (d) =>
+              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
+          );
+        }
+      }
+    } else if (isEnumType(type)) {
+      for (const value of type.getValues()) {
+        if (value.astNode?.directives?.length) {
+          (value.astNode as any).directives = value.astNode.directives.filter(
+            (d) =>
+              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
+          );
+        }
+      }
+    }
+  }
 }
 
 const subschemaConfigTransformerPresets: Array<SubschemaConfigTransform<any>> =

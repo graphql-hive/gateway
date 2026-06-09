@@ -59,7 +59,14 @@ export interface IStitchSchemasOptions<
   typeDefs?: TypeSource;
   types?: Array<GraphQLNamedType>;
   onTypeConflict?: OnTypeConflict<TContext>;
-  /** @deprecated Directives are always merged, this option has no effect. */
+  /**
+   * Should directive definitions from all subschemas be collected and included in the stitched schema.
+   *
+   * When false, custom directive definitions are excluded and their usages are stripped from all type
+   * and field AST nodes.
+   *
+   * @default true
+   */
   mergeDirectives?: boolean | undefined;
   mergeTypes?: boolean | Array<string> | MergeTypeFilter<TContext>;
   typeMergingOptions?: TypeMergingOptions<TContext>;

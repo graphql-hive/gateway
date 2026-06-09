@@ -3849,8 +3849,8 @@ it('should be able to extend a transformed schema', async () => {
   ]);
 });
 
-it('stitch schemas retains schema directive usage and definitions within stitched schema result', async () => {
-  const sdl = /* GraphQL */ `
+describe('directive merging', () => {
+  const directiveMergeTestSdl = /* GraphQL */ `
     directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
 
     type Query @public {
@@ -3858,29 +3858,36 @@ it('stitch schemas retains schema directive usage and definitions within stitche
     }
   `;
 
-  const stitchedSchema = stitchSchemas({
-    subschemas: [buildASTSchema(parse(sdl))],
+  it('stitch schemas retains directive definitions and usages by default (mergeDirectives: true)', () => {
+    const stitchedSchema = stitchSchemas({
+      subschemas: [buildASTSchema(parse(directiveMergeTestSdl))],
+    });
+    expect(printSchemaWithDirectives(stitchedSchema)).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+
+      type Query @public {
+        isAnExample: Boolean @public
+      }"
+    `);
   });
-  const stitchedSdl = printSchemaWithDirectives(stitchedSchema);
-  expect(
-    stitchedSchema
-      .getQueryType()
-      ?.astNode?.directives?.find((d) => d.name.value === 'public'),
-  ).toBeDefined();
-  expect(stitchedSdl).toContain(`type Query @public`);
-  expect(
-    stitchedSchema
-      .getQueryType()
-      ?.getFields()
-      ['isAnExample']?.astNode?.directives?.find(
-        (d) => d.name.value === 'public',
-      ),
-  ).toBeDefined();
-  expect(stitchedSdl).toContain(`isAnExample: Boolean @public`);
-  expect(
-    stitchedSchema.getDirectives().find((d) => d.name === 'public'),
-  ).toBeDefined();
-  expect(stitchedSdl).toContain(
-    `directive @public on SCHEMA | OBJECT | FIELD_DEFINITION`,
-  );
+
+  it('stitch schemas strips directive definitions and usages when mergeDirectives: false', () => {
+    const stitchedSchema = stitchSchemas({
+      subschemas: [buildASTSchema(parse(directiveMergeTestSdl))],
+      mergeDirectives: false,
+    });
+    expect(printSchemaWithDirectives(stitchedSchema)).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        isAnExample: Boolean
+      }"
+    `);
+  });
 });

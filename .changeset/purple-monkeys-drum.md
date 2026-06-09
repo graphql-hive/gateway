@@ -2,7 +2,7 @@
 '@graphql-tools/stitch': patch
 ---
 
-Always retain directive definitions from subschemas in stitched schema
+Fix `mergeDirectives` option and default it to `true`
 
 Custom directive definitions from subschemas were silently dropped from the stitched schema unless `mergeDirectives: true` was explicitly passed to `stitchSchemas`. This meant a schema like:
 
@@ -14,16 +14,8 @@ type Query @public {
 }
 ```
 
-would stitch into:
+would stitch into a broken schema where `@public` was used on types and fields but never defined.
 
-```graphql
-type Query @public {
-  isAnExample: Boolean @public
-}
-```
+The default is now `true`, so directive definitions are always collected and retained in the stitched schema, this is the expected behaviour since the merging was partial before this fix (usages got merged, but definitions not).
 
-The directive usages on types and fields were preserved (carried over via AST nodes through `mergeCandidates`), but the directive definitions themselves were dropped, producing a broken schema where directives are used but never defined.
-
-`mergeDirectives` was flawed to begin with... `mergeDirectives: false` produced an internally inconsistent schema where directive usages existed on fields and types but the corresponding definitions were removed. The correct way to suppress directives from appearing in the stitched schema would have been to also strip their usages from field and type AST nodes - but that was never done. So `mergeDirectives: false` never achieved a clean "no directives" result, it just produced a broken one. In essence, fixing the `mergeDirectives: false` behavior would actually be a breaking change!
-
-Having said all that, we've instead removed the `mergeDirectives` argument and guard so directives from subschemas are always collected. This is correct default behavior - a stitched schema should retain all directive definitions from its subschemas unconditionally. This is not breaking because it actually fixes the partial merge.
+Passing `mergeDirectives: false` now produces a fully clean result - both directive definitions and all their usages on types, fields, input fields, and enum values are stripped.
