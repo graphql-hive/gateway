@@ -47,7 +47,6 @@ export function stitchSchemas<
   types = [],
   typeDefs = [],
   onTypeConflict,
-  mergeDirectives,
   mergeTypes = true,
   typeMergingOptions,
   subschemaConfigTransforms = [],
@@ -58,6 +57,7 @@ export function stitchSchemas<
   schemaExtensions,
   ...rest
 }: IStitchSchemasOptions<TContext>): GraphQLSchema {
+  const mergeDirectives = rest.mergeDirectives ?? true;
   const transformedSubschemas: Array<Subschema<any, any, any, TContext>> = [];
   const subschemaMap: Map<
     GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
@@ -93,7 +93,7 @@ export function stitchSchemas<
     parseOptions: rest,
     directiveMap,
     schemaDefs,
-    mergeDirectives: mergeDirectives ?? true,
+    mergeDirectives,
   });
 
   let stitchingInfo = createStitchingInfo(
@@ -112,7 +112,7 @@ export function stitchSchemas<
     typeMergingOptions,
   });
 
-  if (!(mergeDirectives ?? true)) {
+  if (!mergeDirectives) {
     stripCustomDirectiveUsages(Object.values(newTypeMap));
   }
 
