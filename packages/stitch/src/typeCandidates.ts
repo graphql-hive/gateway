@@ -53,7 +53,7 @@ export function buildTypeCandidates<
   parseOptions,
   directiveMap,
   schemaDefs,
-  mergeDirectives: isMergeDirectives,
+  mergeDirectives: isMergeDirectives = true,
 }: {
   subschemas: Array<Subschema<any, any, any, TContext>>;
   originalSubschemaMap: Map<
@@ -120,7 +120,7 @@ export function buildTypeCandidates<
       });
     }
 
-    if (isMergeDirectives === true) {
+    if (isMergeDirectives) {
       for (const directive of schema.getDirectives()) {
         let directiveCandidatesForName = directiveCandidates.get(
           directive.name,
