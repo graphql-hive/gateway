@@ -176,37 +176,44 @@ export function stitchSchemas<
 }
 
 function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
+  const isBuiltin = (d: { name: { value: string } }) =>
+    isSpecifiedDirective(
+      // @ts-expect-error it's ok to use just the name, isSpecifiedDirective does the same internally
+      { name: d.name.value },
+    );
+
   for (const type of types) {
     if (type.astNode?.directives?.length) {
-      (type.astNode as any).directives = type.astNode.directives.filter((d) =>
-        isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
-      );
+      type.astNode = {
+        ...type.astNode,
+        directives: type.astNode.directives.filter(isBuiltin),
+      };
     }
     if (isObjectType(type) || isInterfaceType(type)) {
       for (const field of Object.values(type.getFields())) {
         if (field.astNode?.directives?.length) {
-          (field.astNode as any).directives = field.astNode.directives.filter(
-            (d) =>
-              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
-          );
+          field.astNode = {
+            ...field.astNode,
+            directives: field.astNode.directives.filter(isBuiltin),
+          };
         }
       }
     } else if (isInputObjectType(type)) {
       for (const field of Object.values(type.getFields())) {
         if (field.astNode?.directives?.length) {
-          (field.astNode as any).directives = field.astNode.directives.filter(
-            (d) =>
-              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
-          );
+          field.astNode = {
+            ...field.astNode,
+            directives: field.astNode.directives.filter(isBuiltin),
+          };
         }
       }
     } else if (isEnumType(type)) {
       for (const value of type.getValues()) {
         if (value.astNode?.directives?.length) {
-          (value.astNode as any).directives = value.astNode.directives.filter(
-            (d) =>
-              isSpecifiedDirective({ name: d.name.value } as GraphQLDirective),
-          );
+          value.astNode = {
+            ...value.astNode,
+            directives: value.astNode.directives.filter(isBuiltin),
+          };
         }
       }
     }
