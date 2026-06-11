@@ -1,0 +1,1 @@
+# @graphql-hive/semantic-introspection
