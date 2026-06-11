@@ -1,5 +1,29 @@
 # @graphql-hive/gateway
 
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [[`8f00140`](https://github.com/graphql-hive/gateway/commit/8f00140d2f4f2bbf5ff0ba7da31267294906c7cc)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.31
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.7
+  - @graphql-hive/plugin-aws-sigv4@2.0.50
+  - @graphql-hive/plugin-opentelemetry@1.4.30
+  - @graphql-mesh/plugin-prometheus@2.1.48
+
+## 2.8.3
+### Patch Changes
+
+
+
+- [#2410](https://github.com/graphql-hive/gateway/pull/2410) [`45f935d`](https://github.com/graphql-hive/gateway/commit/45f935d7a064777b5c0c2933d7fa062f4550434d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Hive Gateway images ship with Rust QP
+  
+  An accidental regression happened starting with release v2.7.1 where the Rust QP was missing from the image.
+
 ## 2.8.2
 ### Patch Changes
 

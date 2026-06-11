@@ -1,5 +1,28 @@
 # @graphql-tools/stitch
 
+## 10.1.22
+### Patch Changes
+
+
+
+- [#2401](https://github.com/graphql-hive/gateway/pull/2401) [`83465de`](https://github.com/graphql-hive/gateway/commit/83465def4d854d1f0912f635bd9621433fd33c8b) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Fix `mergeDirectives` option and default it to `true`
+  
+  Custom directive definitions from subschemas were silently dropped from the stitched schema unless `mergeDirectives: true` was explicitly passed to `stitchSchemas`. This meant a schema like:
+  
+  ```graphql
+  directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+  
+  type Query @public {
+    isAnExample: Boolean @public
+  }
+  ```
+  
+  would stitch into a broken schema where `@public` was used on types and fields but never defined.
+  
+  The default is now `true`, so directive definitions are always collected and retained in the stitched schema, this is the expected behaviour since the merging was partial before this fix (usages got merged, but definitions not).
+  
+  Passing `mergeDirectives: false` now produces a fully clean result - both directive definitions and all their usages on types, fields, input fields, and enum values are stripped.
+
 ## 10.1.21
 ### Patch Changes
 

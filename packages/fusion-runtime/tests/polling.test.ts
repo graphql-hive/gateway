@@ -446,13 +446,7 @@ describe('Polling', () => {
     });
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(1);
     graphDeferred = createDeferred();
-    const timeout$ = new Promise<void>((resolve) => {
-      globalThis.setTimeout(() => {
-        resolve();
-      }, 10_000);
-    });
     await advanceTimersByTimeAsync(10_000);
-    await timeout$;
     const secondRes = await executor({
       document: parse(/* GraphQL */ `
         query {

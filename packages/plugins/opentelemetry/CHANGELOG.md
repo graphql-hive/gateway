@@ -1,5 +1,18 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.4.31
+### Patch Changes
+
+
+
+- [#2389](https://github.com/graphql-hive/gateway/pull/2389) [`8f00140`](https://github.com/graphql-hive/gateway/commit/8f00140d2f4f2bbf5ff0ba7da31267294906c7cc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Attach `hive.request.id` to the root HTTP span at all times
+
+## 1.4.30
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.7
+
 ## 1.4.29
 ### Patch Changes
 
