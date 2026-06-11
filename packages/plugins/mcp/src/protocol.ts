@@ -765,6 +765,14 @@ export async function handleMCPRequest(
 
   const handler = defaultMethods.get(method);
   if (!handler) {
+    // Per JSON-RPC 2.0 §4.1, notifications never receive a response.
+    // The validation step above already established that a null id
+    // implies a `notifications/` method, so checking id alone here
+    // is sufficient.
+    if (id == null) {
+      ctx.log.debug(`Ignoring unknown notification method: ${method}`);
+      return null;
+    }
     return {
       jsonrpc: '2.0',
       id,

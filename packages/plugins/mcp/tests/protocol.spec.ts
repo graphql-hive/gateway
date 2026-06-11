@@ -2352,4 +2352,18 @@ describe('JSON-RPC validation', () => {
     expect(body!.error!.code).toBe(-32601);
     expect(body!.error!.message).toContain('Method not found');
   });
+
+  it('silently drops unknown notification methods (no wire response)', async () => {
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+    const body = await handleMCPRequest(
+      { log: logger },
+      { jsonrpc: '2.0', method: 'notifications/something-unknown' } as any,
+      opts,
+    );
+    expect(body).toBeNull();
+    expect(debugSpy).toHaveBeenCalledWith(
+      expect.stringContaining('notifications/something-unknown'),
+    );
+    debugSpy.mockRestore();
+  });
 });
