@@ -1,5 +1,51 @@
 # @graphql-hive/gateway-runtime
 
+## 2.9.7
+### Patch Changes
+
+- Updated dependencies [[`83465de`](https://github.com/graphql-hive/gateway/commit/83465def4d854d1f0912f635bd9621433fd33c8b)]:
+  - @graphql-tools/stitch@10.1.22
+  - @graphql-tools/federation@4.4.6
+  - @graphql-mesh/fusion-runtime@1.10.7
+
+## 2.9.6
+### Patch Changes
+
+- Updated dependencies [[`b6230c9`](https://github.com/graphql-hive/gateway/commit/b6230c97709065c2f540b6d263af492379eca359)]:
+  - @graphql-tools/batch-delegate@10.0.24
+  - @graphql-tools/stitch@10.1.21
+  - @graphql-tools/federation@4.4.5
+  - @graphql-mesh/fusion-runtime@1.10.6
+
+## 2.9.5
+### Patch Changes
+
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/server@^0.11.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.11.0) (from `^0.10.17`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/server-plugin-cookies@^1.0.7` ↗︎](https://www.npmjs.com/package/@whatwg-node/server-plugin-cookies/v/1.0.7) (from `^1.0.5`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.21.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.1) (from `^5.21.0`, in `dependencies`)
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use `useRequestDeadline` plugin from `@whatwg-node/server` for enforcing per-request timeouts
+  
+  Read more: https://github.com/ardatan/whatwg-node/pull/3399.
+- Updated dependencies [[`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa)]:
+  - @graphql-mesh/fusion-runtime@1.10.5
+
+## 2.9.4
+### Patch Changes
+
+- Updated dependencies [[`3e774e0`](https://github.com/graphql-hive/gateway/commit/3e774e050bc2d3c33e0f36a258ab6a8d94bf0750)]:
+  - @graphql-tools/delegate@12.0.17
+  - @graphql-mesh/fusion-runtime@1.10.4
+  - @graphql-tools/batch-delegate@10.0.23
+  - @graphql-tools/federation@4.4.4
+  - @graphql-tools/stitch@10.1.20
+  - @graphql-tools/wrap@11.1.16
+
 ## 2.9.3
 ### Patch Changes
 

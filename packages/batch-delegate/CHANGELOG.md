@@ -1,5 +1,20 @@
 # @graphql-tools/batch-delegate
 
+## 10.0.24
+### Patch Changes
+
+
+
+- [#2393](https://github.com/graphql-hive/gateway/pull/2393) [`b6230c9`](https://github.com/graphql-hive/gateway/commit/b6230c97709065c2f540b6d263af492379eca359) Thanks [@sjransom](https://github.com/sjransom)! - Fix `DataLoader must be constructed with a function which accepts Array<key> and returns Promise<Array<value>>, but the function did not return a Promise of an Array` thrown when the batch resolves to a sparse array.
+  
+  When `valuesFromResults` returns an array with a hole at the trailing slot — for example when it maps results back to keys by index and the last key in a batch has no matching row — the resulting array fails DataLoader's `isArrayLike` check (which requires `hasOwnProperty(length - 1)`), even though `Array.isArray` returns `true`. The batch result is now normalised to a dense array of `keys.length`, padding any missing entries with `null`.
+
+## 10.0.23
+### Patch Changes
+
+- Updated dependencies [[`3e774e0`](https://github.com/graphql-hive/gateway/commit/3e774e050bc2d3c33e0f36a258ab6a8d94bf0750)]:
+  - @graphql-tools/delegate@12.0.17
+
 ## 10.0.22
 ### Patch Changes
 

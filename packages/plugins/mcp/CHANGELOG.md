@@ -1,5 +1,14 @@
 # @graphql-hive/plugin-mcp
 
+## 0.1.1
+### Patch Changes
+
+
+
+- [#2391](https://github.com/graphql-hive/gateway/pull/2391) [`952f37f`](https://github.com/graphql-hive/gateway/commit/952f37f76bb4c48c135a3ea38e1c9555278b59fa) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`graphql-yoga@^5.21.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.21.1) (from `^5.21.0`, in `peerDependencies`)
+
 ## 0.1.0
 ### Minor Changes
 

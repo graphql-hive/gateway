@@ -18,8 +18,14 @@ import { inspect, IResolvers } from '@graphql-tools/utils';
 import {
   extendSchema,
   GraphQLDirective,
+  GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isObjectType,
+  isSpecifiedDirective,
   specifiedDirectives,
 } from 'graphql';
 import {
@@ -41,7 +47,6 @@ export function stitchSchemas<
   types = [],
   typeDefs = [],
   onTypeConflict,
-  mergeDirectives,
   mergeTypes = true,
   typeMergingOptions,
   subschemaConfigTransforms = [],
@@ -52,6 +57,7 @@ export function stitchSchemas<
   schemaExtensions,
   ...rest
 }: IStitchSchemasOptions<TContext>): GraphQLSchema {
+  const mergeDirectives = rest.mergeDirectives ?? true;
   const transformedSubschemas: Array<Subschema<any, any, any, TContext>> = [];
   const subschemaMap: Map<
     GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
@@ -105,6 +111,10 @@ export function stitchSchemas<
     mergeTypes,
     typeMergingOptions,
   });
+
+  if (!mergeDirectives) {
+    stripCustomDirectiveUsages(Object.values(newTypeMap));
+  }
 
   let schema = new GraphQLSchema({
     query: newTypeMap[rootTypeNameMap.query] as GraphQLObjectType,
@@ -163,6 +173,51 @@ export function stitchSchemas<
   }
 
   return schema;
+}
+
+function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
+  const isBuiltin = (d: { name: { value: string } }) =>
+    isSpecifiedDirective(
+      // @ts-expect-error it's ok to use just the name, isSpecifiedDirective does the same internally
+      { name: d.name.value },
+    );
+
+  for (const type of types) {
+    if (type.astNode?.directives?.length) {
+      type.astNode = {
+        ...type.astNode,
+        directives: type.astNode.directives.filter(isBuiltin),
+      };
+    }
+    if (isObjectType(type) || isInterfaceType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        if (field.astNode?.directives?.length) {
+          field.astNode = {
+            ...field.astNode,
+            directives: field.astNode.directives.filter(isBuiltin),
+          };
+        }
+      }
+    } else if (isInputObjectType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        if (field.astNode?.directives?.length) {
+          field.astNode = {
+            ...field.astNode,
+            directives: field.astNode.directives.filter(isBuiltin),
+          };
+        }
+      }
+    } else if (isEnumType(type)) {
+      for (const value of type.getValues()) {
+        if (value.astNode?.directives?.length) {
+          value.astNode = {
+            ...value.astNode,
+            directives: value.astNode.directives.filter(isBuiltin),
+          };
+        }
+      }
+    }
+  }
 }
 
 const subschemaConfigTransformerPresets: Array<SubschemaConfigTransform<any>> =
