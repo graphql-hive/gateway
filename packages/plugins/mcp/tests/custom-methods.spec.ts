@@ -642,3 +642,78 @@ describe('non-JSON internal execution responses', () => {
     expect(body.error.message).toContain('401');
   });
 });
+
+describe('non-OK JSON internal execution responses', () => {
+  const upstream = createYoga({
+    schema: createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          ping: String
+        }
+      `,
+      resolvers: { Query: { ping: () => 'pong' } },
+    }),
+    logging: false,
+  });
+
+  const gateway = createGatewayRuntime({
+    logging: false,
+    proxy: {
+      endpoint: 'http://upstream:4000/graphql',
+    },
+    plugins: (ctx) => [
+      useCustomFetch(
+        // @ts-expect-error MeshFetch type mismatch
+        (url, init) => upstream.fetch(url, init),
+      ),
+      {
+        onRequestParse({
+          url,
+          endResponse,
+          fetchAPI,
+        }: {
+          url: URL;
+          endResponse: (response: Response) => void;
+          fetchAPI: { Response: typeof Response };
+        }) {
+          if (url.pathname === '/graphql') {
+            endResponse(
+              new fetchAPI.Response(
+                JSON.stringify({ message: 'unauthorized' }),
+                {
+                  status: 401,
+                  headers: { 'content-type': 'application/json' },
+                },
+              ),
+            );
+          }
+        },
+      },
+      useMCP(ctx, {
+        name: 'test-gateway',
+        customMethods: {
+          'graphql/run': (_params, context) =>
+            context.executeGraphQL({ query: '{ ping }' }),
+        },
+      }),
+    ],
+  });
+
+  afterAll(() => gateway[Symbol.asyncDispose]?.());
+
+  it('surfaces non-OK JSON responses without GraphQL shape as errors', async () => {
+    const res = await gateway.fetch('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'graphql/run',
+        params: {},
+      }),
+    });
+    const body = await res.json();
+    expect(body.error.code).toBe(-32603);
+    expect(body.error.message).toContain('failed with status 401');
+  });
+});

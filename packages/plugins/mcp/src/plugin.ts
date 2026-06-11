@@ -1407,16 +1407,26 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         );
       }
       executeViaYoga = async (operation, headers, serverContext) => {
-        // Strip headers describing the original request's transport;
-        // they are false for the synthetic internal request. Semantic
+        // Strip hop-by-hop and transport-mechanics headers (RFC 7230
+        // section 6.1); they describe the original request's transport,
+        // which is false for the synthetic internal request. Semantic
         // headers (authorization, cookies, x-forwarded-*) pass through.
         const requestHeaders: Record<string, string> = { ...headers };
-        delete requestHeaders['accept-encoding'];
-        delete requestHeaders['connection'];
-        delete requestHeaders['content-length'];
-        delete requestHeaders['host'];
-        delete requestHeaders['keep-alive'];
-        delete requestHeaders['transfer-encoding'];
+        for (const name of [
+          'accept-encoding',
+          'connection',
+          'content-length',
+          'host',
+          'keep-alive',
+          'proxy-authenticate',
+          'proxy-authorization',
+          'te',
+          'trailer',
+          'transfer-encoding',
+          'upgrade',
+        ]) {
+          delete requestHeaders[name];
+        }
         requestHeaders['content-type'] = 'application/json';
         requestHeaders['accept'] = 'application/json';
         const response = await yoga.handle(
@@ -1428,13 +1438,28 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           serverContext as Parameters<(typeof yoga)['handle']>[1],
         );
         const responseText = await response.text();
+        let result: ExecutionResult;
         try {
-          return JSON.parse(responseText) as ExecutionResult;
+          result = JSON.parse(responseText) as ExecutionResult;
         } catch {
           throw new Error(
             `[MCP] GraphQL execution returned a non-JSON response (status ${response.status})`,
           );
         }
+        // A non-OK response without GraphQL result shape comes from a
+        // plugin short-circuiting the pipeline (e.g. auth), not from
+        // GraphQL execution; GraphQL-shaped error responses pass
+        // through as data.
+        if (
+          !response.ok &&
+          result.data === undefined &&
+          result.errors === undefined
+        ) {
+          throw new Error(
+            `[MCP] GraphQL execution failed with status ${response.status}`,
+          );
+        }
+        return result;
       };
 
       const mcp = mcpPath
