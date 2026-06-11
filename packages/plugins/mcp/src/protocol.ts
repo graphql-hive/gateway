@@ -258,20 +258,481 @@ export type JsonRpcResponse =
       result?: never;
     };
 
+/**
+ * Arguments passed to every built-in MCP method handler. Pure
+ * dependency injection — handlers close over nothing and can be
+ * tested in isolation.
+ */
+interface BuiltInHandlerArgs {
+  ctx: PluginContext;
+  body: JsonRpcRequest;
+  options: MCPHandlerOptions;
+  providerContext?: DescriptionProviderContext;
+}
+
+/**
+ * A built-in MCP method handler. Returns the JSON-RPC response to
+ * send, or `null` for notifications (no wire response).
+ */
+type BuiltInHandler = (
+  args: BuiltInHandlerArgs,
+) => Promise<JsonRpcResponse | null>;
+
+async function handleInitialize({
+  body,
+  options,
+}: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
+  const { id } = body;
+  const protocolVersion = options.protocolVersion ?? '2025-11-25';
+  const serverInfo: Record<string, unknown> = {
+    name: options.serverName,
+    version: options.serverVersion,
+  };
+  if (options.serverTitle) serverInfo['title'] = options.serverTitle;
+  if (options.serverDescription)
+    serverInfo['description'] = options.serverDescription;
+  if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
+  if (options.serverWebsiteUrl)
+    serverInfo['websiteUrl'] = options.serverWebsiteUrl;
+  const capabilities: Record<string, unknown> = { tools: {} };
+  const hasResources =
+    (options.resources && options.resources.size > 0) ||
+    (options.resourceTemplates && options.resourceTemplates.length > 0);
+  if (hasResources) {
+    capabilities['resources'] = {};
+  }
+  const initResult: Record<string, unknown> = {
+    protocolVersion,
+    serverInfo,
+    capabilities,
+  };
+  if (options.instructions) initResult['instructions'] = options.instructions;
+  return { jsonrpc: '2.0', id, result: initResult };
+}
+
+async function handleToolsList({
+  ctx,
+  body,
+  options,
+  providerContext,
+}: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
+  const { id, params } = body;
+  const { registry } = options;
+
+  const allTools = registry.getMCPTools({
+    suppressOutputSchema: options.suppressOutputSchema,
+  });
+
+  if (options.resolveToolDescriptions) {
+    try {
+      const descriptions =
+        await options.resolveToolDescriptions(providerContext);
+      for (const tool of allTools) {
+        if (descriptions.has(tool.name)) {
+          tool.description = descriptions.get(tool.name)!;
+        }
+      }
+    } catch (err) {
+      ctx.log.error(
+        `Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  if (options.resolveFieldDescriptions) {
+    try {
+      const fieldDescs =
+        await options.resolveFieldDescriptions(providerContext);
+      for (const tool of allTools) {
+        const fields = fieldDescs.get(tool.name);
+        if (fields && tool.inputSchema.properties) {
+          for (const [fieldName, description] of fields) {
+            if (tool.inputSchema.properties[fieldName]) {
+              tool.inputSchema.properties[fieldName].description = description;
+            } else {
+              ctx.log.warn(
+                `Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
+                  `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      ctx.log.error(
+        `Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  if (options.resolveOutputFieldDescriptions) {
+    try {
+      const outputDescs =
+        await options.resolveOutputFieldDescriptions(providerContext);
+      for (const tool of allTools) {
+        const fields = outputDescs.get(tool.name);
+        if (fields && tool.outputSchema) {
+          for (const [dotPath, description] of fields) {
+            if (
+              !setSchemaDescriptionByPath(
+                tool.outputSchema,
+                dotPath,
+                description,
+              )
+            ) {
+              ctx.log.warn(
+                `Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      ctx.log.error(
+        `Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  if (options.toolsListPageSize !== undefined) {
+    if (
+      !Number.isInteger(options.toolsListPageSize) ||
+      options.toolsListPageSize <= 0
+    ) {
+      throw new Error(
+        `[MCP] toolsListPageSize must be a positive integer, got ${options.toolsListPageSize}`,
+      );
+    }
+  }
+
+  const listParams = params as { cursor?: unknown } | undefined;
+  const cursor = listParams?.cursor;
+  let startIndex = 0;
+  if (cursor !== undefined && cursor !== '') {
+    if (typeof cursor !== 'string') {
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32602,
+          message: 'Invalid cursor: expected a string',
+        },
+      };
+    }
+    startIndex = parseInt(cursor, 10);
+    if (
+      Number.isNaN(startIndex) ||
+      startIndex < 0 ||
+      (startIndex > 0 && startIndex >= allTools.length)
+    ) {
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32602,
+          message: `Invalid cursor: ${JSON.stringify(cursor)}`,
+        },
+      };
+    }
+  }
+  const pageSize = options.toolsListPageSize ?? allTools.length;
+  const page = allTools.slice(startIndex, startIndex + pageSize);
+  const nextIndex = startIndex + pageSize;
+  const result: Record<string, unknown> = { tools: page };
+  if (nextIndex < allTools.length) {
+    result['nextCursor'] = String(nextIndex);
+  }
+
+  return { jsonrpc: '2.0', id, result };
+}
+
+async function handleResourcesList({
+  ctx,
+  body,
+  options,
+  providerContext,
+}: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
+  const { id, params } = body;
+
+  const allResources = options.resources
+    ? Array.from(options.resources.values())
+    : [];
+
+  const resourceList = allResources.map((r) => {
+    const entry: Record<string, unknown> = {
+      uri: r.uri,
+      name: r.name,
+      mimeType: r.mimeType,
+    };
+    if (r.title) entry['title'] = r.title;
+    if (r.size != null) entry['size'] = r.size;
+    if (r.icons) entry['icons'] = r.icons;
+    if (r.annotations) entry['annotations'] = r.annotations;
+    const desc = r.description;
+    if (desc) entry['description'] = desc;
+    return entry;
+  });
+
+  if (options.resolveResourceDescriptions) {
+    try {
+      const descriptions =
+        await options.resolveResourceDescriptions(providerContext);
+      for (const resource of resourceList) {
+        const providerDesc = descriptions.get(resource['uri'] as string);
+        if (providerDesc) {
+          resource['description'] = providerDesc;
+        }
+      }
+    } catch (err) {
+      ctx.log.error(
+        `Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  if (options.resourcesListPageSize !== undefined) {
+    if (
+      !Number.isInteger(options.resourcesListPageSize) ||
+      options.resourcesListPageSize <= 0
+    ) {
+      throw new Error(
+        `[MCP] resourcesListPageSize must be a positive integer, got ${options.resourcesListPageSize}`,
+      );
+    }
+  }
+
+  const listParams = params as { cursor?: unknown } | undefined;
+  const cursor = listParams?.cursor;
+  let startIndex = 0;
+  if (cursor !== undefined && cursor !== '') {
+    if (typeof cursor !== 'string') {
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32602,
+          message: 'Invalid cursor: expected a string',
+        },
+      };
+    }
+    startIndex = parseInt(cursor, 10);
+    if (
+      Number.isNaN(startIndex) ||
+      startIndex < 0 ||
+      (startIndex > 0 && startIndex >= resourceList.length)
+    ) {
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32602,
+          message: `Invalid cursor: ${JSON.stringify(cursor)}`,
+        },
+      };
+    }
+  }
+  const pageSize = options.resourcesListPageSize ?? resourceList.length;
+  const page = resourceList.slice(startIndex, startIndex + pageSize);
+  const nextIndex = startIndex + pageSize;
+  const result: Record<string, unknown> = { resources: page };
+  if (nextIndex < resourceList.length) {
+    result['nextCursor'] = String(nextIndex);
+  }
+
+  return { jsonrpc: '2.0', id, result };
+}
+
+async function handleResourcesTemplatesList({
+  ctx,
+  body,
+  options,
+  providerContext,
+}: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
+  const { id } = body;
+  const allTemplates = options.resourceTemplates ?? [];
+
+  const templateList = allTemplates.map((t) => {
+    const entry: Record<string, unknown> = {
+      uriTemplate: t.uriTemplate,
+      name: t.name,
+    };
+    if (t.title) entry['title'] = t.title;
+    if (t.mimeType) entry['mimeType'] = t.mimeType;
+    if (t.icons) entry['icons'] = t.icons;
+    if (t.annotations) entry['annotations'] = t.annotations;
+    const desc = t.description;
+    if (desc) entry['description'] = desc;
+    return entry;
+  });
+
+  if (options.resolveTemplateDescriptions) {
+    try {
+      const descriptions =
+        await options.resolveTemplateDescriptions(providerContext);
+      for (const tmpl of templateList) {
+        const providerDesc = descriptions.get(tmpl['uriTemplate'] as string);
+        if (providerDesc) {
+          tmpl['description'] = providerDesc;
+        }
+      }
+    } catch (err) {
+      ctx.log.error(
+        `Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  return {
+    jsonrpc: '2.0',
+    id,
+    result: { resourceTemplates: templateList },
+  };
+}
+
+async function handleResourcesRead({
+  ctx,
+  body,
+  options,
+}: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
+  const { id, params } = body;
+  const readParams = (params ?? {}) as { uri?: string };
+  if (!readParams.uri) {
+    return {
+      jsonrpc: '2.0',
+      id,
+      error: {
+        code: -32602,
+        message: 'Missing required parameter: uri',
+      },
+    };
+  }
+
+  const resource = options.resources?.get(readParams.uri);
+  if (resource) {
+    if (resource.blob == null && resource.text == null) {
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32603,
+          message: `Resource "${resource.name}" (${resource.uri}) has no content`,
+        },
+      };
+    }
+
+    const contentItem: Record<string, unknown> = {
+      uri: resource.uri,
+      mimeType: resource.mimeType,
+    };
+    if (resource.blob != null) {
+      contentItem['blob'] = resource.blob;
+    } else {
+      contentItem['text'] = resource.text;
+    }
+
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: { contents: [contentItem] },
+    };
+  }
+
+  if (options.resourceTemplates) {
+    for (const tmpl of options.resourceTemplates) {
+      const match = tmpl.pattern.exec(readParams.uri);
+      if (!match) continue;
+
+      const extractedParams: Record<string, string> = {};
+      for (const name of tmpl.paramNames) {
+        extractedParams[name] = match.groups?.[name] ?? '';
+      }
+
+      let handlerResult;
+      try {
+        handlerResult = await tmpl.handler(extractedParams);
+      } catch (err) {
+        ctx.log.error(
+          `Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
+          err instanceof Error ? err.message : err,
+        );
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32002,
+            message: 'Resource handler failed',
+            data: {
+              uri: readParams.uri,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          },
+        };
+      }
+
+      const mimeType = handlerResult.mimeType ?? tmpl.mimeType ?? 'text/plain';
+      const contentItem: Record<string, unknown> = {
+        uri: readParams.uri,
+        mimeType,
+      };
+
+      if ('blob' in handlerResult && handlerResult.blob != null) {
+        contentItem['blob'] = handlerResult.blob;
+      } else if ('text' in handlerResult && handlerResult.text != null) {
+        contentItem['text'] = handlerResult.text;
+      } else {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32603,
+            message: `Resource template handler for "${tmpl.uriTemplate}" returned neither text nor blob`,
+          },
+        };
+      }
+
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: { contents: [contentItem] },
+      };
+    }
+  }
+
+  return {
+    jsonrpc: '2.0',
+    id,
+    error: {
+      code: -32002,
+      message: 'Resource not found',
+      data: { uri: readParams.uri },
+    },
+  };
+}
+
+async function handleNotificationsInitialized(): Promise<null> {
+  return null;
+}
+
+/** Built-in MCP methods, dispatched by name. */
+const defaultMethods: ReadonlyMap<string, BuiltInHandler> = new Map<
+  string,
+  BuiltInHandler
+>([
+  ['initialize', handleInitialize],
+  ['tools/list', handleToolsList],
+  ['resources/list', handleResourcesList],
+  ['resources/templates/list', handleResourcesTemplatesList],
+  ['resources/read', handleResourcesRead],
+  ['notifications/initialized', handleNotificationsInitialized],
+]);
+
 export async function handleMCPRequest(
   ctx: PluginContext,
   body: JsonRpcRequest,
   options: MCPHandlerOptions,
   providerContext?: DescriptionProviderContext,
 ): Promise<JsonRpcResponse | null> {
-  const {
-    serverName,
-    serverVersion,
-    protocolVersion = '2025-11-25',
-    registry,
-  } = options;
-
-  const { id, method, params } = body;
+  const { id, method } = body;
 
   // Validate JSON-RPC structure
   if (body.jsonrpc !== '2.0') {
@@ -302,422 +763,16 @@ export async function handleMCPRequest(
     };
   }
 
-  switch (method) {
-    case 'initialize': {
-      const serverInfo: Record<string, unknown> = {
-        name: serverName,
-        version: serverVersion,
-      };
-      if (options.serverTitle) serverInfo['title'] = options.serverTitle;
-      if (options.serverDescription)
-        serverInfo['description'] = options.serverDescription;
-      if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
-      if (options.serverWebsiteUrl)
-        serverInfo['websiteUrl'] = options.serverWebsiteUrl;
-      const capabilities: Record<string, unknown> = { tools: {} };
-      const hasResources =
-        (options.resources && options.resources.size > 0) ||
-        (options.resourceTemplates && options.resourceTemplates.length > 0);
-      if (hasResources) {
-        capabilities['resources'] = {};
-      }
-      const initResult: Record<string, unknown> = {
-        protocolVersion,
-        serverInfo,
-        capabilities,
-      };
-      if (options.instructions)
-        initResult['instructions'] = options.instructions;
-      return { jsonrpc: '2.0', id, result: initResult };
-    }
-
-    case 'tools/list': {
-      const allTools = registry.getMCPTools({
-        suppressOutputSchema: options.suppressOutputSchema,
-      });
-
-      if (options.resolveToolDescriptions) {
-        try {
-          const descriptions =
-            await options.resolveToolDescriptions(providerContext);
-          for (const tool of allTools) {
-            if (descriptions.has(tool.name)) {
-              tool.description = descriptions.get(tool.name)!;
-            }
-          }
-        } catch (err) {
-          ctx.log.error(
-            `Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-
-      if (options.resolveFieldDescriptions) {
-        try {
-          const fieldDescs =
-            await options.resolveFieldDescriptions(providerContext);
-          for (const tool of allTools) {
-            const fields = fieldDescs.get(tool.name);
-            if (fields && tool.inputSchema.properties) {
-              for (const [fieldName, description] of fields) {
-                if (tool.inputSchema.properties[fieldName]) {
-                  tool.inputSchema.properties[fieldName].description =
-                    description;
-                } else {
-                  ctx.log.warn(
-                    `Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
-                      `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
-                  );
-                }
-              }
-            }
-          }
-        } catch (err) {
-          ctx.log.error(
-            `Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-
-      if (options.resolveOutputFieldDescriptions) {
-        try {
-          const outputDescs =
-            await options.resolveOutputFieldDescriptions(providerContext);
-          for (const tool of allTools) {
-            const fields = outputDescs.get(tool.name);
-            if (fields && tool.outputSchema) {
-              for (const [dotPath, description] of fields) {
-                if (
-                  !setSchemaDescriptionByPath(
-                    tool.outputSchema,
-                    dotPath,
-                    description,
-                  )
-                ) {
-                  ctx.log.warn(
-                    `Resolved output field description for "${dotPath}" on tool "${tool.name}" but no matching output property exists.`,
-                  );
-                }
-              }
-            }
-          }
-        } catch (err) {
-          ctx.log.error(
-            `Failed to resolve output field descriptions: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-
-      if (options.toolsListPageSize !== undefined) {
-        if (
-          !Number.isInteger(options.toolsListPageSize) ||
-          options.toolsListPageSize <= 0
-        ) {
-          throw new Error(
-            `[MCP] toolsListPageSize must be a positive integer, got ${options.toolsListPageSize}`,
-          );
-        }
-      }
-
-      const listParams = params as { cursor?: unknown } | undefined;
-      const cursor = listParams?.cursor;
-      let startIndex = 0;
-      if (cursor !== undefined && cursor !== '') {
-        if (typeof cursor !== 'string') {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32602,
-              message: 'Invalid cursor: expected a string',
-            },
-          };
-        }
-        startIndex = parseInt(cursor, 10);
-        if (
-          Number.isNaN(startIndex) ||
-          startIndex < 0 ||
-          (startIndex > 0 && startIndex >= allTools.length)
-        ) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32602,
-              message: `Invalid cursor: ${JSON.stringify(cursor)}`,
-            },
-          };
-        }
-      }
-      const pageSize = options.toolsListPageSize ?? allTools.length;
-      const page = allTools.slice(startIndex, startIndex + pageSize);
-      const nextIndex = startIndex + pageSize;
-      const result: Record<string, unknown> = { tools: page };
-      if (nextIndex < allTools.length) {
-        result['nextCursor'] = String(nextIndex);
-      }
-
-      return { jsonrpc: '2.0', id, result };
-    }
-
-    case 'resources/list': {
-      const allResources = options.resources
-        ? Array.from(options.resources.values())
-        : [];
-
-      const resourceList = allResources.map((r) => {
-        const entry: Record<string, unknown> = {
-          uri: r.uri,
-          name: r.name,
-          mimeType: r.mimeType,
-        };
-        if (r.title) entry['title'] = r.title;
-        if (r.size != null) entry['size'] = r.size;
-        if (r.icons) entry['icons'] = r.icons;
-        if (r.annotations) entry['annotations'] = r.annotations;
-        const desc = r.description;
-        if (desc) entry['description'] = desc;
-        return entry;
-      });
-
-      if (options.resolveResourceDescriptions) {
-        try {
-          const descriptions =
-            await options.resolveResourceDescriptions(providerContext);
-          for (const resource of resourceList) {
-            const providerDesc = descriptions.get(resource['uri'] as string);
-            if (providerDesc) {
-              resource['description'] = providerDesc;
-            }
-          }
-        } catch (err) {
-          ctx.log.error(
-            `Failed to resolve resource descriptions (${resourceList.length} resources affected): ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-
-      if (options.resourcesListPageSize !== undefined) {
-        if (
-          !Number.isInteger(options.resourcesListPageSize) ||
-          options.resourcesListPageSize <= 0
-        ) {
-          throw new Error(
-            `[MCP] resourcesListPageSize must be a positive integer, got ${options.resourcesListPageSize}`,
-          );
-        }
-      }
-
-      const listParams = params as { cursor?: unknown } | undefined;
-      const cursor = listParams?.cursor;
-      let startIndex = 0;
-      if (cursor !== undefined && cursor !== '') {
-        if (typeof cursor !== 'string') {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32602,
-              message: 'Invalid cursor: expected a string',
-            },
-          };
-        }
-        startIndex = parseInt(cursor, 10);
-        if (
-          Number.isNaN(startIndex) ||
-          startIndex < 0 ||
-          (startIndex > 0 && startIndex >= resourceList.length)
-        ) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32602,
-              message: `Invalid cursor: ${JSON.stringify(cursor)}`,
-            },
-          };
-        }
-      }
-      const pageSize = options.resourcesListPageSize ?? resourceList.length;
-      const page = resourceList.slice(startIndex, startIndex + pageSize);
-      const nextIndex = startIndex + pageSize;
-      const result: Record<string, unknown> = { resources: page };
-      if (nextIndex < resourceList.length) {
-        result['nextCursor'] = String(nextIndex);
-      }
-
-      return { jsonrpc: '2.0', id, result };
-    }
-
-    case 'resources/templates/list': {
-      const allTemplates = options.resourceTemplates ?? [];
-
-      const templateList = allTemplates.map((t) => {
-        const entry: Record<string, unknown> = {
-          uriTemplate: t.uriTemplate,
-          name: t.name,
-        };
-        if (t.title) entry['title'] = t.title;
-        if (t.mimeType) entry['mimeType'] = t.mimeType;
-        if (t.icons) entry['icons'] = t.icons;
-        if (t.annotations) entry['annotations'] = t.annotations;
-        const desc = t.description;
-        if (desc) entry['description'] = desc;
-        return entry;
-      });
-
-      if (options.resolveTemplateDescriptions) {
-        try {
-          const descriptions =
-            await options.resolveTemplateDescriptions(providerContext);
-          for (const tmpl of templateList) {
-            const providerDesc = descriptions.get(
-              tmpl['uriTemplate'] as string,
-            );
-            if (providerDesc) {
-              tmpl['description'] = providerDesc;
-            }
-          }
-        } catch (err) {
-          ctx.log.error(
-            `Failed to resolve template descriptions (${templateList.length} templates affected): ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-
-      return {
-        jsonrpc: '2.0',
-        id,
-        result: { resourceTemplates: templateList },
-      };
-    }
-
-    case 'resources/read': {
-      const readParams = (params ?? {}) as { uri?: string };
-      if (!readParams.uri) {
-        return {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32602,
-            message: 'Missing required parameter: uri',
-          },
-        };
-      }
-
-      const resource = options.resources?.get(readParams.uri);
-      if (resource) {
-        if (resource.blob == null && resource.text == null) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32603,
-              message: `Resource "${resource.name}" (${resource.uri}) has no content`,
-            },
-          };
-        }
-
-        const contentItem: Record<string, unknown> = {
-          uri: resource.uri,
-          mimeType: resource.mimeType,
-        };
-        if (resource.blob != null) {
-          contentItem['blob'] = resource.blob;
-        } else {
-          contentItem['text'] = resource.text;
-        }
-
-        return {
-          jsonrpc: '2.0',
-          id,
-          result: { contents: [contentItem] },
-        };
-      }
-
-      if (options.resourceTemplates) {
-        for (const tmpl of options.resourceTemplates) {
-          const match = tmpl.pattern.exec(readParams.uri);
-          if (!match) continue;
-
-          const extractedParams: Record<string, string> = {};
-          for (const name of tmpl.paramNames) {
-            extractedParams[name] = match.groups?.[name] ?? '';
-          }
-
-          let handlerResult;
-          try {
-            handlerResult = await tmpl.handler(extractedParams);
-          } catch (err) {
-            ctx.log.error(
-              `Resource template handler failed for "${tmpl.uriTemplate}" (uri: ${readParams.uri}):`,
-              err instanceof Error ? err.message : err,
-            );
-            return {
-              jsonrpc: '2.0',
-              id,
-              error: {
-                code: -32002,
-                message: 'Resource handler failed',
-                data: {
-                  uri: readParams.uri,
-                  error: err instanceof Error ? err.message : String(err),
-                },
-              },
-            };
-          }
-
-          const mimeType =
-            handlerResult.mimeType ?? tmpl.mimeType ?? 'text/plain';
-          const contentItem: Record<string, unknown> = {
-            uri: readParams.uri,
-            mimeType,
-          };
-
-          if ('blob' in handlerResult && handlerResult.blob != null) {
-            contentItem['blob'] = handlerResult.blob;
-          } else if ('text' in handlerResult && handlerResult.text != null) {
-            contentItem['text'] = handlerResult.text;
-          } else {
-            return {
-              jsonrpc: '2.0',
-              id,
-              error: {
-                code: -32603,
-                message: `Resource template handler for "${tmpl.uriTemplate}" returned neither text nor blob`,
-              },
-            };
-          }
-
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { contents: [contentItem] },
-          };
-        }
-      }
-
-      return {
-        jsonrpc: '2.0',
-        id,
-        error: {
-          code: -32002,
-          message: 'Resource not found',
-          data: { uri: readParams.uri },
-        },
-      };
-    }
-
-    case 'notifications/initialized':
-      return null;
-
-    default:
-      return {
-        jsonrpc: '2.0',
-        id,
-        error: { code: -32601, message: `Method not found: ${method}` },
-      };
+  const handler = defaultMethods.get(method);
+  if (!handler) {
+    return {
+      jsonrpc: '2.0',
+      id,
+      error: { code: -32601, message: `Method not found: ${method}` },
+    };
   }
+
+  return handler({ ctx, body, options, providerContext });
 }
 
 function setSchemaDescriptionByPath(
