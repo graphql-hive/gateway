@@ -1,4 +1,12 @@
+import type { ExecutionResult, GraphQLSchema } from 'graphql';
 import type { DescriptionProviderContext } from './description-provider.js';
+import {
+  MCPMethodError,
+  type MCPGraphQLOperation,
+  type MCPMethodContext,
+  type MCPMethodHandler,
+  type MCPMethodTransport,
+} from './method-handler.js';
 import type {
   MCPIcon,
   ResolvedResource,
@@ -28,7 +36,7 @@ export function dealiasArgs(
 export async function processExecutionResult(
   ctx: PluginContext,
   options: {
-    id: number | string;
+    id: number | string | null;
     toolName: string;
     args: Record<string, unknown>;
     tool: RegisteredTool;
@@ -37,7 +45,7 @@ export async function processExecutionResult(
   },
 ): Promise<{
   jsonrpc: '2.0';
-  id: number | string;
+  id: number | string | null;
   result: Record<string, unknown>;
 }> {
   const { tool } = options;
@@ -232,14 +240,28 @@ export interface MCPHandlerOptions {
   resolveTemplateDescriptions?: (
     context?: DescriptionProviderContext,
   ) => Promise<Map<string, string>>;
-  requestContext?: {
-    headers: Record<string, string>;
-  };
+  /** Custom JSON-RPC methods dispatched after built-ins. Collisions with built-in method names are rejected at plugin startup. */
+  customMethods?: Record<string, MCPMethodHandler>;
+  /** Additional entries merged into the capabilities object advertised by `initialize`. Custom entries win on key collision. */
+  customCapabilities?: Record<string, unknown>;
+  /** Returns the current GraphQL schema for custom method handlers. */
+  getSchema?: () => GraphQLSchema;
+}
+
+/**
+ * Per-request inputs for dispatching custom methods: the transport
+ * details exposed to handlers and a GraphQL executor bound to the
+ * current request's headers and server context.
+ */
+export interface CustomMethodDispatchContext {
+  transport?: MCPMethodTransport;
+  executeGraphQL?: (operation: MCPGraphQLOperation) => Promise<ExecutionResult>;
 }
 
 export interface JsonRpcRequest {
   jsonrpc: '2.0';
-  id: number | string;
+  /** Absent or null for notifications, which never receive a response. */
+  id?: number | string | null;
   method: string;
   params?: unknown;
 }
@@ -282,7 +304,7 @@ async function handleInitialize({
   body,
   options,
 }: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
-  const { id } = body;
+  const id = body.id ?? null;
   const protocolVersion = options.protocolVersion ?? '2025-11-25';
   const serverInfo: Record<string, unknown> = {
     name: options.serverName,
@@ -301,6 +323,9 @@ async function handleInitialize({
   if (hasResources) {
     capabilities['resources'] = {};
   }
+  if (options.customCapabilities) {
+    Object.assign(capabilities, options.customCapabilities);
+  }
   const initResult: Record<string, unknown> = {
     protocolVersion,
     serverInfo,
@@ -316,7 +341,8 @@ async function handleToolsList({
   options,
   providerContext,
 }: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
-  const { id, params } = body;
+  const id = body.id ?? null;
+  const { params } = body;
   const { registry } = options;
 
   const allTools = registry.getMCPTools({
@@ -452,7 +478,8 @@ async function handleResourcesList({
   options,
   providerContext,
 }: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
-  const { id, params } = body;
+  const id = body.id ?? null;
+  const { params } = body;
 
   const allResources = options.resources
     ? Array.from(options.resources.values())
@@ -548,7 +575,7 @@ async function handleResourcesTemplatesList({
   options,
   providerContext,
 }: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
-  const { id } = body;
+  const id = body.id ?? null;
   const allTemplates = options.resourceTemplates ?? [];
 
   const templateList = allTemplates.map((t) => {
@@ -594,7 +621,8 @@ async function handleResourcesRead({
   body,
   options,
 }: BuiltInHandlerArgs): Promise<JsonRpcResponse> {
-  const { id, params } = body;
+  const id = body.id ?? null;
+  const { params } = body;
   const readParams = (params ?? {}) as { uri?: string };
   if (!readParams.uri) {
     return {
@@ -713,7 +741,10 @@ async function handleNotificationsInitialized(): Promise<null> {
   return null;
 }
 
-/** Built-in MCP methods, dispatched by name. */
+/**
+ * Built-in MCP methods, dispatched by name. The collision check at
+ * plugin startup guarantees `customMethods` cannot shadow these entries.
+ */
 const defaultMethods: ReadonlyMap<string, BuiltInHandler> = new Map<
   string,
   BuiltInHandler
@@ -726,13 +757,88 @@ const defaultMethods: ReadonlyMap<string, BuiltInHandler> = new Map<
   ['notifications/initialized', handleNotificationsInitialized],
 ]);
 
+/**
+ * Method names handled by the plugin itself, including `tools/call`
+ * which is dispatched at the HTTP layer before reaching
+ * {@link handleMCPRequest}. `customMethods` entries with these names
+ * are rejected at startup.
+ */
+export const builtInMethodNames: ReadonlySet<string> = new Set([
+  ...defaultMethods.keys(),
+  'tools/call',
+]);
+
+async function dispatchCustomMethod(
+  ctx: PluginContext,
+  body: JsonRpcRequest,
+  options: MCPHandlerOptions,
+  handler: MCPMethodHandler,
+  dispatchContext?: CustomMethodDispatchContext,
+): Promise<JsonRpcResponse | null> {
+  const id = body.id ?? null;
+  const { method } = body;
+  const context: MCPMethodContext = {
+    logger: ctx.log,
+    method,
+    requestId: id ?? null,
+    executeGraphQL: (operation) => {
+      if (!dispatchContext?.executeGraphQL) {
+        throw new Error(
+          `GraphQL execution is not available for method "${method}"`,
+        );
+      }
+      return dispatchContext.executeGraphQL(operation);
+    },
+    getSchema: () => {
+      if (!options.getSchema) {
+        throw new Error(
+          `Schema access is not available for method "${method}"`,
+        );
+      }
+      return options.getSchema();
+    },
+    transport: dispatchContext?.transport,
+  };
+
+  // Methods under notifications/ follow notification semantics even if
+  // a client mistakenly sends an id, matching the built-in
+  // notifications/initialized behavior.
+  const isNotification = id == null || method.startsWith('notifications/');
+
+  try {
+    const result = await handler(body.params, context);
+    // Notifications never receive a response, regardless of handler outcome
+    if (isNotification) return null;
+    return { jsonrpc: '2.0', id, result: result ?? null };
+  } catch (err) {
+    if (isNotification) {
+      ctx.log.error(
+        `Custom notification handler "${method}" failed:`,
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
+    if (err instanceof MCPMethodError) {
+      const error: { code: number; message: string; data?: unknown } = {
+        code: err.code,
+        message: err.message,
+      };
+      if (err.data !== undefined) error.data = err.data;
+      return { jsonrpc: '2.0', id, error };
+    }
+    throw err;
+  }
+}
+
 export async function handleMCPRequest(
   ctx: PluginContext,
   body: JsonRpcRequest,
   options: MCPHandlerOptions,
   providerContext?: DescriptionProviderContext,
+  dispatchContext?: CustomMethodDispatchContext,
 ): Promise<JsonRpcResponse | null> {
-  const { id, method } = body;
+  const id = body.id ?? null;
+  const { method } = body;
 
   // Validate JSON-RPC structure
   if (body.jsonrpc !== '2.0') {
@@ -765,6 +871,16 @@ export async function handleMCPRequest(
 
   const handler = defaultMethods.get(method);
   if (!handler) {
+    const customHandler = options.customMethods?.[method];
+    if (customHandler) {
+      return dispatchCustomMethod(
+        ctx,
+        body,
+        options,
+        customHandler,
+        dispatchContext,
+      );
+    }
     // Per JSON-RPC 2.0 §4.1, notifications never receive a response.
     // The validation step above already established that a null id
     // implies a `notifications/` method, so checking id alone here
