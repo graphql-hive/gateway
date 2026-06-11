@@ -2366,4 +2366,13 @@ describe('JSON-RPC validation', () => {
     );
     debugSpy.mockRestore();
   });
+
+  it('drops unknown notification-named methods even when an id is sent', async () => {
+    const body = await handleMCPRequest(
+      { log: logger },
+      { jsonrpc: '2.0', id: 7, method: 'notifications/something-unknown' },
+      opts,
+    );
+    expect(body).toBeNull();
+  });
 });

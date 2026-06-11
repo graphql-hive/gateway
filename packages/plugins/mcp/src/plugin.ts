@@ -915,7 +915,15 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       '[MCP] config.tools must be an array of tool configurations',
     );
   }
-  if (config.customMethods) {
+  if (config.customMethods != null) {
+    if (
+      typeof config.customMethods !== 'object' ||
+      Array.isArray(config.customMethods)
+    ) {
+      throw new Error(
+        '[MCP] config.customMethods must be an object mapping method names to handler functions',
+      );
+    }
     const conflicts = Object.keys(config.customMethods).filter((name) =>
       builtInMethodNames.has(name),
     );
@@ -929,6 +937,14 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       if (typeof handler !== 'function') {
         throw new Error(`[MCP] customMethods["${name}"] must be a function`);
       }
+    }
+  }
+  if (config.customCapabilities != null) {
+    if (
+      typeof config.customCapabilities !== 'object' ||
+      Array.isArray(config.customCapabilities)
+    ) {
+      throw new Error('[MCP] config.customCapabilities must be an object');
     }
   }
   const mcpPath = config.path || '/mcp';
@@ -1391,9 +1407,16 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         );
       }
       executeViaYoga = async (operation, headers, serverContext) => {
+        // Strip headers describing the original request's transport;
+        // they are false for the synthetic internal request. Semantic
+        // headers (authorization, cookies, x-forwarded-*) pass through.
         const requestHeaders: Record<string, string> = { ...headers };
-        delete requestHeaders['content-length'];
         delete requestHeaders['accept-encoding'];
+        delete requestHeaders['connection'];
+        delete requestHeaders['content-length'];
+        delete requestHeaders['host'];
+        delete requestHeaders['keep-alive'];
+        delete requestHeaders['transfer-encoding'];
         requestHeaders['content-type'] = 'application/json';
         requestHeaders['accept'] = 'application/json';
         const response = await yoga.handle(

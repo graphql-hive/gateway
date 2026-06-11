@@ -323,6 +323,22 @@ describe('custom method dispatch', () => {
     expect(body.error.code).toBe(-32601);
   });
 
+  it('returns -32601 for prototype-chain method names instead of dispatching inherited properties', async () => {
+    const opts = makeOptions({
+      customMethods: { 'echo/params': (params) => params },
+    });
+
+    for (const method of [
+      'constructor',
+      'toString',
+      'hasOwnProperty',
+      '__proto__',
+    ]) {
+      const body = await callMCP(opts, { jsonrpc: '2.0', id: 1, method });
+      expect(body.error?.code, `method: ${method}`).toBe(-32601);
+    }
+  });
+
   it('merges customCapabilities into the initialize response', async () => {
     const opts = makeOptions({
       customCapabilities: { experimental: { echo: {} } },
@@ -379,6 +395,21 @@ describe('useMCP customMethods validation', () => {
         },
       ),
     ).toThrow(/customMethods\["echo\/params"\] must be a function/);
+  });
+
+  it('throws at startup when customMethods is not a plain object', () => {
+    expect(() =>
+      useMCP({ log: logger }, { name: 'test', customMethods: [] as any }),
+    ).toThrow(/customMethods must be an object/);
+    expect(() =>
+      useMCP({ log: logger }, { name: 'test', customMethods: 'nope' as any }),
+    ).toThrow(/customMethods must be an object/);
+  });
+
+  it('throws at startup when customCapabilities is not a plain object', () => {
+    expect(() =>
+      useMCP({ log: logger }, { name: 'test', customCapabilities: [] as any }),
+    ).toThrow(/customCapabilities must be an object/);
   });
 });
 

@@ -871,7 +871,13 @@ export async function handleMCPRequest(
 
   const handler = defaultMethods.get(method);
   if (!handler) {
-    const customHandler = options.customMethods?.[method];
+    // Own-property check: bracket access on a plain object would also
+    // resolve inherited prototype members (`constructor`, `toString`),
+    // letting clients dispatch them as handlers.
+    const customHandler =
+      options.customMethods && Object.hasOwn(options.customMethods, method)
+        ? options.customMethods[method]
+        : undefined;
     if (customHandler) {
       return dispatchCustomMethod(
         ctx,
@@ -882,10 +888,10 @@ export async function handleMCPRequest(
       );
     }
     // Per JSON-RPC 2.0 §4.1, notifications never receive a response.
-    // The validation step above already established that a null id
-    // implies a `notifications/` method, so checking id alone here
-    // is sufficient.
-    if (id == null) {
+    // Methods under notifications/ get the same treatment even when a
+    // client mistakenly sends an id, matching the custom-method
+    // dispatch behavior.
+    if (id == null || method.startsWith('notifications/')) {
       ctx.log.debug(`Ignoring unknown notification method: ${method}`);
       return null;
     }
