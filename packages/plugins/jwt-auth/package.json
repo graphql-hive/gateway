@@ -53,7 +53,7 @@
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.21.1",
     "jsonwebtoken": "9.0.3",
-    "pkgroll": "2.27.0"
+    "pkgroll": "2.27.1"
   },
   "sideEffects": false
 }
