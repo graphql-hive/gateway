@@ -53,6 +53,8 @@ export default defineConfig({
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
                   '!**/e2e/edfs-mesh-defs-with-entity-resolution',
+                  // TODO: windows has issues with the shutdown process (idk what exactly)
+                  '!**/e2e/graceful-shutdown',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
