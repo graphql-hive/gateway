@@ -131,7 +131,12 @@ jobs:
             const { version } = gateway;
             let r;
             if (context.eventName === 'pull_request') {
-              r = { version, tags: version };
+              // version is like 2.7.0-alpha-49e0277ad6ba49764af44b27cc4febdd3c063d15,
+              // shorten the hash at the end to 7 chars to be 2.7.0-alpha-49e0277
+              const parts = version.split('-');
+              parts[parts.length - 1] = parts[parts.length - 1].slice(0, 7);
+              const shortShaVersion = parts.join('-');
+              r = { version: shortShaVersion, tags: shortShaVersion };
             } else {
               const [major, minor] = version.split('.');
               if (!major || !minor) {
