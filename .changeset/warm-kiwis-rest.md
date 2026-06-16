@@ -14,6 +14,6 @@ Set to `0` to restore the previous behaviour of immediately closing all connecti
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-  gracefulShutdownTimeout: 30000, // default
+  gracefulShutdownTimeout: 10_000, // 10 seconds, default is 0 (immediate shutdown)
 });
 ```

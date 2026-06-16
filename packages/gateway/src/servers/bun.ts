@@ -80,7 +80,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
     return gwRuntime.handleRequest(request, server);
   };
   const server = Bun.serve(serverOptions);
-  const { gracefulShutdownTimeout = 30_000 } = opts;
+  const { gracefulShutdownTimeout = 0 } = opts;
   opts.log.info(`Listening on ${server.url}`);
   gwRuntime.disposableStack.defer(() => {
     opts.log.info('Stopping the server');

@@ -22,7 +22,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     disableWebsockets,
     requestTimeout,
     keepAliveTimeout,
-    gracefulShutdownTimeout = 30_000,
+    gracefulShutdownTimeout = 0,
   } = opts;
   let server: Server;
   let protocol: string;
