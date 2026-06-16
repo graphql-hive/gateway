@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.9.0
+### Minor Changes
+
+
+
+- [#2425](https://github.com/graphql-hive/gateway/pull/2425) [`43bc433`](https://github.com/graphql-hive/gateway/commit/43bc433e9752cefad9f8b8646610ce71b9751ecf) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Graceful HTTP shutdown with configurable drain timeout
+  
+  Add `gracefulShutdownTimeout` to the config and default it to `0` (immediate/forceful shutdown). On SIGTERM/SIGINT the server stops accepting new connections and idles out keep-alive connections, letting active requests finish naturally. After the timeout expires, all remaining connections are force-closed.
+  
+  Set to `0` to restore the previous behaviour of immediately closing all connections.
+  
+  ```ts
+  // gateway.config.ts
+  
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    gracefulShutdownTimeout: 10_000, // 10 seconds, default is 0 (immediate shutdown)
+  });
+  ```
+
 ## 2.8.5
 ### Patch Changes
 
