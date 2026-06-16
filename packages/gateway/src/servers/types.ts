@@ -62,7 +62,7 @@ export interface ServerConfig {
    *
    * Set to `0` to skip the drain window and close all connections immediately.
    *
-   * @default 30000 // (30 seconds)
+   * @default 30000 (30 seconds)
    */
   gracefulShutdownTimeout?: number;
 }
