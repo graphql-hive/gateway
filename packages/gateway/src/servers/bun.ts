@@ -1,7 +1,4 @@
-import {
-  DisposableSymbols,
-  getGraphQLWSOptions,
-} from '@graphql-hive/gateway-runtime';
+import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
 import type { Server, ServerWebSocket, WebSocketOptions } from 'bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
@@ -83,6 +80,22 @@ export async function startBunServer<TContext extends Record<string, any>>(
     return gwRuntime.handleRequest(request, server);
   };
   const server = Bun.serve(serverOptions);
+  const { gracefulShutdownTimeout = 30_000 } = opts;
   opts.log.info(`Listening on ${server.url}`);
-  gwRuntime.disposableStack.defer(() => server[DisposableSymbols.dispose]());
+  gwRuntime.disposableStack.defer(() => {
+    opts.log.info('Stopping the server');
+    const fuse =
+      gracefulShutdownTimeout > 0
+        ? setTimeout(() => {
+            opts.log.warn(
+              `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-closing remaining connections`,
+            );
+            server.stop(true);
+          }, gracefulShutdownTimeout)
+        : undefined;
+    return server.stop(gracefulShutdownTimeout === 0).then(() => {
+      if (fuse) clearTimeout(fuse);
+      opts.log.info('Stopped the server successfully');
+    });
+  });
 }

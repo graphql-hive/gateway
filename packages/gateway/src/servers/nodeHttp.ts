@@ -22,6 +22,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     disableWebsockets,
     requestTimeout,
     keepAliveTimeout,
+    gracefulShutdownTimeout = 30_000,
   } = opts;
   let server: Server;
   let protocol: string;
@@ -123,11 +124,25 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
           new Promise<void>((resolve) => {
             process.stderr.write('\n');
             log.info('Stopping the server');
-            server.closeAllConnections();
+            server.closeIdleConnections();
             server.close(() => {
               log.info('Stopped the server successfully');
+              clearTimeout(fuse);
               return resolve();
             });
+            const fuse =
+              gracefulShutdownTimeout > 0
+                ? setTimeout(() => {
+                    log.warn(
+                      `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-closing remaining connections`,
+                    );
+                    server.closeAllConnections();
+                  }, gracefulShutdownTimeout)
+                : (server.closeAllConnections(), undefined);
+            if (fuse) {
+              // allow the process to exit even if the fuse is still running
+              fuse.unref();
+            }
           }),
       );
       return resolve();
