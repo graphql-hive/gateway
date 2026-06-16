@@ -1,6 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createTenv } from '@internal/e2e';
+import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
 
 const { gateway, service, gatewayRunner } = createTenv(__dirname);
@@ -79,6 +80,43 @@ it
         ),
       ]),
     ).resolves.toBeUndefined();
+  },
+);
+
+it
+  .skipIf(gatewayRunner.includes('docker'))
+  .each(['SIGINT', 'SIGTERM'] as const)(
+  'should reject healthcheck and readiness probes during drain on %s',
+  async (signal) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      // long enough drain window so the server is still up when we probe
+      env: { GRACEFUL_SHUTDOWN_TIMEOUT: 1_000 },
+    });
+
+    const healthcheckUrl = `http://0.0.0.0:${gw.port}/healthcheck`;
+    const readinessUrl = `http://0.0.0.0:${gw.port}/readiness`;
+
+    // confirm probes pass before shutdown
+    await expect(fetch(healthcheckUrl)).resolves.toHaveProperty('status', 200);
+    await expect(fetch(readinessUrl)).resolves.toHaveProperty('status', 200);
+
+    // keep a slow request in-flight so the server stays in the drain window
+    gw.execute({ query: '{slowHello}' });
+    await setTimeout(50);
+    gw.kill(signal);
+    // give server.close() a moment to take effect
+    await setTimeout(50);
+
+    // server no longer accepts new connections - both probes must fail
+    await expect(fetch(healthcheckUrl)).rejects.toThrow();
+    await expect(fetch(readinessUrl)).rejects.toThrow();
+
+    await gw.waitForExit;
   },
 );
 
