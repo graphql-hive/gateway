@@ -48,7 +48,10 @@ it
 );
 
 it
-  .skipIf(gatewayRunner.includes('docker'))
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should exit promptly when no requests are in-flight on %s',
   async (signal) => {
@@ -81,7 +84,10 @@ it
 );
 
 it
-  .skipIf(gatewayRunner.includes('docker'))
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should reject healthcheck and readiness probes during drain on %s',
   async (signal) => {
@@ -118,7 +124,10 @@ it
 );
 
 it
-  .skipIf(gatewayRunner.includes('docker'))
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should forcefully close connections after gracefulShutdownTimeout on %s',
   async (signal) => {
