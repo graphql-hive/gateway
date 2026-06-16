@@ -8,7 +8,9 @@ const { gateway, service, gatewayRunner } = createTenv(__dirname);
 it
   .skipIf(
     // whatever's happening on windows
-    os.platform().toLowerCase() === 'win32',
+    os.platform().toLowerCase() === 'win32' ||
+      // "cannot send signals to containers" from dockerode - tenv limitation
+      gatewayRunner.includes('docker'),
   )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should let in-flight requests complete before exiting on %s',
