@@ -124,12 +124,6 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
           new Promise<void>((resolve) => {
             process.stderr.write('\n');
             log.info('Stopping the server');
-            server.closeIdleConnections();
-            server.close(() => {
-              log.info('Stopped the server successfully');
-              clearTimeout(fuse);
-              return resolve();
-            });
             const fuse =
               gracefulShutdownTimeout > 0
                 ? setTimeout(() => {
@@ -143,6 +137,12 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
               // allow the process to exit even if the fuse is still running
               fuse.unref();
             }
+            server.closeIdleConnections();
+            server.close(() => {
+              log.info('Stopped the server successfully');
+              clearTimeout(fuse);
+              return resolve();
+            });
           }),
       );
       return resolve();
