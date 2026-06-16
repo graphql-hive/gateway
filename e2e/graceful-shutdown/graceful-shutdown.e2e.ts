@@ -1,4 +1,3 @@
-import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
@@ -8,10 +7,8 @@ const { gateway, service, gatewayRunner } = createTenv(__dirname);
 
 it
   .skipIf(
-    // whatever's happening on windows
-    os.platform().toLowerCase() === 'win32' ||
-      // "cannot send signals to containers" from dockerode - tenv limitation
-      gatewayRunner.includes('docker'),
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
   )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should let in-flight requests complete before exiting on %s',
