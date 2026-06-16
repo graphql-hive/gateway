@@ -1,3 +1,4 @@
+import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
@@ -5,7 +6,10 @@ import { expect, it } from 'vitest';
 const { gateway, service, gatewayRunner } = createTenv(__dirname);
 
 it
-  .skipIf(gatewayRunner.includes('docker'))
+  .skipIf(
+    // whatever's happening on windows
+    os.platform().toLowerCase() === 'win32',
+  )
   .each(['SIGINT', 'SIGTERM'] as const)(
   'should let in-flight requests complete before exiting on %s',
   async (signal) => {
