@@ -1163,6 +1163,108 @@ describe('Demand Control', () => {
           });
         }
       });
+
+      it('accepts a function for maxCost that receives cost payload', async () => {
+        const subgraph = buildSubgraphSchema({
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              foo: Foo
+            }
+
+            type Foo {
+              id: ID
+            }
+          `),
+          resolvers: {
+            Query: {
+              foo: async () => ({ id: 'foo' }),
+            },
+          },
+        });
+        const costPayloads: Parameters<
+          NonNullable<
+            Exclude<
+              Parameters<typeof useDemandControl>[0]['maxCost'],
+              number | undefined
+            >
+          >
+        >[] = [];
+        await using gateway = createTestGateway(mode, subgraph, {
+          includeExtensionMetadata: true,
+          maxCost: (payload) => {
+            costPayloads.push([payload]);
+            return Infinity; // never reject
+          },
+        });
+        const query = /* GraphQL */ `
+          query FooQuery {
+            foo {
+              id
+            }
+          }
+        `;
+        const response = await gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
+        const result = await response.json();
+        expect(result.errors).toBeUndefined();
+        expect(costPayloads.length).toBeGreaterThan(0);
+        const [payload] = costPayloads[0]!;
+        expect(typeof payload.operationCost).toBe('number');
+        expect(typeof payload.totalCost).toBe('number');
+        expect(typeof payload.subgraphName).toBe('string');
+        expect(payload.executionRequest).toBeDefined();
+      });
+
+      it('rejects when async maxCost function returns a limit below total cost', async () => {
+        const subgraph = buildSubgraphSchema({
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              foo: Foo
+            }
+
+            type Foo {
+              id: ID
+            }
+          `),
+          resolvers: {
+            Query: {
+              foo: async () => ({ id: 'foo' }),
+            },
+          },
+        });
+        await using gateway = createTestGateway(mode, subgraph, {
+          includeExtensionMetadata: true,
+          maxCost: async ({ totalCost }) => {
+            // simulate async work (e.g. look up per-user rate limit)
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            return totalCost - 1; // always below totalCost → always reject
+          },
+        });
+        const query = /* GraphQL */ `
+          query FooQuery {
+            foo {
+              id
+            }
+          }
+        `;
+        const response = await gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
+        const result = await response.json();
+        expect(result.errors).toBeDefined();
+        expect(result.errors[0].extensions?.code).toBe(
+          'COST_ESTIMATED_TOO_EXPENSIVE',
+        );
+      });
     });
   });
 });
