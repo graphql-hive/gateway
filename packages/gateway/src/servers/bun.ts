@@ -84,13 +84,15 @@ export async function startBunServer<TContext extends Record<string, any>>(
   opts.log.info(`Listening on ${server.url}`);
   gwRuntime.disposableStack.defer(() => {
     opts.log.info('Stopping the server');
+    // bun's stop(true) cannot interrupt in-flight requests once stop(false) is running,
+    // so we use process.exit as the hard fuse instead
     const fuse =
       gracefulShutdownTimeout > 0
         ? setTimeout(() => {
             opts.log.warn(
-              `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-closing remaining connections`,
+              `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-exiting`,
             );
-            server.stop(true);
+            process.exit(0);
           }, gracefulShutdownTimeout)
         : undefined;
     return server.stop(gracefulShutdownTimeout === 0).then(() => {
