@@ -152,6 +152,58 @@ describe('Federation @provides', () => {
     expect(BQuery).not.toMatch(/\bdescription\b/);
   });
 
+  // When @provides covers nested types and the client selects the provided
+  // fields via a fragment spread (not inline), the gateway must still recognise
+  // that no delegation to the owner subgraph is needed.
+  it('does not delegate to owner when nested @provides fields are selected via fragment', async () => {
+    await using serviceNestedA = await service('nested-a');
+    await using serviceNestedB = await service('nested-b');
+    await using gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [serviceNestedA, serviceNestedB],
+      },
+    });
+
+    const result = await gw.execute({
+      query: /* GraphQL */ `
+        query {
+          entity {
+            id
+            nested {
+              nestedNested {
+                ...NestedNestedFrag
+              }
+            }
+          }
+        }
+
+        fragment NestedNestedFrag on NestedNestedField {
+          name
+          description
+        }
+      `,
+    });
+
+    expect(result).toEqual({
+      data: {
+        entity: {
+          id: '1',
+          nested: {
+            nestedNested: {
+              name: 'B:name',
+              description: 'B:description',
+            },
+          },
+        },
+      },
+    });
+
+    // Owner subgraph must NOT be hit - B provides everything via @provides.
+    const ALogs = serviceNestedA.getStd('out');
+    expect(ALogs).not.toContain('received query');
+  });
+
   // The gateway must keep `@include` / `@skip` directives that wrap a
   // `@provides` field intact when forwarding the query to the providing
   // subgraph. If the wrapper were dropped, the providing subgraph would
