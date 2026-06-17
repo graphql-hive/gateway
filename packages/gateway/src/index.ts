@@ -6,7 +6,11 @@ export * from '@graphql-hive/pubsub/nats';
 export * from '@graphql-hive/pubsub/redis';
 export * from '@graphql-mesh/plugin-jwt-auth';
 export * from '@graphql-mesh/plugin-prometheus';
-export { default as useRateLimit } from '@graphql-mesh/plugin-rate-limit';
+export {
+  useRateLimiting,
+  type RateLimitingConfig,
+  type RateLimitingOptions,
+} from './plugins/useRateLimiting';
 export { default as useHttpCache } from '@graphql-mesh/plugin-http-cache';
 export { default as useSnapshot } from '@graphql-mesh/plugin-snapshot';
 export { default as CloudflareKVCacheStorage } from '@graphql-mesh/cache-cfw-kv';
