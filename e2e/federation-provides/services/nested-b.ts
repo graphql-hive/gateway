@@ -11,7 +11,10 @@ createServer(
     schema: buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
         extend schema
-          @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable", "@external", "@provides"])
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.0"
+            import: ["@key", "@shareable", "@external", "@provides"]
+          )
 
         type Query {
           entity: Entity
