@@ -102,11 +102,12 @@ export function useRateLimiting<T extends Record<string, unknown> = {}>({
   const plugin = useRateLimiter({
     identifyFn: (context: any) =>
       context.headers?.authorization ||
+      context.request?.headers?.get('authorization') ||
       context.req?.socket?.remoteAddress ||
       context.req?.connection?.remoteAddress ||
       context.req?.ip ||
+      context.request?.headers?.get('x-forwarded-for') ||
       context.headers?.['x-forwarded-for'] ||
-      context.headers?.host ||
       'unknown',
     store: new RateLimitingStore(cache),
     interpolateMessage: (message, identifier, params) =>
