@@ -162,6 +162,9 @@ function finalizeGatewayDocument<TContext>(
     );
   }
 
+  const includedFragmentNames = new Set(newFragments.map((f) => f.name.value));
+  const hasDroppedFragments = includedFragmentNames.size < usedFragments.length;
+
   let newDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [...newOperations, ...newFragments],
@@ -293,6 +296,26 @@ function finalizeGatewayDocument<TContext>(
     );
   }
 
+  // strip dangling fragment spreads that point to fragments that were dropped
+  // because all their fields are @external in the target subgraph. this must
+  // run after the @provides injection so that provided fields are already
+  // inlined before the now-empty spreads are removed.
+  if (hasDroppedFragments) {
+    const ops = newDocument.definitions.filter(
+      (d): d is OperationDefinitionNode => d.kind === Kind.OPERATION_DEFINITION,
+    );
+    const frags = newDocument.definitions.filter(
+      (d): d is FragmentDefinitionNode => d.kind === Kind.FRAGMENT_DEFINITION,
+    );
+    newDocument = {
+      kind: Kind.DOCUMENT,
+      definitions: [
+        ...removeDeadFragmentSpreads(ops, includedFragmentNames),
+        ...frags,
+      ],
+    };
+  }
+
   return {
     usedVariables,
     newDocument,
@@ -337,6 +360,60 @@ export function finalizeGatewayRequest<TContext>(
     document: newDocument,
     variables: newVariables,
   };
+}
+
+function removeDeadFragmentSpreads(
+  operations: OperationDefinitionNode[],
+  included: Set<string>,
+): OperationDefinitionNode[] {
+  function cleanSelections(
+    selections: readonly SelectionNode[],
+  ): SelectionNode[] {
+    const out: SelectionNode[] = [];
+    for (const sel of selections) {
+      if (sel.kind === Kind.FRAGMENT_SPREAD) {
+        if (included.has(sel.name.value)) {
+          out.push(sel);
+        }
+        // drop spreads referencing dropped (empty) fragments
+      } else if (
+        (sel.kind === Kind.FIELD || sel.kind === Kind.INLINE_FRAGMENT) &&
+        sel.selectionSet
+      ) {
+        const cleaned = cleanSelections(sel.selectionSet.selections);
+        if (cleaned.length === 0 && sel.kind === Kind.INLINE_FRAGMENT) {
+          // inline fragment became empty, drop it
+          continue;
+        }
+        if (cleaned.length === 0 && sel.kind === Kind.FIELD) {
+          // composite field with no remaining selections, drop it
+          continue;
+        }
+        out.push(
+          cleaned === sel.selectionSet.selections
+            ? sel
+            : {
+                ...sel,
+                selectionSet: {
+                  kind: Kind.SELECTION_SET,
+                  selections: cleaned,
+                },
+              },
+        );
+      } else {
+        out.push(sel);
+      }
+    }
+    return out;
+  }
+
+  return operations.map((op) => ({
+    ...op,
+    selectionSet: {
+      ...op.selectionSet,
+      selections: cleanSelections(op.selectionSet.selections),
+    },
+  }));
 }
 
 function isTypeNameField(selection: SelectionNode): boolean {
@@ -731,15 +808,20 @@ function collectFragmentVariables(
 
       if (name && !(name in fragmentSet)) {
         fragmentSet[name] = true;
-        newFragments.push({
-          kind: Kind.FRAGMENT_DEFINITION,
-          name: {
-            kind: Kind.NAME,
-            value: name,
-          },
-          typeCondition: fragment.typeCondition,
-          selectionSet,
-        });
+        // skip fragments that were fully filtered away (e.g. all fields are
+        // @external in the target subgraph). fragment spreads referencing them
+        // will be stripped from the document in a subsequent pass.
+        if (selectionSet.selections.length > 0) {
+          newFragments.push({
+            kind: Kind.FRAGMENT_DEFINITION,
+            name: {
+              kind: Kind.NAME,
+              value: name,
+            },
+            typeCondition: fragment.typeCondition,
+            selectionSet,
+          });
+        }
       }
     }
   }
