@@ -9,10 +9,12 @@ import { collectSubFields, memoize3 } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
+  getNamedType,
   GraphQLField,
   GraphQLObjectType,
   GraphQLSchema,
   isAbstractType,
+  isObjectType,
   Kind,
   SelectionNode,
   SelectionSetNode,
@@ -180,17 +182,24 @@ export function getFieldsNotInSubschema(
         '__DO_NOT_USE__stitching_disable_extract_unavailable_fields_for_fields_not_in_schema__'
       ]
     ) {
+      const providedTypeFieldPairs = providedSelectionNode
+        ? collectProvidedTypeFieldPairs(providedSelectionNode, gatewayType, schema)
+        : null;
       for (const subFieldNode of subFieldNodes) {
         const unavailableFields = extractUnavailableFields(
           sourceSchema,
           field,
           subFieldNode,
-          (fieldType) => {
+          (fieldType, selection) => {
             if (
               stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
                 subschema,
               )
             ) {
+              return false;
+            }
+            // field is already provided by this subgraph via @provides
+            if (providedTypeFieldPairs?.has(`${fieldType.name}.${selection.name.value}`)) {
               return false;
             }
             return true;
@@ -273,6 +282,43 @@ function addMissingRequiredFields({
       }
     }
   }
+}
+
+// walks the @provides selection set using the gateway schema to collect all
+// "TypeName.fieldName" pairs that the providing subgraph covers. used by
+// shouldAdd in extractUnavailableFields to skip re-delegating those fields.
+function collectProvidedTypeFieldPairs(
+  selectionSet: SelectionSetNode,
+  parentType: GraphQLObjectType,
+  schema: GraphQLSchema,
+): Set<string> {
+  const pairs = new Set<string>();
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      pairs.add(`${parentType.name}.${sel.name.value}`);
+      if (sel.selectionSet) {
+        const fieldDef = parentType.getFields()[sel.name.value];
+        if (fieldDef) {
+          const namedType = getNamedType(fieldDef.type);
+          if (isObjectType(namedType)) {
+            for (const p of collectProvidedTypeFieldPairs(sel.selectionSet, namedType, schema)) {
+              pairs.add(p);
+            }
+          }
+        }
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT && sel.selectionSet) {
+      const condType = sel.typeCondition
+        ? (schema.getType(sel.typeCondition.name.value) as GraphQLObjectType | null)
+        : parentType;
+      if (condType && isObjectType(condType)) {
+        for (const p of collectProvidedTypeFieldPairs(sel.selectionSet, condType, schema)) {
+          pairs.add(p);
+        }
+      }
+    }
+  }
+  return pairs;
 }
 
 // Flatten inline fragments (and matching fragment spreads) inside a
