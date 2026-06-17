@@ -183,7 +183,11 @@ export function getFieldsNotInSubschema(
       ]
     ) {
       const providedTypeFieldPairs = providedSelectionNode
-        ? collectProvidedTypeFieldPairs(providedSelectionNode, gatewayType, schema)
+        ? collectProvidedTypeFieldPairs(
+            providedSelectionNode,
+            gatewayType,
+            schema,
+          )
         : null;
       for (const subFieldNode of subFieldNodes) {
         const unavailableFields = extractUnavailableFields(
@@ -199,7 +203,11 @@ export function getFieldsNotInSubschema(
               return false;
             }
             // field is already provided by this subgraph via @provides
-            if (providedTypeFieldPairs?.has(`${fieldType.name}.${selection.name.value}`)) {
+            if (
+              providedTypeFieldPairs?.has(
+                `${fieldType.name}.${selection.name.value}`,
+              )
+            ) {
               return false;
             }
             return true;
@@ -301,7 +309,11 @@ function collectProvidedTypeFieldPairs(
         if (fieldDef) {
           const namedType = getNamedType(fieldDef.type);
           if (isObjectType(namedType)) {
-            for (const p of collectProvidedTypeFieldPairs(sel.selectionSet, namedType, schema)) {
+            for (const p of collectProvidedTypeFieldPairs(
+              sel.selectionSet,
+              namedType,
+              schema,
+            )) {
               pairs.add(p);
             }
           }
@@ -309,10 +321,16 @@ function collectProvidedTypeFieldPairs(
       }
     } else if (sel.kind === Kind.INLINE_FRAGMENT && sel.selectionSet) {
       const condType = sel.typeCondition
-        ? (schema.getType(sel.typeCondition.name.value) as GraphQLObjectType | null)
+        ? (schema.getType(
+            sel.typeCondition.name.value,
+          ) as GraphQLObjectType | null)
         : parentType;
       if (condType && isObjectType(condType)) {
-        for (const p of collectProvidedTypeFieldPairs(sel.selectionSet, condType, schema)) {
+        for (const p of collectProvidedTypeFieldPairs(
+          sel.selectionSet,
+          condType,
+          schema,
+        )) {
           pairs.add(p);
         }
       }
