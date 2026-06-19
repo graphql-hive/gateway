@@ -53,16 +53,16 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@nestjs/common": "11.1.24",
-    "@nestjs/core": "11.1.24",
+    "@nestjs/common": "11.1.27",
+    "@nestjs/core": "11.1.27",
     "@nestjs/graphql": "13.4.2",
     "@nestjs/platform-express": "^11.1.15",
-    "@nestjs/testing": "11.1.24",
+    "@nestjs/testing": "11.1.27",
     "@types/supertest": "7.2.0",
     "fastify": "5.8.5",
     "file-type": "^22.0.0",
     "graphql": "^16.12.0",
-    "pkgroll": "2.27.0",
+    "pkgroll": "2.27.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
     "supertest": "7.2.2"
