@@ -112,6 +112,8 @@ describe('Self Hosting Hive', () => {
 
     const iter = client.iterate({
       query: /* GraphQL */ `
+        # TODO: when operation name is the same as the subscription - the subgraph never responds
+        # subscription userPostChanged { userPostChanged { ... } }
         subscription {
           userPostChanged {
             name
