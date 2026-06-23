@@ -2,7 +2,9 @@ import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDeferredPromise, Opts } from '@internal/testing';
 import { parse } from 'graphql';
+import { useServer } from 'graphql-ws/use/ws';
 import { createYoga, Repeater } from 'graphql-yoga';
+import { WebSocketServer } from 'ws';
 
 const typeDefs = parse(/* GraphQL */ `
   type Query {
@@ -66,4 +68,46 @@ const yoga = createYoga({
 
 const opts = Opts(process.argv);
 
-createServer(yoga).listen(opts.getServicePort('users'));
+const httpServer = createServer(yoga);
+
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: yoga.graphqlEndpoint,
+});
+
+useServer(
+  {
+    execute: (args: any) => args.rootValue.execute(args),
+    subscribe: (args: any) => args.rootValue.subscribe(args),
+    onSubscribe: async (ctx, _id, params) => {
+      console.log('sa krajem');
+
+      const { schema, execute, subscribe, contextFactory, parse, validate } =
+        yoga.getEnveloped({
+          ...ctx,
+          req: ctx.extra.request,
+          socket: ctx.extra.socket,
+          params,
+        });
+
+      const args = {
+        schema,
+        operationName: params.operationName,
+        document: parse(params.query),
+        variableValues: params.variables,
+        contextValue: await contextFactory(),
+        rootValue: {
+          execute,
+          subscribe,
+        },
+      };
+
+      const errors = validate(args.schema, args.document);
+      if (errors.length) return errors;
+      return args;
+    },
+  },
+  wsServer,
+);
+
+httpServer.listen(opts.getServicePort('users'));
