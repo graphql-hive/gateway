@@ -38,7 +38,7 @@ updates:
         - '@whatwg-node/*'
         - 'graphql-yoga'
     exclude-paths:
-      - 'examples' # the examples are auto-generated from the e2es, whose packages we do auto-update
+      - '/examples/**' # the examples are auto-generated from the e2es, whose packages we do auto-update
     versioning-strategy: increase-if-necessary
     groups:
       all-minor-patch:
