@@ -3629,9 +3629,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/rate-limiter@npm:10.1.0-alpha-20260617160447-05cf95db345cd2da5aeb76cf4c22880481e4e7ee":
-  version: 10.1.0-alpha-20260617160447-05cf95db345cd2da5aeb76cf4c22880481e4e7ee
-  resolution: "@envelop/rate-limiter@npm:10.1.0-alpha-20260617160447-05cf95db345cd2da5aeb76cf4c22880481e4e7ee"
+"@envelop/rate-limiter@npm:^10.1.0":
+  version: 10.1.0
+  resolution: "@envelop/rate-limiter@npm:10.1.0"
   dependencies:
     "@envelop/on-resolve": "npm:^7.1.1"
     "@graphql-tools/utils": "npm:^11.0.0"
@@ -3644,7 +3644,7 @@ __metadata:
   peerDependencies:
     "@envelop/core": ^5.5.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/294449ef3d3d9d8d863f75044a31fa870c48296a0dbe46c1f5af719b65ae7d6e13c690fec9af9cef96e36f78ca380f24e4d634eae3412b3a93f1f1ffa5594b50
+  checksum: 10c0/57552e4626a6a0cbf6b5f36d2a1ffbd4656619153bb2c48ba74cc001fa4bc17b1b9c935a4c10b76ea6e75356e0fcf926651c4d5289b4db5a43ad9ff87f8a42b7
   languageName: node
   linkType: hard
 
@@ -4554,7 +4554,7 @@ __metadata:
   dependencies:
     "@commander-js/extra-typings": "npm:^14.0.0"
     "@envelop/core": "npm:^5.4.0"
-    "@envelop/rate-limiter": "npm:10.1.0-alpha-20260617160447-05cf95db345cd2da5aeb76cf4c22880481e4e7ee"
+    "@envelop/rate-limiter": "npm:^10.1.0"
     "@escape.tech/graphql-armor-block-field-suggestions": "npm:^3.0.0"
     "@escape.tech/graphql-armor-max-depth": "npm:^2.4.2"
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
