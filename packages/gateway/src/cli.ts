@@ -30,6 +30,7 @@ import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
+import { RateLimitingOptions } from './plugins/useRateLimiting';
 import type { ServerConfig } from './servers/types';
 
 export type GatewayCLIConfig<
@@ -154,10 +155,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
    */
-  rateLimiting?:
-    | boolean
-    | YamlConfig.RateLimitPluginConfig['config']
-    | YamlConfig.RateLimitPluginConfig; // deprecated
+  rateLimiting?: boolean | RateLimitingOptions['config'] | RateLimitingOptions; // deprecated
   /**
    * Enable and configure AWS Sigv4 signing
    */
@@ -215,6 +213,7 @@ export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
 export type GatewayCLIRedisCacheConfig = (
   | YamlConfig.RedisConfigSingle
   | YamlConfig.RedisConfigSentinel
+  | YamlConfig.RedisConfigCluster
 ) & {
   type: 'redis';
 };

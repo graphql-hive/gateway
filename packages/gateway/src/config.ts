@@ -9,6 +9,7 @@ import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { PubSub } from '@graphql-hive/pubsub';
 import type { KeyValueCache } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
+import { useRateLimiting } from './plugins/useRateLimiting';
 import type { ServerConfig } from './servers/types';
 
 export const defaultConfigExtensions = [
@@ -128,10 +129,8 @@ export async function getBuiltinPluginsFromConfig(
   }
 
   if (config.rateLimiting) {
-    const { default: useMeshRateLimit } =
-      await import('@graphql-mesh/plugin-rate-limit');
     plugins.push(
-      useMeshRateLimit({
+      useRateLimiting({
         config: Array.isArray(config.rateLimiting)
           ? config.rateLimiting
           : typeof config.rateLimiting === 'object'

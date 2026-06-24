@@ -3629,9 +3629,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/rate-limiter@npm:^10.0.1":
-  version: 10.0.1
-  resolution: "@envelop/rate-limiter@npm:10.0.1"
+"@envelop/rate-limiter@npm:^10.1.0":
+  version: 10.1.0
+  resolution: "@envelop/rate-limiter@npm:10.1.0"
   dependencies:
     "@envelop/on-resolve": "npm:^7.1.1"
     "@graphql-tools/utils": "npm:^11.0.0"
@@ -3644,7 +3644,7 @@ __metadata:
   peerDependencies:
     "@envelop/core": ^5.5.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/bbdfe8ba97ff3f546fbec47cb18f68f6556ce8f4a8806eea3d500efe65a201084e8b0392412e90e85cd0f16e65a40ef1801de7698361e33fab1412bd5f31f2fa
+  checksum: 10c0/57552e4626a6a0cbf6b5f36d2a1ffbd4656619153bb2c48ba74cc001fa4bc17b1b9c935a4c10b76ea6e75356e0fcf926651c4d5289b4db5a43ad9ff87f8a42b7
   languageName: node
   linkType: hard
 
@@ -4554,6 +4554,7 @@ __metadata:
   dependencies:
     "@commander-js/extra-typings": "npm:^14.0.0"
     "@envelop/core": "npm:^5.4.0"
+    "@envelop/rate-limiter": "npm:^10.1.0"
     "@escape.tech/graphql-armor-block-field-suggestions": "npm:^3.0.0"
     "@escape.tech/graphql-armor-max-depth": "npm:^2.4.2"
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
@@ -4575,8 +4576,8 @@ __metadata:
     "@graphql-mesh/plugin-jit": "npm:^0.2.35"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
     "@graphql-mesh/plugin-prometheus": "workspace:^"
-    "@graphql-mesh/plugin-rate-limit": "npm:^0.106.14"
     "@graphql-mesh/plugin-snapshot": "npm:^0.104.36"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.17"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/transport-http": "workspace:^"
     "@graphql-mesh/transport-http-callback": "workspace:^"
@@ -4612,6 +4613,7 @@ __metadata:
     "@types/bun": "npm:1.3.14"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.13"
+    "@whatwg-node/promise-helpers": "npm:^1.3.2"
     "@whatwg-node/server": "npm:^0.11.0"
     adm-zip: "npm:^0.5.15"
     bun: "npm:^1.3.2"
@@ -5234,24 +5236,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/plugin-rate-limit@npm:^0.106.14":
-  version: 0.106.15
-  resolution: "@graphql-mesh/plugin-rate-limit@npm:0.106.15"
-  dependencies:
-    "@envelop/rate-limiter": "npm:^10.0.1"
-    "@graphql-mesh/cross-helpers": "npm:^0.4.14"
-    "@graphql-mesh/string-interpolation": "npm:^0.5.16"
-    "@graphql-mesh/types": "npm:^0.104.28"
-    "@graphql-mesh/utils": "npm:^0.104.36"
-    "@graphql-tools/utils": "npm:^11.1.0"
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: "*"
-  checksum: 10c0/460d3a521281ae1403dabb9a9e6499a1d437dbc102fef02408e3be86f0566c0706108f2fba20c193ac950c6576ca5cc82e93674658a3031a9d146112b46c3967
-  languageName: node
-  linkType: hard
-
 "@graphql-mesh/plugin-response-cache@npm:^0.104.42":
   version: 0.104.43
   resolution: "@graphql-mesh/plugin-response-cache@npm:0.104.43"
@@ -5302,6 +5286,20 @@ __metadata:
   peerDependencies:
     graphql: "*"
   checksum: 10c0/9e766d13278bd0a9be4d02870db71a394ffb879ab20d8663148f9252708988ddc014e8335e6113ddbb24588f18a7778595ae3fa51852e7df39220900fc177d3a
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/string-interpolation@npm:^0.5.17":
+  version: 0.5.17
+  resolution: "@graphql-mesh/string-interpolation@npm:0.5.17"
+  dependencies:
+    dayjs: "npm:^1.11.21"
+    json-pointer: "npm:^0.6.2"
+    lodash.get: "npm:^4.4.2"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  checksum: 10c0/b511cbb2865b60c978f8bbeae543103a1c1572c0160d0c75ecc44967305c314e665efc8e6c94997a684bccccbf65d16bb2500406593fdb12219c3ab03a813d85
   languageName: node
   linkType: hard
 
@@ -15260,7 +15258,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dayjs@npm:^1.11.20":
+"dayjs@npm:^1.11.20, dayjs@npm:^1.11.21":
   version: 1.11.21
   resolution: "dayjs@npm:1.11.21"
   checksum: 10c0/bd97dfdc4bfea3c66268635690313828b386faa040fbc1f829ff42a2bd748b72c9d9b3c8f9616ce9e61fcb78923f1461a462c969c54b1084458ae1b715898fb0
