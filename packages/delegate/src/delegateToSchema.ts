@@ -56,14 +56,17 @@ export function delegateToSchema<
   const {
     info,
     schema,
-    rootValue = (schema as SubschemaConfig).rootValue ?? info.rootValue,
-    operationName = info.operation.name?.value,
-    operation = getDelegatingOperation(info.parentType, info.schema),
-    fieldName = info.fieldName,
+    rootValue = (schema as SubschemaConfig).rootValue ?? info?.rootValue,
+    operationName = info?.operation.name?.value,
+    operation = info
+      ? getDelegatingOperation(info.parentType, info.schema)
+      : OperationTypeNode.QUERY,
+    fieldName = info?.fieldName,
     selectionSet,
-    fieldNodes = info.fieldNodes,
+    fieldNodes = info?.fieldNodes,
     context,
     args,
+    fragments = info ? getFragmentDefinitions(info) : undefined,
   } = options;
 
   let targetSchema;
@@ -72,7 +75,7 @@ export function delegateToSchema<
   } else if (isSchema(schema)) {
     targetSchema = schema;
   } else {
-    const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
+    const stitchingInfo = info?.schema.extensions?.['stitchingInfo'] as Maybe<
       StitchingInfo<TContext>
     >;
     const subschema = stitchingInfo?.subschemaMap.get(schema);
@@ -83,7 +86,11 @@ export function delegateToSchema<
     }
   }
 
-  const fragments = info ? getFragmentDefinitions(info) : undefined;
+  if (!fieldName) {
+    throw new Error(
+      'delegateToSchema requires `fieldName` when `info` is not provided.',
+    );
+  }
 
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
