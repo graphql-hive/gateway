@@ -21,6 +21,6 @@
     "@whatwg-node/server": "^0.11.0",
     "graphql": "^16.12.0",
     "jest-leak-detector": "30.4.1",
-    "ws": "^8.18.3"
+    "ws": "^8.21.0"
   }
 }

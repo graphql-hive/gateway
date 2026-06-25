@@ -10,7 +10,7 @@
     "chartjs-plugin-trendline": "^3.1.1",
     "parse-duration": "^2.0.0",
     "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
-    "ws": "^8.18.3"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/k6": "^2.0.0",

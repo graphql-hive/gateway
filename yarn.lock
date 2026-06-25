@@ -2913,7 +2913,7 @@ __metadata:
     graphql-sse: "npm:^2.6.0"
     graphql-ws: "npm:^6.0.6"
     tslib: "npm:^2.8.1"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   languageName: unknown
   linkType: soft
 
@@ -3404,7 +3404,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     graphql-ws: "npm:^6.0.6"
     tslib: "npm:^2.8.1"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   languageName: unknown
   linkType: soft
 
@@ -4630,7 +4630,7 @@ __metadata:
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.1"
     tsx: "npm:4.21.0"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
   bin:
@@ -5427,7 +5427,7 @@ __metadata:
     graphql-ws: "npm:^6.0.6"
     pkgroll: "npm:2.27.0"
     tslib: "npm:^2.8.1"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
@@ -5597,7 +5597,7 @@ __metadata:
     isows: "npm:^1.0.7"
     pkgroll: "npm:2.27.0"
     tslib: "npm:^2.8.1"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
@@ -6818,7 +6818,7 @@ __metadata:
     chartjs-plugin-trendline: "npm:^3.1.1"
     parse-duration: "npm:^2.0.0"
     speedscope: ./speedscope-1.23.0-alpha.4.tgz
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   languageName: unknown
   linkType: soft
 
@@ -6842,7 +6842,7 @@ __metadata:
     "@whatwg-node/server": "npm:^0.11.0"
     graphql: "npm:^16.12.0"
     jest-leak-detector: "npm:30.4.1"
-    ws: "npm:^8.18.3"
+    ws: "npm:^8.21.0"
   languageName: unknown
   linkType: soft
 
@@ -25815,7 +25815,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.18.3, ws@npm:^8.20.0":
+"ws@npm:^8.20.0, ws@npm:^8.21.0":
   version: 8.21.0
   resolution: "ws@npm:8.21.0"
   peerDependencies:
