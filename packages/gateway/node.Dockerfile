@@ -83,5 +83,8 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/
 RUN npm install ip-address@^10.1.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/ip-address
 
+# fix undici vulnerability (CVE-2026-12151) by updating to ^6.27.0
+RUN npm install undici@^6.27.0 -g
+
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
