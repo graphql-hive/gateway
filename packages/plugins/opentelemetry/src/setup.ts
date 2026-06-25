@@ -305,9 +305,34 @@ export type HiveTracingOptions = { target?: string } & (
     }
 );
 
+type HiveSamplingOptions =
+  | {
+      /**
+       * A custom OTEL sampler (head-based).
+       * When provided, this sampler controls span creation before any processing occurs.
+       */
+      sampler: Sampler;
+      samplingRate?: never;
+    }
+  | {
+      sampler?: never;
+      /**
+       * Tail-based sampling rate for Hive Console reporting.
+       *
+       * Unlike the `samplingRate` in `openTelemetrySetup` (which is head-based), this option
+       * applies **after** spans are collected, allowing errors to always be reported:
+       *
+       * - Traces that contain **GraphQL errors** are **always** reported, regardless of this value.
+       * - For successful (error-free) traces, this value controls the fraction to report.
+       *
+       * Set to `1` (the default) to report all traces, or `0` to report none except errors.
+       */
+      samplingRate?: number;
+    };
+
 export type HiveTracingSetupOptions = BaseOptions &
   HiveTracingOptions &
-  SamplingOptions &
+  HiveSamplingOptions &
   TracerOptions;
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
@@ -318,7 +343,10 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
 
   let processorOptions: HiveTracingSpanProcessorOptions;
   if (options.processor) {
-    processorOptions = { processor: options.processor };
+    processorOptions = {
+      processor: options.processor,
+      samplingRate: options.samplingRate,
+    };
   } else {
     options.target ??= getEnvStr('HIVE_TARGET');
     if (!options.target) {
@@ -350,21 +378,37 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
       endpoint: options.endpoint,
       batching: options.batching,
       log,
+      samplingRate: options.samplingRate,
     };
 
     logAttributes['endpoint'] = options.endpoint;
     logAttributes['batching'] = options.batching;
     logAttributes['target'] = options.target;
+    logAttributes['sampling'] = options.samplingRate ?? 1;
   }
 
+  // Build the OTEL-level setup options. The `samplingRate` for hiveTracingSetup is
+  // handled at the processor level (tail-based), so we do NOT forward it to
+  // openTelemetrySetup as a head-based sampler. Only a custom `sampler` is forwarded.
+  const setupSamplingOptions: SamplingOptions = options.sampler
+    ? { sampler: options.sampler }
+    : {};
+
   openTelemetrySetup({
-    ...options,
+    // Pass only the fields relevant to openTelemetrySetup, explicitly.
+    // Do NOT spread `options` to avoid forwarding Hive-specific fields (processor,
+    // accessToken, samplingRate, etc.) which are not part of OpentelemetrySetupOptions.
+    contextManager: options.contextManager,
+    propagators: options.propagators,
+    generalLimits: options.generalLimits,
     log,
+    configureDiagLogger: options.configureDiagLogger,
     resource: createResource(options).merge(
       resourceFromAttributes({
         'hive.target_id': options.target,
       }),
     ),
+    ...setupSamplingOptions,
     traces: {
       processors: [new HiveTracingSpanProcessor(processorOptions)],
       spanLimits: options.spanLimits,
