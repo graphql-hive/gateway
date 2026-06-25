@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/nestjs",
-  "version": "2.0.79",
+  "version": "2.0.80",
   "type": "module",
   "repository": {
     "type": "git",
