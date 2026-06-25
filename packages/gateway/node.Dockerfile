@@ -15,9 +15,9 @@ FROM node:26-bookworm-slim
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    debian-security-support \
-    wget curl \
-    dumb-init
+  debian-security-support \
+  wget curl \
+  dumb-init
 
 # cleanup
 RUN apt-get autoremove -y && \
@@ -72,11 +72,11 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 # fix brace-expansion vulnerability by updating it to the latest version ^5.0.4
 RUN npm install brace-expansion@^5.0.4 -g
-RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion 
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion
 
 # fix picomatch  vulnerability by updating it to the latest version ^4.0.4
 RUN npm install picomatch@^4.0.4 -g
-RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch 
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/picomatch
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch
 
 # fix ip-address vulnerability (CVE-2026-42338) by updating to the latest version ^10.1.1
@@ -85,6 +85,7 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/ip-address
 
 # fix undici vulnerability (CVE-2026-12151) by updating to ^6.27.0
 RUN npm install undici@^6.27.0 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/undici/package.json
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
