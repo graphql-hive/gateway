@@ -1,5 +1,91 @@
 # @graphql-hive/gateway
 
+## 2.10.0
+### Minor Changes
+
+
+
+- [#2433](https://github.com/graphql-hive/gateway/pull/2433) [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Rate limiting now supports per-field identity via `identifier` template strings and per-field `identifyFn` with argument access
+  
+  ### `identifier` template string
+  
+  Use `{args.argName}` or `{context.propName}` dot-path interpolation to build the rate limit key inline, without writing a function:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    rateLimiting: [
+      {
+        type: 'Query',
+        field: 'getProduct',
+        max: 10,
+        ttl: 60000,
+        identifier: '{args.id}',
+      },
+      {
+        type: 'Query',
+        field: 'search',
+        max: 30,
+        ttl: 60000,
+        identifier: '{context.ip}',
+      },
+    ],
+  });
+  ```
+  
+  ### Per-field `identifyFn` with argument values
+  
+  Override the identity function for a single field and receive the resolved argument values as a second parameter, useful for rate limiting unauthenticated requests by argument value:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    rateLimiting: [
+      {
+        type: 'Query',
+        field: 'getProduct', // getProduct(id: ID!): Product!
+        max: 10,
+        ttl: 60000,
+        identifyFn: (ctx, args) => String(args.id),
+      },
+    ],
+  });
+  ```
+
+### Patch Changes
+
+
+
+- [#2433](https://github.com/graphql-hive/gateway/pull/2433) [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Added dependency [`@envelop/rate-limiter@^10.1.0` ↗︎](https://www.npmjs.com/package/@envelop/rate-limiter/v/10.1.0) (to `dependencies`)
+  - Added dependency [`@graphql-mesh/string-interpolation@^0.5.17` ↗︎](https://www.npmjs.com/package/@graphql-mesh/string-interpolation/v/0.5.17) (to `dependencies`)
+  - Added dependency [`@whatwg-node/promise-helpers@^1.3.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.2) (to `dependencies`)
+  - Removed dependency [`@graphql-mesh/plugin-rate-limit@^0.106.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.106.14) (from `dependencies`)
+
+
+- [#2442](https://github.com/graphql-hive/gateway/pull/2442) [`bff3ce4`](https://github.com/graphql-hive/gateway/commit/bff3ce44180bbc232dae0387e705f196a0838875) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+
+
+- [#2433](https://github.com/graphql-hive/gateway/pull/2433) [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `host` header was removed from the fallback chain of default rate limiting identifier as it identifies the server, not the caller
+
+
+
+- [#2433](https://github.com/graphql-hive/gateway/pull/2433) [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Add type definitions for Redis Cluster configuration
+
+
+
+- [#2433](https://github.com/graphql-hive/gateway/pull/2433) [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Rate limiter default identity now checks WHATWG `Request` for `authorization` and `x-forwarded-for`, ensuring correct caller identification in GraphQL Yoga, Cloudflare Workers, Bun, and other non-Node environments
+
+- Updated dependencies [[`bff3ce4`](https://github.com/graphql-hive/gateway/commit/bff3ce44180bbc232dae0387e705f196a0838875)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.32
+
 ## 2.9.0
 ### Minor Changes
 
