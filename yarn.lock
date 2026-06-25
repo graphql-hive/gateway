@@ -2877,6 +2877,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/federation-provides@workspace:e2e/federation-provides":
+  version: 0.0.0-use.local
+  resolution: "@e2e/federation-provides@workspace:e2e/federation-provides"
+  dependencies:
+    "@apollo/subgraph": "npm:2.14.0"
+    graphql: "npm:16.14.0"
+    graphql-yoga: "npm:5.21.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting":
   version: 0.0.0-use.local
   resolution: "@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting"
@@ -12785,6 +12796,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@whatwg-node/server@npm:^0.10.14":
+  version: 0.10.18
+  resolution: "@whatwg-node/server@npm:0.10.18"
+  dependencies:
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/794c4776c8cb432d2f607f5a36392bec59649bbee6aa116b52866555e4852f00378e92d80702c1aa67cf32abe147b3eb96a999b7352237d64126b6e7e33acc6c
+  languageName: node
+  linkType: hard
+
 "@whatwg-node/server@npm:^0.11.0":
   version: 0.11.0
   resolution: "@whatwg-node/server@npm:0.11.0"
@@ -17678,6 +17702,28 @@ __metadata:
     ws:
       optional: true
   checksum: 10c0/df3672448de0ba77052697ad4285330cde49d3fef29a283974b47ce9cf9de46aa7f9c1ea9fe084877aeeab817a0264d65c987e58cb866fcf1beac9ac70368df7
+  languageName: node
+  linkType: hard
+
+"graphql-yoga@npm:5.21.0":
+  version: 5.21.0
+  resolution: "graphql-yoga@npm:5.21.0"
+  dependencies:
+    "@envelop/core": "npm:^5.5.1"
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@graphql-tools/executor": "npm:^1.5.0"
+    "@graphql-tools/schema": "npm:^10.0.11"
+    "@graphql-tools/utils": "npm:^10.11.0"
+    "@graphql-yoga/logger": "npm:^2.0.1"
+    "@graphql-yoga/subscription": "npm:^5.0.5"
+    "@whatwg-node/fetch": "npm:^0.10.6"
+    "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    "@whatwg-node/server": "npm:^0.10.14"
+    lru-cache: "npm:^10.0.0"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^15.2.0 || ^16.0.0
+  checksum: 10c0/15e344ffd77e29e1f09efcaf4d6cb4d0bf92cb4a2f3e81d69c009c55103a03cd7eb1c24fdbafc31d67204b5e6669e2c3e5afef34ccea13d012a1f2581184eb44
   languageName: node
   linkType: hard
 
