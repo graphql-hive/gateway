@@ -241,6 +241,10 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T> | undefined;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
+  // Pins the schema generation an operation executes against for the operation's
+  // whole lifetime (graceful schema reload). Only set when a unified graph
+  // manager is in use; left undefined for the proxy path.
+  let retainGenerationFor: ((schema: GraphQLSchema) => () => void) | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
@@ -637,6 +641,25 @@ export function createGatewayRuntime<
         )(...args),
     };
 
+    const gracefulSchemaReload = config.gracefulSchemaReload;
+    if (gracefulSchemaReload) {
+      if (
+        typeof gracefulSchemaReload.drainTimeout !== 'number' ||
+        gracefulSchemaReload.drainTimeout <= 0
+      ) {
+        throw new Error(
+          'gracefulSchemaReload.drainTimeout must be a positive number of milliseconds',
+        );
+      }
+      if (
+        gracefulSchemaReload.maxConcurrentGenerations != null &&
+        gracefulSchemaReload.maxConcurrentGenerations < 1
+      ) {
+        throw new Error(
+          'gracefulSchemaReload.maxConcurrentGenerations must be at least 1',
+        );
+      }
+    }
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
@@ -661,6 +684,11 @@ export function createGatewayRuntime<
       batch: config.__experimental__batchExecution,
       batchDelegateOptions: config.__experimental__batchDelegateOptions,
       handleProgressiveOverride: config.progressiveOverride,
+      // Public `gracefulSchemaReload` maps onto the manager's
+      // schemaReloadDrainTimeout / maxConcurrentSchemaGenerations opts.
+      schemaReloadDrainTimeout: gracefulSchemaReload?.drainTimeout,
+      maxConcurrentSchemaGenerations:
+        gracefulSchemaReload?.maxConcurrentGenerations,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
@@ -687,6 +715,8 @@ export function createGatewayRuntime<
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
+    retainGenerationFor = (schema) =>
+      unifiedGraphManager.retainGenerationFor(schema);
     unifiedGraphPlugin = {
       onDispose() {
         return handleMaybePromise(
@@ -750,20 +780,54 @@ export function createGatewayRuntime<
 
   if (getExecutor) {
     const onExecute = ({
+      args,
       setExecuteFn,
-    }: OnExecuteEventPayload<GatewayContext>) =>
-      handleMaybePromise(
+    }: OnExecuteEventPayload<GatewayContext>) => {
+      // Pin the generation this operation runs against until it fully completes,
+      // so a schema reload mid-operation does not abort it (graceful schema
+      // reload). Subscriptions go through onSubscribe and are intentionally not
+      // pinned. The release callback is idempotent.
+      const releaseGeneration = retainGenerationFor?.(args.schema);
+      return handleMaybePromise(
         () => getExecutor?.(),
         (executor) => {
           if (executor) {
             const executeFn = getExecuteFnFromExecutor(executor);
             setExecuteFn(executeFn);
           }
+          if (!releaseGeneration) {
+            return undefined;
+          }
+          return {
+            onExecuteDone({ result }: { result: unknown }) {
+              // Incremental-delivery results (@defer / @stream) keep using this
+              // generation until the stream ends; release only then. Single
+              // results are complete now.
+              if (isAsyncIterable(result)) {
+                return { onEnd: releaseGeneration };
+              }
+              releaseGeneration();
+              return undefined;
+            },
+          };
+        },
+        // getExecutor()/schema load rejected before execution started: release
+        // the pin so the generation can still drain. (A thrown execution is rare
+        // — aborts surface as error results, not rejections — and any leaked pin
+        // is reclaimed by the drain timeout.)
+        (error) => {
+          releaseGeneration?.();
+          throw error;
         },
       );
+    };
     const onSubscribe = ({
       setSubscribeFn,
     }: OnSubscribeEventPayload<GatewayContext>) =>
+      // Subscriptions are intentionally NOT pinned to a generation (no
+      // retainGenerationFor here): they are long-lived, so on a schema reload
+      // they end and the client reconnects against the new schema rather than
+      // keeping the old generation alive indefinitely.
       handleMaybePromise(
         () => getExecutor?.(),
         (executor) => {
