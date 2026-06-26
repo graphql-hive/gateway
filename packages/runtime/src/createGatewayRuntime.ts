@@ -643,20 +643,24 @@ export function createGatewayRuntime<
 
     const gracefulSchemaReload = config.gracefulSchemaReload;
     if (gracefulSchemaReload) {
+      // Number.isFinite rejects NaN, Infinity and non-numbers in one check
+      // (NaN <= 0 / NaN < 1 are both false, so a plain comparison would let an
+      // invalid value through).
       if (
-        typeof gracefulSchemaReload.drainTimeout !== 'number' ||
+        !Number.isFinite(gracefulSchemaReload.drainTimeout) ||
         gracefulSchemaReload.drainTimeout <= 0
       ) {
         throw new Error(
-          'gracefulSchemaReload.drainTimeout must be a positive number of milliseconds',
+          'gracefulSchemaReload.drainTimeout must be a finite positive number of milliseconds',
         );
       }
       if (
         gracefulSchemaReload.maxConcurrentGenerations != null &&
-        gracefulSchemaReload.maxConcurrentGenerations < 1
+        (!Number.isFinite(gracefulSchemaReload.maxConcurrentGenerations) ||
+          gracefulSchemaReload.maxConcurrentGenerations < 1)
       ) {
         throw new Error(
-          'gracefulSchemaReload.maxConcurrentGenerations must be at least 1',
+          'gracefulSchemaReload.maxConcurrentGenerations must be a finite number that is at least 1',
         );
       }
     }
