@@ -618,11 +618,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     generation.forceDisposeTimer = forceDisposeTimer;
     // Enforce the cap after registering this generation; if it is exceeded the
     // oldest draining generation is force-disposed immediately — the cap takes
-    // precedence over its drain timer.
-    this.enforceGenerationCap(
-      this.opts.maxConcurrentSchemaGenerations ??
-        DEFAULT_MAX_CONCURRENT_GENERATIONS,
-    );
+    // precedence over its drain timer. Fall back to the default for any invalid
+    // value (including NaN, which would make `size + 1 > cap` always false and
+    // silently disable the cap).
+    const configuredCap = this.opts.maxConcurrentSchemaGenerations;
+    const maxGenerations =
+      Number.isFinite(configuredCap) && (configuredCap as number) >= 1
+        ? (configuredCap as number)
+        : DEFAULT_MAX_CONCURRENT_GENERATIONS;
+    this.enforceGenerationCap(maxGenerations);
     return undefined;
   }
 

@@ -12,7 +12,7 @@ import {
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 /**
  * Behavioral (black-box) tests for graceful supergraph reload ("generation
@@ -779,5 +779,62 @@ describe('Graceful schema reload (generation overlap)', () => {
     releaseSlowA.resolve('fromA');
     const resultA = await inFlightA;
     expect(resultA.data?.['slow']).toBe('fromC');
+  });
+});
+
+describe('Graceful schema reload — config validation', () => {
+  let supergraph: string;
+  beforeAll(async () => {
+    const schema = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          ok: Boolean
+        }
+      `),
+      resolvers: { Query: { ok: () => true } },
+    });
+    supergraph = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema, url: 'http://localhost:9999/graphql' },
+    ]);
+  });
+
+  // NaN is `typeof "number"` and `NaN <= 0` / `NaN < 1` are both false, so these
+  // must be rejected explicitly rather than slipping through the bound checks.
+  it.each([0, -1, NaN, Infinity])(
+    'rejects an invalid drainTimeout (%p)',
+    (drainTimeout) => {
+      expect(() =>
+        createGatewayRuntime({
+          supergraph: () => supergraph,
+          gracefulSchemaReload: { drainTimeout },
+          logging: false,
+        }),
+      ).toThrow(/drainTimeout/);
+    },
+  );
+
+  it.each([0, -1, NaN, Infinity])(
+    'rejects an invalid maxConcurrentGenerations (%p)',
+    (maxConcurrentGenerations) => {
+      expect(() =>
+        createGatewayRuntime({
+          supergraph: () => supergraph,
+          gracefulSchemaReload: {
+            drainTimeout: 1000,
+            maxConcurrentGenerations,
+          },
+          logging: false,
+        }),
+      ).toThrow(/maxConcurrentGenerations/);
+    },
+  );
+
+  it('accepts a finite, in-range config', async () => {
+    await using gw = createGatewayRuntime({
+      supergraph: () => supergraph,
+      gracefulSchemaReload: { drainTimeout: 1000, maxConcurrentGenerations: 3 },
+      logging: false,
+    });
+    expect(gw).toBeDefined();
   });
 });
