@@ -249,9 +249,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private initialUnifiedGraph$?: MaybePromise<GraphQLSchema>;
   private polling$?: MaybePromise<void>;
   private _transportEntryMap?: Record<string, TransportEntry>;
-  private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
-  private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
   private overrideLabelsByContext: WeakMap<any, Set<string>> = new WeakMap();
   private overrideLabels: Iterable<string> | undefined;
@@ -404,7 +402,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               );
               if (isPromise(cacheSet$)) {
                 cacheSet$.then(() => {}, logCacheSetError);
-                this._transportExecutorStack?.defer(() => cacheSet$);
+                // Tie the cache write to the current generation's transport
+                // stack disposal (no generation yet on the very first load).
+                this.currentGeneration?.transportExecutorStack?.defer(
+                  () => cacheSet$,
+                );
               }
             } catch (e) {
               logCacheSetError(e);
@@ -493,8 +495,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           this.generationBySchema.set(newUnifiedGraph, generation);
           this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
           this.unifiedGraph = newUnifiedGraph;
-          this.executor = executor;
-          this._transportExecutorStack = transportExecutorStack;
           this.inContextSDK = inContextSDK;
           this.lastLoadTime = Date.now();
           this._transportEntryMap = transportEntryMap;
@@ -719,7 +719,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   public getExecutor(): MaybePromise<Executor | undefined> {
     return handleMaybePromise(
       () => this.ensureUnifiedGraph(),
-      () => this.executor,
+      () => this.currentGeneration?.executor,
     );
   }
 
@@ -828,9 +828,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         this.inContextSDK = undefined;
         this.lastLoadTime = undefined;
         this.polling$ = undefined;
-        this.executor = undefined;
         this._transportEntryMap = undefined;
-        this._transportExecutorStack = undefined;
         this.currentGeneration = undefined;
       },
     ) as Promise<void>;
