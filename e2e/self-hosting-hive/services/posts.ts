@@ -44,7 +44,7 @@ const resolvers = {
         ...post,
         ...post1Revisions[
           // serve a new revision on every request
-          post1RevisionIndex++
+          post1RevisionIndex++ % post1Revisions.length
         ],
       };
     },

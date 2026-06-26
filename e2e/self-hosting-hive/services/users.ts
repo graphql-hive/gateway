@@ -12,6 +12,7 @@ const typeDefs = parse(/* GraphQL */ `
   }
   type Subscription {
     userPostChanged: User!
+    sameUser5Times: User!
   }
   type User {
     id: ID!
@@ -47,6 +48,26 @@ const resolvers = {
             }),
           );
           await stop;
+        }),
+    },
+    sameUser5Times: {
+      subscribe: () =>
+        new Repeater(async (push, stop) => {
+          for (let i = 1; i <= 5; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            push({
+              sameUser5Times: {
+                id: '2',
+                name: 'Jane Doe',
+                posts: [
+                  {
+                    id: '1',
+                  },
+                ],
+              },
+            });
+          }
+          stop();
         }),
     },
   },
