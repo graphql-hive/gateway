@@ -78,395 +78,147 @@ describe('Self Hosting Hive', () => {
     );
   });
 
-  it('usage reporting of subscriptions subgraphs over sse', async () => {
-    const users = await service('users');
-    const supergraph = await composeWithApollo({
-      services: [await service('posts'), users],
-    });
-    const selfHostingHive = await service('selfHostingHive', {
-      env: {
-        SUPERGRAPH_PATH: supergraph.output,
-      },
-    });
-    const HIVE_URL = `http://${
-      gatewayRunner.includes('docker')
-        ? isCI()
-          ? '172.17.0.1'
-          : 'host.docker.internal'
-        : 'localhost'
-    }:${selfHostingHive.port}`;
-    const gw = await gateway({
-      supergraph: `${HIVE_URL}/supergraph`,
-      args: [
-        `--hive-registry-token=${TEST_TOKEN}`,
-        `--hive-cdn-key=${TEST_KEY}`,
-      ],
-      env: {
-        HIVE_URL,
-      },
-    });
+  it.describe.each(['sse', 'ws'] as const)(
+    'usage reporting of subscriptions with subgraphs over %s',
+    (subProtocol) => {
+      it.each(['sse', 'ws'] as const)(
+        'and clients over %s',
+        async (clProtocol) => {
+          const users = await service('users');
+          const supergraph = await composeWithApollo({
+            services: [await service('posts'), users],
+          });
+          const selfHostingHive = await service('selfHostingHive', {
+            env: {
+              SUPERGRAPH_PATH: supergraph.output,
+            },
+          });
+          const HIVE_URL = `http://${
+            gatewayRunner.includes('docker')
+              ? isCI()
+                ? '172.17.0.1'
+                : 'host.docker.internal'
+              : 'localhost'
+          }:${selfHostingHive.port}`;
+          const gw = await gateway({
+            supergraph: `${HIVE_URL}/supergraph`,
+            args: [
+              `--hive-registry-token=${TEST_TOKEN}`,
+              `--hive-cdn-key=${TEST_KEY}`,
+            ],
+            env: {
+              HIVE_URL,
+              OVER_WS: subProtocol === 'ws' ? 'true' : 'false',
+            },
+          });
 
-    const client = sseCreateClient({
-      url: `http://0.0.0.0:${gw.port}/graphql`,
-      fetchFn: fetch,
-      retryAttempts: 0,
-    });
+          const client =
+            clProtocol === 'ws'
+              ? wsCreateClient({
+                  url: `http://0.0.0.0:${gw.port}/graphql`,
+                  webSocketImpl: WebSocket,
+                  retryAttempts: 0,
+                })
+              : sseCreateClient({
+                  url: `http://0.0.0.0:${gw.port}/graphql`,
+                  fetchFn: fetch,
+                  retryAttempts: 0,
+                });
 
-    const iter = client.iterate({
-      query: /* GraphQL */ `
-        # TODO: when operation name is the same as the subscription - the subgraph never responds
-        # subscription userPostChanged { userPostChanged { ... } }
-        subscription {
-          userPostChanged {
-            name
-            posts {
-              title
-              content
+          const iter = client.iterate({
+            query: /* GraphQL */ `
+              # TODO: when operation name is the same as the subscription - the subgraph never responds
+              # subscription userPostChanged { userPostChanged { ... } }
+              subscription {
+                userPostChanged {
+                  name
+                  posts {
+                    title
+                    content
+                  }
+                }
+              }
+            `,
+          });
+
+          const msgsCount = 3;
+
+          (async () => {
+            for (let i = 0; i < msgsCount; i++) {
+              await fetch(`http://localhost:${users.port}/userPostChanged`);
+            }
+          })();
+
+          const msgs: unknown[] = [];
+          for await (const msg of iter) {
+            msgs.push(msg);
+            if (msgs.length >= msgsCount) {
+              break;
             }
           }
-        }
-      `,
-    });
 
-    const msgsCount = 3;
-
-    (async () => {
-      for (let i = 0; i < msgsCount; i++) {
-        await fetch(`http://localhost:${users.port}/userPostChanged`);
-      }
-    })();
-
-    const msgs: unknown[] = [];
-    for await (const msg of iter) {
-      msgs.push(msg);
-      if (msgs.length >= msgsCount) {
-        break;
-      }
-    }
-
-    expect(msgs).toMatchInlineSnapshot(`
-        [
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is a post",
-                    "title": "Hello world",
-                  },
-                ],
-              },
-            },
-          },
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is another post",
-                    "title": "Hello again",
-                  },
-                ],
-              },
-            },
-          },
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is another post again",
-                    "title": "Hello again again",
-                  },
-                ],
-              },
-            },
-          },
-        ]
-      `);
-
-    await setTimeout(300);
-    const incomingData = selfHostingHive.getStd('out');
-    // Check if `/usage` endpoint receives the POST request
-    expect(incomingData).toContain('POST /usage');
-    expect(incomingData).toContain(`"authorization":"Bearer ${TEST_TOKEN}"`);
-    expect(incomingData).toContain(
-      '"fields":["Subscription.userPostChanged","User.name","User.posts","Post.title","Post.content"]',
-    );
-    // Check if appropriate logs
-    const gwLogs = gw.getStd('out');
-    expect(gwLogs).toMatch(
-      /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
-    );
-  });
-
-  it('usage reporting of subscriptions clients over ws', async () => {
-    const users = await service('users');
-    const supergraph = await composeWithApollo({
-      services: [await service('posts'), users],
-    });
-    const selfHostingHive = await service('selfHostingHive', {
-      env: {
-        SUPERGRAPH_PATH: supergraph.output,
-      },
-    });
-    const HIVE_URL = `http://${
-      gatewayRunner.includes('docker')
-        ? isCI()
-          ? '172.17.0.1'
-          : 'host.docker.internal'
-        : 'localhost'
-    }:${selfHostingHive.port}`;
-    const gw = await gateway({
-      supergraph: `${HIVE_URL}/supergraph`,
-      args: [
-        `--hive-registry-token=${TEST_TOKEN}`,
-        `--hive-cdn-key=${TEST_KEY}`,
-      ],
-      env: {
-        HIVE_URL,
-      },
-    });
-
-    const client = wsCreateClient({
-      url: `http://0.0.0.0:${gw.port}/graphql`,
-      webSocketImpl: WebSocket,
-      retryAttempts: 0,
-    });
-
-    const iter = client.iterate({
-      query: /* GraphQL */ `
-        # TODO: when operation name is the same as the subscription - the subgraph never responds
-        # subscription sameUser5Times { sameUser5Times { ... } }
-        subscription sameUser5Timesgo {
-          sameUser5Times {
-            name
-            posts {
-              title
-              content
-            }
-          }
-        }
-      `,
-    });
-
-    const msgs: unknown[] = [];
-    for await (const msg of iter) {
-      msgs.push(msg);
-    }
-
-    expect(msgs).toMatchInlineSnapshot(`
-      [
-        {
-          "data": {
-            "sameUser5Times": {
-              "name": "Jane Doe",
-              "posts": [
-                {
-                  "content": "This is a post",
-                  "title": "Hello world",
+          expect(msgs).toMatchInlineSnapshot(`
+          [
+            {
+              "data": {
+                "userPostChanged": {
+                  "name": "John Doe",
+                  "posts": [
+                    {
+                      "content": "This is a post",
+                      "title": "Hello world",
+                    },
+                  ],
                 },
-              ],
-            },
-          },
-        },
-        {
-          "data": {
-            "sameUser5Times": {
-              "name": "Jane Doe",
-              "posts": [
-                {
-                  "content": "This is another post",
-                  "title": "Hello again",
-                },
-              ],
-            },
-          },
-        },
-        {
-          "data": {
-            "sameUser5Times": {
-              "name": "Jane Doe",
-              "posts": [
-                {
-                  "content": "This is another post again",
-                  "title": "Hello again again",
-                },
-              ],
-            },
-          },
-        },
-        {
-          "data": {
-            "sameUser5Times": {
-              "name": "Jane Doe",
-              "posts": [
-                {
-                  "content": "This is a post",
-                  "title": "Hello world",
-                },
-              ],
-            },
-          },
-        },
-        {
-          "data": {
-            "sameUser5Times": {
-              "name": "Jane Doe",
-              "posts": [
-                {
-                  "content": "This is another post",
-                  "title": "Hello again",
-                },
-              ],
-            },
-          },
-        },
-      ]
-    `);
-
-    await setTimeout(300);
-
-    const incomingData = selfHostingHive.getStd('out');
-    // Check if `/usage` endpoint receives the POST request
-    expect(incomingData).toContain('POST /usage');
-    expect(incomingData).toContain(`"authorization":"Bearer ${TEST_TOKEN}"`);
-    expect(incomingData).toContain(
-      '"fields":["Subscription.sameUser5Times","User.name","User.posts","Post.title","Post.content"]',
-    );
-    // Check if appropriate logs
-    const gwLogs = gw.getStd('out');
-    expect(gwLogs).toMatch(
-      /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
-    );
-  });
-
-  it('usage reporting of subscriptions subgraphs over ws', async () => {
-    const users = await service('users');
-    const supergraph = await composeWithApollo({
-      services: [await service('posts'), users],
-    });
-    const selfHostingHive = await service('selfHostingHive', {
-      env: {
-        SUPERGRAPH_PATH: supergraph.output,
-      },
-    });
-    const HIVE_URL = `http://${
-      gatewayRunner.includes('docker')
-        ? isCI()
-          ? '172.17.0.1'
-          : 'host.docker.internal'
-        : 'localhost'
-    }:${selfHostingHive.port}`;
-    const gw = await gateway({
-      supergraph: `${HIVE_URL}/supergraph`,
-      args: [
-        `--hive-registry-token=${TEST_TOKEN}`,
-        `--hive-cdn-key=${TEST_KEY}`,
-      ],
-      env: {
-        HIVE_URL,
-        OVER_WS: 'true',
-      },
-    });
-
-    const client = sseCreateClient({
-      url: `http://0.0.0.0:${gw.port}/graphql`,
-      fetchFn: fetch,
-      retryAttempts: 0,
-    });
-
-    const iter = client.iterate({
-      query: /* GraphQL */ `
-        # TODO: when operation name is the same as the subscription - the subgraph never responds
-        # subscription userPostChanged { userPostChanged { ... } }
-        subscription {
-          userPostChanged {
-            name
-            posts {
-              title
-              content
-            }
-          }
-        }
-      `,
-    });
-
-    const msgsCount = 3;
-
-    (async () => {
-      for (let i = 0; i < msgsCount; i++) {
-        await fetch(`http://localhost:${users.port}/userPostChanged`);
-      }
-    })();
-
-    const msgs: unknown[] = [];
-    for await (const msg of iter) {
-      msgs.push(msg);
-      if (msgs.length >= msgsCount) {
-        break;
-      }
-    }
-
-    expect(msgs).toMatchInlineSnapshot(`
-        [
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is a post",
-                    "title": "Hello world",
-                  },
-                ],
               },
             },
-          },
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is another post",
-                    "title": "Hello again",
-                  },
-                ],
+            {
+              "data": {
+                "userPostChanged": {
+                  "name": "John Doe",
+                  "posts": [
+                    {
+                      "content": "This is another post",
+                      "title": "Hello again",
+                    },
+                  ],
+                },
               },
             },
-          },
-          {
-            "data": {
-              "userPostChanged": {
-                "name": "John Doe",
-                "posts": [
-                  {
-                    "content": "This is another post again",
-                    "title": "Hello again again",
-                  },
-                ],
+            {
+              "data": {
+                "userPostChanged": {
+                  "name": "John Doe",
+                  "posts": [
+                    {
+                      "content": "This is another post again",
+                      "title": "Hello again again",
+                    },
+                  ],
+                },
               },
             },
-          },
-        ]
-      `);
+          ]
+        `);
 
-    await setTimeout(300);
-    const incomingData = selfHostingHive.getStd('out');
-    // Check if `/usage` endpoint receives the POST request
-    expect(incomingData).toContain('POST /usage');
-    expect(incomingData).toContain(`"authorization":"Bearer ${TEST_TOKEN}"`);
-    expect(incomingData).toContain(
-      '"fields":["Subscription.userPostChanged","User.name","User.posts","Post.title","Post.content"]',
-    );
-    // Check if appropriate logs
-    const gwLogs = gw.getStd('out');
-    expect(gwLogs).toMatch(
-      /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
-    );
-  });
+          await setTimeout(300);
+
+          const incomingData = selfHostingHive.getStd('out');
+          // Check if `/usage` endpoint receives the POST request
+          expect(incomingData).toContain('POST /usage');
+          expect(incomingData).toContain(
+            `"authorization":"Bearer ${TEST_TOKEN}"`,
+          );
+          expect(incomingData).toContain(
+            '"fields":["Subscription.userPostChanged","User.name","User.posts","Post.title","Post.content"]',
+          );
+          // Check if appropriate logs
+          const gwLogs = gw.getStd('out');
+          expect(gwLogs).toMatch(
+            /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
+          );
+        },
+      );
+    },
+  );
 });
