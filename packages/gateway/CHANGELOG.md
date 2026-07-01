@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 2.10.1
+### Patch Changes
+
+
+
+- [#2450](https://github.com/graphql-hive/gateway/pull/2450) [`736a7dd`](https://github.com/graphql-hive/gateway/commit/736a7ddfd8f9d1a5a57f009d6dbc062b2686d38a) Thanks [@jdolle](https://github.com/jdolle)! - Updates @graphql-hive/render-laboratory to fix "Unexpected invariant triggered" error in the schema explorer when introspecting servers running graphql-js 16.14+. graphql-js 16.14.0 added `DIRECTIVE_DEFINITION` to the `@deprecated` directive's introspection locations
+
 ## 2.10.0
 ### Minor Changes
 
