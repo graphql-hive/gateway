@@ -274,9 +274,15 @@ describe('Self Hosting Hive', () => {
     // genericAuth strips the whole selection set here, so the subscription
     // never actually starts streaming (the executor rejects the now-empty
     // document) - we only care about the usage report that still gets sent
-    // for it
-    await iter.next().catch(() => {});
-    await iter.return?.().catch(() => {});
+    // fr it
+    (async () => {
+      await fetch(`http://localhost:${users.port}/userPostChanged`);
+    })();
+    try {
+      for await (const _ of iter) {
+        break;
+      }
+    } catch {}
 
     await setTimeout(300);
 
