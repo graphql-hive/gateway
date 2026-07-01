@@ -1,5 +1,6 @@
 import { setTimeout } from 'node:timers/promises';
 import { createTenv } from '@internal/e2e';
+import { fetch } from '@whatwg-node/fetch';
 import { isCI } from '~internal/env';
 import { createClient as sseCreateClient } from 'graphql-sse';
 import { createClient as wsCreateClient } from 'graphql-ws';
