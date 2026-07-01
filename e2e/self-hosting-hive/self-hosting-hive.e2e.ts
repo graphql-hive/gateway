@@ -275,9 +275,10 @@ describe('Self Hosting Hive', () => {
     // never actually starts streaming (the executor rejects the now-empty
     // document) - we only care about the usage report that still gets sent
     // fr it
-    (async () => {
-      await fetch(`http://localhost:${users.port}/userPostChanged`);
-    })();
+    setTimeout(100).then(
+      // close the iterator after a moment to let the usage reporting of subscriptions propagate
+      () => iter.return?.(),
+    );
     try {
       for await (const _ of iter) {
         break;
