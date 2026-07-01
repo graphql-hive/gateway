@@ -3364,7 +3364,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
   dependencies:
+    "@envelop/generic-auth": "npm:^11.0.0"
     "@graphql-hive/gateway": "workspace:*"
+    "@graphql-tools/utils": "npm:^11.1.0"
     graphql: "npm:16.14.0"
   languageName: unknown
   linkType: soft
