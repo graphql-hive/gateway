@@ -74,5 +74,18 @@ export function splitResult(
     }
   }
 
+  // A batched response can omit some sub-requests entirely: if the merged result
+  // carries neither a data key nor a path-scoped error for an index, that slot is
+  // never assigned and stays a hole. A hole at the final slot makes the array fail
+  // DataLoader's `isArrayLike` check (which requires `hasOwnProperty(length - 1)`),
+  // even though `Array.isArray` is true — so `getBatchingExecutor`'s DataLoader
+  // throws "did not return a Promise of an Array". Densify to `numResults` with an
+  // empty result so every caller gets a well-formed `ExecutionResult`.
+  for (let i = 0; i < numResults; i++) {
+    if (splitResults[i] == null) {
+      splitResults[i] = { data: {} };
+    }
+  }
+
   return splitResults;
 }
