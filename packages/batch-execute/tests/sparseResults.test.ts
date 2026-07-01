@@ -35,11 +35,10 @@ describe('sparse batch results', () => {
   // Executor that drops the highest-indexed merged sub-request's keys from the
   // response, simulating a subgraph that only answers some of the batched
   // operations. This leaves a hole at the trailing slot of `splitResult`.
-  const lossyExecutor: Executor = async ({ document, variables }) => {
+  const lossyExecutor: Executor = async ({ document }) => {
     const result = (await normalizedExecutor({
       schema,
       document,
-      variableValues: variables as Record<string, unknown>,
     })) as ExecutionResult;
 
     if (result.data) {
