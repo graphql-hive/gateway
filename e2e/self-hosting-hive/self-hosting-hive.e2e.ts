@@ -79,7 +79,7 @@ describe('Self Hosting Hive', () => {
     );
   });
 
-  it.describe.each(['sse', 'ws'] as const)(
+  describe.each(['sse', 'ws'] as const)(
     'usage reporting of subscriptions with subgraphs over %s',
     (subProtocol) => {
       it.each(['sse', 'ws'] as const)(
