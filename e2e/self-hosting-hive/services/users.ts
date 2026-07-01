@@ -101,8 +101,6 @@ useServer(
     execute: (args: any) => args.rootValue.execute(args),
     subscribe: (args: any) => args.rootValue.subscribe(args),
     onSubscribe: async (ctx, _id, params) => {
-      console.log('sa krajem');
-
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         yoga.getEnveloped({
           ...ctx,
