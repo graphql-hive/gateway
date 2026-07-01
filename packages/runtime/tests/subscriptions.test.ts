@@ -160,4 +160,82 @@ describe('Subscriptions', () => {
       ],
     });
   });
+
+  it('terminates subscriptions on schema update even when graceful reload is enabled', async () => {
+    let changeSchema = false;
+
+    await using serve = createGatewayTester({
+      pollingInterval: 500,
+      // Graceful reload keeps in-flight queries/mutations alive across a reload,
+      // but long-lived subscriptions are never overlapped — they must still end
+      // so the client reconnects against the new schema.
+      gracefulSchemaReload: { drainTimeout: 10_000 },
+      subgraphs: () => {
+        if (changeSchema) {
+          return [
+            {
+              name: 'upstream',
+              schema: {
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    foo: String!
+                  }
+                `,
+                resolvers: {
+                  Query: {
+                    foo: () => 'bar',
+                  },
+                },
+              },
+            },
+          ];
+        }
+        changeSchema = true;
+        return [
+          {
+            name: 'upstream',
+            schema: upstreamSchema,
+          },
+        ];
+      },
+    });
+
+    const sse = createSSEClient({
+      url: 'http://mesh/graphql',
+      fetchFn: serve.fetch,
+    });
+
+    const sub = sse.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          neverEmits
+        }
+      `,
+    });
+
+    const msgs: unknown[] = [];
+    globalThis.setTimeout(() => {
+      void serve.execute({
+        query: /* GraphQL */ `
+          query {
+            foo
+          }
+        `,
+      });
+    }, 1000);
+    for await (const msg of sub) {
+      msgs.push(msg);
+    }
+
+    expect(msgs[msgs.length - 1]).toMatchObject({
+      errors: [
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+          },
+          message: 'operation has been aborted due to a schema reload',
+        },
+      ],
+    });
+  });
 });
