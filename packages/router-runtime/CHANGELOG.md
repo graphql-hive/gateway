@@ -1,5 +1,23 @@
 # @graphql-hive/router-runtime
 
+## 1.4.13
+### Patch Changes
+
+
+
+- [#2458](https://github.com/graphql-hive/gateway/pull/2458) [`d1d8ee2`](https://github.com/graphql-hive/gateway/commit/d1d8ee2b64edf1ebeafd4b3a5d8d41382a6cd728) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.38` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.38) (from `^0.0.35`, in `dependencies`)
+
+
+- [#2458](https://github.com/graphql-hive/gateway/pull/2458) [`d1d8ee2`](https://github.com/graphql-hive/gateway/commit/d1d8ee2b64edf1ebeafd4b3a5d8d41382a6cd728) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Various fixes and improvements to the Rust query planner
+  
+  For full information, please refer to the [Hive Router Node addon releases](https://github.com/graphql-hive/router/releases?q=node-addon&expanded=true).
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.10.8
+  - @graphql-tools/delegate@12.0.18
+  - @graphql-tools/federation@4.4.7
+
 ## 1.4.12
 ### Patch Changes
 
