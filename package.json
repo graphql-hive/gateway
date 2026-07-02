@@ -41,7 +41,7 @@
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch",
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@langfuse/client": "^5.0.2",
-    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api": "^1.9.1",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "25.9.1",
     "@yarnpkg/cli": "4.17.0",
