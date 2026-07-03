@@ -1,5 +1,5 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
-import { type MaybePromise } from '@graphql-tools/utils';
+import { createDeferred, type MaybePromise } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createClient as createSSEClient } from 'graphql-sse';
 import { createSchema, Repeater } from 'graphql-yoga';
@@ -238,4 +238,148 @@ describe('Subscriptions', () => {
       ],
     });
   });
+
+  it('releases the generation pin of an aborted operation so the superseded generation still drains', async () => {
+    let changeSchema = false;
+    const blockingEntered = createDeferred<void>();
+    const releaseBlocking = createDeferred<string>();
+    const subscribed = createDeferred<void>();
+
+    await using serve = createGatewayTester({
+      pollingInterval: 500,
+      executionCancellation: true,
+      // Long drain: if the aborted (rejected) operation leaked its pin, the
+      // superseded generation — and the subscription still running on it —
+      // would be held alive this long.
+      gracefulSchemaReload: { drainTimeout: 30_000 },
+      subgraphs: () => {
+        if (changeSchema) {
+          return [
+            {
+              name: 'upstream',
+              schema: {
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    foo: String
+                  }
+                `,
+                resolvers: {
+                  Query: {
+                    foo: () => 'bar',
+                  },
+                },
+              },
+            },
+          ];
+        }
+        return [
+          {
+            name: 'upstream',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  foo: String
+                  blocking: String
+                }
+                type Subscription {
+                  neverEmits: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  foo: () => 'bar',
+                  blocking: () => {
+                    blockingEntered.resolve();
+                    return releaseBlocking.promise;
+                  },
+                },
+                Subscription: {
+                  neverEmits: {
+                    subscribe: () =>
+                      new Repeater((_push, stop) => {
+                        leftovers.push(stop);
+                      }),
+                  },
+                },
+              },
+            },
+          },
+        ];
+      },
+    });
+
+    const sse = createSSEClient({
+      url: 'http://mesh/graphql',
+      fetchFn: serve.fetch,
+      on: {
+        connected() {
+          subscribed.resolve();
+        },
+      },
+    });
+
+    const sub = sse.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          neverEmits
+        }
+      `,
+    });
+
+    const msgs: unknown[] = [];
+    const consumed = (async () => {
+      for await (const msg of sub) {
+        msgs.push(msg);
+      }
+    })();
+    await subscribed.promise;
+
+    // Pin the current generation with an operation blocked inside the
+    // upstream, then abort it: the execution rejects (execution
+    // cancellation), and the pin must be released.
+    const ctrl = new AbortController();
+    const aborted = serve
+      .fetch('http://mesh/graphql', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: '{ blocking }' }),
+        signal: ctrl.signal,
+      })
+      .then(
+        (res) => res.text(),
+        () => 'aborted',
+      );
+    await blockingEntered.promise;
+    ctrl.abort();
+    await aborted;
+
+    // Reload. Nothing is legitimately in flight on the previous generation
+    // anymore, so it must be disposed right away — ending the subscription
+    // with SCHEMA_RELOAD well before the 30s drain timeout.
+    changeSchema = true;
+    globalThis.setTimeout(() => {
+      void serve.execute({
+        query: /* GraphQL */ `
+          query {
+            foo
+          }
+        `,
+      });
+    }, 1000);
+    await consumed;
+
+    expect(msgs[msgs.length - 1]).toMatchObject({
+      errors: [
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+          },
+          message: 'operation has been aborted due to a schema reload',
+        },
+      ],
+    });
+
+    // Unblock the upstream resolver so everything can settle.
+    releaseBlocking.resolve('late');
+  }, 20_000);
 });

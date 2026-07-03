@@ -788,6 +788,7 @@ export function createGatewayRuntime<
   if (getExecutor) {
     const onExecute = ({
       args,
+      executeFn,
       setExecuteFn,
     }: OnExecuteEventPayload<GatewayContext>) => {
       // Pin the generation this operation runs against until it fully completes,
@@ -802,13 +803,28 @@ export function createGatewayRuntime<
         // current generation's executor.
         () => (lease ? lease.executor : getExecutor?.()),
         (executor) => {
-          if (executor) {
-            const executeFn = getExecuteFnFromExecutor(executor);
-            setExecuteFn(executeFn);
-          }
+          const baseExecuteFn = executor
+            ? getExecuteFnFromExecutor(executor)
+            : executeFn;
           if (!lease) {
+            if (executor) {
+              setExecuteFn(baseExecuteFn);
+            }
             return undefined;
           }
+          // envelop only runs onExecuteDone when execution resolves; a rejected
+          // execution (e.g. aborted through execution cancellation) would leak
+          // the pin until the drain timeout, so release it on rejection here.
+          setExecuteFn((execArgs) =>
+            handleMaybePromise(
+              () => baseExecuteFn(execArgs),
+              (result) => result,
+              (error) => {
+                lease.release();
+                throw error;
+              },
+            ),
+          );
           return {
             onExecuteDone({ result }: { result: unknown }) {
               // Incremental-delivery results (@defer / @stream) keep using this
@@ -823,9 +839,7 @@ export function createGatewayRuntime<
           };
         },
         // getExecutor()/schema load rejected before execution started: release
-        // the pin so the generation can still drain. (A thrown execution is rare
-        // — aborts surface as error results, not rejections — and any leaked pin
-        // is reclaimed by the drain timeout.)
+        // the pin so the generation can still drain.
         (error) => {
           lease?.release();
           throw error;
