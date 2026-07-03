@@ -529,8 +529,11 @@ export interface GatewayHivePersistedDocumentsOptions {
  * Incremental-delivery operations (`@defer` / `@stream`) are kept alive until
  * their stream ends.
  *
- * Subscriptions are NOT overlapped: they are long-lived, so on reload they end
- * and the client reconnects against the new schema.
+ * Subscriptions are NOT pinned: they are long-lived, so a subscription on a
+ * superseded generation ends with `SCHEMA_RELOAD` when that generation is
+ * disposed — immediately on reload when it has no in-flight operations,
+ * otherwise once it finishes draining (at the latest after
+ * {@link drainTimeout}) — and the client reconnects against the new schema.
  */
 export interface GracefulSchemaReloadConfig {
   /**

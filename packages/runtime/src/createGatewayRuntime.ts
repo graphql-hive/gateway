@@ -870,9 +870,10 @@ export function createGatewayRuntime<
       setSubscribeFn,
     }: OnSubscribeEventPayload<GatewayContext>) =>
       // Subscriptions are intentionally NOT pinned to a generation (no
-      // retainGenerationFor here): they are long-lived, so on a schema reload
-      // they end and the client reconnects against the new schema rather than
-      // keeping the old generation alive indefinitely.
+      // retainGenerationFor here): they are long-lived, so rather than keeping
+      // the old generation alive indefinitely they end — when that generation
+      // is disposed (immediately on reload when idle, otherwise once it
+      // finishes draining) — and the client reconnects against the new schema.
       handleMaybePromise(
         () => getExecutor?.(),
         (executor) => {

@@ -16,8 +16,11 @@ mutations finish on the schema they were admitted under. Operations are
 reference-counted per generation for their whole lifetime (across all subgraph
 hops, and until `@defer`/`@stream` streams end). A superseded generation is
 disposed once idle, or force-disposed after `drainTimeout`; `maxConcurrentGenerations`
-caps how many generations may overlap. Subscriptions are not overlapped — they
-end on reload and reconnect. Disabled by default.
+caps how many generations may overlap. Subscriptions are not pinned: one on a
+superseded generation ends with `SCHEMA_RELOAD` when that generation is
+disposed — immediately on reload when nothing is draining, otherwise once the
+last in-flight operation finishes (at the latest after `drainTimeout`) — and
+the client then reconnects against the new schema. Disabled by default.
 
 ```ts
 export const gatewayConfig = defineConfig({

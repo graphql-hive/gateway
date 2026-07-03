@@ -559,7 +559,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
    * the drain timeout.
    *
    * Long-lived streaming operations (subscriptions) are intentionally NOT pinned
-   * by the caller — they end on reload (and reconnect) rather than overlapping.
+   * by the caller — rather than overlapping indefinitely, they end (and the
+   * client reconnects) when their superseded generation is disposed: right away
+   * when it is idle, otherwise once it finishes draining.
    */
   public retainGenerationFor(
     schema: GraphQLSchema,

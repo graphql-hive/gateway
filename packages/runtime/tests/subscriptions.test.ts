@@ -167,8 +167,10 @@ describe('Subscriptions', () => {
     await using serve = createGatewayTester({
       pollingInterval: 500,
       // Graceful reload keeps in-flight queries/mutations alive across a reload,
-      // but long-lived subscriptions are never overlapped — they must still end
-      // so the client reconnects against the new schema.
+      // but long-lived subscriptions are never pinned — with nothing draining
+      // here, the superseded generation is disposed at reload and the
+      // subscription must end right away so the client reconnects against the
+      // new schema.
       gracefulSchemaReload: { drainTimeout: 10_000 },
       subgraphs: () => {
         if (changeSchema) {
@@ -381,5 +383,151 @@ describe('Subscriptions', () => {
 
     // Unblock the upstream resolver so everything can settle.
     releaseBlocking.resolve('late');
+  }, 20_000);
+
+  it('keeps a subscription on a draining generation until the last pinned operation finishes', async () => {
+    let changeSchema = false;
+    const blockingEntered = createDeferred<void>();
+    const releaseBlocking = createDeferred<string>();
+    const subscribed = createDeferred<void>();
+
+    await using serve = createGatewayTester({
+      pollingInterval: 500,
+      gracefulSchemaReload: { drainTimeout: 30_000 },
+      subgraphs: () => {
+        if (changeSchema) {
+          return [
+            {
+              name: 'upstream',
+              schema: {
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    foo: String
+                  }
+                `,
+                resolvers: {
+                  Query: {
+                    foo: () => 'bar2',
+                  },
+                },
+              },
+            },
+          ];
+        }
+        return [
+          {
+            name: 'upstream',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  foo: String
+                  blocking: String
+                }
+                type Subscription {
+                  neverEmits: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  foo: () => 'bar',
+                  blocking: () => {
+                    blockingEntered.resolve();
+                    return releaseBlocking.promise;
+                  },
+                },
+                Subscription: {
+                  neverEmits: {
+                    subscribe: () =>
+                      new Repeater((_push, stop) => {
+                        leftovers.push(stop);
+                      }),
+                  },
+                },
+              },
+            },
+          },
+        ];
+      },
+    });
+
+    const sse = createSSEClient({
+      url: 'http://mesh/graphql',
+      fetchFn: serve.fetch,
+      on: {
+        connected() {
+          subscribed.resolve();
+        },
+      },
+    });
+
+    const sub = sse.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          neverEmits
+        }
+      `,
+    });
+
+    const msgs: unknown[] = [];
+    let subEnded = false;
+    const consumed = (async () => {
+      for await (const msg of sub) {
+        msgs.push(msg);
+      }
+      subEnded = true;
+    })();
+    await subscribed.promise;
+
+    // Pin the current generation with an operation blocked inside the
+    // upstream, then reload: the generation drains instead of being
+    // disposed.
+    const pinned = serve.execute({
+      query: /* GraphQL */ `
+        query {
+          blocking
+        }
+      `,
+    });
+    await blockingEntered.promise;
+
+    changeSchema = true;
+    // Drive the lazy poller until the gateway serves the new generation.
+    for (let i = 0; i < 40; i++) {
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 250));
+      const result = await serve.execute({
+        query: /* GraphQL */ `
+          query {
+            foo
+          }
+        `,
+      });
+      if (!(Symbol.asyncIterator in result) && result.data?.foo === 'bar2') {
+        break;
+      }
+    }
+
+    // The old generation is draining (one pinned operation in flight), so
+    // the subscription must NOT have been terminated at reload time...
+    expect(subEnded).toBe(false);
+
+    // ...but disposing the drained generation — right after its last pinned
+    // operation completes — must end it with SCHEMA_RELOAD.
+    releaseBlocking.resolve('done');
+    const pinnedResult = await pinned;
+    if (!(Symbol.asyncIterator in pinnedResult)) {
+      expect(pinnedResult.data?.blocking).toBe('done');
+    }
+    await consumed;
+
+    expect(msgs[msgs.length - 1]).toMatchObject({
+      errors: [
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+          },
+          message: 'operation has been aborted due to a schema reload',
+        },
+      ],
+    });
   }, 20_000);
 });
