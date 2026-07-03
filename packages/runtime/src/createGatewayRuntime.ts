@@ -339,6 +339,19 @@ export function createGatewayRuntime<
     persistedDocumentsPlugin = plugin;
   }
 
+  if (
+    ('proxy' in config || 'subgraph' in config) &&
+    'gracefulSchemaReload' in config &&
+    config['gracefulSchemaReload'] != null
+  ) {
+    // Generation overlap is a supergraph concept (executor + subgraph
+    // transports per generation); accepting the option here would silently do
+    // nothing while the operator believes in-flight operations survive reloads.
+    throw new Error(
+      'gracefulSchemaReload is only supported with a supergraph configuration',
+    );
+  }
+
   if ('proxy' in config) {
     const transportExecutorStack = new AsyncDisposableStack();
     const proxyExecutor = getProxyExecutor({

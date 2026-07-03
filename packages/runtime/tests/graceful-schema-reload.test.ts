@@ -1045,4 +1045,26 @@ describe('Graceful schema reload — config validation', () => {
     });
     expect(gw).toBeDefined();
   });
+
+  // Generation overlap only exists for supergraphs; in the other modes the
+  // option would be silently ignored, so it is rejected up front.
+  it('rejects gracefulSchemaReload in proxy mode', () => {
+    expect(() =>
+      createGatewayRuntime({
+        proxy: { endpoint: 'http://localhost:9999/graphql' },
+        gracefulSchemaReload: { drainTimeout: 1000 },
+        logging: false,
+      }),
+    ).toThrow(/gracefulSchemaReload/);
+  });
+
+  it('rejects gracefulSchemaReload in subgraph mode', () => {
+    expect(() =>
+      createGatewayRuntime({
+        subgraph: () => supergraph,
+        gracefulSchemaReload: { drainTimeout: 1000 },
+        logging: false,
+      }),
+    ).toThrow(/gracefulSchemaReload/);
+  });
 });

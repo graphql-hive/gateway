@@ -273,6 +273,15 @@ export interface GatewayConfigSupergraph<
    * @experimental This option is experimental and may change in the future.
    */
   unifiedGraphHandler?: UnifiedGraphHandler;
+
+  /**
+   * Gracefully reload the supergraph by letting in-flight operations finish on
+   * the previous schema generation instead of aborting them. Disabled by
+   * default (previous generation is disposed immediately on reload).
+   *
+   * @see {@link GracefulSchemaReloadConfig}
+   */
+  gracefulSchemaReload?: GracefulSchemaReloadConfig;
 }
 
 export type ProgressiveOverrideHandler = (
@@ -544,14 +553,6 @@ export interface GracefulSchemaReloadConfig {
 }
 
 export interface GatewayConfigBase<TContext extends Record<string, any>> {
-  /**
-   * Gracefully reload the supergraph by letting in-flight operations finish on
-   * the previous schema generation instead of aborting them. Disabled by
-   * default (previous generation is disposed immediately on reload).
-   *
-   * @see {@link GracefulSchemaReloadConfig}
-   */
-  gracefulSchemaReload?: GracefulSchemaReloadConfig;
   /** Usage reporting options. */
   reporting?: GatewayHiveReportingOptions | GatewayGraphOSReportingOptions;
   /** Persisted documents options. */
