@@ -4,6 +4,8 @@ import {
   createGatewayRuntime,
   type GatewayRuntime,
 } from '@graphql-hive/gateway-runtime';
+import { handleFederationSupergraph } from '@graphql-mesh/fusion-runtime';
+import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { createDeferred } from '@graphql-tools/utils';
 import {
   composeLocalSchemasWithApollo,
@@ -347,6 +349,131 @@ describe('Graceful schema reload (generation overlap)', () => {
     // With only one generation allowed, the previous generation cannot overlap;
     // it is disposed at reload and the query is retried on the new generation.
     expect(result.data?.['slow']).toBe('fromB');
+  });
+
+  it('executes on the generation it pinned when the handler provides an executor (router-runtime path)', async () => {
+    const slowEntered = createDeferred<void>();
+    const releaseSlow = createDeferred<string>();
+    const victimEntered = createDeferred<void>();
+    const releaseVictim = createDeferred<void>();
+
+    const typeDefs = parse(/* GraphQL */ `
+      type Query {
+        ping: String
+        slow: String
+        pinned: String
+      }
+    `);
+    const schemaA = buildSubgraphSchema({
+      typeDefs,
+      resolvers: {
+        Query: {
+          ping: () => 'genA',
+          pinned: () => 'fromA',
+          slow: () => {
+            slowEntered.resolve();
+            return releaseSlow.promise;
+          },
+        },
+      },
+    });
+    const schemaB = buildSubgraphSchema({
+      typeDefs,
+      resolvers: {
+        Query: {
+          ping: () => 'genB',
+          pinned: () => 'fromB',
+          slow: () => 'fromB',
+        },
+      },
+    });
+
+    await using yogaA = createYoga({ schema: schemaA, logging: false });
+    await using serverA = await createDisposableServer(yogaA);
+    await using yogaB = createYoga({ schema: schemaB, logging: false });
+    await using serverB = await createDisposableServer(yogaB);
+
+    const sdlA = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema: schemaA, url: `${serverA.url}/graphql` },
+    ]);
+    const sdlB = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema: schemaB, url: `${serverB.url}/graphql` },
+    ]);
+
+    let useSecond = false;
+    let holdVictim = false;
+    await using gw = createGatewayRuntime({
+      supergraph: () => (useSecond ? sdlB : sdlA),
+      pollingInterval: 100,
+      gracefulSchemaReload: { drainTimeout: 10_000 },
+      // The router runtime executes through a generation-scoped executor
+      // instead of the schema's own resolvers; emulate that shape by attaching
+      // an executor to the default handler's result.
+      unifiedGraphHandler: (opts) => {
+        const result = handleFederationSupergraph(opts);
+        return {
+          ...result,
+          executor: createDefaultExecutor(result.unifiedGraph),
+        };
+      },
+      plugins: () => [
+        {
+          // Hold the victim operation after it has been admitted (schema
+          // captured) but before execution, so a reload completes in between.
+          onContextBuilding({
+            context,
+          }: {
+            context: { params?: { query?: string } };
+          }) {
+            if (holdVictim && context.params?.query?.includes('pinned')) {
+              victimEntered.resolve();
+              return releaseVictim.promise;
+            }
+            return undefined;
+          },
+        },
+      ],
+      logging: false,
+    });
+
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('genA');
+
+    // Keep generation A draining across the reload with a blocked, pinned op.
+    const inFlightSlow = runOperation(
+      gw,
+      /* GraphQL */ `
+        {
+          slow
+        }
+      `,
+    );
+    await slowEntered.promise;
+
+    // Admit the victim under generation A but hold it before execution.
+    holdVictim = true;
+    const victim = runOperation(
+      gw,
+      /* GraphQL */ `
+        {
+          pinned
+        }
+      `,
+    );
+    await victimEntered.promise;
+
+    // Reload to generation B while the victim is held pre-execution.
+    useSecond = true;
+    await waitForGeneration(gw, 'genB');
+
+    // The victim was admitted (and validated) under generation A, so it must
+    // pin AND execute generation A — not run on B's executor while pinning A.
+    releaseVictim.resolve();
+    const result = await victim;
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.['pinned']).toBe('fromA');
+
+    releaseSlow.resolve('fromA');
+    expect((await inFlightSlow).data?.['slow']).toBe('fromA');
   });
 
   it('does not overlap when graceful reload is not configured (opt-in)', async () => {

@@ -11,6 +11,7 @@ import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
+  SchemaGenerationLease,
 } from '@graphql-mesh/fusion-runtime';
 import {
   handleMaybePromiseMaybeAsyncIterableResult,
@@ -244,7 +245,9 @@ export function createGatewayRuntime<
   // Pins the schema generation an operation executes against for the operation's
   // whole lifetime (graceful schema reload). Only set when a unified graph
   // manager is in use; left undefined for the proxy path.
-  let retainGenerationFor: ((schema: GraphQLSchema) => () => void) | undefined;
+  let retainGenerationFor:
+    | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
+    | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
@@ -790,16 +793,20 @@ export function createGatewayRuntime<
       // Pin the generation this operation runs against until it fully completes,
       // so a schema reload mid-operation does not abort it (graceful schema
       // reload). Subscriptions go through onSubscribe and are intentionally not
-      // pinned. The release callback is idempotent.
-      const releaseGeneration = retainGenerationFor?.(args.schema);
+      // pinned. The lease's release callback is idempotent.
+      const lease = retainGenerationFor?.(args.schema);
       return handleMaybePromise(
-        () => getExecutor?.(),
+        // The operation must execute on the generation it pinned — a reload may
+        // already have made a newer generation current. Only unpinned operations
+        // (schema untracked or generation already disposed) fall back to the
+        // current generation's executor.
+        () => (lease ? lease.executor : getExecutor?.()),
         (executor) => {
           if (executor) {
             const executeFn = getExecuteFnFromExecutor(executor);
             setExecuteFn(executeFn);
           }
-          if (!releaseGeneration) {
+          if (!lease) {
             return undefined;
           }
           return {
@@ -808,9 +815,9 @@ export function createGatewayRuntime<
               // generation until the stream ends; release only then. Single
               // results are complete now.
               if (isAsyncIterable(result)) {
-                return { onEnd: releaseGeneration };
+                return { onEnd: lease.release };
               }
-              releaseGeneration();
+              lease.release();
               return undefined;
             },
           };
@@ -820,7 +827,7 @@ export function createGatewayRuntime<
         // — aborts surface as error results, not rejections — and any leaked pin
         // is reclaimed by the drain timeout.)
         (error) => {
-          releaseGeneration?.();
+          lease?.release();
           throw error;
         },
       );

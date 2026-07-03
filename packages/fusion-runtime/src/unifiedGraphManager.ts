@@ -237,6 +237,23 @@ interface SchemaGeneration {
   forceDisposeTimer?: ReturnType<typeof setTimeout>;
 }
 
+/**
+ * An operation's hold on the schema generation it was admitted under, returned
+ * by {@link UnifiedGraphManager.retainGenerationFor}. The operation must
+ * execute through {@link executor} so that it runs on the same generation it
+ * pins, and call {@link release} exactly when it fully completes.
+ */
+export interface SchemaGenerationLease {
+  /**
+   * The pinned generation's executor, when its unified graph handler produced
+   * one (e.g. the router runtime). Undefined for the default handler, which
+   * executes through the schema's own resolvers.
+   */
+  executor: Executor | undefined;
+  /** Release the pin. Idempotent. */
+  release(): void;
+}
+
 export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private batch: boolean;
   private handleUnifiedGraph: UnifiedGraphHandler;
@@ -534,14 +551,19 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   /**
    * Pin the generation serving `schema` for the lifetime of one operation, so it
    * is not disposed while the operation is still running across all of its
-   * subgraph hops. Returns an idempotent release callback. If `schema` is not a
-   * known live generation, retention is a no-op and disposal falls back to the
-   * drain timeout.
+   * subgraph hops. Returns a lease exposing the pinned generation's executor —
+   * the operation must execute through it (not through the current generation's,
+   * which may already be a newer one) — and an idempotent release callback.
+   * Returns undefined if `schema` is not a known live generation; the operation
+   * then proceeds unpinned on the current generation, and disposal falls back to
+   * the drain timeout.
    *
    * Long-lived streaming operations (subscriptions) are intentionally NOT pinned
    * by the caller — they end on reload (and reconnect) rather than overlapping.
    */
-  public retainGenerationFor(schema: GraphQLSchema): () => void {
+  public retainGenerationFor(
+    schema: GraphQLSchema,
+  ): SchemaGenerationLease | undefined {
     const generation = this.generationBySchema.get(schema);
     if (!generation) {
       // The schema isn't one we built (e.g. a plugin returned a wrapped/rebuilt
@@ -554,21 +576,24 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             '(a plugin likely returned a wrapped schema); operations will not be pinned across reloads',
         );
       }
-      return () => {};
+      return undefined;
     }
     if (generation.disposed) {
       // The operation outlived its generation (already disposed). Benign — it
       // proceeds unpinned; not warned, as this is expected around reloads.
-      return () => {};
+      return undefined;
     }
     generation.inFlight++;
     let released = false;
-    return () => {
-      if (released) {
-        return;
-      }
-      released = true;
-      this.releaseGeneration(generation);
+    return {
+      executor: generation.executor,
+      release: () => {
+        if (released) {
+          return;
+        }
+        released = true;
+        this.releaseGeneration(generation);
+      },
     };
   }
 
