@@ -1,5 +1,13 @@
 # @graphql-tools/federation
 
+## 4.4.7
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@12.0.18
+  - @graphql-tools/stitch@10.1.23
+  - @graphql-tools/wrap@11.1.17
+
 ## 4.4.6
 ### Patch Changes
 
