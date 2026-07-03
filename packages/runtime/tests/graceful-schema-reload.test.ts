@@ -4,6 +4,7 @@ import {
   createGatewayRuntime,
   type GatewayRuntime,
 } from '@graphql-hive/gateway-runtime';
+import { Logger, MemoryLogWriter } from '@graphql-hive/logger';
 import { handleFederationSupergraph } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { createDeferred } from '@graphql-tools/utils';
@@ -12,7 +13,7 @@ import {
   createDisposableServer,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { parse } from 'graphql';
+import { lexicographicSortSchema, parse, type GraphQLSchema } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -906,6 +907,86 @@ describe('Graceful schema reload (generation overlap)', () => {
     releaseSlowA.resolve('fromA');
     const resultA = await inFlightA;
     expect(resultA.data?.['slow']).toBe('fromC');
+  });
+});
+
+describe('Graceful schema reload — untracked (plugin-replaced) schemas', () => {
+  // Emulates plugins that replace the served schema with a rebuilt copy (e.g.
+  // the NestJS integration's sortSchema), which is then not a tracked
+  // generation.
+  function schemaReplacingPlugin() {
+    const replaced = new WeakSet<GraphQLSchema>();
+    return {
+      onSchemaChange({
+        schema,
+        replaceSchema,
+      }: {
+        schema: GraphQLSchema;
+        replaceSchema: (schema: GraphQLSchema) => void;
+      }) {
+        if (!replaced.has(schema)) {
+          const next = lexicographicSortSchema(schema);
+          replaced.add(next);
+          replaceSchema(next);
+        }
+      },
+    };
+  }
+
+  async function pingUpstream() {
+    const schema = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          ping: String
+        }
+      `),
+      resolvers: { Query: { ping: () => 'pong' } },
+    });
+    const yoga = createYoga({ schema, logging: false });
+    const server = await createDisposableServer(yoga);
+    const sdl = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema, url: `${server.url}/graphql` },
+    ]);
+    return { sdl, server, yoga };
+  }
+
+  it('does not warn (nor pin) when graceful reload is not configured', async () => {
+    const { sdl, server, yoga } = await pingUpstream();
+    await using _server = server;
+    await using _yoga = yoga;
+
+    const writer = new MemoryLogWriter();
+    await using gw = createGatewayRuntime({
+      supergraph: () => sdl,
+      // graceful reload intentionally NOT configured
+      plugins: () => [schemaReplacingPlugin()],
+      logging: new Logger({ level: 'warn', writers: [writer] }),
+    });
+
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('pong');
+    expect(
+      writer.logs.filter((l) => l.msg?.includes('Graceful reload')),
+    ).toEqual([]);
+  });
+
+  it('warns once when graceful reload is configured but the schema is replaced by a plugin', async () => {
+    const { sdl, server, yoga } = await pingUpstream();
+    await using _server = server;
+    await using _yoga = yoga;
+
+    const writer = new MemoryLogWriter();
+    await using gw = createGatewayRuntime({
+      supergraph: () => sdl,
+      gracefulSchemaReload: { drainTimeout: 10_000 },
+      plugins: () => [schemaReplacingPlugin()],
+      logging: new Logger({ level: 'warn', writers: [writer] }),
+    });
+
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('pong');
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('pong');
+    expect(
+      writer.logs.filter((l) => l.msg?.includes('Graceful reload')),
+    ).toHaveLength(1);
   });
 });
 

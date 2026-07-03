@@ -243,8 +243,9 @@ export function createGatewayRuntime<
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
   // Pins the schema generation an operation executes against for the operation's
-  // whole lifetime (graceful schema reload). Only set when a unified graph
-  // manager is in use; left undefined for the proxy path.
+  // whole lifetime. Only set when a unified graph manager is in use AND
+  // gracefulSchemaReload is enabled; left undefined otherwise (proxy path, or
+  // feature off — superseded generations are then disposed immediately anyway).
   let retainGenerationFor:
     | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
     | undefined;
@@ -722,8 +723,14 @@ export function createGatewayRuntime<
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
-    retainGenerationFor = (schema) =>
-      unifiedGraphManager.retainGenerationFor(schema);
+    if (gracefulSchemaReload) {
+      // Pinning only matters when superseded generations may drain; with the
+      // feature off they are disposed immediately regardless of in-flight
+      // work, so skip the per-operation bookkeeping (and its untracked-schema
+      // warning) entirely.
+      retainGenerationFor = (schema) =>
+        unifiedGraphManager.retainGenerationFor(schema);
+    }
     unifiedGraphPlugin = {
       onDispose() {
         return handleMaybePromise(
