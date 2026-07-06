@@ -3364,9 +3364,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
   dependencies:
-    "@envelop/generic-auth": "npm:^11.0.0"
     "@graphql-hive/gateway": "workspace:*"
-    "@graphql-tools/utils": "npm:^11.1.0"
     graphql: "npm:16.14.0"
   languageName: unknown
   linkType: soft
@@ -4485,7 +4483,7 @@ __metadata:
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
-    "@graphql-hive/yoga": "npm:0.48.2-alpha-20260701154337-22ade7c62fe1b34d2a202c0e368022c6a2fa70a1"
+    "@graphql-hive/yoga": "npm:^0.48.2"
     "@graphql-mesh/cross-helpers": "npm:^0.4.13"
     "@graphql-mesh/fusion-composition": "npm:^0.8.46"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -4905,9 +4903,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:0.48.2-alpha-20260701154337-22ade7c62fe1b34d2a202c0e368022c6a2fa70a1":
-  version: 0.48.2-alpha-20260701154337-22ade7c62fe1b34d2a202c0e368022c6a2fa70a1
-  resolution: "@graphql-hive/yoga@npm:0.48.2-alpha-20260701154337-22ade7c62fe1b34d2a202c0e368022c6a2fa70a1"
+"@graphql-hive/yoga@npm:^0.48.2":
+  version: 0.48.2
+  resolution: "@graphql-hive/yoga@npm:0.48.2"
   dependencies:
     "@graphql-hive/core": "npm:0.21.1"
     "@graphql-hive/logger": "npm:^1.1.0"
@@ -4915,7 +4913,7 @@ __metadata:
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/fe5e74bb3313f253133511a32134a24b12bff7425fae44b6ad9569bd0d6b073ed069c89889eb23743c46785e0dea0a1ceab3e192b67bf8e51c0a0984f21ef7b7
+  checksum: 10c0/686502242589297ab923e99788546f387c548d562187e2bdb599f373d39f5a7c1197109970afd6f307703c3167132da2ca64816a093eb90f9333cc91ebcfc8fd
   languageName: node
   linkType: hard
 
