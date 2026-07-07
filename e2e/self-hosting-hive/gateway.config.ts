@@ -6,6 +6,7 @@ const overWs = process.env['OVER_WS'] === 'true';
 const genericAuth = process.env['GENERIC_AUTH'] === 'true';
 
 export const gatewayConfig = defineConfig({
+  maskedErrors: false,
   reporting: {
     type: 'hive',
     debug: true,
