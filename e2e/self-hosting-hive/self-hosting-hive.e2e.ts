@@ -10,7 +10,10 @@ import WebSocket from 'ws';
 const { gateway, service, gatewayRunner, composeWithApollo } =
   createTenv(__dirname);
 
-describe('Self Hosting Hive', () => {
+describe.skipIf(
+  // tricky to get the docker host name right in CI, so skip this test there
+  gatewayRunner.includes('docker'),
+)('Self Hosting Hive', () => {
   const TEST_TOKEN = 'my-token';
   const TEST_KEY = 'my-key';
 
