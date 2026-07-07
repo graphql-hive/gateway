@@ -121,7 +121,7 @@ function unwrapAttrVal(
   }
 
   // very likely an instance of something, dont unwrap it
-  return objectifyClass(attr);
+  return objectifyClass(attr, visited);
 }
 
 function isPrimitive(val: unknown): val is string | number | boolean {
@@ -130,7 +130,10 @@ function isPrimitive(val: unknown): val is string | number | boolean {
 
 const nodejsCustomInspectSy = Symbol.for('nodejs.util.inspect.custom');
 
-function objectifyClass(val: unknown): Record<string, unknown> {
+function objectifyClass(
+  val: unknown,
+  visited = new WeakSet(),
+): Record<string, unknown> {
   if (
     // simply empty
     !val ||
@@ -156,13 +159,14 @@ function objectifyClass(val: unknown): Record<string, unknown> {
     return {
       [nodejsCustomInspectSy.toString()]: unwrapAttrVal(
         val[nodejsCustomInspectSy](Infinity, {}),
+        visited,
       ),
       class: val.constructor.name,
     };
   }
   const props: Record<string, unknown> = {};
   for (const propName of Object.getOwnPropertyNames(val)) {
-    props[propName] = unwrapAttrVal(val[propName as keyof typeof val]);
+    props[propName] = unwrapAttrVal(val[propName as keyof typeof val], visited);
   }
   for (const protoPropName of Object.getOwnPropertyNames(
     Object.getPrototypeOf(val),
@@ -171,7 +175,7 @@ function objectifyClass(val: unknown): Record<string, unknown> {
     if (typeof propVal === 'function') {
       continue;
     }
-    props[protoPropName] = unwrapAttrVal(propVal);
+    props[protoPropName] = unwrapAttrVal(propVal, visited);
   }
   return {
     ...props,
