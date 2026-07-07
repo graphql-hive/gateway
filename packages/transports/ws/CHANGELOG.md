@@ -1,5 +1,11 @@
 # @graphql-mesh/transport-ws
 
+## 2.0.21
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.0.17
+
 ## 2.0.20
 ### Patch Changes
 

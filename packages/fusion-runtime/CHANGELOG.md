@@ -1,5 +1,12 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.10.9
+### Patch Changes
+
+- Updated dependencies [[`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6)]:
+  - @graphql-hive/logger@1.1.1
+  - @graphql-mesh/transport-common@1.0.17
+
 ## 1.10.8
 ### Patch Changes
 

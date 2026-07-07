@@ -1,5 +1,14 @@
 # @graphql-hive/logger
 
+## 1.1.1
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Circular class instance now resolves to [Circular] instead of recursing forever
+  
+  `objectifyClass` wasn't threading the visited `WeakSet` into its recursive `unwrapAttrVal` calls, so class instances referencing themselves never hit the cycle guard and will then stack overflow.
+
 ## 1.1.0
 ### Minor Changes
 
