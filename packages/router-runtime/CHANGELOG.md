@@ -1,5 +1,17 @@
 # @graphql-hive/router-runtime
 
+## 1.4.14
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.38` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.38) (from `^0.0.35`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.10.9
+  - @graphql-mesh/transport-common@1.0.17
+
 ## 1.4.13
 ### Patch Changes
 

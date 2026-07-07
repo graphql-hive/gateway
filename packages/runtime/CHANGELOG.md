@@ -1,5 +1,22 @@
 # @graphql-hive/gateway-runtime
 
+## 2.9.9
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/yoga@^0.48.2` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.48.2) (from `^0.48.0`, in `dependencies`)
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove an empty and unnecessary log during debug
+
+- Updated dependencies [[`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6)]:
+  - @graphql-hive/logger@1.1.1
+  - @graphql-mesh/fusion-runtime@1.10.9
+  - @graphql-mesh/transport-common@1.0.17
+
 ## 2.9.8
 ### Patch Changes
 
