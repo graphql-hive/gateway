@@ -1,5 +1,5 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import { createGraphQLError } from '@graphql-tools/utils';
+import { GraphQLError } from 'graphql';
 
 const hiveUrl = process.env['HIVE_URL']!;
 const overWs = process.env['OVER_WS'] === 'true';
@@ -45,7 +45,7 @@ export const gatewayConfig = defineConfig({
         // even starts streaming
         validateUser: ({ parentType, fieldNode }) =>
           parentType.name === 'User'
-            ? createGraphQLError('Unauthorized field or type', {
+            ? new GraphQLError('Unauthorized field or type', {
                 nodes: [fieldNode],
               })
             : undefined,
