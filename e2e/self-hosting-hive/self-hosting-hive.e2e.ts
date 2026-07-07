@@ -1,7 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
-import { isCI } from '~internal/env';
+import { isCI, usingHiveRouterRuntime } from '~internal/env';
 import { createClient as sseCreateClient } from 'graphql-sse';
 import { createClient as wsCreateClient } from 'graphql-ws';
 import { describe, expect, it } from 'vitest';
@@ -223,76 +223,83 @@ describe('Self Hosting Hive', () => {
     },
   );
 
-  it('usage reporting of subscriptions must not have empty fields when genericAuth strips them', async () => {
-    const users = await service('users');
-    const supergraph = await composeWithApollo({
-      services: [await service('posts'), users],
-    });
-    const selfHostingHive = await service('selfHostingHive', {
-      env: {
-        SUPERGRAPH_PATH: supergraph.output,
-      },
-    });
-    const HIVE_URL = `http://${
-      gatewayRunner.includes('docker')
-        ? isCI()
-          ? '172.17.0.1'
-          : 'host.docker.internal'
-        : 'localhost'
-    }:${selfHostingHive.port}`;
-    const gw = await gateway({
-      supergraph: `${HIVE_URL}/supergraph`,
-      args: [
-        `--hive-registry-token=${TEST_TOKEN}`,
-        `--hive-cdn-key=${TEST_KEY}`,
-      ],
-      env: {
-        HIVE_URL,
-        GENERIC_AUTH: 'true',
-      },
-    });
+  it.skipIf(
+    // hive router runtime wont even reach the execution because it'll fail on
+    // parsing during query planning
+    usingHiveRouterRuntime(),
+  )(
+    'usage reporting of subscriptions must not have empty fields when genericAuth strips them',
+    async () => {
+      const users = await service('users');
+      const supergraph = await composeWithApollo({
+        services: [await service('posts'), users],
+      });
+      const selfHostingHive = await service('selfHostingHive', {
+        env: {
+          SUPERGRAPH_PATH: supergraph.output,
+        },
+      });
+      const HIVE_URL = `http://${
+        gatewayRunner.includes('docker')
+          ? isCI()
+            ? '172.17.0.1'
+            : 'host.docker.internal'
+          : 'localhost'
+      }:${selfHostingHive.port}`;
+      const gw = await gateway({
+        supergraph: `${HIVE_URL}/supergraph`,
+        args: [
+          `--hive-registry-token=${TEST_TOKEN}`,
+          `--hive-cdn-key=${TEST_KEY}`,
+        ],
+        env: {
+          HIVE_URL,
+          GENERIC_AUTH: 'true',
+        },
+      });
 
-    const client = sseCreateClient({
-      url: `http://0.0.0.0:${gw.port}/graphql`,
-      fetchFn: fetch,
-      retryAttempts: 0,
-    });
+      const client = sseCreateClient({
+        url: `http://0.0.0.0:${gw.port}/graphql`,
+        fetchFn: fetch,
+        retryAttempts: 0,
+      });
 
-    const iter = client.iterate({
-      query: /* GraphQL */ `
-        subscription {
-          userPostChanged {
-            name
-            posts {
-              title
-              content
+      const iter = client.iterate({
+        query: /* GraphQL */ `
+          subscription {
+            userPostChanged {
+              name
+              posts {
+                title
+                content
+              }
             }
           }
+        `,
+      });
+
+      // genericAuth strips the whole selection set here, so the subscription
+      // never actually starts streaming (the executor rejects the now-empty
+      // document) - we only care about the usage report that still gets sent
+      // fr it
+      setTimeout(100).then(
+        // close the iterator after a moment to let the usage reporting of subscriptions propagate
+        () => iter.return?.(),
+      );
+      try {
+        for await (const _ of iter) {
+          break;
         }
-      `,
-    });
+      } catch {}
 
-    // genericAuth strips the whole selection set here, so the subscription
-    // never actually starts streaming (the executor rejects the now-empty
-    // document) - we only care about the usage report that still gets sent
-    // fr it
-    setTimeout(100).then(
-      // close the iterator after a moment to let the usage reporting of subscriptions propagate
-      () => iter.return?.(),
-    );
-    try {
-      for await (const _ of iter) {
-        break;
-      }
-    } catch {}
+      await setTimeout(300);
 
-    await setTimeout(300);
-
-    const incomingData = selfHostingHive.getStd('out');
-    expect(incomingData).toContain('POST /usage');
-    expect(incomingData).not.toContain('"fields":[]');
-    expect(incomingData).toContain(
-      '"fields":["Subscription.userPostChanged","User.name","User.posts","Post.title","Post.content"]',
-    );
-  });
+      const incomingData = selfHostingHive.getStd('out');
+      expect(incomingData).toContain('POST /usage');
+      expect(incomingData).not.toContain('"fields":[]');
+      expect(incomingData).toContain(
+        '"fields":["Subscription.userPostChanged","User.name","User.posts","Post.title","Post.content"]',
+      );
+    },
+  );
 });
