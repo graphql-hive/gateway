@@ -608,7 +608,6 @@ it('should consistently explain the query plan', async () => {
             author {
               username
               __typename
-              __typename
               ...User
               reviews {
                 __typename
@@ -698,7 +697,6 @@ it('should consistently explain the query plan', async () => {
                 ...Review
                 author {
                   username
-                  __typename
                   __typename
                   ...User
                   reviews {
