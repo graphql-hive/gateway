@@ -742,6 +742,120 @@ describe('@provides only fetches client-requested fields', () => {
     expect(subgraphCalls[0]?.query).toMatch(/\bdescription\b/);
   });
 
+  it('does not delegate nested fragment fields covered by @provides to their owner', async () => {
+    const a = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.7"
+            import: ["@key", "@shareable"]
+          )
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          nested: NestedField @shareable
+        }
+
+        type NestedField @shareable {
+          nestedNested: NestedNestedField!
+        }
+
+        type NestedNestedField @shareable {
+          name: String
+          description: String
+        }
+      `),
+    });
+
+    const b = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.7"
+            import: ["@key", "@shareable", "@external", "@provides"]
+          )
+
+        type Query {
+          entity: Entity
+            @provides(fields: "nested { nestedNested { name description } }")
+        }
+
+        type Entity @key(fields: "id") {
+          id: ID!
+          nested: NestedField @external
+        }
+
+        type NestedField @shareable {
+          nestedNested: NestedNestedField!
+        }
+
+        type NestedNestedField @shareable {
+          name: String
+          description: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          entity() {
+            return {
+              id: 'e1',
+              nested: {
+                nestedNested: {
+                  name: 'nested name',
+                  description: 'nested description',
+                },
+              },
+            };
+          },
+        },
+      },
+    });
+
+    const subgraphCalls: string[] = [];
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { a, b },
+      onSubgraphExecute(subgraph) {
+        subgraphCalls.push(subgraph);
+      },
+    });
+
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            nested {
+              nestedNested {
+                ...NestedNestedFields
+              }
+            }
+          }
+        }
+
+        fragment NestedNestedFields on NestedNestedField {
+          name
+          description
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        entity: {
+          id: 'e1',
+          nested: {
+            nestedNested: {
+              name: 'nested name',
+              description: 'nested description',
+            },
+          },
+        },
+      },
+    });
+    expect(subgraphCalls).toEqual(['b']);
+  });
+
   // Mirrors the `nested-provides` audit case: when @provides covers fields on
   // nested types, the gateway should not delegate to the owning subgraphs for
   // those nested fields.
