@@ -631,9 +631,13 @@ function buildBatchFetchVariables(
     variableName,
     state,
   ] of batchContext.representationsByVariableName.entries()) {
-    if (!state.representations.length) {
-      continue;
-    }
+    // Always attach the representations variable, even when it resolved to an
+    // empty list. The batched `_entities` document declares every alias's
+    // `$representations` as a required `[_Any!]!`, so skipping an empty alias
+    // sends an operation that declares a variable it never provides — which the
+    // subgraph rejects wholesale, failing the sibling aliases that *did* have
+    // representations. Sending `[]` keeps the operation valid
+    // (`_entities(representations: [])` simply returns `[]`).
     const targetVariables =
       variablesForFetch ?? (Object.create(null) as Record<string, any>);
     if (!variablesForFetch) {
