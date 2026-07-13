@@ -742,7 +742,44 @@ describe('@provides only fetches client-requested fields', () => {
     expect(subgraphCalls[0]?.query).toMatch(/\bdescription\b/);
   });
 
-  it('does not delegate nested fragment fields covered by @provides to their owner', async () => {
+  it.each([
+    {
+      name: 'does not delegate nested fields covered by @provides to their owner',
+      document: parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            nested {
+              nestedNested {
+                name
+                description
+              }
+            }
+          }
+        }
+      `),
+    },
+    {
+      name: 'does not delegate nested fragment fields covered by @provides to their owner',
+      document: parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            nested {
+              nestedNested {
+                ...NestedNestedFields
+              }
+            }
+          }
+        }
+
+        fragment NestedNestedFields on NestedNestedField {
+          name
+          description
+        }
+      `),
+    },
+  ])('$name', async ({ document }) => {
     const a = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
         extend schema
@@ -819,26 +856,7 @@ describe('@provides only fetches client-requested fields', () => {
       },
     });
 
-    const result = await normalizedExecutor({
-      schema,
-      document: parse(/* GraphQL */ `
-        query {
-          entity {
-            id
-            nested {
-              nestedNested {
-                ...NestedNestedFields
-              }
-            }
-          }
-        }
-
-        fragment NestedNestedFields on NestedNestedField {
-          name
-          description
-        }
-      `),
-    });
+    const result = await normalizedExecutor({ schema, document });
 
     expect(result).toEqual({
       data: {
@@ -853,6 +871,8 @@ describe('@provides only fetches client-requested fields', () => {
         },
       },
     });
+
+    // 'a' should not be called because the @provides covers all requested fields
     expect(subgraphCalls).toEqual(['b']);
   });
 
