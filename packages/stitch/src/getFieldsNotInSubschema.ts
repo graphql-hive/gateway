@@ -5,15 +5,18 @@ import {
   Subschema,
   subtractSelectionSets,
 } from '@graphql-tools/delegate';
-import { collectSubFields } from '@graphql-tools/utils';
+import { collectSubFields, memoize3 } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
+  getNamedType,
   GraphQLField,
   GraphQLObjectType,
   GraphQLSchema,
   isAbstractType,
+  isObjectType,
   Kind,
+  SelectionNode,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -145,9 +148,20 @@ export function getFieldsNotInSubschema(
           kind: Kind.SELECTION_SET,
           selections: subFieldNodes,
         };
+        // Flatten the @provides selection set so inline fragments matching
+        // the gateway type are lifted to the top level. Without this,
+        // `@provides(fields: "... on Book { title }")` looks like an
+        // inline fragment to `subtractSelectionSets` and the planner ends
+        // up still delegating the field to the owner subgraph.
+        const flattenedProvided = flattenSelectionsForType(
+          providedSelectionNode,
+          gatewayType,
+          schema,
+        );
         const subtracted = subtractSelectionSets(
           subFieldSelection,
-          providedSelectionNode,
+          flattenedProvided,
+          fragments,
         );
         if (subtracted?.selections?.length) {
           fieldNotInSchema = true;
@@ -169,15 +183,30 @@ export function getFieldsNotInSubschema(
         '__DO_NOT_USE__stitching_disable_extract_unavailable_fields_for_fields_not_in_schema__'
       ]
     ) {
+      const providedTypeFieldPairs = providedSelectionNode
+        ? collectProvidedTypeFieldPairs(
+            providedSelectionNode,
+            gatewayType,
+            schema,
+          )
+        : null;
       for (const subFieldNode of subFieldNodes) {
         const unavailableFields = extractUnavailableFields(
           sourceSchema,
           field,
           subFieldNode,
-          (fieldType) => {
+          (fieldType, selection) => {
             if (
               stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
                 subschema,
+              )
+            ) {
+              return false;
+            }
+            // field is already provided by this subgraph via @provides
+            if (
+              providedTypeFieldPairs?.has(
+                `${fieldType.name}.${selection.name.value}`,
               )
             ) {
               return false;
@@ -263,3 +292,101 @@ function addMissingRequiredFields({
     }
   }
 }
+
+// walks the @provides selection set using the gateway schema to collect all
+// "TypeName.fieldName" pairs that the providing subgraph covers. used by
+// shouldAdd in extractUnavailableFields to skip re-delegating those fields.
+function collectProvidedTypeFieldPairs(
+  selectionSet: SelectionSetNode,
+  parentType: GraphQLObjectType,
+  schema: GraphQLSchema,
+): Set<string> {
+  const pairs = new Set<string>();
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      pairs.add(`${parentType.name}.${sel.name.value}`);
+      if (sel.selectionSet) {
+        const fieldDef = parentType.getFields()[sel.name.value];
+        if (fieldDef) {
+          const namedType = getNamedType(fieldDef.type);
+          if (isObjectType(namedType)) {
+            for (const p of collectProvidedTypeFieldPairs(
+              sel.selectionSet,
+              namedType,
+              schema,
+            )) {
+              pairs.add(p);
+            }
+          }
+        }
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT && sel.selectionSet) {
+      const condType = sel.typeCondition
+        ? (schema.getType(
+            sel.typeCondition.name.value,
+          ) as GraphQLObjectType | null)
+        : parentType;
+      if (condType && isObjectType(condType)) {
+        for (const p of collectProvidedTypeFieldPairs(
+          sel.selectionSet,
+          condType,
+          schema,
+        )) {
+          pairs.add(p);
+        }
+      }
+    }
+  }
+  return pairs;
+}
+
+// Flatten inline fragments (and matching fragment spreads) inside a
+// `@provides` selection set so that field-level subtraction can recognise
+// fields that were declared inside `... on TypeName { ... }`.
+//
+// The result is type-specific: when the planner is evaluating fields for a
+// concrete `gatewayType`, only inline fragments whose type condition is
+// compatible with that type are lifted up. Other inline fragments are
+// preserved as-is so that the same provided selection set can still be used
+// for other concrete types that go through the same merged-type resolver.
+const flattenSelectionsForTypeImpl = (
+  selectionSet: SelectionSetNode,
+  gatewayType: GraphQLObjectType,
+  schema: GraphQLSchema,
+): SelectionSetNode => {
+  let changed = false;
+  const flat: SelectionNode[] = [];
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
+      const condName = selection.typeCondition?.name.value;
+      const condType = condName ? schema.getType(condName) : gatewayType;
+      const matchesGatewayType =
+        condType != null &&
+        (condType.name === gatewayType.name ||
+          (isAbstractType(condType) &&
+            schema.isSubType(condType, gatewayType)));
+      if (matchesGatewayType) {
+        changed = true;
+        const inner = flattenSelectionsForType(
+          selection.selectionSet,
+          gatewayType,
+          schema,
+        );
+        for (const innerSel of inner.selections) {
+          flat.push(innerSel);
+        }
+        continue;
+      }
+    }
+    flat.push(selection);
+  }
+  if (!changed) {
+    return selectionSet;
+  }
+  return {
+    kind: Kind.SELECTION_SET,
+    selections: flat,
+  };
+};
+
+const flattenSelectionsForType = memoize3(flattenSelectionsForTypeImpl);
