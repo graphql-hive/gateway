@@ -161,6 +161,7 @@ export function getFieldsNotInSubschema(
         const subtracted = subtractSelectionSets(
           subFieldSelection,
           flattenedProvided,
+          fragments,
         );
         if (subtracted?.selections?.length) {
           fieldNotInSchema = true;
