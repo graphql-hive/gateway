@@ -1,5 +1,20 @@
 # @graphql-hive/router-runtime
 
+## 1.4.15
+### Patch Changes
+
+
+
+- [#2467](https://github.com/graphql-hive/gateway/pull/2467) [`d51423d`](https://github.com/graphql-hive/gateway/commit/d51423d14a0aa97429c3d7d013a07e2c48d6eb62) Thanks [@vyacheslav-voloshyn](https://github.com/vyacheslav-voloshyn)! - Fix `BatchFetch` execution dropping the `$representations` variable for an entity alias that resolved to zero representations.
+  
+  When a `BatchFetch` plan node groups several entity fetches for the same subgraph into one aliased `_entities` request and one alias resolves to an empty representation list (e.g. a nullable federated field that is `null`), `buildBatchFetchVariables` omitted that alias's variable. The batched document still declares it as a required `[_Any!]!`, so the operation declared a variable it never provided and the subgraph rejected the whole request — failing the sibling aliases that *did* have representations.
+  
+  Empty aliases now send `[]`, keeping the operation valid (`_entities(representations: [])` simply returns `[]`).
+- Updated dependencies [[`0bbdbbc`](https://github.com/graphql-hive/gateway/commit/0bbdbbc22b75d9705a77f96144af002c796a695d)]:
+  - @graphql-tools/delegate@12.0.19
+  - @graphql-tools/federation@4.4.8
+  - @graphql-mesh/fusion-runtime@1.10.10
+
 ## 1.4.14
 ### Patch Changes
 
