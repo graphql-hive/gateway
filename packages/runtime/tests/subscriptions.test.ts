@@ -241,6 +241,69 @@ describe('Subscriptions', () => {
     });
   });
 
+  it('does not pin subscriptions during graceful reload', async () => {
+    let changeSchema = false;
+    const subscribed = createDeferred<void>();
+
+    await using serve = createGatewayTester({
+      pollingInterval: 500,
+      gracefulSchemaReload: { drainTimeout: 30_000 },
+      subgraphs: () => {
+        if (changeSchema) {
+          return [
+            {
+              name: 'upstream',
+              schema: {
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    foo: String
+                  }
+                `,
+                resolvers: { Query: { foo: () => 'bar2' } },
+              },
+            },
+          ];
+        }
+        return [{ name: 'upstream', schema: upstreamSchema }];
+      },
+    });
+
+    const sse = createSSEClient({
+      url: 'http://mesh/graphql',
+      fetchFn: serve.fetch,
+      on: { connected: () => subscribed.resolve() },
+    });
+    const sub = sse.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          neverEmits
+        }
+      `,
+    });
+    const msgs: unknown[] = [];
+    const consumed = (async () => {
+      for await (const msg of sub) {
+        msgs.push(msg);
+      }
+    })();
+    await subscribed.promise;
+
+    changeSchema = true;
+    globalThis.setTimeout(() => {
+      void serve.execute({ query: `{ foo }` });
+    }, 1000);
+    await consumed;
+
+    expect(msgs[msgs.length - 1]).toMatchObject({
+      errors: [
+        {
+          extensions: { code: 'SCHEMA_RELOAD' },
+          message: 'operation has been aborted due to a schema reload',
+        },
+      ],
+    });
+  });
+
   it('releases the generation pin of an aborted operation so the superseded generation still drains', async () => {
     let changeSchema = false;
     const blockingEntered = createDeferred<void>();
