@@ -190,6 +190,92 @@ describe('Polling', () => {
     // Check if transport executor is disposed on global shutdown
     expect(disposeFn).toHaveBeenCalledTimes(3);
   });
+  it('waits for each generation cache write when that generation is disposed', async () => {
+    const schemas = [
+      createSchema({ typeDefs: 'type Query { value: String }' }),
+      createSchema({ typeDefs: 'type Query { value: String, next: String }' }),
+    ];
+    const cacheWrites = [createDeferred<void>(), createDeferred<void>()];
+    let schemaIndex = 0;
+
+    const log = new Logger({ level: false });
+    const manager = new UnifiedGraphManager({
+      getUnifiedGraph: () => schemas[schemaIndex]!,
+      transportContext: {
+        log,
+        logger: LegacyLogger.from(log),
+        cache: {
+          get: () => undefined,
+          set: () => cacheWrites[schemaIndex]!.promise,
+          delete: () => true,
+          getKeysByPrefix: () => [],
+        },
+      },
+    });
+
+    await manager.getUnifiedGraph();
+    schemaIndex = 1;
+    const reloaded = manager.invalidateUnifiedGraph();
+    let reloadFinished = false;
+    Promise.resolve(reloaded).then(() => {
+      reloadFinished = true;
+    });
+    await Promise.resolve();
+    expect(reloadFinished).toBe(false);
+
+    cacheWrites[0]!.resolve();
+    await reloaded;
+
+    const disposed = manager[DisposableSymbols.asyncDispose]();
+    let disposeFinished = false;
+    Promise.resolve(disposed).then(() => {
+      disposeFinished = true;
+    });
+    await Promise.resolve();
+    expect(disposeFinished).toBe(false);
+
+    cacheWrites[1]!.resolve();
+    await disposed;
+  });
+
+  it('retires the previous generation before publishing the new schema', async () => {
+    const schemas = [
+      createSchema({ typeDefs: 'type Query { value: String }' }),
+      createSchema({ typeDefs: 'type Query { value: String, next: String }' }),
+    ];
+    let schemaIndex = 0;
+    let releaseDuringPublish: (() => void) | undefined;
+    let disposedDuringPublish = false;
+    let publishing = false;
+
+    await using manager = new UnifiedGraphManager({
+      getUnifiedGraph: () => schemas[schemaIndex]!,
+      schemaReloadDrainTimeout: 30_000,
+      onUnifiedGraphChange() {
+        publishing = true;
+        releaseDuringPublish?.();
+        publishing = false;
+      },
+      handleUnifiedGraph: ({ unifiedGraph }) => ({
+        unifiedGraph,
+        getSubgraphSchema: () => unifiedGraph,
+        executor: makeDisposable(createDefaultExecutor(unifiedGraph), () => {
+          if (publishing) {
+            disposedDuringPublish = true;
+          }
+        }),
+      }),
+    });
+
+    const firstSchema = await manager.getUnifiedGraph();
+    releaseDuringPublish = manager.retainGenerationFor(firstSchema)!.release;
+    schemaIndex = 1;
+
+    await manager.invalidateUnifiedGraph();
+
+    expect(disposedDuringPublish).toBe(true);
+  });
+
   it('continues polling after failing initial fetch', async () => {
     const advanceTimersByTimeAsync = useFakeTimers();
     const pollingInterval = 300;

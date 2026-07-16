@@ -11,6 +11,7 @@ import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
+  SchemaGenerationLease,
 } from '@graphql-mesh/fusion-runtime';
 import {
   handleMaybePromiseMaybeAsyncIterableResult,
@@ -241,6 +242,13 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T> | undefined;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
+  // Pins the schema generation an operation executes against for the operation's
+  // whole lifetime. Only set when a unified graph manager is in use AND
+  // gracefulSchemaReload is enabled; left undefined otherwise (proxy path, or
+  // feature off — superseded generations are then disposed immediately anyway).
+  let retainGenerationFor:
+    | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
+    | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
@@ -329,6 +337,19 @@ export function createGatewayRuntime<
     });
     // @ts-expect-error the ServerContext does not match
     persistedDocumentsPlugin = plugin;
+  }
+
+  if (
+    ('proxy' in config || 'subgraph' in config) &&
+    'gracefulSchemaReload' in config &&
+    config['gracefulSchemaReload'] != null
+  ) {
+    // Generation overlap is a supergraph concept (executor + subgraph
+    // transports per generation); accepting the option here would silently do
+    // nothing while the operator believes in-flight operations survive reloads.
+    throw new Error(
+      'gracefulSchemaReload is only supported with a supergraph configuration',
+    );
   }
 
   if ('proxy' in config) {
@@ -637,6 +658,29 @@ export function createGatewayRuntime<
         )(...args),
     };
 
+    const gracefulSchemaReload = config.gracefulSchemaReload;
+    if (gracefulSchemaReload) {
+      // Number.isFinite rejects NaN, Infinity and non-numbers in one check
+      // (NaN <= 0 / NaN < 1 are both false, so a plain comparison would let an
+      // invalid value through).
+      if (
+        !Number.isFinite(gracefulSchemaReload.drainTimeout) ||
+        gracefulSchemaReload.drainTimeout <= 0
+      ) {
+        throw new Error(
+          'gracefulSchemaReload.drainTimeout must be a finite positive number of milliseconds',
+        );
+      }
+      if (
+        gracefulSchemaReload.maxConcurrentGenerations != null &&
+        (!Number.isFinite(gracefulSchemaReload.maxConcurrentGenerations) ||
+          gracefulSchemaReload.maxConcurrentGenerations < 1)
+      ) {
+        throw new Error(
+          'gracefulSchemaReload.maxConcurrentGenerations must be a finite number that is at least 1',
+        );
+      }
+    }
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
@@ -661,6 +705,11 @@ export function createGatewayRuntime<
       batch: config.__experimental__batchExecution,
       batchDelegateOptions: config.__experimental__batchDelegateOptions,
       handleProgressiveOverride: config.progressiveOverride,
+      // Public `gracefulSchemaReload` maps onto the manager's
+      // schemaReloadDrainTimeout / maxConcurrentSchemaGenerations opts.
+      schemaReloadDrainTimeout: gracefulSchemaReload?.drainTimeout,
+      maxConcurrentSchemaGenerations:
+        gracefulSchemaReload?.maxConcurrentGenerations,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
@@ -687,6 +736,14 @@ export function createGatewayRuntime<
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
+    if (gracefulSchemaReload) {
+      // Pinning only matters when superseded generations may drain; with the
+      // feature off they are disposed immediately regardless of in-flight
+      // work, so skip the per-operation bookkeeping (and its untracked-schema
+      // warning) entirely.
+      retainGenerationFor = (schema) =>
+        unifiedGraphManager.retainGenerationFor(schema);
+    }
     unifiedGraphPlugin = {
       onDispose() {
         return handleMaybePromise(
@@ -750,20 +807,73 @@ export function createGatewayRuntime<
 
   if (getExecutor) {
     const onExecute = ({
+      args,
+      executeFn,
       setExecuteFn,
-    }: OnExecuteEventPayload<GatewayContext>) =>
-      handleMaybePromise(
-        () => getExecutor?.(),
+    }: OnExecuteEventPayload<GatewayContext>) => {
+      // Pin the generation this operation runs against until it fully completes,
+      // so a schema reload mid-operation does not abort it (graceful schema
+      // reload). Subscriptions go through onSubscribe and are intentionally not
+      // pinned. The lease's release callback is idempotent.
+      const lease = retainGenerationFor?.(args.schema);
+      return handleMaybePromise(
+        // The operation must execute on the generation it pinned — a reload may
+        // already have made a newer generation current. Only unpinned operations
+        // (schema untracked or generation already disposed) fall back to the
+        // current generation's executor.
+        () => (lease ? lease.executor : getExecutor?.()),
         (executor) => {
-          if (executor) {
-            const executeFn = getExecuteFnFromExecutor(executor);
-            setExecuteFn(executeFn);
+          const baseExecuteFn = executor
+            ? getExecuteFnFromExecutor(executor)
+            : executeFn;
+          if (!lease) {
+            if (executor) {
+              setExecuteFn(baseExecuteFn);
+            }
+            return undefined;
           }
+          // envelop only runs onExecuteDone when execution resolves; a rejected
+          // execution (e.g. aborted through execution cancellation) would leak
+          // the pin until the drain timeout, so release it on rejection here.
+          setExecuteFn((execArgs) =>
+            handleMaybePromise(
+              () => baseExecuteFn(execArgs),
+              (result) => result,
+              (error) => {
+                lease.release();
+                throw error;
+              },
+            ),
+          );
+          return {
+            onExecuteDone({ result }: { result: unknown }) {
+              // Incremental-delivery results (@defer / @stream) keep using this
+              // generation until the stream ends; release only then. Single
+              // results are complete now.
+              if (isAsyncIterable(result)) {
+                return { onEnd: lease.release };
+              }
+              lease.release();
+              return undefined;
+            },
+          };
+        },
+        // getExecutor()/schema load rejected before execution started: release
+        // the pin so the generation can still drain.
+        (error) => {
+          lease?.release();
+          throw error;
         },
       );
+    };
     const onSubscribe = ({
       setSubscribeFn,
     }: OnSubscribeEventPayload<GatewayContext>) =>
+      // Subscriptions are intentionally NOT pinned to a generation (no
+      // retainGenerationFor here): they are long-lived, so rather than keeping
+      // the old generation alive indefinitely they end — when that generation
+      // is disposed (immediately on reload when idle, otherwise once it
+      // finishes draining) — and the client reconnects against the new schema.
       handleMaybePromise(
         () => getExecutor?.(),
         (executor) => {

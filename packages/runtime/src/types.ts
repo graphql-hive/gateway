@@ -273,6 +273,15 @@ export interface GatewayConfigSupergraph<
    * @experimental This option is experimental and may change in the future.
    */
   unifiedGraphHandler?: UnifiedGraphHandler;
+
+  /**
+   * Gracefully reload the supergraph by letting in-flight operations finish on
+   * the previous schema generation instead of aborting them. Disabled by
+   * default (previous generation is disposed immediately on reload).
+   *
+   * @see {@link GracefulSchemaReloadConfig}
+   */
+  gracefulSchemaReload?: GracefulSchemaReloadConfig;
 }
 
 export type ProgressiveOverrideHandler = (
@@ -501,6 +510,54 @@ export interface GatewayHivePersistedDocumentsOptions {
    * @default "hive:pd:"
    */
   cacheKeyPrefix?: string;
+}
+
+/**
+ * Options for gracefully reloading the supergraph ("generation overlap").
+ *
+ * By default, when the supergraph schema changes, the previous generation
+ * (executor + subgraph transports) is disposed immediately, which aborts any
+ * in-flight operation still running on it with an `extensions.code:
+ * "SCHEMA_RELOAD"` / HTTP 503 error (queries are then retried on the new schema
+ * by the built-in retry-on-schema-reload plugin; mutations are not).
+ *
+ * When this option is provided, the previous generation is instead kept alive
+ * and only NEW requests are routed to the new generation. In-flight operations
+ * on the previous generation are allowed to finish ("drain") under the schema
+ * they were admitted on, and the previous generation is disposed once it is idle
+ * — or force-disposed once {@link drainTimeout} elapses, whichever comes first.
+ * Incremental-delivery operations (`@defer` / `@stream`) are kept alive until
+ * their stream ends.
+ *
+ * Subscriptions are NOT pinned: they are long-lived, so a subscription on a
+ * superseded generation ends with `SCHEMA_RELOAD` when that generation is
+ * disposed — immediately on reload when it has no in-flight operations,
+ * otherwise once it finishes draining (at the latest after
+ * {@link drainTimeout}) — and the client reconnects against the new schema.
+ *
+ * Schema-replacing plugins must preserve the schema object supplied by the
+ * gateway. If a plugin replaces or rebuilds it, the gateway cannot associate
+ * operations with their schema generation, so graceful reload does not protect
+ * those operations. The gateway logs a warning once when this occurs.
+ */
+export interface GracefulSchemaReloadConfig {
+  /**
+   * Maximum time, in milliseconds, to keep a superseded schema generation alive
+   * so that in-flight operations can finish before it is force-disposed
+   * (aborting any operations still in flight, as in the default behavior).
+   *
+   * Must be greater than 0 to enable graceful reload.
+   */
+  drainTimeout: number;
+  /**
+   * Maximum number of schema generations kept alive at the same time (the
+   * current generation plus any still-draining previous generations). When a
+   * reload would exceed this number, the oldest draining generation is
+   * force-disposed. Must be at least 1.
+   *
+   * @default 10
+   */
+  maxConcurrentGenerations?: number;
 }
 
 export interface GatewayConfigBase<TContext extends Record<string, any>> {
