@@ -534,6 +534,11 @@ export interface GatewayHivePersistedDocumentsOptions {
  * disposed — immediately on reload when it has no in-flight operations,
  * otherwise once it finishes draining (at the latest after
  * {@link drainTimeout}) — and the client reconnects against the new schema.
+ *
+ * Schema-replacing plugins must preserve the schema object supplied by the
+ * gateway. If a plugin replaces or rebuilds it, the gateway cannot associate
+ * operations with their schema generation, so graceful reload does not protect
+ * those operations. The gateway logs a warning once when this occurs.
  */
 export interface GracefulSchemaReloadConfig {
   /**
