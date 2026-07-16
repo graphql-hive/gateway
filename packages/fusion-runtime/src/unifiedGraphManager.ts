@@ -508,6 +508,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           const previousGeneration = this.currentGeneration;
           const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
 
+          const disposePrevious =
+            previousGeneration && previousUnifiedGraph != null
+              ? this.retirePreviousGeneration(previousGeneration)
+              : undefined;
+
           this.currentGeneration = generation;
           this.generationBySchema.set(newUnifiedGraph, generation);
           this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
@@ -523,7 +528,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               'Supergraph has been changed, updating...',
             );
             return handleMaybePromise(
-              () => this.retirePreviousGeneration(previousGeneration),
+              () => disposePrevious,
               () => this.unifiedGraph!,
               (err) => {
                 this.opts.transportContext?.log.error(

@@ -190,6 +190,44 @@ describe('Polling', () => {
     // Check if transport executor is disposed on global shutdown
     expect(disposeFn).toHaveBeenCalledTimes(3);
   });
+  it('retires the previous generation before publishing the new schema', async () => {
+    const schemas = [
+      createSchema({ typeDefs: 'type Query { value: String }' }),
+      createSchema({ typeDefs: 'type Query { value: String, next: String }' }),
+    ];
+    let schemaIndex = 0;
+    let releaseDuringPublish: (() => void) | undefined;
+    let disposedDuringPublish = false;
+    let publishing = false;
+
+    await using manager = new UnifiedGraphManager({
+      getUnifiedGraph: () => schemas[schemaIndex]!,
+      schemaReloadDrainTimeout: 30_000,
+      onUnifiedGraphChange() {
+        publishing = true;
+        releaseDuringPublish?.();
+        publishing = false;
+      },
+      handleUnifiedGraph: ({ unifiedGraph }) => ({
+        unifiedGraph,
+        getSubgraphSchema: () => unifiedGraph,
+        executor: makeDisposable(createDefaultExecutor(unifiedGraph), () => {
+          if (publishing) {
+            disposedDuringPublish = true;
+          }
+        }),
+      }),
+    });
+
+    const firstSchema = await manager.getUnifiedGraph();
+    releaseDuringPublish = manager.retainGenerationFor(firstSchema)!.release;
+    schemaIndex = 1;
+
+    await manager.invalidateUnifiedGraph();
+
+    expect(disposedDuringPublish).toBe(true);
+  });
+
   it('continues polling after failing initial fetch', async () => {
     const advanceTimersByTimeAsync = useFakeTimers();
     const pollingInterval = 300;
