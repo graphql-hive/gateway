@@ -390,6 +390,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         return this.unifiedGraph;
       }
       let serializedUnifiedGraph: string | undefined;
+      let cacheSet$: PromiseLike<void> | undefined;
       if (!doNotCache && this.opts.transportContext?.cache) {
         serializedUnifiedGraph =
           serializeLoadedUnifiedGraph(loadedUnifiedGraph);
@@ -412,18 +413,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               );
             };
             try {
-              const cacheSet$ = this.opts.transportContext?.cache.set(
+              const result = this.opts.transportContext?.cache.set(
                 UNIFIEDGRAPH_CACHE_KEY,
                 serializedUnifiedGraph,
                 { ttl },
               );
-              if (isPromise(cacheSet$)) {
-                cacheSet$.then(() => {}, logCacheSetError);
-                // Tie the cache write to the current generation's transport
-                // stack disposal (no generation yet on the very first load).
-                this.currentGeneration?.transportExecutorStack?.defer(
-                  () => cacheSet$,
-                );
+              if (isPromise(result)) {
+                cacheSet$ = result;
+                result.then(() => {}, logCacheSetError);
               }
             } catch (e) {
               logCacheSetError(e);
@@ -489,6 +486,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             superseded: false,
             disposed: false,
           };
+          if (cacheSet$) {
+            transportExecutorStack.defer(() => cacheSet$!);
+          }
           onSubgraphExecute = getOnSubgraphExecute({
             onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
             transports: this.opts.transports,
