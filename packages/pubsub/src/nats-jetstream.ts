@@ -3,7 +3,11 @@ import { DeliverPolicy, jetstream } from '@nats-io/jetstream';
 import type { NatsConnection } from '@nats-io/nats-core';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { fakePromise, type MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  fakePromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
 /**
@@ -217,7 +221,7 @@ export class NATSJetStreamPubSub<
     // to be established before publishing when they cannot afford to miss the first message
     return new Repeater<JetStreamTopicDataMap<M>[Topic], any, any>(
       async (push, stopped) => {
-        const consumerClosed = Promise.withResolvers<void>();
+        const consumerClosed = createDeferredPromise<void>();
         const stop = await this.#consume(
           topic,
           optionsOrListener?.cursor,
