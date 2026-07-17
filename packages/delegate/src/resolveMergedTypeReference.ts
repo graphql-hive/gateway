@@ -15,7 +15,7 @@ import { StitchingInfo } from './types.js';
 // presence-based only: values are not type-checked, a null leaf counts as
 // satisfied while a null object with a requested sub-selection does not
 function valueSatisfiesSelectionSet(
-  value: any,
+  value: unknown,
   selectionSet: SelectionSetNode,
 ): boolean {
   if (Array.isArray(value)) {
@@ -26,6 +26,7 @@ function valueSatisfiesSelectionSet(
   if (value == null || typeof value !== 'object') {
     return false;
   }
+  const objectValue = value as Record<string, unknown>;
   return selectionSet.selections.every((selection) => {
     if (selection.kind === Kind.INLINE_FRAGMENT) {
       return valueSatisfiesSelectionSet(value, selection.selectionSet);
@@ -35,9 +36,12 @@ function valueSatisfiesSelectionSet(
     }
     const responseKey = selection.alias?.value || selection.name.value;
     return (
-      value[responseKey] !== undefined &&
+      objectValue[responseKey] !== undefined &&
       (selection.selectionSet == null ||
-        valueSatisfiesSelectionSet(value[responseKey], selection.selectionSet))
+        valueSatisfiesSelectionSet(
+          objectValue[responseKey],
+          selection.selectionSet,
+        ))
     );
   });
 }
@@ -93,13 +97,14 @@ export function resolveMergedTypeReference<
 // the payload is a raw resolver result keyed by field name (aliases are a
 // client-side concern); null composites are missing, null leaves are not
 function getMissingSelections(
-  value: any,
+  value: unknown,
   selections: readonly SelectionNode[],
   fragments: Record<string, FragmentDefinitionNode> = {},
 ): SelectionNode[] {
   if (value == null || typeof value !== 'object') {
     return [...selections];
   }
+  const objectValue = value as Record<string, unknown>;
   const missing: SelectionNode[] = [];
   for (const selection of selections) {
     if (selection.kind === Kind.INLINE_FRAGMENT) {
@@ -140,7 +145,7 @@ function getMissingSelections(
       }
       continue;
     }
-    const fieldValue = value[selection.name.value];
+    const fieldValue = objectValue[selection.name.value];
     if (
       fieldValue === undefined ||
       (fieldValue === null && selection.selectionSet != null)
@@ -182,7 +187,7 @@ function getMissingSelections(
 }
 
 function resolveOne<TContext extends Record<string, any>>(
-  value: any,
+  value: unknown,
   context: TContext,
   info: GraphQLResolveInfo,
   stitchingInfo: StitchingInfo<TContext>,
@@ -201,8 +206,12 @@ function resolveOne<TContext extends Record<string, any>>(
   ) {
     return value;
   }
+  const objectValue = value as Record<string, unknown>;
   const returnType = getNamedType(info.returnType);
-  const typeName: string = value['__typename'] ?? returnType.name;
+  const typeName =
+    typeof objectValue['__typename'] === 'string'
+      ? objectValue['__typename']
+      : returnType.name;
   const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
   if (mergedTypeInfo == null) {
     return value;
@@ -235,8 +244,8 @@ function resolveOne<TContext extends Record<string, any>>(
     if (valueSatisfiesSelectionSet(value, keySelectionSet)) {
       const resolver = mergedTypeInfo.resolvers.get(subschema);
       if (resolver != null) {
-        if (value['__typename'] == null && !isAbstractType(returnType)) {
-          value['__typename'] = typeName;
+        if (objectValue['__typename'] == null && !isAbstractType(returnType)) {
+          objectValue['__typename'] = typeName;
         }
         return handleMaybePromise(
           () =>
