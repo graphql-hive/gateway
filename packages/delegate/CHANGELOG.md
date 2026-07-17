@@ -1,5 +1,19 @@
 # @graphql-tools/delegate
 
+## 12.0.20
+### Patch Changes
+
+
+
+- [#2474](https://github.com/graphql-hive/gateway/pull/2474) [`8a08de3`](https://github.com/graphql-hive/gateway/commit/8a08de36be598f975ba500a28a9bd9710ead2d66) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix delegated argument variable type compatibility
+  
+  Avoid reusing variables whose types are incompatible with target schema argument types, and create correctly typed variables instead.
+
+
+- [#2475](https://github.com/graphql-hive/gateway/pull/2475) [`65ce370`](https://github.com/graphql-hive/gateway/commit/65ce3702231068c946d4f95147b556cab57ad28c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix enum argument serialization when delegating to a field removed from the transformed schema.
+  
+  When a delegated query field is filtered from the transformed schema, its arguments now use the original subschema for type lookup. This ensures enum values are sent as typed variables instead of invalid quoted enum literals while preserving input field transforms for fields that remain exposed.
+
 ## 12.0.19
 ### Patch Changes
 
