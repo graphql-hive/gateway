@@ -151,8 +151,7 @@ export function createRequest({
         if (existingArgNode?.value.kind === Kind.VARIABLE) {
           const existingVarName = existingArgNode.value.name.value;
           const existingVarIndex = variableDefinitions.findIndex(
-            (definition) =>
-              definition.variable.name.value === existingVarName,
+            (definition) => definition.variable.name.value === existingVarName,
           );
           if (existingVarIndex !== -1) {
             variableDefinitions.splice(existingVarIndex, 1);
