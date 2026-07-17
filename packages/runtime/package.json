@@ -67,7 +67,7 @@
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/federation": "workspace:^",
     "@graphql-tools/stitch": "workspace:^",
-    "@graphql-tools/utils": "^11.0.0",
+    "@graphql-tools/utils": "11.2.1-rc-20260717092129-624f1b3f2a1bf4721edde659d2d0a914a68e20c8",
     "@graphql-tools/wrap": "workspace:^",
     "@graphql-yoga/plugin-apollo-usage-report": "^0.16.0",
     "@graphql-yoga/plugin-csrf-prevention": "^3.16.2",
