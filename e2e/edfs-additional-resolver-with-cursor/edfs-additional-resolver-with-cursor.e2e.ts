@@ -97,7 +97,6 @@ it('replays missed events from the cursor of the last received one', async () =>
   await publishReviewCreated('1');
 
   const first: any = await firstMsg;
-  console.log(first);
   expect(first.data.reviewCreated.review).toEqual({
     id: '1',
     content: 'Great desk!',
