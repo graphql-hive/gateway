@@ -1,6 +1,13 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { createGraphQLError } from '@graphql-tools/utils';
-import { graphql, Kind, OperationTypeNode } from 'graphql';
+import {
+  buildSchema,
+  graphql,
+  Kind,
+  OperationTypeNode,
+  parse,
+  validate,
+} from 'graphql';
 import { describe, expect, test } from 'vitest';
 import { createRequest } from '../src/createRequest.js';
 import { delegateRequest } from '../src/delegateToSchema.js';
@@ -274,4 +281,47 @@ describe('bare requests', () => {
       ],
     });
   });
+});
+
+test('creates a target-compatible variable when reusing an argument value', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    type Identity {
+      id: ID!
+    }
+    type Query {
+      identity(id: ID!): Identity!
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    query GetIdentity($identityId: ID) {
+      identity(id: $identityId) {
+        id
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+
+  const request = createRequest({
+    subgraphName: 'identity',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'identity',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error we are testing the creation of a request with a variable
+    info: {
+      operation,
+      variableValues: { identityId: 'identity-abc-123' },
+    },
+    args: { id: 'identity-abc-123' },
+  });
+
+  expect(validate(targetSchema, request.document)).toEqual([]);
 });

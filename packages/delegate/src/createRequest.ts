@@ -16,12 +16,14 @@ import {
   isInputObjectType,
   isListType,
   isNonNullType,
+  isTypeSubTypeOf,
   Kind,
   NameNode,
   OperationDefinitionNode,
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
+  typeFromAST,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
 
@@ -103,12 +105,26 @@ export function createRequest({
         (argNode) => argNode.name.value === argName,
       );
       // Check if we can re-use the variable from the original request for this argument
-      if (existingArgNode?.value.kind === Kind.VARIABLE) {
+      if (existingArgNode?.value.kind === Kind.VARIABLE && argInstance) {
         const varName = existingArgNode.value.name.value;
         const varValue = newVariables[varName];
-        // If the variable value is the same as the argument value,
-        // we can re-use the variable and its definition
-        if (varValue === argValue) {
+        const variableDefinition = variableDefinitions.find(
+          (definition) => definition.variable.name.value === varName,
+        );
+        const variableType =
+          variableDefinition && targetSchema
+            ? typeFromAST(info?.schema ?? targetSchema, variableDefinition.type)
+            : undefined;
+        // If the variable value and type are compatible, we can re-use them
+        if (
+          varValue === argValue &&
+          variableType &&
+          isTypeSubTypeOf(
+            info?.schema ?? targetSchema!,
+            variableType,
+            argInstance.type,
+          )
+        ) {
           argNodes.push(existingArgNode);
           continue;
         }
@@ -130,6 +146,16 @@ export function createRequest({
           let i = 0;
           while (varExists(varName)) {
             varName = `_${i++}_${rootFieldName}_${argName}`;
+          }
+        }
+        if (existingArgNode?.value.kind === Kind.VARIABLE) {
+          const existingVarName = existingArgNode.value.name.value;
+          const existingVarIndex = variableDefinitions.findIndex(
+            (definition) => definition.variable.name.value === existingVarName,
+          );
+          if (existingVarIndex !== -1) {
+            variableDefinitions.splice(existingVarIndex, 1);
+            delete newVariables[existingVarName];
           }
         }
         variableDefinitions.push({
