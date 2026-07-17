@@ -1,8 +1,9 @@
+import type { JetStreamClient, JsMsg } from '@nats-io/jetstream';
 import { DeliverPolicy, jetstream } from '@nats-io/jetstream';
-import type { JetStreamClient } from '@nats-io/jetstream';
 import type { NatsConnection } from '@nats-io/nats-core';
+import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type { MaybePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise, type MaybePromise } from '@whatwg-node/promise-helpers';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
 /**
@@ -16,7 +17,7 @@ export type JetStreamTopicDataMap<M extends TopicDataMap> = {
   };
 };
 
-/** Subscribe options required by {@link NATSJetStreamPubSub} for every topic. */
+/** Subscribe options for {@link NATSJetStreamPubSub}, omit to only receive new messages. */
 export type JetStreamSubscribeOptions = {
   /**
    * Opaque cursor returned by a previous subscription's message, replay resumes right after it.
@@ -55,14 +56,14 @@ export interface NATSJetStreamPubSubOptions {
  * {@link PubSub Hive PubSub} implementation using [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)
  * persisted streams.
  *
- * Unlike {@link PubSub}'s regular AsyncIterable subscribe, subscribing here yields the published
- * data alongside an opaque `cursor`. Passing that cursor back in through the subscribe options on
- * a later subscription resumes delivery right after it, allowing subscribers to recover events
- * missed while disconnected.
+ * Subscribe normally to receive published data like any other {@link PubSub}. Pass subscribe
+ * options to receive the data alongside an opaque `cursor`. Passing that cursor back on a later
+ * subscription resumes delivery right after it, allowing subscribers to recover events missed
+ * while disconnected.
  */
 export class NATSJetStreamPubSub<
   M extends TopicDataMap = TopicDataMap,
-> implements PubSub<JetStreamTopicDataMap<M>, JetStreamSubscribeOptions> {
+> implements PubSub<M, JetStreamSubscribeOptions> {
   #disposed = false;
   #closeOnDispose: boolean;
   #nats: NatsConnection;
@@ -108,98 +109,113 @@ export class NATSJetStreamPubSub<
     return distinctTopics;
   }
 
-  public async publish<Topic extends keyof M>(topic: Topic, data: M[Topic]) {
+  public publish<Topic extends keyof M>(topic: Topic, data: M[Topic]) {
     if (this.#disposed) {
       throw new Error('PubSub is disposed, cannot publish data');
     }
     // publishing through JetStream (instead of core NATS) means we get a server
     // acknowledgement that the message was persisted to the stream
-    await this.#js.publish(this.#topicToSubject(topic), JSON.stringify(data));
+    return this.#js
+      .publish(this.#topicToSubject(topic), JSON.stringify(data))
+      .then(() => undefined);
   }
 
-  #subscribe<Topic extends keyof M>(
-    topic: Topic,
+  /**
+   * An ordered consumer is a fresh ephemeral consumer, exactly what we want for a resumable
+   * per-subscription cursor: no shared/durable state between subscribers.
+   */
+  #createConsumer(topic: keyof M, cursor: string | undefined) {
+    return this.#js.consumers.get(this.#stream, {
+      filter_subjects: [this.#topicToSubject(topic)],
+      ...(cursor === undefined
+        ? { deliver_policy: DeliverPolicy.New }
+        : {
+            deliver_policy: DeliverPolicy.StartSequence,
+            opt_start_seq: this.#parseCursor(cursor) + 1,
+          }),
+    });
+  }
+
+  async #consume(
+    topic: keyof M,
     cursor: string | undefined,
-  ): AsyncIterable<JetStreamTopicDataMap<M>[Topic]> {
-    const subject = this.#topicToSubject(topic);
-    const self = this;
-    async function* generate(): AsyncGenerator<
-      JetStreamTopicDataMap<M>[Topic]
-    > {
-      // an ordered consumer is a fresh ephemeral consumer, exactly what we want for a
-      // resumable per-subscription cursor: no shared/durable state between subscribers
-      const consumer = await self.#js.consumers.get(self.#stream, {
-        filter_subjects: [subject],
-        ...(cursor === undefined
-          ? { deliver_policy: DeliverPolicy.New }
-          : {
-              deliver_policy: DeliverPolicy.StartSequence,
-              opt_start_seq: self.#parseCursor(cursor) + 1,
-            }),
-      });
-      const messages = await consumer.consume();
-      const stop = async () => {
-        self.#activeConsumers.delete(stop);
-        await messages.close();
-      };
-      self.#activeConsumers.set(stop, topic);
-      try {
-        for await (const msg of messages) {
-          yield {
-            data: msg.json<M[Topic]>(),
-            cursor: String(msg.seq),
-          } as JetStreamTopicDataMap<M>[Topic];
+    callback: (msg: JsMsg) => void,
+    finished?: () => void,
+  ) {
+    const consumer = await this.#createConsumer(topic, cursor);
+    const messages = await consumer.consume({ callback });
+    const stop = async () => {
+      if (this.#activeConsumers.delete(stop)) {
+        try {
+          await messages.close();
+        } finally {
+          finished?.();
         }
-      } finally {
-        await stop();
       }
-    }
-    return generate();
+    };
+    this.#activeConsumers.set(stop, topic);
+    return stop;
   }
 
+  public subscribe<Topic extends keyof M>(
+    topic: Topic,
+  ): AsyncIterable<M[Topic]>;
   public subscribe<Topic extends keyof M>(
     topic: Topic,
     options: JetStreamSubscribeOptions,
   ): AsyncIterable<JetStreamTopicDataMap<M>[Topic]>;
   public subscribe<Topic extends keyof M>(
     topic: Topic,
-    listener: PubSubListener<JetStreamTopicDataMap<M>, Topic>,
+    listener: PubSubListener<M, Topic>,
   ): MaybePromise<() => MaybePromise<void>>;
   public subscribe<Topic extends keyof M>(
     topic: Topic,
     // the two overloads above are structurally incompatible (mandatory options vs a listener
     // function) so the implementation signature has to be loosely typed and narrowed at runtime
-    ...args: unknown[]
+    optionsOrListener?: JetStreamSubscribeOptions | PubSubListener<M, Topic>,
   ):
-    | AsyncIterable<JetStreamTopicDataMap<M>[Topic]>
+    | AsyncIterable<M[Topic] | JetStreamTopicDataMap<M>[Topic]>
     | MaybePromise<() => MaybePromise<void>> {
     if (this.#disposed) {
       throw new Error('PubSub is disposed, cannot subscribe to topics');
     }
 
-    const optionsOrListener = args[0] as
-      | JetStreamSubscribeOptions
-      | PubSubListener<JetStreamTopicDataMap<M>, Topic>;
-
-    if (typeof optionsOrListener !== 'function') {
-      return this.#subscribe(topic, optionsOrListener.cursor);
+    if (typeof optionsOrListener === 'function') {
+      // null out on unsubscribe so the listener can be GC'd (nats client may retain the callback)
+      const listenerRef = {
+        ref: optionsOrListener as typeof optionsOrListener | null,
+      };
+      // resolves only once the subscription is actually established, no need to wait/retry
+      const stop = this.#consume(topic, undefined, (msg) =>
+        listenerRef.ref?.(msg.json<M[Topic]>()),
+      );
+      return fakePromise(stop).then((stop) => async () => {
+        listenerRef.ref = null;
+        await stop();
+      });
     }
 
-    const listener = optionsOrListener;
-    const iterator = this.#subscribe(topic, undefined)[Symbol.asyncIterator]();
-    (async () => {
-      for (;;) {
-        const { value, done } = await iterator.next();
-        if (done) return;
-        listener(value);
-      }
-    })().catch(() => {
-      // subscription ended (e.g. unsubscribed), nothing to do
-    });
-
-    return async () => {
-      await iterator.return?.();
-    };
+    // consumer creation starts on the first pull, so callers must wait for the subscription
+    // to be established before publishing when they cannot afford to miss the first message
+    return new Repeater<JetStreamTopicDataMap<M>[Topic], any, any>(
+      async (push, stopped) => {
+        const stop = await this.#consume(
+          topic,
+          optionsOrListener?.cursor,
+          (msg) => {
+            const item: JetStreamTopicDataMap<M>[Topic] = {
+              data: msg.json<M[Topic]>(),
+              cursor: String(msg.seq),
+            };
+            void push(item);
+          },
+          stopped,
+        );
+        await stopped;
+        await stop();
+        // subscription ended (e.g. unsubscribed), nothing to do
+      },
+    );
   }
 
   public async dispose() {
