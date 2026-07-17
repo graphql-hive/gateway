@@ -97,6 +97,9 @@ function getMissingSelections(
   selections: readonly SelectionNode[],
   fragments: Record<string, FragmentDefinitionNode> = {},
 ): SelectionNode[] {
+  if (value == null || typeof value !== 'object') {
+    return [...selections];
+  }
   const missing: SelectionNode[] = [];
   for (const selection of selections) {
     if (selection.kind === Kind.INLINE_FRAGMENT) {
