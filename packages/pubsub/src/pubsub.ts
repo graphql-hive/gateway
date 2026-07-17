@@ -41,7 +41,9 @@ export interface PubSub<
    */
   subscribe<Topic extends keyof M>(
     topic: Topic,
-    ...options: SubscribeOptions extends never
+    // wrapped in tuples to keep the conditional non-distributive,
+    // otherwise SubscribeOptions=never collapses the rest param to never
+    ...options: [SubscribeOptions] extends [never]
       ? []
       : [options: SubscribeOptions]
   ): AsyncIterable<M[Topic]>;

@@ -10,7 +10,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { resolveMergedTypeReference } from '../src/resolveMergedTypeReference.js';
 import { UNPATHED_ERRORS_SYMBOL } from '../src/symbols.js';
-import { StitchingInfo } from '../src/types.js';
+import { MergedTypeResolver, StitchingInfo } from '../src/types.js';
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -87,7 +87,7 @@ describe('resolveMergedTypeReference', () => {
       name: 'Remote',
       surname: 'RemoteSurname',
     }));
-    const value = { id: '1' };
+    const value: { id: string; __typename?: string } = { id: '1' };
     const result = resolveMergedTypeReference(
       value,
       context,
@@ -118,7 +118,7 @@ describe('resolveMergedTypeReference', () => {
   });
 
   it('delegates only the fields missing from the payload', () => {
-    const resolver = vi.fn(() => ({ surname: 'Remote' }));
+    const resolver = vi.fn<MergedTypeResolver>(() => ({ surname: 'Remote' }));
     const value = { id: '1', name: 'Stale' };
     const result = resolveMergedTypeReference(
       value,
@@ -272,7 +272,10 @@ describe('resolveMergedTypeReference', () => {
   });
 
   it('excludes providedFields from the delegated selection', () => {
-    const resolver = vi.fn((value: any) => ({ ...value, surname: 'Remote' }));
+    const resolver = vi.fn<MergedTypeResolver>((value) => ({
+      ...value,
+      surname: 'Remote',
+    }));
     resolveMergedTypeReference(
       { id: '1' },
       context,
@@ -317,7 +320,9 @@ describe('resolveMergedTypeReference', () => {
   });
 
   it('keeps the alias in the delegated selection for missing fields', () => {
-    const resolver = vi.fn(() => ({ fullName: 'Remote' }));
+    const resolver = vi.fn<MergedTypeResolver>(() => ({
+      fullName: 'Remote',
+    }));
     resolveMergedTypeReference(
       { id: '1' },
       context,
@@ -332,7 +337,9 @@ describe('resolveMergedTypeReference', () => {
   });
 
   it('keeps only literal field names on the merged result, aliases resolve downstream', () => {
-    const resolver = vi.fn(() => ({ familyName: 'Remote' }));
+    const resolver = vi.fn<MergedTypeResolver>(() => ({
+      familyName: 'Remote',
+    }));
     const value = { id: '1', name: 'Local' };
     const result = resolveMergedTypeReference(
       value,
