@@ -7,12 +7,12 @@ import {
   isAsyncIterable,
   mergeDeep,
 } from '@graphql-tools/utils';
-import { wrapSchema } from '@graphql-tools/wrap';
+import { FilterRootFields, wrapSchema } from '@graphql-tools/wrap';
 import { graphql, OperationTypeNode, parse } from 'graphql';
 import _ from 'lodash';
 import { describe, expect, test } from 'vitest';
 import { delegateToSchema } from '../src/delegateToSchema.js';
-import { DelegationContext } from '../src/index.js';
+import { DelegationContext, Subschema } from '../src/index.js';
 
 function assertSome<T>(
   input: T,
@@ -69,6 +69,79 @@ describe('delegateToSchema', () => {
 
     assertSome(result.data);
     expect(result.data['delegateToSchema']).toEqual('test');
+  });
+
+  test('should serialize enum arguments when the delegated field is filtered from the transformed schema', async () => {
+    const innerSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        enum CustodianEnum {
+          so
+        }
+        input CustodianAccountID {
+          id: ID!
+          custodian: CustodianEnum!
+        }
+        type CustodianAccount {
+          id: ID!
+          custodian: CustodianEnum!
+        }
+        type Query {
+          custodianAccounts(ids: [CustodianAccountID!]!): [CustodianAccount!]!
+        }
+      `,
+      resolvers: {
+        Query: {
+          custodianAccounts: (_root, { ids }) => ids,
+        },
+      },
+    });
+    const subschema = new Subschema({
+      schema: innerSchema,
+      transforms: [
+        new FilterRootFields(
+          (_operation, fieldName) => fieldName !== 'custodianAccounts',
+        ),
+      ],
+    });
+    const outerSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        enum CustodianEnum {
+          so
+        }
+        type CustodianAccount {
+          id: ID!
+          custodian: CustodianEnum!
+        }
+        type Query {
+          account: CustodianAccount
+        }
+      `,
+      resolvers: {
+        Query: {
+          account: async (_root, _args, context, info) => {
+            const accounts = await delegateToSchema({
+              schema: subschema,
+              operation: OperationTypeNode.QUERY,
+              fieldName: 'custodianAccounts',
+              args: { ids: [{ id: '123', custodian: 'so' }] },
+              context,
+              info,
+              validateRequest: true,
+            });
+            return accounts[0];
+          },
+        },
+      },
+    });
+
+    const result = await graphql({
+      schema: outerSchema,
+      source: '{ account { id custodian } }',
+    });
+
+    expect(result).toEqual({
+      data: { account: { id: '123', custodian: 'so' } },
+    });
   });
 
   test('should work even where there are default fields', async () => {
