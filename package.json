@@ -71,7 +71,7 @@
     "@apollo/server": "5.5.1",
     "@apollo/subgraph": "2.14.0",
     "@graphql-mesh/types": "0.104.28",
-    "@graphql-mesh/utils": "0.104.38-alpha-20260717173123-0fdc1800aa1083a1c703a39b10032d1e368dc7e1",
+    "@graphql-mesh/utils": "0.104.38-alpha-20260717191133-97ee063bdca630f2b2a02b71b8455ae717fa36a2",
     "@graphql-tools/delegate": "workspace:*",
     "@isaacs/brace-expansion": "5.0.1",
     "@opentelemetry/otlp-exporter-base@npm:^0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A^0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
