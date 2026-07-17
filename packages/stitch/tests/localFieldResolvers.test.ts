@@ -44,8 +44,8 @@ function createRemoteSubschema(
 
 describe('local fields returning merged types', () => {
   it('resolves a mix of local and remote fields from a key-only local result', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -82,8 +82,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('does not delegate when the payload and local resolvers cover the request', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -119,8 +119,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('resolves aliased fields from the payload without delegating', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -150,8 +150,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('resolves aliased fields from local resolvers and delegates the rest', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -187,8 +187,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('resolves aliased payload fields to null once delegation happens', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -221,8 +221,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('resolves aliases on nested payload objects to null once delegation happens', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -255,15 +255,17 @@ describe('local fields returning merged types', () => {
     });
     expect(result).toEqual({
       data: {
-        getPerson: { friend: { nick: 'LocalFriend', surname: 'FriendSurname' } },
+        getPerson: {
+          friend: { nick: 'LocalFriend', surname: 'FriendSurname' },
+        },
       },
     });
     expect(personById).toHaveBeenCalledTimes(1);
   });
 
   it('hydrates a typeDefs-defined field through the default resolver', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -308,8 +310,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('does not delegate when the local result already satisfies the request', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -320,7 +322,11 @@ describe('local fields returning merged types', () => {
       `,
       resolvers: {
         Query: {
-          getPerson: () => ({ id: '1', name: 'Local', surname: 'LocalSurname' }),
+          getPerson: () => ({
+            id: '1',
+            name: 'Local',
+            surname: 'LocalSurname',
+          }),
         },
       },
     });
@@ -342,8 +348,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('treats a subscription payload as the field value when no resolve is given', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -389,8 +395,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('hydrates partial results of a user resolver overriding a subschema field', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
@@ -419,8 +425,8 @@ describe('local fields returning merged types', () => {
   });
 
   it('keeps the proxying resolver of subschema fields without local resolvers', async () => {
-    const personById = vi.fn((_root: unknown, { id }: { id: string }) =>
-      people[id],
+    const personById = vi.fn(
+      (_root: unknown, { id }: { id: string }) => people[id],
     );
     const stitchedSchema = stitchSchemas({
       subschemas: [createRemoteSubschema(personById)],
