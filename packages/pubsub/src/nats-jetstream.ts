@@ -141,6 +141,10 @@ export class NATSJetStreamPubSub<
     cursor: string | undefined,
     callback: (msg: JsMsg) => void,
     finished?: () => void,
+    closed?: {
+      resolve: () => void;
+      reject: (error: unknown) => void;
+    },
   ) {
     const consumer = await this.#createConsumer(topic, cursor);
     const messages = await consumer.consume({ callback });
@@ -153,7 +157,17 @@ export class NATSJetStreamPubSub<
         }
       }
     };
+    if (this.#disposed) {
+      await messages.close();
+      finished?.();
+      throw new Error('PubSub is disposed');
+    }
     this.#activeConsumers.set(stop, topic);
+    if (closed) {
+      void messages
+        .closed()
+        .then((error) => (error ? closed.reject(error) : closed.resolve()));
+    }
     return stop;
   }
 
@@ -186,9 +200,13 @@ export class NATSJetStreamPubSub<
         ref: optionsOrListener as typeof optionsOrListener | null,
       };
       // resolves only once the subscription is actually established, no need to wait/retry
-      const stop = this.#consume(topic, undefined, (msg) =>
-        listenerRef.ref?.(msg.json<M[Topic]>()),
-      );
+      const stop = this.#consume(topic, undefined, (msg) => {
+        try {
+          listenerRef.ref?.(msg.json<M[Topic]>());
+        } catch {
+          // listener subscriptions have no error channel
+        }
+      });
       return fakePromise(stop).then((stop) => async () => {
         listenerRef.ref = null;
         await stop();
@@ -199,20 +217,30 @@ export class NATSJetStreamPubSub<
     // to be established before publishing when they cannot afford to miss the first message
     return new Repeater<JetStreamTopicDataMap<M>[Topic], any, any>(
       async (push, stopped) => {
+        const consumerClosed = Promise.withResolvers<void>();
         const stop = await this.#consume(
           topic,
           optionsOrListener?.cursor,
           (msg) => {
-            const item: JetStreamTopicDataMap<M>[Topic] = {
-              data: msg.json<M[Topic]>(),
-              cursor: String(msg.seq),
-            };
-            void push(item);
+            try {
+              const item: JetStreamTopicDataMap<M>[Topic] = {
+                data: msg.json<M[Topic]>(),
+                cursor: String(msg.seq),
+              };
+              void push(item);
+            } catch (error) {
+              consumerClosed.reject(error);
+            }
           },
           stopped,
+          consumerClosed,
         );
-        await stopped;
-        await stop();
+        try {
+          await Promise.race([stopped, consumerClosed.promise]);
+        } finally {
+          consumerClosed.resolve();
+          await stop();
+        }
         // subscription ended (e.g. unsubscribed), nothing to do
       },
     );
