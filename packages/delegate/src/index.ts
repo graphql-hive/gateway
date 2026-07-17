@@ -6,6 +6,7 @@ export * from './defaultMergedResolver.js';
 export * from './delegateToSchema.js';
 export * from './mergeFields.js';
 export * from './resolveExternalValue.js';
+export * from './resolveMergedTypeReference.js';
 export * from './subschemaConfig.js';
 export * from './types.js';
 export * from './extractUnavailableFields.js';
