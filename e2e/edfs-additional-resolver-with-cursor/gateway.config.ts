@@ -42,8 +42,7 @@ export const gatewayConfig = defineConfig({
               cursor: after ?? undefined,
             }),
             ({ data: review, cursor }: { data: unknown; cursor: string }) => ({
-              review,
-              cursor,
+              reviewCreated: { review, cursor },
             }),
           );
         },

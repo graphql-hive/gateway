@@ -1,8 +1,12 @@
+import { mergeDeep } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
+  FragmentDefinitionNode,
   getNamedType,
   GraphQLResolveInfo,
   isAbstractType,
   Kind,
+  SelectionNode,
   SelectionSetNode,
 } from 'graphql';
 import { isExternalObject } from './mergeFields.js';
@@ -46,14 +50,24 @@ function valueSatisfiesSelectionSet(
  *   returned as-is and no delegation happens. This is the fast path for
  *   resolvers that return complete values.
  * - If requested fields are missing but the object satisfies a merge key of
- *   the return type, it is delegated to the owning subschema with the full
- *   requested selection set. The merge key is only the entry ticket; the
- *   subschema answer is authoritative for the requested fields, and the
- *   returned external object keeps merging nested fields through the usual
+ *   the return type, only the missing fields are delegated to the owning
+ *   subschema. The merge key is only the entry ticket; fields the object
+ *   already carries are kept as-is and never fetched from the subschema, and
+ *   the merged result keeps merging nested fields through the usual
  *   stitching flow.
+ * - Payloads are raw resolver results keyed by literal field name, so
+ *   aliased requests are matched by field name and aliased fields already in
+ *   the payload are not fetched again. Hydrated results carry only literal
+ *   field names; `defaultMergedResolver` falls back to the field name when
+ *   the aliased response key is absent, so incoming query aliases resolve
+ *   with plain graphql-js semantics.
  * - When merge keys of several subschemas are satisfied, the first match
  *   wins. Any match works because the delegation is pruned to the fields the
  *   chosen subschema provides, and nested merging covers the rest.
+ * - Fields listed in `providedFields` (fields that have their own resolver on
+ *   the stitched schema) are excluded from the required selection, because
+ *   they are resolved locally anyway. When the remaining selection is already
+ *   satisfied by the object, no delegation happens at all.
  * - Objects that satisfy no merge key, are already external, or are not
  *   objects at all are returned untouched, so missing non-nullable fields
  *   error downstream exactly as they would without this helper.
@@ -67,11 +81,101 @@ export function resolveMergedTypeReference<
   stitchingInfo = info.schema.extensions?.[
     'stitchingInfo'
   ] as StitchingInfo<TContext>,
+  providedFields?: ReadonlySet<string>,
 ): any {
   if (stitchingInfo == null || result == null) {
     return result;
   }
-  return resolveOne(result, context, info, stitchingInfo);
+  return resolveOne(result, context, info, stitchingInfo, providedFields);
+}
+
+// selections the value does not cover, so only those get delegated;
+// the payload is a raw resolver result keyed by field name (aliases are a
+// client-side concern); null composites are missing, null leaves are not
+function getMissingSelections(
+  value: any,
+  selections: readonly SelectionNode[],
+  fragments: Record<string, FragmentDefinitionNode> = {},
+): SelectionNode[] {
+  const missing: SelectionNode[] = [];
+  for (const selection of selections) {
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
+      const sub = getMissingSelections(
+        value,
+        selection.selectionSet.selections,
+        fragments,
+      );
+      if (sub.length) {
+        missing.push({
+          ...selection,
+          selectionSet: { kind: Kind.SELECTION_SET, selections: sub },
+        });
+      }
+      continue;
+    }
+    if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragment = fragments[selection.name.value];
+      if (fragment == null) {
+        missing.push(selection);
+        continue;
+      }
+      const sub = getMissingSelections(
+        value,
+        fragment.selectionSet.selections,
+        fragments,
+      );
+      if (sub.length) {
+        missing.push({
+          kind: Kind.INLINE_FRAGMENT,
+          typeCondition: fragment.typeCondition,
+          directives: [
+            ...(fragment.directives ?? []),
+            ...(selection.directives ?? []),
+          ],
+          selectionSet: { kind: Kind.SELECTION_SET, selections: sub },
+        });
+      }
+      continue;
+    }
+    const fieldValue = value[selection.name.value];
+    if (
+      fieldValue === undefined ||
+      (fieldValue === null && selection.selectionSet != null)
+    ) {
+      missing.push(selection);
+      continue;
+    }
+    if (selection.selectionSet != null) {
+      if (Array.isArray(fieldValue)) {
+        // ponytail: any incomplete item keeps the whole sub-selection, per-item
+        // diffs are not worth it for list payloads
+        const anyMissing = fieldValue.some(
+          (item) =>
+            getMissingSelections(
+              item,
+              selection.selectionSet!.selections,
+              fragments,
+            ).length > 0,
+        );
+        if (anyMissing) {
+          missing.push(selection);
+        }
+      } else {
+        const sub = getMissingSelections(
+          fieldValue,
+          selection.selectionSet.selections,
+          fragments,
+        );
+        if (sub.length) {
+          missing.push({
+            ...selection,
+            selectionSet: { kind: Kind.SELECTION_SET, selections: sub },
+          });
+        }
+      }
+    }
+  }
+  return missing;
 }
 
 function resolveOne<TContext extends Record<string, any>>(
@@ -79,9 +183,12 @@ function resolveOne<TContext extends Record<string, any>>(
   context: TContext,
   info: GraphQLResolveInfo,
   stitchingInfo: StitchingInfo<TContext>,
+  providedFields?: ReadonlySet<string>,
 ): any {
   if (Array.isArray(value)) {
-    return value.map((item) => resolveOne(item, context, info, stitchingInfo));
+    return value.map((item) =>
+      resolveOne(item, context, info, stitchingInfo, providedFields),
+    );
   }
   if (
     value == null ||
@@ -97,18 +204,30 @@ function resolveOne<TContext extends Record<string, any>>(
   if (mergedTypeInfo == null) {
     return value;
   }
-  const selectionSet: SelectionSetNode = {
-    kind: Kind.SELECTION_SET,
-    selections: info.fieldNodes.flatMap(
-      (fieldNode) => fieldNode.selectionSet?.selections ?? [],
-    ),
-  };
-  if (
-    !selectionSet.selections.length ||
-    valueSatisfiesSelectionSet(value, selectionSet)
-  ) {
+  let selections = info.fieldNodes.flatMap(
+    (fieldNode) => fieldNode.selectionSet?.selections ?? [],
+  );
+  if (providedFields?.size) {
+    // these fields have their own resolvers on the stitched schema,
+    // so they will be resolved locally and are not required from the payload
+    selections = selections.filter(
+      (selection) =>
+        selection.kind !== Kind.FIELD ||
+        !providedFields.has(selection.name.value),
+    );
+  }
+  const missingSelections = getMissingSelections(
+    value,
+    selections,
+    info.fragments,
+  );
+  if (!missingSelections.length) {
     return value;
   }
+  const selectionSet: SelectionSetNode = {
+    kind: Kind.SELECTION_SET,
+    selections: missingSelections,
+  };
   for (const [subschema, keySelectionSet] of mergedTypeInfo.selectionSets) {
     if (valueSatisfiesSelectionSet(value, keySelectionSet)) {
       const resolver = mergedTypeInfo.resolvers.get(subschema);
@@ -116,14 +235,21 @@ function resolveOne<TContext extends Record<string, any>>(
         if (value['__typename'] == null && !isAbstractType(returnType)) {
           value['__typename'] = typeName;
         }
-        return resolver(
-          value,
-          context,
-          info,
-          subschema,
-          selectionSet,
-          undefined,
-          returnType,
+        return handleMaybePromise(
+          () =>
+            resolver(
+              value,
+              context,
+              info,
+              subschema,
+              selectionSet,
+              undefined,
+              returnType,
+            ),
+          // value comes first so the delegation result wins on overlaps, while
+          // payload fields outside the delegated selection (like the key) survive;
+          // respectNonEnumerableSymbols keeps the external object annotation intact
+          (resolved) => mergeDeep([value, resolved], false, false, false, true),
         );
       }
     }

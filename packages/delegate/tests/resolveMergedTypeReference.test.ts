@@ -1,0 +1,381 @@
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { parseSelectionSet } from '@graphql-tools/utils';
+import {
+  FieldNode,
+  GraphQLResolveInfo,
+  Kind,
+  OperationDefinitionNode,
+  parse,
+} from 'graphql';
+import { describe, expect, it, vi } from 'vitest';
+import { resolveMergedTypeReference } from '../src/resolveMergedTypeReference.js';
+import { UNPATHED_ERRORS_SYMBOL } from '../src/symbols.js';
+import { StitchingInfo } from '../src/types.js';
+
+const schema = makeExecutableSchema({
+  typeDefs: /* GraphQL */ `
+    type Person {
+      id: ID!
+      name: String
+      surname: String
+      friend: Person
+    }
+    type Query {
+      person: Person
+    }
+  `,
+});
+const personType = schema.getType('Person')!;
+
+function fieldNodeOf(source: string): FieldNode {
+  const document = parse(source);
+  return (document.definitions[0] as OperationDefinitionNode).selectionSet
+    .selections[0] as FieldNode;
+}
+
+function infoOf(source: string): GraphQLResolveInfo {
+  return {
+    returnType: personType,
+    fieldNodes: [fieldNodeOf(source)],
+  } as unknown as GraphQLResolveInfo;
+}
+
+function stitchingInfoOf(
+  entries: Array<{
+    subschema: any;
+    keySelectionSet: string;
+    resolver: any;
+  }>,
+): StitchingInfo {
+  return {
+    mergedTypes: {
+      Person: {
+        typeName: 'Person',
+        selectionSets: new Map(
+          entries.map((e) => [
+            e.subschema,
+            parseSelectionSet(e.keySelectionSet),
+          ]),
+        ),
+        resolvers: new Map(entries.map((e) => [e.subschema, e.resolver])),
+      },
+    },
+  } as unknown as StitchingInfo;
+}
+
+const info = infoOf('query { person { name surname } }');
+const context = {};
+
+describe('resolveMergedTypeReference', () => {
+  it('returns the value as-is when it already satisfies the requested selection', () => {
+    const resolver = vi.fn();
+    const value = { id: '1', name: 'Joe', surname: 'Doe' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('delegates to the owning subschema when requested fields are missing but a merge key is satisfied', () => {
+    const subschema = { name: 'remote' };
+    const resolver = vi.fn((value: any) => ({
+      ...value,
+      name: 'Remote',
+      surname: 'RemoteSurname',
+    }));
+    const value = { id: '1' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toEqual({
+      id: '1',
+      __typename: 'Person',
+      name: 'Remote',
+      surname: 'RemoteSurname',
+    });
+    expect(resolver).toHaveBeenCalledTimes(1);
+    expect(resolver).toHaveBeenCalledWith(
+      value,
+      context,
+      info,
+      subschema,
+      {
+        kind: Kind.SELECTION_SET,
+        selections: info.fieldNodes[0]!.selectionSet!.selections,
+      },
+      undefined,
+      personType,
+    );
+    // the delegated value needs __typename for entity representations
+    expect(value.__typename).toBe('Person');
+  });
+
+  it('delegates only the fields missing from the payload', () => {
+    const resolver = vi.fn(() => ({ surname: 'Remote' }));
+    const value = { id: '1', name: 'Stale' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    // name was already in the payload, only surname gets fetched
+    expect(result).toMatchObject({ name: 'Stale', surname: 'Remote' });
+    const selectionSet = resolver.mock.calls[0]![4];
+    expect(selectionSet.selections).toHaveLength(1);
+    expect(selectionSet.selections[0]).toMatchObject({
+      name: { value: 'surname' },
+    });
+  });
+
+  it('returns the value untouched when no merge key is satisfied', () => {
+    const resolver = vi.fn();
+    const value = { foo: 'bar' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('returns the value untouched without stitching info', () => {
+    const value = { id: '1' };
+    expect(resolveMergedTypeReference(value, context, info, null as any)).toBe(
+      value,
+    );
+  });
+
+  it('returns the value untouched when the return type is not merged', () => {
+    const resolver = vi.fn();
+    const value = { id: '1' };
+    const result = resolveMergedTypeReference(value, context, info, {
+      mergedTypes: {},
+    } as unknown as StitchingInfo);
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('returns already external objects untouched', () => {
+    const resolver = vi.fn();
+    const value = { id: '1', [UNPATHED_ERRORS_SYMBOL]: [] };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('resolves each item of a list independently', () => {
+    const resolver = vi.fn((value: any) => ({ ...value, name: 'Remote' }));
+    const complete = { id: '2', name: 'Joe', surname: 'Doe' };
+    const result = resolveMergedTypeReference(
+      [{ id: '1' }, complete],
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result[0].name).toBe('Remote');
+    expect(result[1]).toBe(complete);
+    expect(resolver).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes null and scalar values through', () => {
+    const resolver = vi.fn();
+    const stitchingInfo = stitchingInfoOf([
+      { subschema: {}, keySelectionSet: '{ id }', resolver },
+    ]);
+    expect(resolveMergedTypeReference(null, context, info, stitchingInfo)).toBe(
+      null,
+    );
+    expect(resolveMergedTypeReference('x', context, info, stitchingInfo)).toBe(
+      'x',
+    );
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('counts null leaf fields as satisfied', () => {
+    const resolver = vi.fn();
+    const value = { id: '1', name: null, surname: 'Doe' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('counts null composites with a requested sub-selection as unsatisfied', () => {
+    const resolver = vi.fn((value: any) => value);
+    const value = { id: '1', friend: null };
+    resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { friend { name } } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(resolver).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the first subschema whose merge key is satisfied', () => {
+    const first = { name: 'first' };
+    const second = { name: 'second' };
+    const firstResolver = vi.fn((value: any) => value);
+    const secondResolver = vi.fn((value: any) => value);
+    resolveMergedTypeReference(
+      { id: '1' },
+      context,
+      info,
+      stitchingInfoOf([
+        {
+          subschema: first,
+          keySelectionSet: '{ id }',
+          resolver: firstResolver,
+        },
+        {
+          subschema: second,
+          keySelectionSet: '{ id }',
+          resolver: secondResolver,
+        },
+      ]),
+    );
+    expect(firstResolver).toHaveBeenCalledTimes(1);
+    expect(secondResolver).not.toHaveBeenCalled();
+  });
+
+  it('treats providedFields as resolved locally when checking satisfaction', () => {
+    const resolver = vi.fn();
+    const value = { id: '1' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { id name } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+      new Set(['name']),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('excludes providedFields from the delegated selection', () => {
+    const resolver = vi.fn((value: any) => ({ ...value, surname: 'Remote' }));
+    resolveMergedTypeReference(
+      { id: '1' },
+      context,
+      info,
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+      new Set(['name']),
+    );
+    const selectionSet = resolver.mock.calls[0]![4];
+    expect(selectionSet.selections).toHaveLength(1);
+    expect(selectionSet.selections[0]).toMatchObject({
+      name: { value: 'surname' },
+    });
+  });
+
+  it('keeps payload fields that are outside the delegated selection', () => {
+    const resolver = vi.fn(() => ({ name: 'Remote' }));
+    const value = { id: '1', local: 'kept' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { name } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toMatchObject({
+      id: '1',
+      local: 'kept',
+      name: 'Remote',
+    });
+  });
+
+  it('matches query aliases against the literal field names of the payload', () => {
+    const resolver = vi.fn();
+    const value = { id: '1', name: 'Local' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { fullName: name } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
+  it('keeps the alias in the delegated selection for missing fields', () => {
+    const resolver = vi.fn(() => ({ fullName: 'Remote' }));
+    resolveMergedTypeReference(
+      { id: '1' },
+      context,
+      infoOf('query { person { fullName: name } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    const selectionSet = resolver.mock.calls[0]![4];
+    expect(selectionSet.selections[0]).toMatchObject({
+      alias: { value: 'fullName' },
+      name: { value: 'name' },
+    });
+  });
+
+  it('keeps only literal field names on the merged result, aliases resolve downstream', () => {
+    const resolver = vi.fn(() => ({ familyName: 'Remote' }));
+    const value = { id: '1', name: 'Local' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { fullName: name, familyName: surname } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    // name was already in the payload, only familyName was fetched
+    expect(resolver.mock.calls[0]![4].selections).toHaveLength(1);
+    // neither the merged result nor the payload ever carry alias keys
+    expect(result).toMatchObject({
+      name: 'Local',
+      familyName: 'Remote',
+    });
+    expect(result).not.toHaveProperty('fullName');
+    expect(value).not.toHaveProperty('fullName');
+  });
+
+  it('keeps only literal field names on nested payload objects', () => {
+    const resolver = vi.fn(() => ({ friend: { surname: 'Remote' } }));
+    const result = resolveMergedTypeReference(
+      { id: '1', friend: { id: '2', name: 'LocalFriend' } },
+      context,
+      infoOf('query { person { friend { nick: name, surname } } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result.friend).toMatchObject({
+      name: 'LocalFriend',
+      surname: 'Remote',
+    });
+    expect(result.friend).not.toHaveProperty('nick');
+  });
+
+  it('sees through inline fragments in the requested selection', () => {
+    const resolver = vi.fn();
+    const value = { id: '1', name: 'Joe' };
+    const result = resolveMergedTypeReference(
+      value,
+      context,
+      infoOf('query { person { ... on Person { name } } }'),
+      stitchingInfoOf([{ subschema: {}, keySelectionSet: '{ id }', resolver }]),
+    );
+    expect(result).toBe(value);
+    expect(resolver).not.toHaveBeenCalled();
+  });
+});

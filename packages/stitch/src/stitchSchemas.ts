@@ -19,7 +19,6 @@ import {
 import { inspect, IResolvers } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
-  defaultFieldResolver,
   extendSchema,
   getNamedType,
   GraphQLDirective,
@@ -232,11 +231,10 @@ function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
 }
 
 /**
- * Normalizes resolvers given through the `resolvers` option and lets fields
- * that are not provided by any subschema (introduced through the `typeDefs` or
- * `resolvers` options) return plain objects containing only the key fields of
- * a merged type; those get delegated to the owning subschema so the rest of
- * the fields resolve through regular type merging.
+ * Lets fields that are not provided by any subschema (introduced through the
+ * `typeDefs` or `resolvers` options) return plain objects containing only the
+ * key fields of a merged type; those get delegated to the owning subschema so
+ * the rest of the fields resolve through regular type merging.
  */
 function addLocalFieldResolvers<TContext extends Record<string, any>>(
   schema: GraphQLSchema,
@@ -286,17 +284,6 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
         continue;
       }
       fields.add(fieldName);
-      const fieldResolver = (typeResolvers as Record<string, any>)[fieldName];
-      if (
-        fieldResolver != null &&
-        typeof fieldResolver === 'object' &&
-        typeof fieldResolver.subscribe === 'function' &&
-        fieldResolver.resolve == null
-      ) {
-        // a subscription payload IS the field value, while graphql's default
-        // resolver would look it up under `payload[fieldName]`
-        fieldResolver.resolve = (payload: any) => payload;
-      }
     }
   }
   for (const [typeName, fieldNames] of localFields) {
@@ -321,9 +308,21 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
       if (stitchingInfo.mergedTypes[namedType.name] == null) {
         continue;
       }
+      const namedTypeResolvers = resolvers[namedType.name];
+      const providedFields =
+        namedTypeResolvers != null && typeof namedTypeResolvers === 'object'
+          ? new Set(
+              Object.keys(namedTypeResolvers).filter(
+                (fieldName) => !fieldName.startsWith('__'),
+              ),
+            )
+          : undefined;
       const originalResolve =
         typeof existing === 'function' ? existing : existing?.resolve;
-      const baseResolve = originalResolve ?? defaultFieldResolver;
+      // keep defaultMergedResolver as the base: it annotates delegated results
+      // as external objects on the way through, and falls back to plain
+      // property access for local payloads anyway
+      const baseResolve = originalResolve ?? defaultMergedResolver;
       const wrappedResolve = (
         parent: any,
         args: any,
@@ -333,7 +332,13 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
         handleMaybePromise(
           () => baseResolve(parent, args, context, info),
           (result) =>
-            resolveMergedTypeReference(result, context, info, stitchingInfo),
+            resolveMergedTypeReference(
+              result,
+              context,
+              info,
+              stitchingInfo,
+              providedFields,
+            ),
         );
       if (existing != null && typeof existing === 'object') {
         existing.resolve = wrappedResolve;
