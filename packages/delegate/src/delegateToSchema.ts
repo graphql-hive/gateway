@@ -88,7 +88,11 @@ export function delegateToSchema<
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
     fragments,
-    targetSchema,
+    targetSchema:
+      targetSchema.getQueryType()?.getFields()[fieldName] == null &&
+      isSubschemaConfig(schema)
+        ? schema.schema
+        : targetSchema,
     rootValue: rootValue,
     targetOperationName: operationName,
     targetOperation: operation,
