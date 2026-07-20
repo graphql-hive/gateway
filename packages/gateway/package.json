@@ -119,7 +119,7 @@
     "@graphql-mesh/transport-http-callback": "workspace:^",
     "@graphql-mesh/transport-ws": "workspace:^",
     "@graphql-mesh/types": "^0.104.28",
-    "@graphql-mesh/utils": "0.104.38-alpha-20260720145753-a9bbec477ec07ad5e973ae3f68460fab8d0cd183",
+    "@graphql-mesh/utils": "^0.104.38",
     "@graphql-tools/code-file-loader": "^8.1.26",
     "@graphql-tools/graphql-file-loader": "^8.1.6",
     "@graphql-tools/load": "^8.1.6",

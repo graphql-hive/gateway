@@ -60,7 +60,7 @@
     "@graphql-mesh/plugin-response-cache": "^0.104.42",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.28",
-    "@graphql-mesh/utils": "0.104.38-alpha-20260720145753-a9bbec477ec07ad5e973ae3f68460fab8d0cd183",
+    "@graphql-mesh/utils": "^0.104.38",
     "@graphql-tools/batch-delegate": "workspace:^",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor-common": "workspace:^",

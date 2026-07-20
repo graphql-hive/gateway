@@ -42,7 +42,7 @@
     "graphql": "^16.12.0"
   },
   "dependencies": {
-    "@graphql-mesh/utils": "0.104.38-alpha-20260720145753-a9bbec477ec07ad5e973ae3f68460fab8d0cd183",
+    "@graphql-mesh/utils": "^0.104.38",
     "@graphql-tools/utils": "^11.0.0",
     "@whatwg-node/promise-helpers": "^1.3.2"
   },

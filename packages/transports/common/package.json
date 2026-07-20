@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.13",
-    "@graphql-mesh/utils": "0.104.38-alpha-20260720145753-a9bbec477ec07ad5e973ae3f68460fab8d0cd183",
+    "@graphql-mesh/utils": "^0.104.38",
     "graphql": "^16.12.0",
     "pkgroll": "2.27.1"
   },
