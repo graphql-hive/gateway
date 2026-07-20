@@ -2,6 +2,7 @@ import { setTimeout } from 'node:timers/promises';
 import { createTenv } from '@internal/e2e';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { createClient } from 'graphql-sse';
 import Redis from 'ioredis';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -35,7 +36,10 @@ afterAll(async () => {
   }
 });
 
-it('consumes the pubsub topics and resolves fields', async () => {
+it.skipIf(
+  // uses mesh for composition
+  usingHiveRouterRuntime(),
+)('consumes the pubsub topics and resolves fields', async () => {
   await using products = await service('products');
   await using inventory = await service('inventory');
   await using reviews = await service('reviews');
@@ -112,7 +116,10 @@ it('consumes the pubsub topics and resolves fields', async () => {
   }
 });
 
-it('consumes the pubsub topics and resolves entities', async () => {
+it.skipIf(
+  // uses mesh for composition
+  usingHiveRouterRuntime(),
+)('consumes the pubsub topics and resolves entities', async () => {
   await using products = await service('products');
   await using inventory = await service('inventory');
   await using reviews = await service('reviews');
