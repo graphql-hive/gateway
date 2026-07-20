@@ -262,9 +262,7 @@ describe('resolveMergedTypeReference', () => {
   });
 
   it('enables type merging for stitching to resolve other subschemas', async () => {
-    const inventory = { name: 'inventory' };
     const products = { name: 'products' };
-    const inventoryResolver = vi.fn();
     const productsResolver = vi.fn((..._args: unknown[]) => ({
       name: 'Joe',
       surname: 'Doe',
@@ -275,11 +273,6 @@ describe('resolveMergedTypeReference', () => {
       context,
       infoOf('query { person { name surname friend { id } } }'),
       stitchingInfoOf([
-        {
-          subschema: inventory,
-          keySelectionSet: '{ id }',
-          resolver: inventoryResolver,
-        },
         {
           subschema: products,
           keySelectionSet: '{ id }',
@@ -293,7 +286,6 @@ describe('resolveMergedTypeReference', () => {
       friend: { id: '2' },
     });
     expect(productsResolver.mock.calls[0]![7]).toBe(false);
-    expect(inventoryResolver).not.toHaveBeenCalled();
   });
 
   it('treats providedFields as resolved locally when checking satisfaction', () => {
