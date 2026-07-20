@@ -238,6 +238,7 @@ export type MergedTypeResolver<TContext = Record<string, any>> = (
   selectionSet: SelectionSetNode,
   key: any | undefined,
   type: GraphQLOutputType,
+  skipTypeMerging?: boolean,
 ) => any;
 
 export interface StitchingInfo<TContext = Record<string, any>> {

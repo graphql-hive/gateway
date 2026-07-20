@@ -259,7 +259,9 @@ function createMergedTypes<
                   info,
                   subschema,
                   selectionSet,
+                  keyOrType,
                   type,
+                  skipTypeMerging,
                 ) {
                   return handleMaybePromise(
                     () => keyFn(originalResult),
@@ -271,7 +273,8 @@ function createMergedTypes<
                         subschema,
                         selectionSet,
                         key,
-                        type,
+                        keyOrType ?? type,
+                        skipTypeMerging,
                       ),
                   );
                 }

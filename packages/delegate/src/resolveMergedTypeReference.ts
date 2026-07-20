@@ -65,9 +65,9 @@ function valueSatisfiesSelectionSet(
  *   field names; `defaultMergedResolver` falls back to the field name when
  *   the aliased response key is absent, so incoming query aliases resolve
  *   with plain graphql-js semantics.
- * - When merge keys of several subschemas are satisfied, the first match
- *   wins. Any match works because the delegation is pruned to the fields the
- *   chosen subschema provides, and nested merging covers the rest.
+ * - When merge keys of several subschemas are satisfied, a subschema without
+ *   computed field dependencies starts the delegation. Type merging stays
+ *   enabled so the stitching planner resolves fields owned by other subschemas.
  * - Fields listed in `providedFields` (fields that have their own resolver on
  *   the stitched schema) are excluded from the required selection, because
  *   they are resolved locally anyway. When the remaining selection is already
@@ -240,7 +240,12 @@ function resolveOne<TContext extends Record<string, any>>(
     kind: Kind.SELECTION_SET,
     selections: missingSelections,
   };
-  for (const [subschema, keySelectionSet] of mergedTypeInfo.selectionSets) {
+  const candidates = [...mergedTypeInfo.selectionSets].sort(
+    ([a], [b]) =>
+      Number(Boolean(a.merge?.[typeName]?.fields)) -
+      Number(Boolean(b.merge?.[typeName]?.fields)),
+  );
+  for (const [subschema, keySelectionSet] of candidates) {
     if (valueSatisfiesSelectionSet(value, keySelectionSet)) {
       const resolver = mergedTypeInfo.resolvers.get(subschema);
       if (resolver != null) {
@@ -257,6 +262,7 @@ function resolveOne<TContext extends Record<string, any>>(
               selectionSet,
               undefined,
               returnType,
+              false,
             ),
           // value comes first so the delegation result wins on overlaps, while
           // payload fields outside the delegated selection (like the key) survive;

@@ -112,6 +112,7 @@ describe('resolveMergedTypeReference', () => {
       },
       undefined,
       personType,
+      false,
     );
     // the delegated value needs __typename for entity representations
     expect(value.__typename).toBe('Person');
@@ -231,30 +232,68 @@ describe('resolveMergedTypeReference', () => {
     expect(resolver).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the first subschema whose merge key is satisfied', () => {
-    const first = { name: 'first' };
-    const second = { name: 'second' };
-    const firstResolver = vi.fn((value: any) => value);
-    const secondResolver = vi.fn((value: any) => value);
+  it('bootstraps from a subschema without computed field dependencies', () => {
+    const inventory = {
+      name: 'inventory',
+      merge: { Person: { fields: { surname: { computed: true } } } },
+    };
+    const products = { name: 'products' };
+    const inventoryResolver = vi.fn();
+    const productsResolver = vi.fn((value: any) => value);
     resolveMergedTypeReference(
       { id: '1' },
       context,
       info,
       stitchingInfoOf([
         {
-          subschema: first,
+          subschema: inventory,
           keySelectionSet: '{ id }',
-          resolver: firstResolver,
+          resolver: inventoryResolver,
         },
         {
-          subschema: second,
+          subschema: products,
           keySelectionSet: '{ id }',
-          resolver: secondResolver,
+          resolver: productsResolver,
         },
       ]),
     );
-    expect(firstResolver).toHaveBeenCalledTimes(1);
-    expect(secondResolver).not.toHaveBeenCalled();
+    expect(productsResolver).toHaveBeenCalledTimes(1);
+    expect(inventoryResolver).not.toHaveBeenCalled();
+  });
+
+  it('enables type merging for stitching to resolve other subschemas', async () => {
+    const inventory = { name: 'inventory' };
+    const products = { name: 'products' };
+    const inventoryResolver = vi.fn();
+    const productsResolver = vi.fn(() => ({
+      name: 'Joe',
+      surname: 'Doe',
+      friend: { id: '2' },
+    }));
+    const result = await resolveMergedTypeReference(
+      { id: '1' },
+      context,
+      infoOf('query { person { name surname friend { id } } }'),
+      stitchingInfoOf([
+        {
+          subschema: inventory,
+          keySelectionSet: '{ id }',
+          resolver: inventoryResolver,
+        },
+        {
+          subschema: products,
+          keySelectionSet: '{ id }',
+          resolver: productsResolver,
+        },
+      ]),
+    );
+    expect(result).toMatchObject({
+      name: 'Joe',
+      surname: 'Doe',
+      friend: { id: '2' },
+    });
+    expect(productsResolver.mock.calls[0]![7]).toBe(false);
+    expect(inventoryResolver).not.toHaveBeenCalled();
   });
 
   it('treats providedFields as resolved locally when checking satisfaction', () => {

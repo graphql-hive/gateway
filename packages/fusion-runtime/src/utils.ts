@@ -568,7 +568,16 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
   onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[],
   log: Logger,
 ): MergedTypeResolver<TContext> {
-  return (object, context, info, subschema, selectionSet, key, type) => {
+  return (
+    object,
+    context,
+    info,
+    subschema,
+    selectionSet,
+    key,
+    type,
+    skipTypeMerging,
+  ) => {
     if (subschema.name) {
       log = log.child({ subgraph: subschema.name });
     }
@@ -607,6 +616,7 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
           selectionSet,
           key,
           type,
+          skipTypeMerging,
         ),
       (result) => {
         function setResult(newResult: any) {
