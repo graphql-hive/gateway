@@ -4,6 +4,6 @@
   "dependencies": {
     "graphql": "^16.14.0",
     "graphql-sse": "^2.5.4",
-    "ioredis": "^5.11.1"
+    "ioredis": "^5.8.2"
   }
 }
