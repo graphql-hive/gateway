@@ -1,5 +1,37 @@
 # @graphql-tools/delegate
 
+## 12.1.0
+### Minor Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Automatically resolve plain merged-type references returned by local stitching resolvers
+  
+  Local fields introduced through `typeDefs` or `resolvers` are wrapped by `stitchSchemas`. When they return a partial merged type containing a usable key, stitching performs one initial delegation with type merging enabled. The existing stitching planner then handles computed fields, `@requires` dependencies, batching, nested entities, and fields owned by other subschemas.
+
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `defaultMergedResolver` now falls back to the literal field name when an external object does not have the requested response key
+  
+  Plain resolver data merged into an external object is keyed by field name, so an aliased request used to resolve to `null` even though the value was there:
+  
+  ```graphql
+  {
+    person {
+      fullName: name
+    }
+  }
+  ```
+  
+  ```ts
+  // merged object carries resolver data by field name
+  { id: '1', name: 'Local' }
+  ```
+  
+  Previously `fullName` was `null` because only the alias was looked up. Now it resolves to `'Local'` by field name, matching plain graphql-js behavior. When the response key is present (e.g. the field came from a subschema), it is still preferred.
+
 ## 12.0.20
 ### Patch Changes
 

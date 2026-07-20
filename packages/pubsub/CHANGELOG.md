@@ -1,5 +1,51 @@
 # @graphql-hive/pubsub
 
+## 2.2.0
+### Minor Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Add `NATSJetStreamPubSub`, a NATS JetStream transport with optional cursor-based replay
+  
+  Subscribe like any other Hive PubSub, or pass subscribe options to receive each message with an opaque `cursor`. Pass that cursor on a later subscription to resume right after it and recover events missed while disconnected. Without a cursor, only messages published after the subscription starts are delivered.
+  
+  The JetStream stream is not created or configured by this transport; it must already exist and capture the subjects used by the pubsub (`${subjectPrefix}:${topic}`).
+  
+  ```ts
+  import { connect } from '@nats-io/transport-node';
+  import { NATSJetStreamPubSub } from '@graphql-hive/pubsub/nats-jetstream';
+  
+  const nats = await connect({ servers: 'localhost:4222' });
+  const pubsub = new NATSJetStreamPubSub(nats, {
+    subjectPrefix: 'my-service',
+    stream: 'EVENTS',
+  });
+  
+  // live-only: no cursor, only messages published after subscribe starts
+  const live = pubsub.subscribe('personCreated', { cursor: undefined });
+  const first = await live.next();
+  // first.value => { data: { id: '1' }, cursor: '...' }
+  await live.return?.();
+  
+  // published while disconnected is retained by JetStream
+  await pubsub.publish('personCreated', { id: '2' });
+  
+  // resume right after the last seen cursor — gets { id: '2' }, not a repeat of '1'
+  for await (const { data, cursor } of pubsub.subscribe('personCreated', {
+    cursor: first.value.cursor,
+  })) {
+    // persist `cursor` so the next reconnect can resume again
+  }
+  ```
+
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Added dependency [`@nats-io/jetstream@^3` ↗︎](https://www.npmjs.com/package/@nats-io/jetstream/v/3.0.0) (to `peerDependencies`)
+
 ## 2.1.1
 ### Patch Changes
 

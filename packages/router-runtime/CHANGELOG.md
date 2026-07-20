@@ -1,5 +1,19 @@
 # @graphql-hive/router-runtime
 
+## 1.4.18
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-mesh/fusion-runtime@1.11.2
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-mesh/transport-common@1.0.18
+  - @graphql-tools/federation@4.4.10
+
 ## 1.4.17
 ### Patch Changes
 

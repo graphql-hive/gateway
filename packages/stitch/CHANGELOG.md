@@ -1,5 +1,46 @@
 # @graphql-tools/stitch
 
+## 10.2.0
+### Minor Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Automatically resolve plain merged-type references returned by local stitching resolvers
+  
+  Local fields introduced through `typeDefs` or `resolvers` are wrapped by `stitchSchemas`. When they return a partial merged type containing a usable key, stitching performs one initial delegation with type merging enabled. The existing stitching planner then handles computed fields, `@requires` dependencies, batching, nested entities, and fields owned by other subschemas.
+
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fields that are not provided by any subschema (added through `typeDefs` or `resolvers`) can now return partial objects of merged types; the missing fields are resolved from the owning subschema automatically
+  
+  ```graphql
+  type Query {
+    personCreated: PersonCreated
+  }
+  
+  type PersonCreated {
+    person: Person # merged type, owned by a subschema
+    cursor: String
+  }
+  ```
+  
+  ```ts
+  const resolvers = {
+    Query: {
+      // only the key of `Person` is provided locally
+      personCreated: () => ({ person: { id: '1' }, cursor: 'c1' }),
+    },
+  };
+  ```
+  
+  Before, `person` had to be resolved manually even though the stitched schema knows `Person` and its keys. Now the key is enough: `{ person { name } }` runs through the standard stitching planner, while local data (`cursor`) and local field resolvers on `Person` keep working as before. Computed fields, `@requires` dependencies, batching, and fields from other subschemas use the same type-merging flow as regular delegated results.
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-tools/batch-delegate@10.0.28
+  - @graphql-tools/wrap@11.1.20
+
 ## 10.1.25
 ### Patch Changes
 

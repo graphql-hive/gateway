@@ -1,5 +1,24 @@
 # @graphql-hive/gateway-runtime
 
+## 2.10.2
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-hive/pubsub@2.2.0
+  - @graphql-mesh/fusion-runtime@1.11.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.13
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-tools/stitch@10.2.0
+  - @graphql-mesh/transport-common@1.0.18
+  - @graphql-tools/batch-delegate@10.0.28
+  - @graphql-tools/federation@4.4.10
+  - @graphql-tools/wrap@11.1.20
+
 ## 2.10.1
 ### Patch Changes
 
