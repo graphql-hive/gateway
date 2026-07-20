@@ -265,7 +265,7 @@ describe('resolveMergedTypeReference', () => {
     const inventory = { name: 'inventory' };
     const products = { name: 'products' };
     const inventoryResolver = vi.fn();
-    const productsResolver = vi.fn(() => ({
+    const productsResolver = vi.fn((..._args: unknown[]) => ({
       name: 'Joe',
       surname: 'Doe',
       friend: { id: '2' },
