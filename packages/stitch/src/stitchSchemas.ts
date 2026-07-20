@@ -31,6 +31,7 @@ import {
   isSpecifiedDirective,
   specifiedDirectives,
 } from 'graphql';
+import { resolveLocalFieldResult } from './resolveLocalFieldResult.js';
 import {
   addStitchingInfo,
   completeStitchingInfo,
@@ -40,7 +41,6 @@ import {
   isolateComputedFieldsTransformer,
   splitMergedTypeEntryPointsTransformer,
 } from './subschemaConfigTransforms/index.js';
-import { resolveLocalFieldResult } from './resolveLocalFieldResult.js';
 import { buildTypeCandidates, buildTypes } from './typeCandidates.js';
 import {
   IStitchSchemasOptions,

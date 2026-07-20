@@ -1,3 +1,8 @@
+import {
+  MergedTypeResolver,
+  StitchingInfo,
+  UNPATHED_ERRORS_SYMBOL,
+} from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { parseSelectionSet } from '@graphql-tools/utils';
 import {
@@ -8,11 +13,6 @@ import {
   parse,
 } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  MergedTypeResolver,
-  StitchingInfo,
-  UNPATHED_ERRORS_SYMBOL,
-} from '@graphql-tools/delegate';
 import { resolveLocalFieldResult } from '../src/resolveLocalFieldResult.js';
 
 const schema = makeExecutableSchema({

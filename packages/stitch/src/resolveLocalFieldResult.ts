@@ -1,7 +1,4 @@
-import {
-  isExternalObject,
-  StitchingInfo,
-} from '@graphql-tools/delegate';
+import { isExternalObject, StitchingInfo } from '@graphql-tools/delegate';
 import { mergeDeep } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
