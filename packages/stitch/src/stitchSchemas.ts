@@ -1,7 +1,6 @@
 import {
   defaultMergedResolver,
   isSubschemaConfig,
-  resolveMergedTypeReference,
   StitchingInfo,
   Subschema,
   SubschemaConfig,
@@ -41,6 +40,7 @@ import {
   isolateComputedFieldsTransformer,
   splitMergedTypeEntryPointsTransformer,
 } from './subschemaConfigTransforms/index.js';
+import { resolveLocalFieldResult } from './resolveLocalFieldResult.js';
 import { buildTypeCandidates, buildTypes } from './typeCandidates.js';
 import {
   IStitchSchemasOptions,
@@ -332,7 +332,7 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
         handleMaybePromise(
           () => baseResolve(parent, args, context, info),
           (result) =>
-            resolveMergedTypeReference(
+            resolveLocalFieldResult(
               result,
               context,
               info,

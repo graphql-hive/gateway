@@ -8,9 +8,12 @@ import {
   parse,
 } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
-import { resolveMergedTypeReference } from '../src/resolveMergedTypeReference.js';
-import { UNPATHED_ERRORS_SYMBOL } from '../src/symbols.js';
-import { MergedTypeResolver, StitchingInfo } from '../src/types.js';
+import {
+  MergedTypeResolver,
+  StitchingInfo,
+  UNPATHED_ERRORS_SYMBOL,
+} from '@graphql-tools/delegate';
+import { resolveLocalFieldResult } from '../src/resolveLocalFieldResult.js';
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -66,11 +69,11 @@ function stitchingInfoOf(
 const info = infoOf('query { person { name surname } }');
 const context = {};
 
-describe('resolveMergedTypeReference', () => {
+describe('resolveLocalFieldResult', () => {
   it('returns the value as-is when it already satisfies the requested selection', () => {
     const resolver = vi.fn();
     const value = { id: '1', name: 'Joe', surname: 'Doe' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -88,7 +91,7 @@ describe('resolveMergedTypeReference', () => {
       surname: 'RemoteSurname',
     }));
     const value: { id: string; __typename?: string } = { id: '1' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -121,7 +124,7 @@ describe('resolveMergedTypeReference', () => {
   it('delegates only the fields missing from the payload', () => {
     const resolver = vi.fn<MergedTypeResolver>(() => ({ surname: 'Remote' }));
     const value = { id: '1', name: 'Stale' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -139,7 +142,7 @@ describe('resolveMergedTypeReference', () => {
   it('returns the value untouched when no merge key is satisfied', () => {
     const resolver = vi.fn();
     const value = { foo: 'bar' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -151,7 +154,7 @@ describe('resolveMergedTypeReference', () => {
 
   it('returns the value untouched without stitching info', () => {
     const value = { id: '1' };
-    expect(resolveMergedTypeReference(value, context, info, null as any)).toBe(
+    expect(resolveLocalFieldResult(value, context, info, null as any)).toBe(
       value,
     );
   });
@@ -159,7 +162,7 @@ describe('resolveMergedTypeReference', () => {
   it('returns the value untouched when the return type is not merged', () => {
     const resolver = vi.fn();
     const value = { id: '1' };
-    const result = resolveMergedTypeReference(value, context, info, {
+    const result = resolveLocalFieldResult(value, context, info, {
       mergedTypes: {},
     } as unknown as StitchingInfo);
     expect(result).toBe(value);
@@ -169,7 +172,7 @@ describe('resolveMergedTypeReference', () => {
   it('returns already external objects untouched', () => {
     const resolver = vi.fn();
     const value = { id: '1', [UNPATHED_ERRORS_SYMBOL]: [] };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -182,7 +185,7 @@ describe('resolveMergedTypeReference', () => {
   it('resolves each item of a list independently', () => {
     const resolver = vi.fn((value: any) => ({ ...value, name: 'Remote' }));
     const complete = { id: '2', name: 'Joe', surname: 'Doe' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       [{ id: '1' }, complete],
       context,
       info,
@@ -198,10 +201,10 @@ describe('resolveMergedTypeReference', () => {
     const stitchingInfo = stitchingInfoOf([
       { subschema: {}, keySelectionSet: '{ id }', resolver },
     ]);
-    expect(resolveMergedTypeReference(null, context, info, stitchingInfo)).toBe(
+    expect(resolveLocalFieldResult(null, context, info, stitchingInfo)).toBe(
       null,
     );
-    expect(resolveMergedTypeReference('x', context, info, stitchingInfo)).toBe(
+    expect(resolveLocalFieldResult('x', context, info, stitchingInfo)).toBe(
       'x',
     );
     expect(resolver).not.toHaveBeenCalled();
@@ -210,7 +213,7 @@ describe('resolveMergedTypeReference', () => {
   it('counts null leaf fields as satisfied', () => {
     const resolver = vi.fn();
     const value = { id: '1', name: null, surname: 'Doe' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       info,
@@ -223,7 +226,7 @@ describe('resolveMergedTypeReference', () => {
   it('counts null composites with a requested sub-selection as unsatisfied', () => {
     const resolver = vi.fn((value: any) => value);
     const value = { id: '1', friend: null };
-    resolveMergedTypeReference(
+    resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { friend { name } } }'),
@@ -240,7 +243,7 @@ describe('resolveMergedTypeReference', () => {
     const products = { name: 'products' };
     const inventoryResolver = vi.fn();
     const productsResolver = vi.fn((value: any) => value);
-    resolveMergedTypeReference(
+    resolveLocalFieldResult(
       { id: '1' },
       context,
       info,
@@ -268,7 +271,7 @@ describe('resolveMergedTypeReference', () => {
       surname: 'Doe',
       friend: { id: '2' },
     }));
-    const result = await resolveMergedTypeReference(
+    const result = await resolveLocalFieldResult(
       { id: '1' },
       context,
       infoOf('query { person { name surname friend { id } } }'),
@@ -291,7 +294,7 @@ describe('resolveMergedTypeReference', () => {
   it('treats providedFields as resolved locally when checking satisfaction', () => {
     const resolver = vi.fn();
     const value = { id: '1' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { id name } }'),
@@ -307,7 +310,7 @@ describe('resolveMergedTypeReference', () => {
       ...value,
       surname: 'Remote',
     }));
-    resolveMergedTypeReference(
+    resolveLocalFieldResult(
       { id: '1' },
       context,
       info,
@@ -324,7 +327,7 @@ describe('resolveMergedTypeReference', () => {
   it('keeps payload fields that are outside the delegated selection', () => {
     const resolver = vi.fn(() => ({ name: 'Remote' }));
     const value = { id: '1', local: 'kept' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { name } }'),
@@ -340,7 +343,7 @@ describe('resolveMergedTypeReference', () => {
   it('matches query aliases against the literal field names of the payload', () => {
     const resolver = vi.fn();
     const value = { id: '1', name: 'Local' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { fullName: name } }'),
@@ -354,7 +357,7 @@ describe('resolveMergedTypeReference', () => {
     const resolver = vi.fn<MergedTypeResolver>(() => ({
       fullName: 'Remote',
     }));
-    resolveMergedTypeReference(
+    resolveLocalFieldResult(
       { id: '1' },
       context,
       infoOf('query { person { fullName: name } }'),
@@ -372,7 +375,7 @@ describe('resolveMergedTypeReference', () => {
       familyName: 'Remote',
     }));
     const value = { id: '1', name: 'Local' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { fullName: name, familyName: surname } }'),
@@ -391,7 +394,7 @@ describe('resolveMergedTypeReference', () => {
 
   it('keeps only literal field names on nested payload objects', () => {
     const resolver = vi.fn(() => ({ friend: { surname: 'Remote' } }));
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       { id: '1', friend: { id: '2', name: 'LocalFriend' } },
       context,
       infoOf('query { person { friend { nick: name, surname } } }'),
@@ -407,7 +410,7 @@ describe('resolveMergedTypeReference', () => {
   it('sees through inline fragments in the requested selection', () => {
     const resolver = vi.fn();
     const value = { id: '1', name: 'Joe' };
-    const result = resolveMergedTypeReference(
+    const result = resolveLocalFieldResult(
       value,
       context,
       infoOf('query { person { ... on Person { name } } }'),

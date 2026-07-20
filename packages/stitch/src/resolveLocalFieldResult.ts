@@ -1,3 +1,7 @@
+import {
+  isExternalObject,
+  StitchingInfo,
+} from '@graphql-tools/delegate';
 import { mergeDeep } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
@@ -9,8 +13,6 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';
-import { isExternalObject } from './mergeFields.js';
-import { StitchingInfo } from './types.js';
 
 // presence-based only: values are not type-checked, a null leaf counts as
 // satisfied while a null object with a requested sub-selection does not
@@ -76,7 +78,7 @@ function valueSatisfiesSelectionSet(
  *   objects at all are returned untouched, so missing non-nullable fields
  *   error downstream exactly as they would without this helper.
  */
-export function resolveMergedTypeReference<
+export function resolveLocalFieldResult<
   TContext extends Record<string, any> = Record<string, any>,
 >(
   result: any,
