@@ -53,6 +53,7 @@ export default defineConfig({
                   '!**/e2e/edfs-gateway-defs',
                   '!**/e2e/edfs-subgraph-defs',
                   '!**/e2e/edfs-mesh-defs-with-entity-resolution',
+                  '!**/e2e/edfs-additional-resolver-with-cursor',
                   // TODO: windows has issues with the shutdown process (idk what exactly)
                   '!**/e2e/graceful-shutdown',
                   // TODO: I am just lazy to set everything up in a containerised version although,
