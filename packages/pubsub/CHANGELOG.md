@@ -1,5 +1,21 @@
 # @graphql-hive/pubsub
 
+## 2.2.1
+### Patch Changes
+
+
+
+- [`96a19f2`](https://github.com/graphql-hive/gateway/commit/96a19f2dc63be7ff1c9a1c6d2d239d153b82153b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Accept a `JetStreamClient` in `NATSJetStreamPubSub` so the optional NATS dependencies remain type-only imports
+  
+  ```diff
+  -import { NATSJetStreamPubSub } from '@graphql-hive/pubsub/nats-jetstream';
+  +import { NATSJetStreamPubSub } from '@graphql-hive/pubsub/nats-jetstream';
+  +import { jetstream } from '@nats-io/jetstream';
+  
+  -const pubsub = new NATSJetStreamPubSub(nats, options);
+  +const pubsub = new NATSJetStreamPubSub(jetstream(nats), options);
+  ```
+
 ## 2.2.0
 ### Minor Changes
 
