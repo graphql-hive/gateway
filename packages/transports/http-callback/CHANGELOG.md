@@ -1,5 +1,11 @@
 # @graphql-mesh/transport-http-callback
 
+## 1.0.23
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.0.19
+
 ## 1.0.22
 ### Patch Changes
 

@@ -1,5 +1,18 @@
 # @graphql-hive/gateway
 
+## 2.10.8
+### Patch Changes
+
+- Updated dependencies [[`96a19f2`](https://github.com/graphql-hive/gateway/commit/96a19f2dc63be7ff1c9a1c6d2d239d153b82153b)]:
+  - @graphql-hive/pubsub@2.2.1
+  - @graphql-hive/gateway-runtime@2.10.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.57
+  - @graphql-hive/plugin-opentelemetry@1.4.39
+  - @graphql-mesh/plugin-prometheus@2.1.55
+  - @graphql-mesh/transport-http@1.1.3
+  - @graphql-mesh/transport-http-callback@1.0.23
+  - @graphql-mesh/transport-ws@2.0.23
+
 ## 2.10.7
 ### Patch Changes
 
