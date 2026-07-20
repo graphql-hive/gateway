@@ -1,5 +1,46 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.11.2
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fields that are not provided by any subschema (added through `typeDefs` or `resolvers`) can now return partial objects of merged types; the missing fields are resolved from the owning subschema automatically
+  
+  ```graphql
+  type Query {
+    personCreated: PersonCreated
+  }
+  
+  type PersonCreated {
+    person: Person # merged type, owned by a subschema
+    cursor: String
+  }
+  ```
+  
+  ```ts
+  const resolvers = {
+    Query: {
+      // only the key of `Person` is provided locally
+      personCreated: () => ({ person: { id: '1' }, cursor: 'c1' }),
+    },
+  };
+  ```
+  
+  Before, `person` had to be resolved manually even though the stitched schema knows `Person` and its keys. Now the key is enough: `{ person { name } }` runs through the standard stitching planner, while local data (`cursor`) and local field resolvers on `Person` keep working as before. Computed fields, `@requires` dependencies, batching, and fields from other subschemas use the same type-merging flow as regular delegated results.
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-tools/stitch@10.2.0
+  - @graphql-mesh/transport-common@1.0.18
+  - @graphql-tools/federation@4.4.10
+  - @graphql-tools/stitching-directives@4.0.26
+  - @graphql-tools/wrap@11.1.20
+
 ## 1.11.1
 ### Patch Changes
 
