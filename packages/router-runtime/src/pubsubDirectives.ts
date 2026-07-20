@@ -183,6 +183,7 @@ function resolvePubsubOperationRootField(
     (root) =>
       pubsubOperationResolver.resolve(
         root,
+        // @ts-expect-error in case the resolve takes in more args, doesnt hurt to keep passing them
         resolverOpts.args,
         resolverOpts.context,
         undefined!,
