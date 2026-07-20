@@ -1,6 +1,4 @@
 import type { JetStreamClient, JsMsg } from '@nats-io/jetstream';
-import { DeliverPolicy, jetstream } from '@nats-io/jetstream';
-import type { NatsConnection } from '@nats-io/nats-core';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
@@ -43,17 +41,6 @@ export interface NATSJetStreamPubSubOptions {
    * configured to capture the subjects used by this pub/sub (i.e. `${subjectPrefix}:${topic}`).
    */
   stream: string;
-  /**
-   * By default, when the pub/sub instance is disposed, it will call
-   * `close` on the NATS connection. Set this to `true` if you
-   * want to keep the connection alive after disposal.
-   *
-   * This might be useful if you want to manage the NATS connection's lifecycle
-   * outside of the pub/sub instance.
-   *
-   * @default false
-   */
-  noCloseOnDispose?: boolean;
 }
 
 /**
@@ -69,25 +56,21 @@ export class NATSJetStreamPubSub<
   M extends TopicDataMap = TopicDataMap,
 > implements PubSub<M, JetStreamSubscribeOptions> {
   #disposed = false;
-  #closeOnDispose: boolean;
-  #nats: NatsConnection;
   #js: JetStreamClient;
   #subjectPrefix: string;
   #stream: string;
   #activeConsumers = new Map<() => Promise<void>, keyof M>();
 
-  constructor(nats: NatsConnection, options: NATSJetStreamPubSubOptions) {
-    this.#nats = nats;
+  constructor(js: JetStreamClient, options: NATSJetStreamPubSubOptions) {
+    this.#js = js;
     this.#subjectPrefix = options.subjectPrefix;
     this.#stream = options.stream;
-    this.#closeOnDispose = !options.noCloseOnDispose;
     if (String(this.#subjectPrefix || '').trim() === '') {
       throw new Error('NATSJetStreamPubSub requires a non-empty subjectPrefix');
     }
     if (String(this.#stream || '').trim() === '') {
       throw new Error('NATSJetStreamPubSub requires a non-empty stream');
     }
-    this.#js = jetstream(nats);
   }
 
   #topicToSubject(topic: keyof M): string {
@@ -132,9 +115,9 @@ export class NATSJetStreamPubSub<
     return this.#js.consumers.get(this.#stream, {
       filter_subjects: [this.#topicToSubject(topic)],
       ...(cursor === undefined
-        ? { deliver_policy: DeliverPolicy.New }
+        ? { deliver_policy: 'new' }
         : {
-            deliver_policy: DeliverPolicy.StartSequence,
+            deliver_policy: 'by_start_sequence',
             opt_start_seq: this.#parseCursor(cursor) + 1,
           }),
     });
@@ -256,9 +239,6 @@ export class NATSJetStreamPubSub<
       Array.from(this.#activeConsumers.keys()).map((stop) => stop()),
     );
     this.#activeConsumers.clear();
-    if (this.#closeOnDispose) {
-      await this.#nats.close();
-    }
   }
 
   [DisposableSymbols.asyncDispose]() {

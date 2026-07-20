@@ -1,6 +1,6 @@
 import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
-import { jetstreamManager } from '@nats-io/jetstream';
+import { jetstream, jetstreamManager } from '@nats-io/jetstream';
 import { connect as natsConnect } from '@nats-io/transport-node';
 import { crypto } from '@whatwg-node/fetch';
 import {
@@ -124,7 +124,7 @@ for (const PubSub of PubSubCtors) {
           const conn = await natsConnect({
             servers: [`0.0.0.0:${nats.port}`],
           });
-          return new NATSJetStreamPubSub<Data>(conn, {
+          return new NATSJetStreamPubSub<Data>(jetstream(conn), {
             subjectPrefix: opts.topicPrefix,
             stream,
           });
@@ -392,10 +392,13 @@ describe.skipIf(getEnvBool('LEAK_TEST'))(
       const conn = await natsConnect({
         servers: [`0.0.0.0:${nats.port}`],
       });
-      await using pubsub = new NATSJetStreamPubSub<{ hello: string }>(conn, {
-        subjectPrefix: `resumability.${crypto.randomUUID()}`,
-        stream,
-      });
+      await using pubsub = new NATSJetStreamPubSub<{ hello: string }>(
+        jetstream(conn),
+        {
+          subjectPrefix: `resumability.${crypto.randomUUID()}`,
+          stream,
+        },
+      );
 
       const iterator1 = pubsub
         .subscribe('hello', { cursor: undefined })

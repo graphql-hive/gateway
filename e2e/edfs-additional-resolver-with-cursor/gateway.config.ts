@@ -1,15 +1,18 @@
 import { defineConfig, NATSJetStreamPubSub } from '@graphql-hive/gateway';
+import { jetstream } from '@nats-io/jetstream';
 import { connect } from '@nats-io/transport-node';
 import { mapAsyncIterator } from '@whatwg-node/promise-helpers';
 
 export const gatewayConfig = defineConfig({
   maskedErrors: false,
   pubsub: new NATSJetStreamPubSub(
-    await connect({
-      servers: [
-        `nats://${process.env['NATS_HOST']}:${process.env['NATS_PORT']}`,
-      ],
-    }),
+    jetstream(
+      await connect({
+        servers: [
+          `nats://${process.env['NATS_HOST']}:${process.env['NATS_PORT']}`,
+        ],
+      }),
+    ),
     {
       subjectPrefix: 'edfs-additional-resolver-with-cursor',
       stream: process.env['NATS_STREAM'] || 'REVIEWS',
