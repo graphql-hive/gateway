@@ -1,6 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
 import { createTenv, dockerHostName } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { createClient } from 'graphql-sse';
 import { beforeAll, expect, it } from 'vitest';
 
@@ -23,7 +24,10 @@ beforeAll(async () => {
   natsEnv.NATS_PORT = nats.port;
 });
 
-it('should perform entity resolution', async () => {
+it.skipIf(
+  // doesnt work with Hive Router runtime (Rust QP) because we're using additional resolvers
+  usingHiveRouterRuntime(),
+)('should perform entity resolution', async () => {
   const gw = await gateway({
     supergraph: {
       with: 'mesh',

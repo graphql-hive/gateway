@@ -232,6 +232,29 @@ export const handleFederationSupergraph = function ({
     }
   }
 
+  // register pubsub resolvers before stitching so local merged-type results get wrapped for hydration
+  const subscriptionType = unifiedGraph.getSubscriptionType();
+  if (subscriptionType) {
+    for (const field of Object.values(subscriptionType.getFields())) {
+      // the generic only projects the return type; the validated unified graph guarantees the directive args
+      const pubsubOperations = getDirectiveExtensions<{
+        pubsubOperation: PubSubOperationOptions;
+      }>(field, unifiedGraph).pubsubOperation;
+      if (pubsubOperations?.length) {
+        const resolver: Record<string, unknown> = {};
+        for (const pubsubOperationArgs of pubsubOperations) {
+          Object.assign(
+            resolver,
+            getResolverForPubSubOperation(pubsubOperationArgs),
+          );
+        }
+        additionalResolvers.push({
+          [subscriptionType.name]: { [field.name]: resolver },
+        });
+      }
+    }
+  }
+
   const unifiedGraphDirectives = getDirectiveExtensions(unifiedGraph);
 
   let executableUnifiedGraph = getStitchedSchemaFromSupergraphSdl({
@@ -406,24 +429,6 @@ export const handleFederationSupergraph = function ({
         };
       }
     }
-  }
-  if (executableUnifiedGraph.getDirective('pubsubOperation')) {
-    executableUnifiedGraph = mapSchema(executableUnifiedGraph, {
-      [MapperKind.ROOT_FIELD](fieldConfig) {
-        const directiveExtensions = getDirectiveExtensions<{
-          pubsubOperation: PubSubOperationOptions;
-        }>(fieldConfig, executableUnifiedGraph);
-        if (directiveExtensions.pubsubOperation?.length) {
-          for (const pubsubOperationArgs of directiveExtensions.pubsubOperation) {
-            const { subscribe, resolve } =
-              getResolverForPubSubOperation(pubsubOperationArgs);
-            fieldConfig.subscribe = subscribe;
-            fieldConfig.resolve = resolve;
-          }
-        }
-        return fieldConfig;
-      },
-    });
   }
   if (executableUnifiedGraph.getDirective('pubsubPublish')) {
     executableUnifiedGraph = mapSchema(executableUnifiedGraph, {

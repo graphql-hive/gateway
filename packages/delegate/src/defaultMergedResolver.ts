@@ -38,6 +38,8 @@ import { ExternalObject, MergedTypeResolver, StitchingInfo } from './types.js';
  * a) handle aliases for proxied schemas
  * b) handle errors from proxied schemas
  * c) handle external to internal enum conversion
+ * d) fall back to the field name for plain resolver data merged into
+ *    external objects, which is keyed by literal field name
  */
 export function defaultMergedResolver(
   parent: ExternalObject,
@@ -104,6 +106,12 @@ export function defaultMergedResolver(
         handleLeftOver(parent, context, info, leftOver);
       }
       return deferred.promise;
+    }
+    // plain resolver data merged into an external object is keyed by the
+    // literal field name; when the request aliases the field, resolve it the
+    // way graphql-js default resolution would on a plain object
+    if (Object.prototype.hasOwnProperty.call(parent, info.fieldName)) {
+      return defaultFieldResolver(parent, args, context, info);
     }
     return undefined;
   }

@@ -40,6 +40,7 @@ export function createMergedTypeResolver<
       selectionSet,
       key,
       type = getType(info),
+      skipTypeMerging = true,
     ) {
       return batchDelegateToSchema({
         schema: subschema,
@@ -52,7 +53,7 @@ export function createMergedTypeResolver<
         selectionSet,
         context,
         info,
-        skipTypeMerging: true,
+        skipTypeMerging,
         dataLoaderOptions: mergedTypeResolverOptions.dataLoaderOptions,
       });
     };
@@ -67,6 +68,7 @@ export function createMergedTypeResolver<
       selectionSet,
       _key,
       type = getType(info),
+      skipTypeMerging = true,
     ) {
       return delegateToSchema({
         schema: subschema,
@@ -77,7 +79,7 @@ export function createMergedTypeResolver<
         selectionSet,
         context,
         info,
-        skipTypeMerging: true,
+        skipTypeMerging,
       });
     };
   }

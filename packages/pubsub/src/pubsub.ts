@@ -10,7 +10,10 @@ export type PubSubListener<
 
 // DO NOT FORGET TO UPDATE DOCUMENTATION WHEN CHANGING THE INTERFACE
 
-export interface PubSub<M extends TopicDataMap = TopicDataMap> {
+export interface PubSub<
+  M extends TopicDataMap = TopicDataMap,
+  SubscribeOptions extends { [key: string]: unknown } = never,
+> {
   /**
    * Publish {@link data} for a {@link topic}.
    * @returns `void` or a `Promise` that resolves when the data has been successfully published
@@ -36,7 +39,14 @@ export interface PubSub<M extends TopicDataMap = TopicDataMap> {
    *
    * @returns an `AsyncIterable` that yields data for the given {@link topic}
    */
-  subscribe<Topic extends keyof M>(topic: Topic): AsyncIterable<M[Topic]>;
+  subscribe<Topic extends keyof M>(
+    topic: Topic,
+    // wrapped in tuples to keep the conditional non-distributive,
+    // otherwise SubscribeOptions=never collapses the rest param to never
+    ...options: [SubscribeOptions] extends [never]
+      ? []
+      : [options: SubscribeOptions]
+  ): AsyncIterable<M[Topic]>;
   subscribe<Topic extends keyof M>(
     topic: Topic,
     listener: PubSubListener<M, Topic>,

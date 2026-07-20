@@ -1,5 +1,6 @@
 import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
+import { jetstreamManager } from '@nats-io/jetstream';
 import { connect as natsConnect } from '@nats-io/transport-node';
 import { crypto } from '@whatwg-node/fetch';
 import {
@@ -12,18 +13,22 @@ import LeakDetector from 'jest-leak-detector';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { MemPubSub } from '../src/mem';
 import { NATSPubSub } from '../src/nats';
+import { NATSJetStreamPubSub } from '../src/nats-jetstream';
 import { PubSub as IPubSub, TopicDataMap } from '../src/pubsub';
 import { RedisPubSub } from '../src/redis';
 
-const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub];
+const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub, NATSJetStreamPubSub];
 
 for (const PubSub of PubSubCtors) {
   describe.skipIf(
     getEnvBool('LEAK_TEST') &&
-      (PubSub === RedisPubSub || PubSub === NATSPubSub),
+      (PubSub === RedisPubSub ||
+        PubSub === NATSPubSub ||
+        PubSub === NATSJetStreamPubSub),
   )(PubSub.name, () => {
     let redis: Container | null = null;
     let nats: Container | null = null;
+    let stream: string | null = null;
     beforeAll(
       async () => {
         switch (PubSub) {
@@ -43,17 +48,29 @@ for (const PubSub of PubSubCtors) {
             return;
           }
           case NATSPubSub:
+          case NATSJetStreamPubSub: {
             const { container } = createTenv(__dirname);
             nats = await container({
-              name: 'nats',
+              name: PubSub === NATSPubSub ? 'nats' : 'nats-jetstream',
               image: 'nats:2.11-alpine', // we want alpine for healtcheck
               containerPort: 4222,
+              args: PubSub === NATSJetStreamPubSub ? ['-js', '-m', '8222'] : [],
               healthcheck: [
                 'CMD-SHELL',
                 'wget --spider http://localhost:8222/healthz',
               ],
             });
+            if (PubSub === NATSJetStreamPubSub) {
+              const conn = await natsConnect({
+                servers: [`0.0.0.0:${nats.port}`],
+              });
+              stream = `stream_${crypto.randomUUID().replaceAll('-', '_')}`;
+              const jsm = await jetstreamManager(conn);
+              await jsm.streams.add({ name: stream, subjects: ['*'] });
+              await conn.close();
+            }
             break;
+          }
         }
       },
       globalThis.Bun ? undefined : 60_000,
@@ -100,6 +117,18 @@ for (const PubSub of PubSubCtors) {
             subjectPrefix: opts.topicPrefix,
           });
         }
+        case NATSJetStreamPubSub: {
+          if (!nats || !stream) {
+            throw new Error('NATS JetStream container is not initialized');
+          }
+          const conn = await natsConnect({
+            servers: [`0.0.0.0:${nats.port}`],
+          });
+          return new NATSJetStreamPubSub<Data>(conn, {
+            subjectPrefix: opts.topicPrefix,
+            stream,
+          });
+        }
         default:
           throw new Error(`Unsupported PubSub implementation: ${PubSub.name}`);
       }
@@ -111,34 +140,39 @@ for (const PubSub of PubSubCtors) {
         obj: Record<string, any>;
       }>();
 
-      pubsub.publish('hello', 'world');
+      // settle any async publishes before dispose so jetstream acks don't race the closed connection
+      await Promise.allSettled(
+        [
+          pubsub.publish('hello', 'world'),
 
-      pubsub.publish(
-        'hello',
-        // @ts-expect-error must be 'world'
-        0,
+          pubsub.publish(
+            'hello',
+            // @ts-expect-error must be 'world'
+            0,
+          ),
+
+          pubsub.publish(
+            // @ts-expect-error does not exist in map
+            'aloha',
+            0,
+          ),
+
+          pubsub.publish('obj', {}),
+
+          pubsub.publish(
+            'obj',
+            // @ts-expect-error must be an object
+            '{}',
+          ),
+        ].map((p) => Promise.resolve(p)),
       );
 
-      pubsub.publish(
-        // @ts-expect-error does not exist in map
-        'aloha',
-        0,
-      );
-
-      pubsub.publish('obj', {});
-
-      pubsub.publish(
-        'obj',
-        // @ts-expect-error must be an object
-        '{}',
-      );
-
-      pubsub.subscribe('hello', (data) => {
+      await pubsub.subscribe('hello', (data) => {
         // @ts-expect-error must be 'world'
         data();
       });
 
-      pubsub.subscribe(
+      await pubsub.subscribe(
         // @ts-expect-error does not exist in map
         'aloha',
         () => {},
@@ -245,7 +279,9 @@ for (const PubSub of PubSubCtors) {
     it.skipIf(
       // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
       // we also assume that bun doesnt leak
-      globalThis.Bun,
+      globalThis.Bun ||
+        // jetstream consumer callbacks are retained by the nats client past unsubscribe
+        PubSub === NATSJetStreamPubSub,
     )('should GC listener after unsubscribe', async () => {
       const pubsub = await createPubSub();
 
@@ -282,8 +318,8 @@ for (const PubSub of PubSubCtors) {
 
     it.skipIf(
       PubSub === MemPubSub ||
-        // TODO: do we even need it?
-        PubSub === NATSPubSub,
+        PubSub === NATSPubSub ||
+        PubSub === NATSJetStreamPubSub,
     )('should get subscribed topics across all pubsubs', async () => {
       const sharedChannel = crypto.randomUUID();
       await using pubsub1 = await createPubSub({
@@ -317,3 +353,87 @@ for (const PubSub of PubSubCtors) {
     });
   });
 }
+
+describe.skipIf(getEnvBool('LEAK_TEST'))(
+  `${NATSJetStreamPubSub.name} resumability`,
+  () => {
+    let nats: Container;
+    let stream: string;
+
+    beforeAll(
+      async () => {
+        const { container } = createTenv(__dirname);
+        nats = await container({
+          name: 'nats-jetstream-resumability',
+          image: 'nats:2.11-alpine', // we want alpine for healtcheck
+          containerPort: 4222,
+          args: ['-js', '-m', '8222'],
+          healthcheck: [
+            'CMD-SHELL',
+            'wget --spider http://localhost:8222/healthz',
+          ],
+        });
+        const conn = await natsConnect({
+          servers: [`0.0.0.0:${nats.port}`],
+        });
+        stream = `stream_${crypto.randomUUID().replaceAll('-', '_')}`;
+        const jsm = await jetstreamManager(conn);
+        // nats requires no_ack for streams capturing all subjects, so keep this stream scoped
+        await jsm.streams.add({
+          name: stream,
+          subjects: ['resumability.>'],
+        });
+        await conn.close();
+      },
+      globalThis.Bun ? undefined : 60_000,
+    );
+
+    it('should resume from a cursor without repeating already seen data', async () => {
+      const conn = await natsConnect({
+        servers: [`0.0.0.0:${nats.port}`],
+      });
+      await using pubsub = new NATSJetStreamPubSub<{ hello: string }>(conn, {
+        subjectPrefix: `resumability.${crypto.randomUUID()}`,
+        stream,
+      });
+
+      const iterator1 = pubsub
+        .subscribe('hello', { cursor: undefined })
+        [Symbol.asyncIterator]();
+      const next1 = iterator1.next();
+
+      /**
+       * The ordered consumer behind a fresh `{ cursor: undefined }` subscription is created
+       * asynchronously, so wait until it is active instead of guessing a delay or publishing
+       * repeatedly.
+       */
+      while (!Array.from(await pubsub.subscribedTopics()).includes('hello')) {
+        await setTimeout(10);
+      }
+
+      await pubsub.publish('hello', 'one');
+      const firstResult = await next1;
+      if (firstResult.done) {
+        throw new Error('Subscription ended unexpectedly');
+      }
+      expect(firstResult.value).toMatchObject({ data: 'one' });
+
+      await iterator1.return?.();
+
+      // published while nobody is subscribed, must not be lost
+      await pubsub.publish('hello', 'two');
+
+      const iterator2 = pubsub
+        .subscribe('hello', { cursor: firstResult.value.cursor })
+        [Symbol.asyncIterator]();
+      const secondResult = await iterator2.next();
+      if (secondResult.done) {
+        throw new Error('Subscription ended unexpectedly');
+      }
+      expect(secondResult.value).toMatchObject({ data: 'two' });
+      expect(secondResult.value.cursor).not.toBe(firstResult.value.cursor);
+
+      await iterator2.return?.();
+    });
+  },
+);

@@ -1,6 +1,7 @@
 import {
   defaultMergedResolver,
   isSubschemaConfig,
+  StitchingInfo,
   Subschema,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
@@ -15,8 +16,10 @@ import {
   extendResolversFromInterfaces,
 } from '@graphql-tools/schema';
 import { inspect, IResolvers } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   extendSchema,
+  getNamedType,
   GraphQLDirective,
   GraphQLNamedType,
   GraphQLObjectType,
@@ -28,6 +31,7 @@ import {
   isSpecifiedDirective,
   specifiedDirectives,
 } from 'graphql';
+import { resolveLocalFieldResult } from './resolveLocalFieldResult.js';
 import {
   addStitchingInfo,
   completeStitchingInfo,
@@ -38,7 +42,11 @@ import {
   splitMergedTypeEntryPointsTransformer,
 } from './subschemaConfigTransforms/index.js';
 import { buildTypeCandidates, buildTypes } from './typeCandidates.js';
-import { IStitchSchemasOptions, SubschemaConfigTransform } from './types.js';
+import {
+  IStitchSchemasOptions,
+  MergeTypeCandidate,
+  SubschemaConfigTransform,
+} from './types.js';
 
 export function stitchSchemas<
   TContext extends Record<string, any> = Record<string, any>,
@@ -143,6 +151,8 @@ export function stitchSchemas<
 
   stitchingInfo = completeStitchingInfo(stitchingInfo, finalResolvers, schema);
 
+  addLocalFieldResolvers(schema, finalResolvers, stitchingInfo, typeCandidates);
+
   schema = addResolversToSchema({
     schema,
     defaultFieldResolver: defaultMergedResolver,
@@ -215,6 +225,126 @@ function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
             directives: value.astNode.directives.filter(isBuiltin),
           };
         }
+      }
+    }
+  }
+}
+
+/**
+ * Lets fields that are not provided by any subschema (introduced through the
+ * `typeDefs` or `resolvers` options) return plain objects containing only the
+ * key fields of a merged type; those get delegated to the owning subschema so
+ * the rest of the fields resolve through regular type merging.
+ */
+function addLocalFieldResolvers<TContext extends Record<string, any>>(
+  schema: GraphQLSchema,
+  resolvers: IResolvers,
+  stitchingInfo: StitchingInfo<TContext>,
+  typeCandidates: Record<string, Array<MergeTypeCandidate<TContext>>>,
+): void {
+  const subschemaFields = new Set<string>();
+  const localFields = new Map<string, Set<string>>();
+  for (const typeName in typeCandidates) {
+    for (const candidate of typeCandidates[typeName]!) {
+      if (!isObjectType(candidate.type) && !isInterfaceType(candidate.type)) {
+        continue;
+      }
+      const fieldNames = Object.keys(candidate.type.getFields());
+      if (
+        candidate.transformedSubschema != null ||
+        candidate.subschema != null
+      ) {
+        for (const fieldName of fieldNames) {
+          subschemaFields.add(`${typeName}.${fieldName}`);
+        }
+      } else {
+        let fields = localFields.get(typeName);
+        if (fields == null) {
+          fields = new Set();
+          localFields.set(typeName, fields);
+        }
+        for (const fieldName of fieldNames) {
+          fields.add(fieldName);
+        }
+      }
+    }
+  }
+  for (const typeName in resolvers) {
+    const typeResolvers = resolvers[typeName];
+    if (typeResolvers == null || typeof typeResolvers !== 'object') {
+      continue;
+    }
+    let fields = localFields.get(typeName);
+    if (fields == null) {
+      fields = new Set();
+      localFields.set(typeName, fields);
+    }
+    for (const fieldName in typeResolvers) {
+      if (fieldName.startsWith('__')) {
+        continue;
+      }
+      fields.add(fieldName);
+    }
+  }
+  for (const [typeName, fieldNames] of localFields) {
+    const type = schema.getType(typeName);
+    if (!isObjectType(type) && !isInterfaceType(type)) {
+      continue;
+    }
+    const fields = type.getFields();
+    for (const fieldName of fieldNames) {
+      const field = fields[fieldName];
+      const existing = (
+        resolvers[typeName] as Record<string, any> | undefined
+      )?.[fieldName];
+      if (
+        field == null ||
+        // subschema-owned fields keep their proxying resolver unless the user overrode it
+        (existing == null && subschemaFields.has(`${typeName}.${fieldName}`))
+      ) {
+        continue;
+      }
+      const namedType = getNamedType(field.type);
+      if (stitchingInfo.mergedTypes[namedType.name] == null) {
+        continue;
+      }
+      const namedTypeResolvers = resolvers[namedType.name];
+      const providedFields =
+        namedTypeResolvers != null && typeof namedTypeResolvers === 'object'
+          ? new Set(
+              Object.keys(namedTypeResolvers).filter(
+                (fieldName) => !fieldName.startsWith('__'),
+              ),
+            )
+          : undefined;
+      const originalResolve =
+        typeof existing === 'function' ? existing : existing?.resolve;
+      // keep defaultMergedResolver as the base: it annotates delegated results
+      // as external objects on the way through, and falls back to plain
+      // property access for local payloads anyway
+      const baseResolve = originalResolve ?? defaultMergedResolver;
+      const wrappedResolve = (
+        parent: any,
+        args: any,
+        context: any,
+        info: any,
+      ) =>
+        handleMaybePromise(
+          () => baseResolve(parent, args, context, info),
+          (result) =>
+            resolveLocalFieldResult(
+              result,
+              context,
+              info,
+              stitchingInfo,
+              providedFields,
+            ),
+        );
+      if (existing != null && typeof existing === 'object') {
+        existing.resolve = wrappedResolve;
+      } else {
+        ((resolvers[typeName] ||= {}) as Record<string, any>)[fieldName] =
+          wrappedResolve;
       }
     }
   }

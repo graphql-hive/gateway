@@ -107,6 +107,9 @@
       "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"],
       "@graphql-hive/pubsub/redis": ["./packages/pubsub/src/redis.ts"],
       "@graphql-hive/pubsub/nats": ["./packages/pubsub/src/nats.ts"],
+      "@graphql-hive/pubsub/nats-jetstream": [
+        "./packages/pubsub/src/nats-jetstream.ts"
+      ],
       "@graphql-hive/router-runtime": [
         "./packages/router-runtime/src/index.ts"
       ],
