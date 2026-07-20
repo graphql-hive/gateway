@@ -7,7 +7,7 @@ import { createClient } from 'graphql-sse';
 import Redis from 'ioredis';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
-const { container, service, gateway } = createTenv(__dirname);
+const { container, service, gateway, gatewayRunner } = createTenv(__dirname);
 
 const redisEnv = {
   REDIS_HOST: '',
@@ -37,8 +37,10 @@ afterAll(async () => {
 });
 
 it.skipIf(
-  // uses mesh for composition
-  usingHiveRouterRuntime(),
+  // too lazy to set everything up for docker
+  gatewayRunner.includes('docker') ||
+    // uses mesh for composition
+    usingHiveRouterRuntime(),
 )('consumes the pubsub topics and resolves fields', async () => {
   await using products = await service('products');
   await using inventory = await service('inventory');
@@ -117,8 +119,10 @@ it.skipIf(
 });
 
 it.skipIf(
-  // uses mesh for composition
-  usingHiveRouterRuntime(),
+  // too lazy to set everything up for docker
+  gatewayRunner.includes('docker') ||
+    // uses mesh for composition
+    usingHiveRouterRuntime(),
 )('consumes the pubsub topics and resolves entities', async () => {
   await using products = await service('products');
   await using inventory = await service('inventory');

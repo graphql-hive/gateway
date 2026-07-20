@@ -54,11 +54,9 @@ export default defineConfig({
                   '!**/e2e/edfs-subgraph-defs',
                   '!**/e2e/edfs-mesh-defs-with-entity-resolution',
                   '!**/e2e/edfs-additional-resolver-with-cursor',
+                  '!**/e2e/subscriptions-type-merging',
                   // TODO: windows has issues with the shutdown process (idk what exactly)
                   '!**/e2e/graceful-shutdown',
-                  // TODO: I am just lazy to set everything up in a containerised version although,
-                  // this test is ultimately a unit test so different envs make no difference
-                  '!**/e2e/subscriptions-type-merging',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
