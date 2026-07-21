@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.13",
-    "@graphql-mesh/types": "0.105.0-alpha-20260508144502-aa9e10247ea4ce2543eca32553a49fff3784bba7",
+    "@graphql-mesh/types": "0.105.0-alpha-20260721125616-85ceb3ca7e8b6092a6bf4e389e8c7d00ab0e59d9",
     "@graphql-mesh/utils": "^0.104.38",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^11.0.0",
