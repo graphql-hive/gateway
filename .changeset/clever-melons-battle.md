@@ -14,7 +14,7 @@ only when `iamAuth` is configured, so gateways not using IAM auth pay zero cost.
 Install the optional peer dependencies:
 
 ```sh
-yarn add @smithy/signature-v4 @aws-sdk/credential-providers
+yarn add @aws-crypto/sha256-js @aws-sdk/credential-providers @aws-sdk/util-format-url @smithy/protocol-http @smithy/signature-v4
 ```
 
 ```ts
