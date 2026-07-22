@@ -18,6 +18,7 @@ import {
 import { inspect, IResolvers } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
+  concatAST,
   extendSchema,
   getNamedType,
   GraphQLDirective,
@@ -50,99 +51,57 @@ import {
 
 export function stitchSchemas<
   TContext extends Record<string, any> = Record<string, any>,
->({
-  subschemas = [],
-  types = [],
-  typeDefs = [],
-  onTypeConflict,
-  mergeTypes = true,
-  typeMergingOptions,
-  subschemaConfigTransforms = [],
-  resolvers = {},
-  inheritResolversFromInterfaces = false,
-  resolverValidationOptions = {},
-  updateResolversInPlace = true,
-  schemaExtensions,
-  ...rest
-}: IStitchSchemasOptions<TContext>): GraphQLSchema {
-  const mergeDirectives = rest.mergeDirectives ?? true;
-  const transformedSubschemas: Array<Subschema<any, any, any, TContext>> = [];
-  const subschemaMap: Map<
-    GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
-    Subschema<any, any, any, TContext>
-  > = new Map();
-  const originalSubschemaMap: Map<
-    Subschema<any, any, any, TContext>,
-    GraphQLSchema | SubschemaConfig<any, any, any, TContext>
-  > = new Map();
-
-  for (const subschema of subschemas) {
-    for (const transformedSubschemaConfig of applySubschemaConfigTransforms(
-      subschemaConfigTransforms,
-      subschema,
-      subschemaMap,
-      originalSubschemaMap,
-    )) {
-      transformedSubschemas.push(transformedSubschemaConfig);
-    }
-  }
-
-  const directiveMap: Record<string, GraphQLDirective> = Object.create(null);
-  for (const directive of specifiedDirectives) {
-    directiveMap[directive.name] = directive;
-  }
-  const schemaDefs = Object.create(null);
-
-  const [typeCandidates, rootTypeNameMap, extensions] = buildTypeCandidates({
-    subschemas: transformedSubschemas,
-    originalSubschemaMap,
-    types,
-    typeDefs: typeDefs || [],
-    parseOptions: rest,
-    directiveMap,
-    schemaDefs,
-    mergeDirectives,
-  });
-
-  let stitchingInfo = createStitchingInfo(
-    subschemaMap,
-    typeCandidates,
-    mergeTypes,
-  );
-
-  const { typeMap: newTypeMap, directives: newDirectives } = buildTypes({
-    typeCandidates,
-    directives: Object.values(directiveMap),
+>(options: IStitchSchemasOptions<TContext>): GraphQLSchema {
+  const {
+    resolvers = {},
+    inheritResolversFromInterfaces = false,
+    resolverValidationOptions = {},
+    updateResolversInPlace = true,
+    schemaExtensions,
+    ...rest
+  } = options;
+  let {
+    newTypeMap,
+    newDirectives,
+    rootTypeNameMap,
     stitchingInfo,
-    rootTypeNames: Object.values(rootTypeNameMap),
-    onTypeConflict,
-    mergeTypes,
-    typeMergingOptions,
-  });
+    schemaDefs,
+    extensions,
+    mergeDirectives,
+  } = prepareStitchingData(options);
 
-  if (!mergeDirectives) {
-    stripCustomDirectiveUsages(Object.values(newTypeMap));
+  let schema: GraphQLSchema;
+  {
+    // try to optimize memory...
+    // allocate inside scope to allow freeing after.
+    const finalTypes = Object.values(newTypeMap);
+
+    if (!mergeDirectives) {
+      stripCustomDirectiveUsages(finalTypes);
+    }
+
+    schema = new GraphQLSchema({
+      query: newTypeMap[rootTypeNameMap.query] as GraphQLObjectType,
+      mutation: newTypeMap[rootTypeNameMap.mutation] as GraphQLObjectType,
+      subscription: newTypeMap[
+        rootTypeNameMap.subscription
+      ] as GraphQLObjectType,
+      types: finalTypes,
+      directives: newDirectives,
+      astNode: schemaDefs.schemaDef,
+      extensionASTNodes: schemaDefs.schemaExtensions,
+      extensions: null,
+      assumeValid: rest.assumeValid,
+    });
   }
 
-  let schema = new GraphQLSchema({
-    query: newTypeMap[rootTypeNameMap.query] as GraphQLObjectType,
-    mutation: newTypeMap[rootTypeNameMap.mutation] as GraphQLObjectType,
-    subscription: newTypeMap[rootTypeNameMap.subscription] as GraphQLObjectType,
-    types: Object.values(newTypeMap),
-    directives: newDirectives,
-    astNode: schemaDefs.schemaDef,
-    extensionASTNodes: schemaDefs.schemaExtensions,
-    extensions: null,
-    assumeValid: rest.assumeValid,
-  });
-
-  for (const extension of extensions) {
-    schema = extendSchema(schema, extension, {
+  if (extensions.length > 0) {
+    const mergedExtensions = concatAST(extensions);
+    schema = extendSchema(schema, mergedExtensions, {
       commentDescriptions: true,
     } as any);
   }
 
-  // We allow passing in an array of resolver maps, in which case we merge them
   const resolverMap: IResolvers = mergeResolvers(resolvers);
 
   const finalResolvers = inheritResolversFromInterfaces
@@ -176,10 +135,11 @@ export function stitchSchemas<
   addStitchingInfo(schema, stitchingInfo);
 
   if (schemaExtensions) {
-    if (Array.isArray(schemaExtensions)) {
-      schemaExtensions = mergeExtensions(schemaExtensions);
-    }
-    applyExtensions(schema, schemaExtensions);
+    const mergedSchemaExtensions = Array.isArray(schemaExtensions)
+      ? mergeExtensions(schemaExtensions)
+      : schemaExtensions;
+
+    applyExtensions(schema, mergedSchemaExtensions);
   }
 
   return schema;
@@ -401,4 +361,84 @@ function applySubschemaConfigTransforms<TContext = Record<string, any>>(
   }
 
   return transformedSubschemas;
+}
+
+function prepareStitchingData<TContext extends Record<string, any>>(
+  options: IStitchSchemasOptions<TContext>,
+) {
+  const {
+    subschemas = [],
+    types = [],
+    typeDefs = [],
+    onTypeConflict,
+    mergeTypes = true,
+    typeMergingOptions,
+    subschemaConfigTransforms = [],
+    ...rest
+  } = options;
+
+  const mergeDirectives = rest.mergeDirectives ?? true;
+  const transformedSubschemas: Array<Subschema<any, any, any, TContext>> = [];
+
+  // These maps take up a lot of memory during large stitches...
+  const subschemaMap = new Map();
+  const originalSubschemaMap = new Map();
+
+  for (const subschema of subschemas) {
+    for (const transformedSubschemaConfig of applySubschemaConfigTransforms(
+      subschemaConfigTransforms,
+      subschema,
+      subschemaMap,
+      originalSubschemaMap,
+    )) {
+      transformedSubschemas.push(transformedSubschemaConfig);
+    }
+  }
+
+  const directiveMap: Record<string, GraphQLDirective> = Object.create(null);
+  for (const directive of specifiedDirectives) {
+    directiveMap[directive.name] = directive;
+  }
+  const schemaDefs = Object.create(null);
+
+  // note that typeCandidates is usually a massive object in large schemas
+  const [typeCandidates, rootTypeNameMap, extensions] = buildTypeCandidates({
+    subschemas: transformedSubschemas,
+    originalSubschemaMap,
+    types,
+    typeDefs: typeDefs || [],
+    parseOptions: rest,
+    directiveMap,
+    schemaDefs,
+    mergeDirectives,
+  });
+
+  const stitchingInfo = createStitchingInfo(
+    subschemaMap,
+    typeCandidates,
+    mergeTypes,
+  );
+
+  const { typeMap: newTypeMap, directives: newDirectives } = buildTypes({
+    typeCandidates,
+    directives: Object.values(directiveMap),
+    stitchingInfo,
+    rootTypeNames: Object.values(rootTypeNameMap),
+    onTypeConflict,
+    mergeTypes,
+    typeMergingOptions,
+  });
+
+  // We only return the specific references the main function actually needs.
+  // Everything else falls out of scope and gets Garbage Collected.
+  // This is critical to optimize memory usage since schemas can be very big.
+  return {
+    newTypeMap,
+    newDirectives,
+    rootTypeNameMap,
+    stitchingInfo,
+    schemaDefs,
+    extensions,
+    mergeDirectives,
+  };
 }
