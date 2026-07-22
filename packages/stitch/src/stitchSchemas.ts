@@ -61,6 +61,7 @@ export function stitchSchemas<
     ...rest
   } = options;
   let {
+    typeCandidates,
     newTypeMap,
     newDirectives,
     rootTypeNameMap,
@@ -433,6 +434,7 @@ function prepareStitchingData<TContext extends Record<string, any>>(
   // Everything else falls out of scope and gets Garbage Collected.
   // This is critical to optimize memory usage since schemas can be very big.
   return {
+    typeCandidates,
     newTypeMap,
     newDirectives,
     rootTypeNameMap,
