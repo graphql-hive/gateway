@@ -39,7 +39,10 @@ export function handleEventStreamResponse(
       .then(() => {
         subscriptionCtrl?.abort();
         if (body.locked) {
-          reader.releaseLock();
+          // cancel, not releaseLock: releasing the lock detaches the reader but
+          // leaves the response body un-cancelled, so the underlying connection
+          // is never released and the socket leaks until the process exits
+          reader.cancel().catch(() => {});
         }
       })
       .catch((err) => {
