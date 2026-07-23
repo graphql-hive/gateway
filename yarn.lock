@@ -4558,7 +4558,7 @@ __metadata:
     react: "npm:^19.2.0"
     react-dom: "npm:^19.2.0"
     tslib: "npm:^2.8.1"
-    tsx: "npm:4.21.0"
+    tsx: "npm:4.22.4"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
@@ -4662,7 +4662,7 @@ __metadata:
     rollup-plugin-copy: "npm:^3.5.0"
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.1"
-    tsx: "npm:4.21.0"
+    tsx: "npm:4.22.4"
     ws: "npm:^8.21.0"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
@@ -6893,7 +6893,7 @@ __metadata:
     esbuild: "npm:^0.28.0"
     glob: "npm:^13.0.0"
     jscodeshift: "npm:^17.1.1"
-    tsx: "npm:4.21.0"
+    tsx: "npm:4.22.4"
     zod: "npm:^4.1.12"
   languageName: unknown
   linkType: soft
