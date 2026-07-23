@@ -4932,6 +4932,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/semantic-introspection@workspace:packages/semantic-introspection":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/semantic-introspection@workspace:packages/semantic-introspection"
+  dependencies:
+    graphql: "npm:^16.13.2"
+    pkgroll: "npm:2.27.0"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/signal@npm:^2.0.0, @graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/signal@workspace:packages/signal"
