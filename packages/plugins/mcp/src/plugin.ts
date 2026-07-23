@@ -8,6 +8,7 @@ import {
   concatAST,
   parse,
   type DocumentNode,
+  type ExecutionResult,
   type GraphQLSchema,
 } from 'graphql';
 import { isAsyncIterable, type FetchAPI } from 'graphql-yoga';
@@ -20,6 +21,10 @@ import {
   type DescriptionProviderContext,
   type ProviderRegistry,
 } from './description-provider.js';
+import type {
+  MCPGraphQLOperation,
+  MCPMethodHandler,
+} from './method-handler.js';
 import {
   loadOperationsFromDocument,
   parseInlineHeaderDirectives,
@@ -27,10 +32,12 @@ import {
   type ParsedOperation,
 } from './operation-loader.js';
 import {
+  builtInMethodNames,
   dealiasArgs,
   formatToolCallResult,
   handleMCPRequest,
   processExecutionResult,
+  type CustomMethodDispatchContext,
   type JsonRpcRequest,
   type MCPHandlerOptions,
 } from './protocol.js';
@@ -41,7 +48,7 @@ import type { PluginContext } from './types.js';
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 interface MCPToolCallContext {
-  jsonrpcId: number | string;
+  jsonrpcId: number | string | null;
   toolName: string;
   args: Record<string, unknown>;
   tool: RegisteredTool;
@@ -494,6 +501,17 @@ export interface MCPConfig {
   suppressOutputSchema?: boolean;
   /** Dynamic operations source. Loaded at startup; if `onUpdate` is provided, the plugin subscribes to live changes and rebuilds tools automatically. */
   loader?: MCPOperationsLoader;
+  /**
+   * Custom JSON-RPC methods served from the MCP endpoint alongside the
+   * built-ins. Keys are method names (e.g. "graphql/query"); names that
+   * collide with built-in methods cause startup to fail.
+   */
+  customMethods?: Record<string, MCPMethodHandler>;
+  /**
+   * Additional capability entries merged into the `initialize` response.
+   * Keys merge shallowly over the built-in advertisement; custom entries win.
+   */
+  customCapabilities?: Record<string, unknown>;
 }
 
 /** Internal resolved form of a tool config after merging directive and explicit config sources. */
@@ -897,9 +915,48 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       '[MCP] config.tools must be an array of tool configurations',
     );
   }
+  if (config.customMethods != null) {
+    if (
+      typeof config.customMethods !== 'object' ||
+      Array.isArray(config.customMethods)
+    ) {
+      throw new Error(
+        '[MCP] config.customMethods must be an object mapping method names to handler functions',
+      );
+    }
+    const conflicts = Object.keys(config.customMethods).filter((name) =>
+      builtInMethodNames.has(name),
+    );
+    if (conflicts.length > 0) {
+      throw new Error(
+        `[MCP] customMethods cannot override built-in methods: ${conflicts.join(', ')}. ` +
+          `Built-in methods are: ${[...builtInMethodNames].join(', ')}`,
+      );
+    }
+    for (const [name, handler] of Object.entries(config.customMethods)) {
+      if (typeof handler !== 'function') {
+        throw new Error(`[MCP] customMethods["${name}"] must be a function`);
+      }
+    }
+  }
+  if (config.customCapabilities != null) {
+    if (
+      typeof config.customCapabilities !== 'object' ||
+      Array.isArray(config.customCapabilities)
+    ) {
+      throw new Error('[MCP] config.customCapabilities must be an object');
+    }
+  }
   const mcpPath = config.path || '/mcp';
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
+  let executeViaYoga:
+    | ((
+        operation: MCPGraphQLOperation,
+        headers: Record<string, string>,
+        serverContext: unknown,
+      ) => Promise<ExecutionResult>)
+    | null = null;
 
   ctx = { ...ctx, log: (config.log ?? ctx.log).child('[MCP] ') };
   const logger = ctx.log;
@@ -1132,6 +1189,14 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       instructions: config.instructions,
       protocolVersion: config.protocolVersion,
       suppressOutputSchema: config.suppressOutputSchema,
+      customMethods: config.customMethods,
+      customCapabilities: config.customCapabilities,
+      getSchema: () => {
+        if (!schema) {
+          throw new Error('[MCP] schema is not yet available');
+        }
+        return schema;
+      },
       registry: reg,
       resolveToolDescriptions:
         providerToolConfigs.length > 0
@@ -1280,7 +1345,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   }
 
   function mcpErrorResponse(
-    id: number | string,
+    id: number | string | null,
     message: string,
     fetchAPI: FetchAPI,
   ) {
@@ -1327,6 +1392,76 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
     // Extend Yoga's graphqlEndpoint to also accept the MCP path so
     // all requests flow through the full pipeline.
     onYogaInit({ yoga }) {
+      // Capture the GraphQL endpoint before extending it with the MCP
+      // path: internal execution must target the GraphQL route, not the
+      // MCP route, or requests would re-enter this plugin.
+      const endpoint = yoga.graphqlEndpoint;
+      const endpointGroup = endpoint.match(/^\/\((.+)\)$/);
+      const executionPath = endpointGroup
+        ? `/${endpointGroup[1]!.split('|')[0]}`
+        : endpoint;
+      if (executionPath === mcpPath) {
+        throw new Error(
+          `[MCP] path "${mcpPath}" conflicts with the GraphQL endpoint. ` +
+            `Configure a distinct MCP path.`,
+        );
+      }
+      executeViaYoga = async (operation, headers, serverContext) => {
+        // Strip hop-by-hop and transport-mechanics headers (RFC 7230
+        // section 6.1); they describe the original request's transport,
+        // which is false for the synthetic internal request. Semantic
+        // headers (authorization, cookies, x-forwarded-*) pass through.
+        const requestHeaders: Record<string, string> = { ...headers };
+        for (const name of [
+          'accept-encoding',
+          'connection',
+          'content-length',
+          'host',
+          'keep-alive',
+          'proxy-authenticate',
+          'proxy-authorization',
+          'te',
+          'trailer',
+          'transfer-encoding',
+          'upgrade',
+        ]) {
+          delete requestHeaders[name];
+        }
+        requestHeaders['content-type'] = 'application/json';
+        requestHeaders['accept'] = 'application/json';
+        const response = await yoga.handle(
+          new yoga.fetchAPI.Request(`http://mcp.internal${executionPath}`, {
+            method: 'POST',
+            headers: requestHeaders,
+            body: JSON.stringify(operation),
+          }),
+          serverContext as Parameters<(typeof yoga)['handle']>[1],
+        );
+        const responseText = await response.text();
+        let result: ExecutionResult;
+        try {
+          result = JSON.parse(responseText) as ExecutionResult;
+        } catch {
+          throw new Error(
+            `[MCP] GraphQL execution returned a non-JSON response (status ${response.status})`,
+          );
+        }
+        // A non-OK response without GraphQL result shape comes from a
+        // plugin short-circuiting the pipeline (e.g. auth), not from
+        // GraphQL execution; GraphQL-shaped error responses pass
+        // through as data.
+        if (
+          !response.ok &&
+          result.data === undefined &&
+          result.errors === undefined
+        ) {
+          throw new Error(
+            `[MCP] GraphQL execution failed with status ${response.status}`,
+          );
+        }
+        return result;
+      };
+
       const mcp = mcpPath
         .replace(/^\//, '')
         .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1345,6 +1480,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       setRequestParser,
       endResponse,
       fetchAPI,
+      serverContext,
     }) {
       if (url.pathname !== mcpPath) {
         return;
@@ -1630,6 +1766,25 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       const providerContext: DescriptionProviderContext | undefined =
         promptLabel ? { label: promptLabel } : undefined;
 
+      let dispatchContext: CustomMethodDispatchContext | undefined;
+      if (mcpHandlerOptions.customMethods) {
+        const headers: Record<string, string> = {};
+        request.headers.forEach((value, key) => {
+          headers[key] = value;
+        });
+        dispatchContext = {
+          transport: { type: 'http', request, headers },
+          executeGraphQL: (operation) => {
+            if (!executeViaYoga) {
+              throw new Error(
+                '[MCP] GraphQL execution is not available until the server has initialized',
+              );
+            }
+            return executeViaYoga(operation, headers, serverContext);
+          },
+        };
+      }
+
       let result;
       try {
         result = await handleMCPRequest(
@@ -1637,6 +1792,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
           body,
           mcpHandlerOptions,
           providerContext,
+          dispatchContext,
         );
       } catch (err) {
         logger.error(

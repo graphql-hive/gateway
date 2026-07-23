@@ -391,6 +391,44 @@ The `load()` method is called once at startup. If `onUpdate` is provided, it is 
 
 If `load()` rejects, the error is logged and `onUpdate` is not called. The plugin continues without loader-sourced operations. Implement retry logic inside `load()` if you need automatic recovery.
 
+## Custom methods
+
+Register additional JSON-RPC methods on the MCP endpoint with `customMethods`. Handlers receive the request params and a context with access to the schema and GraphQL execution. Use `customCapabilities` to advertise the extension in `initialize` responses.
+
+```typescript
+import { MCPMethodError, useMCP } from '@graphql-hive/plugin-mcp';
+
+useMCP(ctx, {
+  name: 'my-api',
+  customCapabilities: { echo: {} },
+  customMethods: {
+    'echo/uppercase': (params) => {
+      if (typeof params !== 'object' || params === null) {
+        throw new MCPMethodError(-32602, 'Invalid params: expected an object');
+      }
+      const { text } = params as { text?: string };
+      return { text: text?.toUpperCase() ?? '' };
+    },
+    'graphql/run': async (params, context) => {
+      const { query } = params as { query?: string };
+      if (typeof query !== 'string') {
+        throw new MCPMethodError(
+          -32602,
+          'Invalid params: "query" must be a string',
+        );
+      }
+      return context.executeGraphQL({ query });
+    },
+  },
+});
+```
+
+The handler's return value becomes the JSON-RPC `result`. Throw `MCPMethodError` to produce a JSON-RPC error response with a specific code; any other thrown error becomes a generic internal error.
+
+`context.executeGraphQL` runs the operation through the full server pipeline with the original request headers forwarded, so header-driven plugins (authentication, tracing) treat the operation like any HTTP request. The operation shares the MCP request's server context, so plugins that key per-request state on context identity see it as part of the surrounding request. `context.getSchema()` returns the current schema, and `context.transport` exposes the incoming request and its headers.
+
+Method names that collide with the built-in MCP methods (`initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/templates/list`, `resources/read`, `notifications/initialized`) are rejected at startup. Methods named under `notifications/` follow JSON-RPC notification semantics: they may run side effects but never produce a response.
+
 ## Langfuse integration
 
 The plugin has built-in support for [Langfuse](https://langfuse.com/) as a description provider. Tool and field descriptions are fetched from Langfuse prompts at startup and can be refreshed at runtime.
