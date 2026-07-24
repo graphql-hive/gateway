@@ -4480,12 +4480,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/federation-gateway-audit@npm:0.0.2":
-  version: 0.0.2
-  resolution: "@graphql-hive/federation-gateway-audit@npm:0.0.2"
+"@graphql-hive/federation-gateway-audit@npm:0.0.3":
+  version: 0.0.3
+  resolution: "@graphql-hive/federation-gateway-audit@npm:0.0.3"
   dependencies:
-    "@apollo/composition": "npm:^2.13.2"
-    "@apollo/subgraph": "npm:^2.13.2"
+    "@apollo/composition": "npm:2.14.1"
+    "@apollo/subgraph": "npm:2.14.1"
     async-retry: "npm:^1.3.3"
     detect-port: "npm:^2.1.0"
     fets: "npm:^0.8.5"
@@ -4499,7 +4499,7 @@ __metadata:
     graphql: "*"
   bin:
     graphql-federation-audit: dist/cli.js
-  checksum: 10c0/87740dc5f6eae3d265bed6166dc2f81fe0f0688a1d4fcd25df021e2539ed03b1ecf3d2244da8cd069cb04eeb5593d52cdd5e6c2e002828aabdae7ac4d83af191
+  checksum: 10c0/36c7dddf30d7d9ae9b63a0b43476c60e4fa1990c85d868d8827ae5c3e2c9523617e81559cd8837cf9e2b12fc8f1f2412efed831ebc903c855bc804130a0413dd
   languageName: node
   linkType: hard
 
@@ -5756,7 +5756,7 @@ __metadata:
     "@apollo/server": "npm:^5.4.0"
     "@apollo/server-gateway-interface": "npm:^2.0.0"
     "@apollo/subgraph": "npm:^2.13.3"
-    "@graphql-hive/federation-gateway-audit": "npm:0.0.2"
+    "@graphql-hive/federation-gateway-audit": "npm:0.0.3"
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/executor-http": "workspace:^"
