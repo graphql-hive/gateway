@@ -294,6 +294,7 @@ describe('delegateToSchema', () => {
           fieldName === 'createThing' ? '_encapsulated_createThing' : fieldName,
         ),
       ],
+      // @ts-expect-error typescript scares me sometimes
       executor: (request) => {
         delegatedDocuments.push(print(request.document));
         return { data: { _encapsulated_createThing: { id: '1' } } };

@@ -125,6 +125,7 @@ export function createRequest({
         if (
           varValue === argValue &&
           variableType &&
+          argInstance &&
           isTypeSubTypeOf(
             info?.schema ?? targetSchema!,
             variableType,
