@@ -154,6 +154,119 @@ describe('delegateToSchema', () => {
     });
   });
 
+  test.each([
+    {
+      name: 'the transformed mutation root is absent',
+      queryFields: 'status: Boolean',
+      mutationFields: '',
+    },
+    {
+      name: 'the query root has a field with the same name',
+      queryFields: 'createThing: Boolean',
+      mutationFields: 'keepMutationRoot: Boolean',
+    },
+  ])(
+    'should recover argument types when $name',
+    async ({ queryFields, mutationFields }) => {
+      const innerSchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          enum Color {
+            RED
+            GREEN
+          }
+          input CreateThingInput {
+            color: Color!
+          }
+          type Thing {
+            id: ID!
+          }
+          type Query {
+            ${queryFields}
+          }
+          type Mutation {
+            createThing(input: CreateThingInput!): Thing
+            ${mutationFields}
+          }
+        `,
+        resolvers: {
+          Mutation: {
+            createThing: () => ({ id: '1' }),
+          },
+        },
+      });
+      const subschema = new Subschema({
+        schema: innerSchema,
+        transforms: [
+          new FilterRootFields(
+            (operation, fieldName) =>
+              `${operation}.${fieldName}` !== 'Mutation.createThing',
+          ),
+        ],
+      });
+      const outerSchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          enum Color {
+            RED
+            GREEN
+          }
+          input CreateThingInput {
+            color: Color!
+          }
+          type Thing {
+            id: ID!
+          }
+          type Query {
+            _: Boolean
+          }
+          type Mutation {
+            createThing(input: CreateThingInput!): Thing
+          }
+        `,
+        resolvers: {
+          Mutation: {
+            createThing: (_root, args, context, info) =>
+              delegateToSchema({
+                schema: subschema,
+                operation: OperationTypeNode.MUTATION,
+                fieldName: 'createThing',
+                args,
+                context,
+                info,
+                validateRequest: true,
+              }),
+          },
+        },
+      });
+
+      const result = await graphql({
+        schema: outerSchema,
+        source: /* GraphQL */ `
+          mutation ($input: CreateThingInput!) {
+            createThing(input: $input) {
+              id
+            }
+          }
+        `,
+        variableValues: { input: { color: 'RED' } },
+      });
+
+      expect(result).toEqual({ data: { createThing: { id: '1' } } });
+
+      const inlineResult = await graphql({
+        schema: outerSchema,
+        source: /* GraphQL */ `
+          mutation {
+            createThing(input: { color: RED }) {
+              id
+            }
+          }
+        `,
+      });
+
+      expect(inlineResult).toEqual({ data: { createThing: { id: '1' } } });
+    },
+  );
+
   test('should serialize enum arguments when delegating to a renamed mutation field', async () => {
     const delegatedDocuments: string[] = [];
     const innerSchema = makeExecutableSchema({
@@ -241,11 +354,25 @@ describe('delegateToSchema', () => {
     });
 
     expect(result).toEqual({ data: { createThing: { id: '1' } } });
-    // the document must be valid against the subgraph it is sent to, a quoted
+
+    const inlineResult = await graphql({
+      schema: outerSchema,
+      source: /* GraphQL */ `
+        mutation {
+          createThing(input: { name: "x", color: RED }) {
+            id
+          }
+        }
+      `,
+    });
+
+    expect(inlineResult).toEqual({ data: { createThing: { id: '1' } } });
+    // the documents must be valid against the subgraph they are sent to, a quoted
     // `color: "RED"` fails with 'Enum "Color" cannot represent non-enum value'
-    const delegated = delegatedDocuments[0];
-    expect(delegated).toBeDefined();
-    expect(validate(innerSchema, parse(delegated!))).toEqual([]);
+    expect(delegatedDocuments).toHaveLength(2);
+    for (const delegated of delegatedDocuments) {
+      expect(validate(innerSchema, parse(delegated))).toEqual([]);
+    }
   });
 
   test('should work even where there are default fields', async () => {

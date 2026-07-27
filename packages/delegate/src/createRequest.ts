@@ -91,18 +91,7 @@ export function createRequest({
     ? [...info.operation.variableDefinitions]
     : [];
   const argNodes: ArgumentNode[] = [];
-  const variablesUsedOutsideRootArguments = new Set<string>();
-  for (const node of [
-    ...(newSelectionSet ? [newSelectionSet] : []),
-    ...(fieldNode?.directives ?? []),
-    ...(fragments ?? []),
-  ]) {
-    visit(node, {
-      Variable: (variableNode) => {
-        variablesUsedOutsideRootArguments.add(variableNode.name.value);
-      },
-    });
-  }
+  const replacedVariableNames = new Set<string>();
 
   if (args != null) {
     const rootType =
@@ -166,17 +155,7 @@ export function createRequest({
           }
         }
         if (existingArgNode?.value.kind === Kind.VARIABLE) {
-          const existingVarName = existingArgNode.value.name.value;
-          const existingVarIndex = variableDefinitions.findIndex(
-            (definition) => definition.variable.name.value === existingVarName,
-          );
-          if (
-            existingVarIndex !== -1 &&
-            !variablesUsedOutsideRootArguments.has(existingVarName)
-          ) {
-            variableDefinitions.splice(existingVarIndex, 1);
-            delete newVariables[existingVarName];
-          }
+          replacedVariableNames.add(existingArgNode.value.name.value);
         }
         variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
@@ -263,6 +242,25 @@ export function createRequest({
     kind: Kind.DOCUMENT,
     definitions,
   };
+
+  const usedVariableNames = new Set<string>();
+  visit(document, {
+    VariableDefinition: () => false,
+    Variable: (variableNode) => {
+      usedVariableNames.add(variableNode.name.value);
+    },
+  });
+  for (const variableName of replacedVariableNames) {
+    if (!usedVariableNames.has(variableName)) {
+      const variableIndex = variableDefinitions.findIndex(
+        (definition) => definition.variable.name.value === variableName,
+      );
+      if (variableIndex !== -1) {
+        variableDefinitions.splice(variableIndex, 1);
+        delete newVariables[variableName];
+      }
+    }
+  }
 
   return {
     subgraphName,

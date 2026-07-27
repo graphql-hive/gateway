@@ -554,3 +554,86 @@ test('keeps the original variable definition when it is still used by a sibling 
   expect(validate(targetSchema, request.document)).toEqual([]);
   expect(request.variables).toMatchObject(variableValues);
 });
+
+test('keeps the original variable definition when it is still used by a root field directive', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      check(flag: Boolean!): Boolean
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    query Check($flag: Boolean = true) {
+      check(flag: $flag) @include(if: $flag)
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'check',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues: { flag: true },
+    },
+    args: { flag: true },
+  });
+
+  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(request.variables).toMatchObject({ flag: true });
+});
+
+test('keeps a variable forwarded by another root argument', () => {
+  const gatewaySchema = buildSchema(/* GraphQL */ `
+    type Query {
+      field(a: String!, b: String): String
+    }
+  `);
+  const targetSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      field(a: String!): String
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    query SharedArgument($value: String) {
+      field(a: $value, b: $value)
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'field',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: gatewaySchema,
+      operation,
+      variableValues: { value: 'x' },
+    },
+    args: { a: 'x', b: 'x' },
+  });
+
+  expect(validate(gatewaySchema, request.document)).toEqual([]);
+  expect(request.variables).toMatchObject({ value: 'x' });
+});
