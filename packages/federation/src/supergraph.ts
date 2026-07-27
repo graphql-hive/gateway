@@ -812,8 +812,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           fieldDefinitionNodesOfSubgraph.push(entitiesFieldDefinitionNode);
         }
         const objectTypedDefNodeForSubgraph:
-          | ObjectTypeDefinitionNode
-          | InterfaceTypeDefinitionNode = {
+          ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode = {
           ...typeNode,
           interfaces,
           fields: fieldDefinitionNodesOfSubgraph,
@@ -2026,8 +2025,7 @@ export function getStitchingOptionsFromSupergraphSdl(
         function mergedResolver(_root, args, context, info) {
           const filteredCandidates = candidates.filter((candidate) => {
             const subschemaConfig = candidate.subschema as
-              | SubschemaConfig
-              | undefined;
+              SubschemaConfig | undefined;
             const overrideHandler =
               subschemaConfig?.merge?.[candidate.type.name]?.fields?.[
                 candidate.fieldName
@@ -2048,8 +2046,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           let currentScore = Infinity;
           let currentUnavailableSelectionSet: SelectionSetNode | undefined;
           let currentFriendSubschemas:
-            | Map<SubschemaConfig, SelectionSetNode>
-            | undefined;
+            Map<SubschemaConfig, SelectionSetNode> | undefined;
           let currentAvailableSelectionSet: SelectionSetNode | undefined;
           // Find the best subschema to delegate this selection
           for (const candidate of candidatesReversed) {

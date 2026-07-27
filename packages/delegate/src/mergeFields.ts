@@ -39,9 +39,7 @@ export function annotateExternalObject<TContext>(
   object: any,
   errors: Array<GraphQLError>,
   subschema:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, TContext>
-    | undefined,
+    GraphQLSchema | SubschemaConfig<any, any, any, TContext> | undefined,
   subschemaMap: Record<
     string,
     GraphQLSchema | SubschemaConfig<any, any, any, Record<string, any>>

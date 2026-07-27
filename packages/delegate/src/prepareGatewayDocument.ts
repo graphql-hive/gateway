@@ -477,8 +477,7 @@ export function isSelectionSetSatisfiedBySchema(
           return false;
         }
         const typeInInfoSchema = infoSchema.getType(namedType.name) as
-          | GraphQLObjectType
-          | GraphQLInterfaceType;
+          GraphQLObjectType | GraphQLInterfaceType;
         const fieldInInfoSchema = typeInInfoSchema?.getFields?.()?.[fieldName];
         const resolverInInfoSchema = fieldInInfoSchema?.resolve;
         // Is additional field?

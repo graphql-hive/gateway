@@ -265,8 +265,9 @@ const propertyRootTypeDefs = /* GraphQL */ `
     foo: String
   }
 
-  ${'getInterfaces' in GraphQLInterfaceType.prototype
-    ? `interface TestNestedInterface implements TestInterface {
+  ${
+    'getInterfaces' in GraphQLInterfaceType.prototype
+      ? `interface TestNestedInterface implements TestInterface {
     kind: TestInterfaceKind
     testString: String
   }
@@ -276,11 +277,12 @@ const propertyRootTypeDefs = /* GraphQL */ `
     testString: String
     bar: String
   }`
-    : `type TestImpl2 implements TestInterface {
+      : `type TestImpl2 implements TestInterface {
     kind: TestInterfaceKind
     testString: String
     bar: String
-  }`}
+  }`
+  }
 
   type UnionImpl {
     someField: String

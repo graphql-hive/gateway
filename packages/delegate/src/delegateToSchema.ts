@@ -251,8 +251,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
   >;
 
   const subschemaOrSubschemaConfig:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, any> =
+    GraphQLSchema | SubschemaConfig<any, any, any, any> =
     stitchingInfo?.subschemaMap.get(schema) ?? schema;
 
   const operation = operationDefinition.operation;

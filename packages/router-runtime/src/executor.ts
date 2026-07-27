@@ -926,8 +926,7 @@ function executeFetchPlanNode(
 
       if (flattenState && flattenState.entityRefs.length) {
         const returnedEntities = responseData._entities as
-          | EntityRepresentation[]
-          | undefined;
+          EntityRepresentation[] | undefined;
         if (Array.isArray(returnedEntities)) {
           mergeFlattenEntities(returnedEntities, flattenState);
         }

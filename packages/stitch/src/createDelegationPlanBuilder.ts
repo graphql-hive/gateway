@@ -325,8 +325,7 @@ export const calculateSelectionScore = memoize2(
 
 function getStitchingInfo(schema: GraphQLSchema): StitchingInfo {
   const stitchingInfo = schema.extensions?.['stitchingInfo'] as
-    | StitchingInfo
-    | undefined;
+    StitchingInfo | undefined;
   if (!stitchingInfo) {
     throw new Error(`Schema is not a stitched schema.`);
   }

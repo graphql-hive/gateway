@@ -112,8 +112,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
   pollingInterval?: number;
   additionalTypeDefs?: TypeSource;
   additionalResolvers?:
-    | IResolvers<unknown, TContext>
-    | IResolvers<unknown, TContext>[];
+    IResolvers<unknown, TContext> | IResolvers<unknown, TContext>[];
   transportContext?: TransportContext;
   onSubgraphExecuteHooks?: OnSubgraphExecuteHook<TContext>[];
   // TODO: Will be removed later once we get rid of v0

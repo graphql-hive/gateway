@@ -6,8 +6,7 @@ export interface AWSSignv4PluginOptions {
    * Outgoing options for signing outgoing requests.
    */
   outgoing?:
-    | AWSSignv4PluginOutgoingOptions
-    | AWSSignv4PluginOutgoingOptionsFactory;
+    AWSSignv4PluginOutgoingOptions | AWSSignv4PluginOutgoingOptionsFactory;
   /**
    * Incoming options for validating incoming requests.
    */
@@ -166,9 +165,7 @@ export interface AWSSignv4PluginIncomingOptions {
   assumeRole?: (
     payload: AWSSignv4PluginIncomingPayload,
   ) =>
-    | MaybePromise<AssumeRolePayload | undefined>
-    | AssumeRolePayload
-    | undefined;
+    MaybePromise<AssumeRolePayload | undefined> | AssumeRolePayload | undefined;
   /**
    * Callback for changes in incoming headers before it goes through parse process. Help to more sophisticated changes to preserve proper headers.
    */
@@ -247,8 +244,8 @@ export interface AWSSignv4PluginIncomingOptions {
   onSuccess?: (payload: AWSSignv4PluginIncomingPayload) => MaybePromise<void>;
 }
 export enum AWSSignV4Headers {
-  'Authorization' = 'authorization',
-  'XAmzDate' = 'x-amz-date',
-  'XAmzContentSha256' = 'x-amz-content-sha256',
-  'XAmzExpires' = 'x-amz-expires',
+  Authorization = 'authorization',
+  XAmzDate = 'x-amz-date',
+  XAmzContentSha256 = 'x-amz-content-sha256',
+  XAmzExpires = 'x-amz-expires',
 }

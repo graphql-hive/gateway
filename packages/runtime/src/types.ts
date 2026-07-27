@@ -491,8 +491,7 @@ export interface GatewayHivePersistedDocumentsOptions {
    * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
    */
   allowArbitraryOperations?:
-    | boolean
-    | ((request: Request) => MaybePromise<boolean>);
+    boolean | ((request: Request) => MaybePromise<boolean>);
   /**
    * TTL in seconds for cached persisted documents.
    * When set (and the gateway cache is configured), enables Layer 2 caching.
@@ -593,8 +592,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
          * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
          */
         allowArbitraryOperations?:
-          | boolean
-          | ((request: Request) => MaybePromise<boolean>);
+          boolean | ((request: Request) => MaybePromise<boolean>);
       });
   /**
    * A map, or factory function, of transport kinds to their implementations.
@@ -971,8 +969,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default false
    */
   inboundInflightRequestDeduplication?:
-    | boolean
-    | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
+    boolean | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
 }
 
 interface DisableIntrospectionOptions<TContext extends Record<string, any>> {
