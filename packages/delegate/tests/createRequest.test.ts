@@ -327,7 +327,7 @@ test('creates a target-compatible variable when reusing an argument value', () =
   expect(validate(targetSchema, request.document)).toEqual([]);
 });
 
-test('forwards enum arguments as variables when the delegated field is missing from the target schema', () => {
+test('does not inline enum arguments as quoted strings when the delegated field is missing from the target schema', () => {
   const gatewaySchema = buildSchema(/* GraphQL */ `
     enum Color {
       RED
@@ -364,6 +364,24 @@ test('forwards enum arguments as variables when the delegated field is missing f
       other: Boolean
     }
   `);
+  // the subgraph the delegated document is actually sent to still has the field
+  const subgraphSchema = buildSchema(/* GraphQL */ `
+    enum Color {
+      RED
+      GREEN
+      BLUE
+    }
+    input CreateThingInput {
+      name: String!
+      color: Color!
+    }
+    type Thing {
+      id: ID!
+    }
+    type Mutation {
+      createThing(input: CreateThingInput!): Thing
+    }
+  `);
   const document = parse(/* GraphQL */ `
     mutation CreateThing($input: CreateThingInput!) {
       createThing(input: $input) {
@@ -396,9 +414,13 @@ test('forwards enum arguments as variables when the delegated field is missing f
     args: { input: variableValues.input },
   });
 
-  // the enum must not be inlined as a quoted string, it has to stay a variable
-  expect(print(request.document)).toContain('createThing(input: $input)');
-  expect(request.variables).toEqual(variableValues);
+  // either forwarding `$input` or inlining a proper EnumValue is acceptable,
+  // a quoted `color: "RED"` is not
+  expect(validate(subgraphSchema, request.document)).toEqual([]);
+  const serialized =
+    print(request.document) + JSON.stringify(request.variables);
+  expect(serialized).not.toContain('color: "RED"');
+  expect(serialized).toContain('RED');
 });
 
 test('keeps the original variable definition when it is still used inside a fragment', () => {
@@ -457,6 +479,66 @@ test('keeps the original variable definition when it is still used inside a frag
     targetSchema,
     fieldNodes: [fieldNode],
     fragments: [fragment],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues,
+    },
+    args: { filter: variableValues.filter },
+  });
+
+  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(request.variables).toMatchObject(variableValues);
+});
+
+test('keeps the original variable definition when it is still used by a sibling selection', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    input Filter {
+      visible: Boolean
+    }
+    type Value {
+      id: ID!
+    }
+    type Section {
+      values(filter: Filter): [Value!]!
+    }
+    type Group {
+      visible: Section
+    }
+    type Query {
+      grouping(filter: Filter!): Group
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    query Board($filter: Filter) {
+      grouping(filter: $filter) {
+        visible {
+          values(filter: $filter) {
+            id
+          }
+        }
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+  const variableValues = { filter: { visible: true } };
+
+  // same as above but with no fragment involved, so a usage scan that only
+  // walks fragments would still miss this one
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'grouping',
+    targetSchema,
+    fieldNodes: [fieldNode],
     // @ts-expect-error only the fields read by createRequest are needed here
     info: {
       schema: targetSchema,

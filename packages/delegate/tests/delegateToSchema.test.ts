@@ -12,7 +12,13 @@ import {
   RenameRootFields,
   wrapSchema,
 } from '@graphql-tools/wrap';
-import { graphql, OperationTypeNode, parse, print } from 'graphql';
+import {
+  graphql,
+  OperationTypeNode,
+  parse,
+  print,
+  validate,
+} from 'graphql';
 import _ from 'lodash';
 import { describe, expect, test } from 'vitest';
 import { delegateToSchema } from '../src/delegateToSchema.js';
@@ -235,8 +241,11 @@ describe('delegateToSchema', () => {
     });
 
     expect(result).toEqual({ data: { createThing: { id: '1' } } });
-    // the enum must not be inlined as a quoted string
-    expect(delegatedDocuments[0]).not.toContain('color: "RED"');
+    // the document must be valid against the subgraph it is sent to, a quoted
+    // `color: "RED"` fails with 'Enum "Color" cannot represent non-enum value'
+    const delegated = delegatedDocuments[0];
+    expect(delegated).toBeDefined();
+    expect(validate(innerSchema, parse(delegated!))).toEqual([]);
   });
 
   test('should work even where there are default fields', async () => {
