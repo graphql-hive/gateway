@@ -400,3 +400,72 @@ test('forwards enum arguments as variables when the delegated field is missing f
   expect(print(request.document)).toContain('createThing(input: $input)');
   expect(request.variables).toEqual(variableValues);
 });
+
+test('keeps the original variable definition when it is still used inside a fragment', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    input Filter {
+      visible: Boolean
+    }
+    type Value {
+      id: ID!
+    }
+    type Section {
+      values(filter: Filter): [Value!]!
+    }
+    type Group {
+      visible: Section
+    }
+    type Query {
+      grouping(filter: Filter!): Group
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    query Board($filter: Filter) {
+      grouping(filter: $filter) {
+        ...GroupFields
+      }
+    }
+
+    fragment GroupFields on Group {
+      visible {
+        values(filter: $filter) {
+          id
+        }
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fragment = document.definitions[1];
+  if (fragment?.kind !== Kind.FRAGMENT_DEFINITION) {
+    throw new Error('Expected a fragment definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+  const variableValues = { filter: { visible: true } };
+
+  // the nullable $filter is not assignable to the non-null arg, so the root arg
+  // gets its own variable, but $filter is still referenced from the fragment
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'grouping',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    fragments: [fragment],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues,
+    },
+    args: { filter: variableValues.filter },
+  });
+
+  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(request.variables).toMatchObject(variableValues);
+});
