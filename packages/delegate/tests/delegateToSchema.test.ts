@@ -7,8 +7,12 @@ import {
   isAsyncIterable,
   mergeDeep,
 } from '@graphql-tools/utils';
-import { FilterRootFields, wrapSchema } from '@graphql-tools/wrap';
-import { graphql, OperationTypeNode, parse } from 'graphql';
+import {
+  FilterRootFields,
+  RenameRootFields,
+  wrapSchema,
+} from '@graphql-tools/wrap';
+import { graphql, OperationTypeNode, parse, print } from 'graphql';
 import _ from 'lodash';
 import { describe, expect, test } from 'vitest';
 import { delegateToSchema } from '../src/delegateToSchema.js';
@@ -142,6 +146,97 @@ describe('delegateToSchema', () => {
     expect(result).toEqual({
       data: { account: { id: '123', custodian: 'so' } },
     });
+  });
+
+  test('should serialize enum arguments when delegating to a renamed mutation field', async () => {
+    const delegatedDocuments: string[] = [];
+    const innerSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        enum Color {
+          RED
+          GREEN
+          BLUE
+        }
+        input CreateThingInput {
+          name: String!
+          color: Color!
+        }
+        type Thing {
+          id: ID!
+        }
+        type Query {
+          thing: Thing
+        }
+        type Mutation {
+          createThing(input: CreateThingInput!): Thing
+        }
+      `,
+    });
+    // the delegation target only exists under its encapsulated name, so neither
+    // the transformed schema nor the original subschema can resolve its arg types
+    const subschema = new Subschema({
+      schema: innerSchema,
+      transforms: [
+        new RenameRootFields((_operation, fieldName) =>
+          fieldName === 'createThing' ? '_encapsulated_createThing' : fieldName,
+        ),
+      ],
+      executor: (request) => {
+        delegatedDocuments.push(print(request.document));
+        return { data: { _encapsulated_createThing: { id: '1' } } };
+      },
+    });
+    const outerSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        enum Color {
+          RED
+          GREEN
+          BLUE
+        }
+        input CreateThingInput {
+          name: String!
+          color: Color!
+        }
+        type Thing {
+          id: ID!
+        }
+        type Query {
+          _: Boolean
+        }
+        type Mutation {
+          createThing(input: CreateThingInput!): Thing
+        }
+      `,
+      resolvers: {
+        Mutation: {
+          createThing: (_root, args, context, info) =>
+            delegateToSchema({
+              schema: subschema,
+              operation: OperationTypeNode.MUTATION,
+              fieldName: '_encapsulated_createThing',
+              args,
+              context,
+              info,
+            }),
+        },
+      },
+    });
+
+    const result = await graphql({
+      schema: outerSchema,
+      source: /* GraphQL */ `
+        mutation ($input: CreateThingInput!) {
+          createThing(input: $input) {
+            id
+          }
+        }
+      `,
+      variableValues: { input: { name: 'x', color: 'RED' } },
+    });
+
+    expect(result).toEqual({ data: { createThing: { id: '1' } } });
+    // the enum must not be inlined as a quoted string
+    expect(delegatedDocuments[0]).not.toContain('color: "RED"');
   });
 
   test('should work even where there are default fields', async () => {

@@ -6,6 +6,7 @@ import {
   Kind,
   OperationTypeNode,
   parse,
+  print,
   validate,
 } from 'graphql';
 import { describe, expect, test } from 'vitest';
@@ -324,4 +325,78 @@ test('creates a target-compatible variable when reusing an argument value', () =
   });
 
   expect(validate(targetSchema, request.document)).toEqual([]);
+});
+
+test('forwards enum arguments as variables when the delegated field is missing from the target schema', () => {
+  const gatewaySchema = buildSchema(/* GraphQL */ `
+    enum Color {
+      RED
+      GREEN
+      BLUE
+    }
+    input CreateThingInput {
+      name: String!
+      color: Color!
+    }
+    type Thing {
+      id: ID!
+    }
+    type Mutation {
+      createThing(input: CreateThingInput!): Thing
+    }
+  `);
+  // the delegated field has been filtered out of the target schema
+  // (@inaccessible, FilterRootFields, ...), so its arg types cannot be looked up
+  const targetSchema = buildSchema(/* GraphQL */ `
+    enum Color {
+      RED
+      GREEN
+      BLUE
+    }
+    input CreateThingInput {
+      name: String!
+      color: Color!
+    }
+    type Thing {
+      id: ID!
+    }
+    type Mutation {
+      other: Boolean
+    }
+  `);
+  const document = parse(/* GraphQL */ `
+    mutation CreateThing($input: CreateThingInput!) {
+      createThing(input: $input) {
+        id
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+  const variableValues = { input: { name: 'x', color: 'RED' } };
+
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.MUTATION,
+    targetFieldName: 'createThing',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: gatewaySchema,
+      operation,
+      variableValues,
+    },
+    args: { input: variableValues.input },
+  });
+
+  // the enum must not be inlined as a quoted string, it has to stay a variable
+  expect(print(request.document)).toContain('createThing(input: $input)');
+  expect(request.variables).toEqual(variableValues);
 });
