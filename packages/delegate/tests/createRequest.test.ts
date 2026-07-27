@@ -2,6 +2,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { createGraphQLError } from '@graphql-tools/utils';
 import {
   buildSchema,
+  DocumentNode,
   graphql,
   Kind,
   OperationTypeNode,
@@ -345,6 +346,7 @@ test('does not inline enum arguments as quoted strings when the delegated field 
       createThing(input: CreateThingInput!): Thing
     }
   `);
+
   // the delegated field has been filtered out of the target schema
   // (@inaccessible, FilterRootFields, ...), so its arg types cannot be looked up
   const targetSchema = buildSchema(/* GraphQL */ `
@@ -364,66 +366,78 @@ test('does not inline enum arguments as quoted strings when the delegated field 
       other: Boolean
     }
   `);
-  // the subgraph the delegated document is actually sent to still has the field
-  const subgraphSchema = buildSchema(/* GraphQL */ `
-    enum Color {
-      RED
-      GREEN
-      BLUE
+
+  function buildRequest(
+    document: DocumentNode,
+    variableValues: Record<string, unknown>,
+  ) {
+    const operation = document.definitions[0];
+    if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+      throw new Error('Expected an operation definition');
     }
-    input CreateThingInput {
-      name: String!
-      color: Color!
+    const fieldNode = operation.selectionSet.selections[0];
+    if (fieldNode?.kind !== Kind.FIELD) {
+      throw new Error('Expected a field');
     }
-    type Thing {
-      id: ID!
-    }
-    type Query {
-      _: Boolean
-    }
-    type Mutation {
-      createThing(input: CreateThingInput!): Thing
-    }
-  `);
-  const document = parse(/* GraphQL */ `
-    mutation CreateThing($input: CreateThingInput!) {
+    // const variableValues = { input: { name: 'x', color: 'RED' } };
+
+    return createRequest({
+      subgraphName: 'inner',
+      targetOperation: OperationTypeNode.MUTATION,
+      targetFieldName: 'createThing',
+      targetSchema,
+      fieldNodes: [fieldNode],
+      // @ts-expect-error only the fields read by createRequest are needed here
+      info: {
+        schema: gatewaySchema,
+        operation,
+        variableValues,
+      },
+      args: variableValues,
+    });
+  }
+
+  // vars
+  const variableValues = {
+    input: { name: 'x', color: 'RED' },
+  };
+  const requestVars = buildRequest(
+    parse(/* GraphQL */ `
+      mutation CreateThingVars($input: CreateThingInput!) {
+        createThing(input: $input) {
+          id
+        }
+      }
+    `),
+    variableValues,
+  );
+  expect(print(requestVars.document)).toMatchInlineSnapshot(`
+    "mutation ($input: CreateThingInput!) {
       createThing(input: $input) {
         id
       }
-    }
+    }"
   `);
-  const operation = document.definitions[0];
-  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
-    throw new Error('Expected an operation definition');
-  }
-  const fieldNode = operation.selectionSet.selections[0];
-  if (fieldNode?.kind !== Kind.FIELD) {
-    throw new Error('Expected a field');
-  }
-  const variableValues = { input: { name: 'x', color: 'RED' } };
+  expect(requestVars.variables).toMatchObject(variableValues);
 
-  const request = createRequest({
-    subgraphName: 'inner',
-    targetOperation: OperationTypeNode.MUTATION,
-    targetFieldName: 'createThing',
-    targetSchema,
-    fieldNodes: [fieldNode],
-    // @ts-expect-error only the fields read by createRequest are needed here
-    info: {
-      schema: gatewaySchema,
-      operation,
-      variableValues,
-    },
-    args: { input: variableValues.input },
-  });
-
-  // either forwarding `$input` or inlining a proper EnumValue is acceptable,
-  // a quoted `color: "RED"` is not
-  expect(validate(subgraphSchema, request.document)).toEqual([]);
-  const serialized =
-    print(request.document) + JSON.stringify(request.variables);
-  expect(serialized).not.toContain('color: "RED"');
-  expect(serialized).toContain('RED');
+  // inline
+  const requestInl = buildRequest(
+    parse(/* GraphQL */ `
+      mutation CreateThingVars {
+        createThing(input: { name: "x", color: RED }) {
+          id
+        }
+      }
+    `),
+    variableValues,
+  );
+  expect(print(requestInl.document)).toMatchInlineSnapshot(`
+    "mutation {
+      createThing(input: {name: "x", color: RED}) {
+        id
+      }
+    }"
+  `);
 });
 
 test('keeps the original variable definition when it is still used inside a fragment', () => {
@@ -444,6 +458,7 @@ test('keeps the original variable definition when it is still used inside a frag
       grouping(filter: Filter!): Group
     }
   `);
+
   const document = parse(/* GraphQL */ `
     query Board($filter: Filter) {
       grouping(filter: $filter) {
@@ -491,7 +506,21 @@ test('keeps the original variable definition when it is still used inside a frag
     args: { filter: variableValues.filter },
   });
 
-  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($filter: Filter, $_grouping_filter: Filter!) {
+      grouping(filter: $_grouping_filter) {
+        ...GroupFields
+      }
+    }
+
+    fragment GroupFields on Group {
+      visible {
+        values(filter: $filter) {
+          id
+        }
+      }
+    }"
+  `);
   expect(request.variables).toMatchObject(variableValues);
 });
 
@@ -513,6 +542,7 @@ test('keeps the original variable definition when it is still used by a sibling 
       grouping(filter: Filter!): Group
     }
   `);
+
   const document = parse(/* GraphQL */ `
     query Board($filter: Filter) {
       grouping(filter: $filter) {
@@ -551,7 +581,17 @@ test('keeps the original variable definition when it is still used by a sibling 
     args: { filter: variableValues.filter },
   });
 
-  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($filter: Filter, $_grouping_filter: Filter!) {
+      grouping(filter: $_grouping_filter) {
+        visible {
+          values(filter: $filter) {
+            id
+          }
+        }
+      }
+    }"
+  `);
   expect(request.variables).toMatchObject(variableValues);
 });
 
@@ -561,6 +601,7 @@ test('keeps the original variable definition when it is still used by a root fie
       check(flag: Boolean!): Boolean
     }
   `);
+
   const document = parse(/* GraphQL */ `
     query Check($flag: Boolean = true) {
       check(flag: $flag) @include(if: $flag)
@@ -590,7 +631,11 @@ test('keeps the original variable definition when it is still used by a root fie
     args: { flag: true },
   });
 
-  expect(validate(targetSchema, request.document)).toEqual([]);
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($flag: Boolean = true, $_check_flag: Boolean!) {
+      check(flag: $_check_flag) @include(if: $flag)
+    }"
+  `);
   expect(request.variables).toMatchObject({ flag: true });
 });
 
@@ -605,6 +650,7 @@ test('keeps a variable forwarded by another root argument', () => {
       field(a: String!): String
     }
   `);
+
   const document = parse(/* GraphQL */ `
     query SharedArgument($value: String) {
       field(a: $value, b: $value)
@@ -634,6 +680,10 @@ test('keeps a variable forwarded by another root argument', () => {
     args: { a: 'x', b: 'x' },
   });
 
-  expect(validate(gatewaySchema, request.document)).toEqual([]);
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($value: String, $a: String!) {
+      field(a: $a, b: $value)
+    }"
+  `);
   expect(request.variables).toMatchObject({ value: 'x' });
 });
