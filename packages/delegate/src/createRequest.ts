@@ -106,7 +106,7 @@ export function createRequest({
       const existingArgNode = fieldNode?.arguments?.find(
         (argNode) => argNode.name.value === argName,
       );
-      // Check if we can re-use the variable from the original request for this argument
+      // If we can't resolve the argument type from the target schema, preserve the original argument AST (variable or literal) to avoid losing enum literal kinds.
       if (existingArgNode && !argInstance) {
         argNodes.push(existingArgNode);
         continue;
