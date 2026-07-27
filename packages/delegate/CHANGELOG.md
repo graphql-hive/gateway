@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.1.1
+### Patch Changes
+
+
+
+- [#2498](https://github.com/graphql-hive/gateway/pull/2498) [`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix delegated argument serialization when fields are filtered or renamed
+  
+  Inline enum values now remain enum literals, and original variable definitions are preserved while still referenced by fragments, selections, directives, or other arguments.
+
 ## 12.1.0
 ### Minor Changes
 
