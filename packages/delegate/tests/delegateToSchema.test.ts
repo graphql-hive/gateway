@@ -12,13 +12,7 @@ import {
   RenameRootFields,
   wrapSchema,
 } from '@graphql-tools/wrap';
-import {
-  graphql,
-  OperationTypeNode,
-  parse,
-  print,
-  validate,
-} from 'graphql';
+import { graphql, OperationTypeNode, parse, print, validate } from 'graphql';
 import _ from 'lodash';
 import { describe, expect, test } from 'vitest';
 import { delegateToSchema } from '../src/delegateToSchema.js';
