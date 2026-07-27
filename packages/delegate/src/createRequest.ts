@@ -107,11 +107,11 @@ export function createRequest({
         (argNode) => argNode.name.value === argName,
       );
       // Check if we can re-use the variable from the original request for this argument
+      if (existingArgNode && !argInstance) {
+        argNodes.push(existingArgNode);
+        continue;
+      }
       if (existingArgNode?.value.kind === Kind.VARIABLE) {
-        if (!argInstance) {
-          argNodes.push(existingArgNode);
-          continue;
-        }
         const varName = existingArgNode.value.name.value;
         const varValue = newVariables[varName];
         const variableDefinition = variableDefinitions.find(
