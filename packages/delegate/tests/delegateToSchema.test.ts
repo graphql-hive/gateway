@@ -285,8 +285,8 @@ describe('delegateToSchema', () => {
         }
       `,
     });
-    // the delegation target only exists under its encapsulated name, so neither
-    // the transformed schema nor the original subschema can resolve its arg types
+    // the gateway delegates using the encapsulated field name; only the transformed
+    // schema contains that name (the original subschema schema does not)
     const subschema = new Subschema({
       schema: innerSchema,
       transforms: [
