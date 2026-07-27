@@ -244,21 +244,23 @@ export function createRequest({
     definitions,
   };
 
-  const usedVariableNames = new Set<string>();
-  visit(document, {
-    VariableDefinition: () => false,
-    Variable: (variableNode) => {
-      usedVariableNames.add(variableNode.name.value);
-    },
-  });
-  for (const variableName of replacedVariableNames) {
-    if (!usedVariableNames.has(variableName)) {
-      const variableIndex = variableDefinitions.findIndex(
-        (definition) => definition.variable.name.value === variableName,
-      );
-      if (variableIndex !== -1) {
-        variableDefinitions.splice(variableIndex, 1);
-        delete newVariables[variableName];
+  if (replacedVariableNames.size > 0) {
+    const usedVariableNames = new Set<string>();
+    visit(document, {
+      VariableDefinition: () => false,
+      Variable: (variableNode) => {
+        usedVariableNames.add(variableNode.name.value);
+      },
+    });
+    for (const variableName of replacedVariableNames) {
+      if (!usedVariableNames.has(variableName)) {
+        const variableIndex = variableDefinitions.findIndex(
+          (definition) => definition.variable.name.value === variableName,
+        );
+        if (variableIndex !== -1) {
+          variableDefinitions.splice(variableIndex, 1);
+          delete newVariables[variableName];
+        }
       }
     }
   }
