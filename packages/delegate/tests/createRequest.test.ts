@@ -378,6 +378,9 @@ test('does not inline enum arguments as quoted strings when the delegated field 
     type Thing {
       id: ID!
     }
+    type Query {
+      _: Boolean
+    }
     type Mutation {
       createThing(input: CreateThingInput!): Thing
     }

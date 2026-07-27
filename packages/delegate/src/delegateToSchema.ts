@@ -89,7 +89,7 @@ export function delegateToSchema<
     subgraphName: (schema as SubschemaConfig).name,
     fragments,
     targetSchema:
-      targetSchema.getQueryType()?.getFields()[fieldName] == null &&
+      getDefinedRootType(targetSchema, operation).getFields()[fieldName] == null &&
       isSubschemaConfig(schema)
         ? schema.schema
         : targetSchema,

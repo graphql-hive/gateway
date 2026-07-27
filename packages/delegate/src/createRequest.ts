@@ -24,6 +24,7 @@ import {
   SelectionNode,
   SelectionSetNode,
   typeFromAST,
+  visit,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
 
@@ -90,6 +91,18 @@ export function createRequest({
     ? [...info.operation.variableDefinitions]
     : [];
   const argNodes: ArgumentNode[] = [];
+  const variablesUsedOutsideRootArguments = new Set<string>();
+  for (const node of [
+    ...(newSelectionSet ? [newSelectionSet] : []),
+    ...(fieldNode?.directives ?? []),
+    ...(fragments ?? []),
+  ]) {
+    visit(node, {
+      Variable: (variableNode) => {
+        variablesUsedOutsideRootArguments.add(variableNode.name.value);
+      },
+    });
+  }
 
   if (args != null) {
     const rootType =
@@ -105,7 +118,11 @@ export function createRequest({
         (argNode) => argNode.name.value === argName,
       );
       // Check if we can re-use the variable from the original request for this argument
-      if (existingArgNode?.value.kind === Kind.VARIABLE && argInstance) {
+      if (existingArgNode?.value.kind === Kind.VARIABLE) {
+        if (!argInstance) {
+          argNodes.push(existingArgNode);
+          continue;
+        }
         const varName = existingArgNode.value.name.value;
         const varValue = newVariables[varName];
         const variableDefinition = variableDefinitions.find(
@@ -153,7 +170,10 @@ export function createRequest({
           const existingVarIndex = variableDefinitions.findIndex(
             (definition) => definition.variable.name.value === existingVarName,
           );
-          if (existingVarIndex !== -1) {
+          if (
+            existingVarIndex !== -1 &&
+            !variablesUsedOutsideRootArguments.has(existingVarName)
+          ) {
             variableDefinitions.splice(existingVarIndex, 1);
             delete newVariables[existingVarName];
           }
