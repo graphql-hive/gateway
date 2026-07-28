@@ -5452,21 +5452,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/types@npm:0.104.28":
-  version: 0.104.28
-  resolution: "@graphql-mesh/types@npm:0.104.28"
+"@graphql-mesh/types@npm:0.104.30":
+  version: 0.104.30
+  resolution: "@graphql-mesh/types@npm:0.104.30"
   dependencies:
     "@graphql-hive/pubsub": "npm:^2.1.1"
-    "@graphql-tools/batch-delegate": "npm:^10.0.20"
-    "@graphql-tools/delegate": "npm:^12.0.14"
-    "@graphql-tools/utils": "npm:^11.1.0"
+    "@graphql-tools/batch-delegate": "npm:^10.0.26"
+    "@graphql-tools/delegate": "npm:^12.0.19"
+    "@graphql-tools/utils": "npm:^11.2.0"
     "@graphql-typed-document-node/core": "npm:^3.2.0"
-    "@repeaterjs/repeater": "npm:^3.0.6"
+    "@repeaterjs/repeater": "npm:^3.1.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/353304707d8b2e7bef3f19935b6d9691ced20b6c476243aaf006d9906d6afd8e925cf0e2df59734ec7bce03a1b7b6d736e43840efea158efcafbe89c74e2195a
+  checksum: 10c0/da4bf9388d03b813b3c294837975504104d70c080d0bf94fce29789ce45500765f2028e40c34913661202bfc4e43089a46eeec715a05ced1096efeb8e41a8c65
   languageName: node
   linkType: hard
 
@@ -5511,7 +5511,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/batch-delegate@npm:^10.0.20, @graphql-tools/batch-delegate@npm:^10.0.26, @graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
+"@graphql-tools/batch-delegate@npm:^10.0.26, @graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/batch-delegate@workspace:packages/batch-delegate"
   dependencies:
