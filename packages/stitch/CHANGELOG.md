@@ -1,5 +1,20 @@
 # @graphql-tools/stitch
 
+## 10.2.2
+### Patch Changes
+
+- Updated dependencies [[`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24)]:
+  - @graphql-tools/delegate@12.1.1
+  - @graphql-tools/batch-delegate@10.0.29
+  - @graphql-tools/wrap@11.1.21
+
+## 10.2.1
+### Patch Changes
+
+
+
+- [#2484](https://github.com/graphql-hive/gateway/pull/2484) [`a589a2d`](https://github.com/graphql-hive/gateway/commit/a589a2d9797e67623b28439d0bd30a17e3a247d6) Thanks [@jdolle](https://github.com/jdolle)! - Reduce peak memory consumption for `stitchSchemas` function
+
 ## 10.2.0
 ### Minor Changes
 
