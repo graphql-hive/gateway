@@ -84,12 +84,18 @@ export function delegateToSchema<
   }
 
   const fragments = info ? getFragmentDefinitions(info) : undefined;
+  const targetRootType =
+    operation === OperationTypeNode.MUTATION
+      ? targetSchema.getMutationType()
+      : operation === OperationTypeNode.SUBSCRIPTION
+        ? targetSchema.getSubscriptionType()
+        : targetSchema.getQueryType();
 
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
     fragments,
     targetSchema:
-      targetSchema.getQueryType()?.getFields()[fieldName] == null &&
+      targetRootType?.getFields()[fieldName] == null &&
       isSubschemaConfig(schema)
         ? schema.schema
         : targetSchema,

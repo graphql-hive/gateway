@@ -2,10 +2,12 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { createGraphQLError } from '@graphql-tools/utils';
 import {
   buildSchema,
+  DocumentNode,
   graphql,
   Kind,
   OperationTypeNode,
   parse,
+  print,
   validate,
 } from 'graphql';
 import { describe, expect, test } from 'vitest';
@@ -324,4 +326,364 @@ test('creates a target-compatible variable when reusing an argument value', () =
   });
 
   expect(validate(targetSchema, request.document)).toEqual([]);
+});
+
+test('does not inline enum arguments as quoted strings when the delegated field is missing from the target schema', () => {
+  const gatewaySchema = buildSchema(/* GraphQL */ `
+    enum Color {
+      RED
+      GREEN
+      BLUE
+    }
+    input CreateThingInput {
+      name: String!
+      color: Color!
+    }
+    type Thing {
+      id: ID!
+    }
+    type Mutation {
+      createThing(input: CreateThingInput!): Thing
+    }
+  `);
+
+  // the delegated field has been filtered out of the target schema
+  // (@inaccessible, FilterRootFields, ...), so its arg types cannot be looked up
+  const targetSchema = buildSchema(/* GraphQL */ `
+    enum Color {
+      RED
+      GREEN
+      BLUE
+    }
+    input CreateThingInput {
+      name: String!
+      color: Color!
+    }
+    type Thing {
+      id: ID!
+    }
+    type Mutation {
+      other: Boolean
+    }
+  `);
+
+  function buildRequest(
+    document: DocumentNode,
+    variableValues: Record<string, unknown>,
+  ) {
+    const operation = document.definitions[0];
+    if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+      throw new Error('Expected an operation definition');
+    }
+    const fieldNode = operation.selectionSet.selections[0];
+    if (fieldNode?.kind !== Kind.FIELD) {
+      throw new Error('Expected a field');
+    }
+    // const variableValues = { input: { name: 'x', color: 'RED' } };
+
+    return createRequest({
+      subgraphName: 'inner',
+      targetOperation: OperationTypeNode.MUTATION,
+      targetFieldName: 'createThing',
+      targetSchema,
+      fieldNodes: [fieldNode],
+      // @ts-expect-error only the fields read by createRequest are needed here
+      info: {
+        schema: gatewaySchema,
+        operation,
+        variableValues,
+      },
+      args: variableValues,
+    });
+  }
+
+  // vars
+  const variableValues = {
+    input: { name: 'x', color: 'RED' },
+  };
+  const requestVars = buildRequest(
+    parse(/* GraphQL */ `
+      mutation CreateThingVars($input: CreateThingInput!) {
+        createThing(input: $input) {
+          id
+        }
+      }
+    `),
+    variableValues,
+  );
+  expect(print(requestVars.document)).toMatchInlineSnapshot(`
+    "mutation ($input: CreateThingInput!) {
+      createThing(input: $input) {
+        id
+      }
+    }"
+  `);
+  expect(requestVars.variables).toMatchObject(variableValues);
+
+  // inline
+  const requestInl = buildRequest(
+    parse(/* GraphQL */ `
+      mutation CreateThingVars {
+        createThing(input: { name: "x", color: RED }) {
+          id
+        }
+      }
+    `),
+    variableValues,
+  );
+  expect(print(requestInl.document)).toMatchInlineSnapshot(`
+    "mutation {
+      createThing(input: {name: "x", color: RED}) {
+        id
+      }
+    }"
+  `);
+});
+
+test('keeps the original variable definition when it is still used inside a fragment', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    input Filter {
+      visible: Boolean
+    }
+    type Value {
+      id: ID!
+    }
+    type Section {
+      values(filter: Filter): [Value!]!
+    }
+    type Group {
+      visible: Section
+    }
+    type Query {
+      grouping(filter: Filter!): Group
+    }
+  `);
+
+  const document = parse(/* GraphQL */ `
+    query Board($filter: Filter) {
+      grouping(filter: $filter) {
+        ...GroupFields
+      }
+    }
+
+    fragment GroupFields on Group {
+      visible {
+        values(filter: $filter) {
+          id
+        }
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fragment = document.definitions[1];
+  if (fragment?.kind !== Kind.FRAGMENT_DEFINITION) {
+    throw new Error('Expected a fragment definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+  const variableValues = { filter: { visible: true } };
+
+  // the nullable $filter is not assignable to the non-null arg, so the root arg
+  // gets its own variable, but $filter is still referenced from the fragment
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'grouping',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    fragments: [fragment],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues,
+    },
+    args: { filter: variableValues.filter },
+  });
+
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($filter: Filter, $_grouping_filter: Filter!) {
+      grouping(filter: $_grouping_filter) {
+        ...GroupFields
+      }
+    }
+
+    fragment GroupFields on Group {
+      visible {
+        values(filter: $filter) {
+          id
+        }
+      }
+    }"
+  `);
+  expect(request.variables).toMatchObject(variableValues);
+});
+
+test('keeps the original variable definition when it is still used by a sibling selection', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    input Filter {
+      visible: Boolean
+    }
+    type Value {
+      id: ID!
+    }
+    type Section {
+      values(filter: Filter): [Value!]!
+    }
+    type Group {
+      visible: Section
+    }
+    type Query {
+      grouping(filter: Filter!): Group
+    }
+  `);
+
+  const document = parse(/* GraphQL */ `
+    query Board($filter: Filter) {
+      grouping(filter: $filter) {
+        visible {
+          values(filter: $filter) {
+            id
+          }
+        }
+      }
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+  const variableValues = { filter: { visible: true } };
+
+  // same as above but with no fragment involved, so a usage scan that only
+  // walks fragments would still miss this one
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'grouping',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues,
+    },
+    args: { filter: variableValues.filter },
+  });
+
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($filter: Filter, $_grouping_filter: Filter!) {
+      grouping(filter: $_grouping_filter) {
+        visible {
+          values(filter: $filter) {
+            id
+          }
+        }
+      }
+    }"
+  `);
+  expect(request.variables).toMatchObject(variableValues);
+});
+
+test('keeps the original variable definition when it is still used by a root field directive', () => {
+  const targetSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      check(flag: Boolean!): Boolean
+    }
+  `);
+
+  const document = parse(/* GraphQL */ `
+    query Check($flag: Boolean = true) {
+      check(flag: $flag) @include(if: $flag)
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'check',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: targetSchema,
+      operation,
+      variableValues: { flag: true },
+    },
+    args: { flag: true },
+  });
+
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($flag: Boolean = true, $_check_flag: Boolean!) {
+      check(flag: $_check_flag) @include(if: $flag)
+    }"
+  `);
+  expect(request.variables).toMatchObject({ flag: true });
+});
+
+test('keeps a variable forwarded by another root argument', () => {
+  const gatewaySchema = buildSchema(/* GraphQL */ `
+    type Query {
+      field(a: String!, b: String): String
+    }
+  `);
+  const targetSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      field(a: String!): String
+    }
+  `);
+
+  const document = parse(/* GraphQL */ `
+    query SharedArgument($value: String) {
+      field(a: $value, b: $value)
+    }
+  `);
+  const operation = document.definitions[0];
+  if (operation?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('Expected an operation definition');
+  }
+  const fieldNode = operation.selectionSet.selections[0];
+  if (fieldNode?.kind !== Kind.FIELD) {
+    throw new Error('Expected a field');
+  }
+
+  const request = createRequest({
+    subgraphName: 'inner',
+    targetOperation: OperationTypeNode.QUERY,
+    targetFieldName: 'field',
+    targetSchema,
+    fieldNodes: [fieldNode],
+    // @ts-expect-error only the fields read by createRequest are needed here
+    info: {
+      schema: gatewaySchema,
+      operation,
+      variableValues: { value: 'x' },
+    },
+    args: { a: 'x', b: 'x' },
+  });
+
+  expect(print(request.document)).toMatchInlineSnapshot(`
+    "query ($value: String, $a: String!) {
+      field(a: $a, b: $value)
+    }"
+  `);
+  expect(request.variables).toMatchObject({ value: 'x' });
 });
