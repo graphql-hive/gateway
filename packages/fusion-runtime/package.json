@@ -49,7 +49,7 @@
     "@graphql-mesh/cross-helpers": "^0.4.13",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.105.0",
-    "@graphql-mesh/utils": "^0.104.38",
+    "@graphql-mesh/utils": "^0.105.1",
     "@graphql-tools/batch-execute": "workspace:^",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor": "^1.4.13",
