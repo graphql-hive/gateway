@@ -1,5 +1,14 @@
 # @graphql-hive/gateway-runtime
 
+## 2.10.7
+### Patch Changes
+
+
+
+- [#2523](https://github.com/graphql-hive/gateway/pull/2523) [`90c41c8`](https://github.com/graphql-hive/gateway/commit/90c41c8cc3c65af3184d9dc1f1a194edba141a79) Thanks [@jdolle](https://github.com/jdolle)! - Upgrade `@graphql-hive/core` to 0.22.1.
+  
+  This version improves error handling inside the usage collector to prevent unhandled exceptions from being raised that can kill the application.
+
 ## 2.10.6
 ### Patch Changes
 
