@@ -1,5 +1,33 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.11.6
+### Patch Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.105.0) (from `^0.104.28`, in `dependencies`)
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-mesh/transport-common@1.0.20
+
+## 1.11.5
+### Patch Changes
+
+- Updated dependencies [[`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24)]:
+  - @graphql-tools/delegate@12.1.1
+  - @graphql-tools/federation@4.4.12
+  - @graphql-tools/stitch@10.2.2
+  - @graphql-tools/stitching-directives@4.0.27
+  - @graphql-tools/wrap@11.1.21
+
+## 1.11.4
+### Patch Changes
+
+- Updated dependencies [[`a589a2d`](https://github.com/graphql-hive/gateway/commit/a589a2d9797e67623b28439d0bd30a17e3a247d6)]:
+  - @graphql-tools/stitch@10.2.1
+  - @graphql-tools/federation@4.4.11
+
 ## 1.11.3
 ### Patch Changes
 

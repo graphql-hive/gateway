@@ -24,6 +24,7 @@ import {
   SelectionNode,
   SelectionSetNode,
   typeFromAST,
+  visit,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
 
@@ -90,6 +91,7 @@ export function createRequest({
     ? [...info.operation.variableDefinitions]
     : [];
   const argNodes: ArgumentNode[] = [];
+  const replacedVariableNames = new Set<string>();
 
   if (args != null) {
     const rootType =
@@ -104,8 +106,12 @@ export function createRequest({
       const existingArgNode = fieldNode?.arguments?.find(
         (argNode) => argNode.name.value === argName,
       );
-      // Check if we can re-use the variable from the original request for this argument
-      if (existingArgNode?.value.kind === Kind.VARIABLE && argInstance) {
+      // If we can't resolve the argument type from the target schema, preserve the original argument AST (variable or literal) to avoid losing enum literal kinds.
+      if (existingArgNode && !argInstance) {
+        argNodes.push(existingArgNode);
+        continue;
+      }
+      if (existingArgNode?.value.kind === Kind.VARIABLE) {
         const varName = existingArgNode.value.name.value;
         const varValue = newVariables[varName];
         const variableDefinition = variableDefinitions.find(
@@ -119,6 +125,7 @@ export function createRequest({
         if (
           varValue === argValue &&
           variableType &&
+          argInstance &&
           isTypeSubTypeOf(
             info?.schema ?? targetSchema!,
             variableType,
@@ -149,14 +156,7 @@ export function createRequest({
           }
         }
         if (existingArgNode?.value.kind === Kind.VARIABLE) {
-          const existingVarName = existingArgNode.value.name.value;
-          const existingVarIndex = variableDefinitions.findIndex(
-            (definition) => definition.variable.name.value === existingVarName,
-          );
-          if (existingVarIndex !== -1) {
-            variableDefinitions.splice(existingVarIndex, 1);
-            delete newVariables[existingVarName];
-          }
+          replacedVariableNames.add(existingArgNode.value.name.value);
         }
         variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
@@ -243,6 +243,27 @@ export function createRequest({
     kind: Kind.DOCUMENT,
     definitions,
   };
+
+  if (replacedVariableNames.size > 0) {
+    const usedVariableNames = new Set<string>();
+    visit(document, {
+      VariableDefinition: () => false,
+      Variable: (variableNode) => {
+        usedVariableNames.add(variableNode.name.value);
+      },
+    });
+    for (const variableName of replacedVariableNames) {
+      if (!usedVariableNames.has(variableName)) {
+        const variableIndex = variableDefinitions.findIndex(
+          (definition) => definition.variable.name.value === variableName,
+        );
+        if (variableIndex !== -1) {
+          variableDefinitions.splice(variableIndex, 1);
+          delete newVariables[variableName];
+        }
+      }
+    }
+  }
 
   return {
     subgraphName,

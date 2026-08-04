@@ -1,5 +1,90 @@
 # @graphql-hive/gateway
 
+## 2.11.0
+### Minor Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - AWS IAM authentication for Redis cache
+  
+  IAM auth for ElastiCache/MemoryDB works by generating a short-lived SigV4 presigned URL (valid up to 15 minutes) and using it as the Redis AUTH password. The token is signed against the `elasticache` (or `memorydb`) service using the ambient AWS credentials resolved via the standard credential chain (env vars, `~/.aws/credentials`, EC2 instance role, ECS task role, etc.).
+  
+  The `@smithy/signature-v4` and `@aws-sdk/credential-providers` packages are dynamically imported
+  only when `iamAuth` is configured, so gateways not using IAM auth pay zero cost.
+  
+  ## Usage
+  
+  Install the optional peer dependencies:
+  
+  ```sh
+  yarn add @aws-crypto/sha256-js @aws-sdk/credential-providers @aws-sdk/util-format-url @smithy/protocol-http @smithy/signature-v4
+  ```
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    cache: {
+      type: 'redis',
+      host: 'my-cluster.abc123.0001.use1.cache.amazonaws.com',
+      port: '6379',
+      username: 'iam-user-01',
+      tls: true,
+      iamAuth: {
+        // AWS region where the cluster is deployed
+        region: 'us-east-1',
+        // cluster name used as the host in the SigV4 presigned URL
+        clusterName: 'my-cluster',
+        // IAM-enabled Redis username - must match the ElastiCache/MemoryDB user id exactly
+        userId: 'iam-user-01',
+        // AWS service to sign for - 'elasticache' (default) or 'memorydb'
+        serviceName: 'elasticache',
+        // token expiry in seconds - maximum 900 (15 minutes), defaults to 900
+        tokenExpirySeconds: 900,
+      },
+    },
+  });
+  ```
+  
+  https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html
+
+### Patch Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.106.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.106.0) (from `^0.105.22`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.105.0) (from `^0.104.28`, in `dependencies`)
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-hive/gateway-runtime@2.10.6
+  - @graphql-hive/plugin-opentelemetry@1.4.42
+  - @graphql-mesh/hmac-upstream-signature@2.0.14
+  - @graphql-mesh/plugin-jwt-auth@2.0.13
+  - @graphql-mesh/plugin-prometheus@2.1.58
+  - @graphql-mesh/transport-http@1.1.4
+  - @graphql-mesh/transport-http-callback@1.0.24
+  - @graphql-mesh/transport-ws@2.0.24
+  - @graphql-hive/plugin-aws-sigv4@2.0.60
+
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.59
+  - @graphql-hive/plugin-opentelemetry@1.4.41
+  - @graphql-mesh/plugin-prometheus@2.1.57
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.4
+  - @graphql-hive/plugin-aws-sigv4@2.0.58
+  - @graphql-hive/plugin-opentelemetry@1.4.40
+  - @graphql-mesh/plugin-prometheus@2.1.56
+
 ## 2.10.8
 ### Patch Changes
 
