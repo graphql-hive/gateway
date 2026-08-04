@@ -4455,7 +4455,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.21.1, @graphql-hive/core@npm:^0.21.0":
+"@graphql-hive/core@npm:0.21.1":
   version: 0.21.1
   resolution: "@graphql-hive/core@npm:0.21.1"
   dependencies:
@@ -4471,6 +4471,25 @@ __metadata:
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/6506fbe0222943459de56b9928d912de9810506fc0fbd7701eba9f5caf375d6134fe9c80b20c0e6b32dacaff5996617a4eaa5e5a412166f685fdc1752e3a544f
+  languageName: node
+  linkType: hard
+
+"@graphql-hive/core@npm:^0.22.1":
+  version: 0.22.1
+  resolution: "@graphql-hive/core@npm:0.22.1"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.1.0"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^11.4.7"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/27dd876df2a12b06f090370f940aceb2adbb166d33445f0a03b48ab5aaf1b892c60778cd278228ada11ed5dc3c79910e2fab5bf924e25213154dbe3bb975dcdd
   languageName: node
   linkType: hard
 
@@ -4506,7 +4525,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.21.0"
+    "@graphql-hive/core": "npm:^0.22.1"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -4823,7 +4842,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
-    "@graphql-hive/core": "npm:^0.21.0"
+    "@graphql-hive/core": "npm:^0.22.1"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.13"
