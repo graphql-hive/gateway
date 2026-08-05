@@ -4610,7 +4610,7 @@ __metadata:
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
-    "@graphql-hive/render-laboratory": "npm:^0.1.10"
+    "@graphql-hive/render-laboratory": "npm:^0.1.14"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
@@ -4695,9 +4695,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/laboratory@npm:0.1.9":
-  version: 0.1.9
-  resolution: "@graphql-hive/laboratory@npm:0.1.9"
+"@graphql-hive/laboratory@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@graphql-hive/laboratory@npm:0.2.3"
   dependencies:
     "@base-ui/react": "npm:^1.1.0"
     "@graphql-tools/url-loader": "npm:^9.1.0"
@@ -4714,7 +4714,7 @@ __metadata:
     subscriptions-transport-ws: ^0.11.0
     tslib: ^2.8.1
     zod: ^4.1.12
-  checksum: 10c0/a3763566bd60bb7f6cac7198c1c8a2428bd7d28103c81dd4f0e924b0af1d493a48a229f350733e0934e08e8dc98d28793697e358692ce14659b74d6d55f72251
+  checksum: 10c0/b028dd3780873fdba23197415948e2b65dd14094e6dad66897b23a757c697b4800a406340c5cfe44b4e4e321a6337dc8d25645d481287868cf7cda1220a79cb2
   languageName: node
   linkType: hard
 
@@ -4905,14 +4905,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/render-laboratory@npm:^0.1.10":
-  version: 0.1.10
-  resolution: "@graphql-hive/render-laboratory@npm:0.1.10"
+"@graphql-hive/render-laboratory@npm:^0.1.14":
+  version: 0.1.14
+  resolution: "@graphql-hive/render-laboratory@npm:0.1.14"
   dependencies:
-    "@graphql-hive/laboratory": "npm:0.1.9"
+    "@graphql-hive/laboratory": "npm:0.2.3"
   peerDependencies:
     graphql-yoga: ^5
-  checksum: 10c0/d18fea98a8fcd2454eab6fc434d8d73216aed8cc0c545e41932cc64d50b1c506e45672ec5655970d3ad6457d3a5faa2b3bab60e50785dfa7812a4f3e2e773dcc
+  checksum: 10c0/eaa77f5206d06c27c5f48a6f4881e3daee582edb6c9e5f13efa8df6e70f90fbd71a59b4b9d7080e5ab10074e9fe814519f069c0fe930e7b6b5827772a135422c
   languageName: node
   linkType: hard
 
