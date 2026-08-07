@@ -24,7 +24,8 @@ updates:
         exclude-patterns:
           - 'ScribeMD/docker-cache' # dont update docker-cache because we use a custom fix, see test.yml and memtest.yml
   - package-ecosystem: 'npm' # See documentation for possible values
-    directory: '/' # Location of package manifests
+    # only scan packages because exclude-paths does not reliably ignore generated examples
+    directory: '/packages' # Location of package manifests
     schedule:
       interval: 'daily'
     cooldown:
@@ -37,8 +38,6 @@ updates:
         - '@graphql-yoga/*'
         - '@whatwg-node/*'
         - 'graphql-yoga'
-    exclude-paths:
-      - 'examples/**' # the examples are auto-generated from the e2es, whose packages we do auto-update
     versioning-strategy: increase-if-necessary
     groups:
       all-minor-patch:
