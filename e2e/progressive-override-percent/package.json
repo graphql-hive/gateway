@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@apollo/server": "^5.4.0",
-    "@apollo/subgraph": "2.14.0",
+    "@apollo/subgraph": "2.14.3",
     "@as-integrations/express5": "^1.1.2",
     "express": "^5.2.1",
     "graphql": "16.14.0",
