@@ -4,7 +4,7 @@ import { GraphQLError } from 'graphql';
 import { expect, it } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
 
-it('should have accurate error paths', async () => {
+async function execute(query: string) {
   await using gw = createGatewayTester({
     unifiedGraphHandler,
     subgraphs: [
@@ -40,6 +40,7 @@ it('should have accurate error paths', async () => {
             type User {
               id: ID!
               name: String
+              friends: [User]
             }
           `,
           resolvers: {
@@ -54,6 +55,7 @@ it('should have accurate error paths', async () => {
                   },
                 });
               },
+              friends: () => [{ id: 3 }],
             },
           },
         },
@@ -61,19 +63,21 @@ it('should have accurate error paths', async () => {
     ],
   });
 
-  const result = await gw.execute({
-    query: /* GraphQL */ `
-      {
-        product {
-          id
-        }
-        users {
-          id
-          name
-        }
+  return await gw.execute({ query });
+}
+
+it('should have accurate error paths', async () => {
+  const result = await execute(/* GraphQL */ `
+    {
+      product {
+        id
       }
-    `,
-  });
+      users {
+        id
+        name
+      }
+    }
+  `);
 
   assertSingleExecutionValue(result);
 
@@ -110,3 +114,38 @@ it('should have accurate error paths', async () => {
     ]
   `);
 });
+
+it.each([
+  {
+    name: 'aliases',
+    query: /* GraphQL */ `
+      {
+        people: users {
+          displayName: name
+        }
+      }
+    `,
+    path: ['people', 0, 'displayName'],
+  },
+  {
+    name: 'nested lists',
+    query: /* GraphQL */ `
+      {
+        users {
+          friends {
+            name
+          }
+        }
+      }
+    `,
+    path: ['users', 0, 'friends', 0, 'name'],
+  },
+])(
+  'preserves graphql-js error paths through $name',
+  async ({ query, path }) => {
+    const result = await execute(query);
+
+    assertSingleExecutionValue(result);
+    expect(result.errors?.map((error) => error.path)).toEqual([path]);
+  },
+);

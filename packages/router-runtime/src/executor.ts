@@ -1026,10 +1026,9 @@ function normalizeFetchErrors(
   const fallbackPath = options.defaultPath ?? getDefaultErrorPath(fetchNode);
 
   if (!flattenState) {
-    if (!fallbackPath) {
-      return [...errors];
-    }
-    return errors.map((error) => relocatedError(error, fallbackPath));
+    return errors.map((error) =>
+      error.path || !fallbackPath ? error : relocatedError(error, fallbackPath),
+    );
   }
 
   const entityPathMap = buildFlattenEntityPathMap(flattenState);
