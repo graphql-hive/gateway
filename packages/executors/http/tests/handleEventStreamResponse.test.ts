@@ -327,14 +327,23 @@ data:
 
     // dispose the subscription. not awaited: pump() is parked on reader.read()
     // and only settles once the body is actually cancelled.
-    void iterator.return?.();
+    const returned = iterator.return?.();
 
-    await expect(
-      Promise.race([
-        cancelled,
-        setTimeout(1000).then(() => 'still open' as const),
-      ]),
-    ).resolves.toBe('cancelled');
+    // the timeout handle is always cleared: a pending timer left behind here
+    // keeps the suite alive and trips `jest --detectLeaks` in the leaks job.
+    let timeout: ReturnType<typeof globalThis.setTimeout>;
+    const stillOpen = new Promise<'still open'>((resolve) => {
+      timeout = globalThis.setTimeout(() => resolve('still open'), 1000);
+    });
+    try {
+      await expect(Promise.race([cancelled, stillOpen])).resolves.toBe(
+        'cancelled',
+      );
+    } finally {
+      globalThis.clearTimeout(timeout!);
+    }
+
+    await returned;
   });
 
   it.todo('should consume messages on an immediately closed stream', () => {
