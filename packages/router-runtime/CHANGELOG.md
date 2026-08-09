@@ -1,5 +1,12 @@
 # @graphql-hive/router-runtime
 
+## 1.4.23
+### Patch Changes
+
+
+
+- [#2532](https://github.com/graphql-hive/gateway/pull/2532) [`ae78edc`](https://github.com/graphql-hive/gateway/commit/ae78edcb39700415a5df2a90a5ffb69024cd63ab) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Preserve complete GraphQL error paths returned by subgraphs when executing router query plans, including aliases, list indices, and nested fields
+
 ## 1.4.22
 ### Patch Changes
 
