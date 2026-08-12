@@ -4610,7 +4610,7 @@ __metadata:
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
-    "@graphql-hive/render-laboratory": "npm:^0.1.14"
+    "@graphql-hive/render-laboratory": "npm:^0.1.16"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.35"
     "@graphql-mesh/cache-localforage": "npm:^0.105.36"
@@ -4695,14 +4695,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/laboratory@npm:0.2.3":
-  version: 0.2.3
-  resolution: "@graphql-hive/laboratory@npm:0.2.3"
+"@graphql-hive/laboratory@npm:0.2.5":
+  version: 0.2.5
+  resolution: "@graphql-hive/laboratory@npm:0.2.5"
   dependencies:
     "@base-ui/react": "npm:^1.1.0"
     "@graphql-tools/url-loader": "npm:^9.1.0"
+    dompurify: "npm:3.4.13"
+    graphql-language-service: "npm:^5.5.0"
     radix-ui: "npm:^1.4.3"
     react-zoom-pan-pinch: "npm:^3.7.0"
+    snarkdown: "npm:2.0.0"
     uuid: "npm:^14.0.0"
   peerDependencies:
     "@tanstack/react-form": ^1.23.8
@@ -4714,7 +4717,7 @@ __metadata:
     subscriptions-transport-ws: ^0.11.0
     tslib: ^2.8.1
     zod: ^4.1.12
-  checksum: 10c0/b028dd3780873fdba23197415948e2b65dd14094e6dad66897b23a757c697b4800a406340c5cfe44b4e4e321a6337dc8d25645d481287868cf7cda1220a79cb2
+  checksum: 10c0/91d70b4e0185c1a89074d6d13f704e6ff28ecba30d651617c36a85a14c578f084aa30f7c27156c2aa09175141ac547b794eb2639fc641aa1a9596f272aa49837
   languageName: node
   linkType: hard
 
@@ -4905,14 +4908,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/render-laboratory@npm:^0.1.14":
-  version: 0.1.14
-  resolution: "@graphql-hive/render-laboratory@npm:0.1.14"
+"@graphql-hive/render-laboratory@npm:^0.1.16":
+  version: 0.1.16
+  resolution: "@graphql-hive/render-laboratory@npm:0.1.16"
   dependencies:
-    "@graphql-hive/laboratory": "npm:0.2.3"
+    "@graphql-hive/laboratory": "npm:0.2.5"
   peerDependencies:
     graphql-yoga: ^5
-  checksum: 10c0/eaa77f5206d06c27c5f48a6f4881e3daee582edb6c9e5f13efa8df6e70f90fbd71a59b4b9d7080e5ab10074e9fe814519f069c0fe930e7b6b5827772a135422c
+  checksum: 10c0/911e007ea0e0fc33d716812605364e49929edadd8f4a293f5028d1fc6cf2f61a631bfe9b0b2ae8edc9a5cd1e3a916240e08f8cf58effe6a4d552794600823e2d
   languageName: node
   linkType: hard
 
@@ -12559,6 +12562,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/trusted-types@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
+  languageName: node
+  linkType: hard
+
 "@types/uuid@npm:^9.0.0":
   version: 9.0.8
   resolution: "@types/uuid@npm:9.0.8"
@@ -15628,6 +15638,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"debounce-promise@npm:^3.1.2":
+  version: 3.1.2
+  resolution: "debounce-promise@npm:3.1.2"
+  checksum: 10c0/68d22b2ed5e8c890643c1b02dadffc9a6a31ec6db225530f34dfeef14112977bedf735d5141e29264ce608ec59375665d582f0013362fa61c7a92d3c0f2f410d
+  languageName: node
+  linkType: hard
+
 "debounce@npm:^3.0.0":
   version: 3.0.0
   resolution: "debounce@npm:3.0.0"
@@ -15924,6 +15941,18 @@ __metadata:
   dependencies:
     esutils: "npm:^2.0.2"
   checksum: 10c0/b6416aaff1f380bf56c3b552f31fdf7a69b45689368deca72d28636f41c16bb28ec3ebc40ace97db4c1afc0ceeb8120e8492fe0046841c94c2933b2e30a7d5ac
+  languageName: node
+  linkType: hard
+
+"dompurify@npm:3.4.13":
+  version: 3.4.13
+  resolution: "dompurify@npm:3.4.13"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.7"
+  dependenciesMeta:
+    "@types/trusted-types":
+      optional: true
+  checksum: 10c0/9c2a1a71e1a1d8b77953db7a39ffc935ef4ed4f10fe40770232128c2cbfd4c3dc677d3d7bae51eb24cc52d9ff3548612dc540ecb4343e89b26e809d2be2e0cfe
   languageName: node
   linkType: hard
 
@@ -17951,6 +17980,21 @@ __metadata:
   peerDependencies:
     graphql: ">=15"
   checksum: 10c0/a7b92f4eb1ce74a4486fac74b6e583b12a9ebe6f341822e8017c81772519e3529806149346c01077ad09e94ecb04aab7438f67b9374a239bf93d210be588d3ca
+  languageName: node
+  linkType: hard
+
+"graphql-language-service@npm:^5.5.0":
+  version: 5.5.2
+  resolution: "graphql-language-service@npm:5.5.2"
+  dependencies:
+    debounce-promise: "npm:^3.1.2"
+    nullthrows: "npm:^1.0.0"
+    vscode-languageserver-types: "npm:^3.17.1"
+  peerDependencies:
+    graphql: ^15.5.0 || ^16.0.0 || ^17.0.0
+  bin:
+    graphql: dist/temp-bin.js
+  checksum: 10c0/fe340823b90f418fa466c0dedfdf0070ab658530bfbad3386aefa58998d272c6971d93e95ecd0ea44a36df2edc3471273b2b467a1526c8f62da1df400cc172e1
   languageName: node
   linkType: hard
 
@@ -21314,6 +21358,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nullthrows@npm:^1.0.0":
+  version: 1.1.1
+  resolution: "nullthrows@npm:1.1.1"
+  checksum: 10c0/56f34bd7c3dcb3bd23481a277fa22918120459d3e9d95ca72976c72e9cac33a97483f0b95fc420e2eb546b9fe6db398273aba9a938650cdb8c98ee8f159dcb30
+  languageName: node
+  linkType: hard
+
 "object-assign@npm:^4, object-assign@npm:^4.0.1, object-assign@npm:^4.1.1":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
@@ -23947,6 +23998,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"snarkdown@npm:2.0.0":
+  version: 2.0.0
+  resolution: "snarkdown@npm:2.0.0"
+  checksum: 10c0/2e1645924041f0a69804b2d0eac3eef0403d1d769da374c73102f1f8a401401990c79e6dd1ee0ea302585ecea232e358c11134781b389b0afffb987f4db5b36d
+  languageName: node
+  linkType: hard
+
 "socks-proxy-agent@npm:^8.0.3":
   version: 8.0.5
   resolution: "socks-proxy-agent@npm:8.0.5"
@@ -25911,6 +25969,13 @@ __metadata:
   bin:
     vitest: ./vitest.mjs
   checksum: 10c0/1ac80ef4991be82822a52aea48415f1bc64ddf8fd88ee24c172ec368f1d480fefacbde622c3c951982f7961a1d07313e18deaafc774d29e42ad6f6ffa63334a7
+  languageName: node
+  linkType: hard
+
+"vscode-languageserver-types@npm:^3.17.1":
+  version: 3.18.0
+  resolution: "vscode-languageserver-types@npm:3.18.0"
+  checksum: 10c0/d8c51cd286cc55b4c1f333e87fa3cefc66d2aae8c65f6209e7ecf88032d3326308b333d62b05243c194be8a3304760445b87630b298116c6c612607f011b4de0
   languageName: node
   linkType: hard
 
