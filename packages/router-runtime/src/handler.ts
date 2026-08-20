@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { QueryPlan } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
@@ -11,7 +12,11 @@ import {
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  handleMaybePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
@@ -30,6 +35,34 @@ import {
   queryPlanForExecutionRequestContext,
 } from './utils';
 
+function sha256(input: string) {
+  return createHash('sha256').update(input).digest('hex');
+}
+
+/** Query plans only depend on the supergraph and the operation, so they're safe to keep for a while. */
+const QUERY_PLAN_CACHE_TTL_SECONDS = 60 * 60 * 24;
+
+function cacheQueryPlan(
+  cache: NonNullable<UnifiedGraphHandlerOpts['cache']>,
+  key: string,
+  queryPlan: QueryPlan,
+  log: UnifiedGraphHandlerOpts['log'],
+) {
+  const logCacheSetError = (err: unknown) => {
+    log?.debug({ err, key }, 'Unable to cache query plan');
+  };
+  try {
+    const result = cache.set(key, queryPlan, {
+      ttl: QUERY_PLAN_CACHE_TTL_SECONDS,
+    });
+    if (isPromise(result)) {
+      result.then(() => {}, logCacheSetError);
+    }
+  } catch (err) {
+    logCacheSetError(err);
+  }
+}
+
 export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): Promise<UnifiedGraphHandlerResult> {
@@ -46,17 +79,6 @@ export async function unifiedGraphHandler(
     await import(moduleName);
   const supergraphSdl = opts.getUnifiedGraphSDL();
   const queryPlanner = new QueryPlanner(supergraphSdl);
-
-  function getActivePercentLabels(percentageValue: number) {
-    const activePercentLabels = new Set<string>();
-    for (const percentage of queryPlanner.overridePercentages) {
-      if (percentageValue > percentage) {
-        activePercentLabels.add(`percent(${percentage})`);
-      }
-    }
-    return activePercentLabels;
-  }
-
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
   const pubsubOperationMetadataMap = getPubsubOperationRootFields(
     opts.unifiedGraph,
@@ -71,26 +93,18 @@ export async function unifiedGraphHandler(
     createDefaultExecutor(supergraphSchema),
   );
 
-  function calculateCacheKeyForDocument(
-    activeLabels: Set<string>,
-    percentageValue: number,
-    operationName?: string,
-  ) {
-    let cacheKey = operationName || '';
-    for (const label of activeLabels) {
-      cacheKey += `|${label}`;
-    }
-    const activePercentLabels = getActivePercentLabels(percentageValue);
-    for (const label of activePercentLabels) {
-      cacheKey += `|${label}`;
-    }
-    return cacheKey;
-  }
+  // Scoping the key by the supergraph itself means a schema reload (or a
+  // redeploy pointing at a new supergraph) naturally stops reusing old plans,
+  // without needing to explicitly invalidate anything in the shared cache.
+  const remotePlanCacheKeyPrefix = opts.cache
+    ? `hive-gateway:query-plan:${sha256(supergraphSdl)}:`
+    : undefined;
 
   const documentOperationPlanCache = new WeakMap<
     DocumentNode,
     Map<string | null, MaybePromise<QueryPlan>>
-  >();
+    >();
+
   function planDocument(executionRequest: ExecutionRequest) {
     let operationCache = documentOperationPlanCache.get(
       executionRequest.document,
@@ -103,10 +117,12 @@ export async function unifiedGraphHandler(
     }
     const rng = getRngFromEnv() || Math.random();
     const percentageValue = rng * 100;
-    const cacheKey = calculateCacheKeyForDocument(
+    const printedDocument = defaultPrintFn(executionRequest.document);
+    const cacheKey = queryPlanner.computeCacheKey(
+      printedDocument,
+      executionRequest.operationName,
       activeLabels,
       percentageValue,
-      executionRequest.operationName,
     );
 
     // we dont need to worry about releasing values. the map values in weakmap
@@ -121,15 +137,41 @@ export async function unifiedGraphHandler(
       documentOperationPlanCache.set(executionRequest.document, operationCache);
     }
 
+
+    function computePlan() {
+      return queryPlanner.planAsync(
+        printedDocument,
+        executionRequest.operationName,
+        activeLabels,
+        percentageValue,
+        executionRequest.signal,
+      );
+    }
+
     const plan = handleMaybePromise(
-      () =>
-        queryPlanner.planAsync(
-          defaultPrintFn(executionRequest.document),
-          executionRequest.operationName,
-          activeLabels,
-          percentageValue,
-          executionRequest.signal,
-        ),
+      () => {
+        if (!opts.cache || !remotePlanCacheKeyPrefix) {
+          return computePlan();
+        }
+        const cache = opts.cache;
+        const remoteKey = remotePlanCacheKeyPrefix + cacheKey;
+        return handleMaybePromise(
+          () => cache.get(remoteKey),
+          (cachedPlan) =>
+            cachedPlan ??
+            handleMaybePromise(computePlan, (queryPlan) => {
+              cacheQueryPlan(cache, remoteKey, queryPlan, opts.log);
+              return queryPlan;
+            }),
+          (err) => {
+            opts.log?.debug(
+              { err, key: remoteKey },
+              'Unable to read cached query plan, computing it instead',
+            );
+            return computePlan();
+          },
+        );
+      },
       (queryPlan) => {
         operationCache.set(cacheKey, queryPlan);
         return queryPlan;
