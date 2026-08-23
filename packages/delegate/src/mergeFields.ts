@@ -21,6 +21,7 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { isPrototypePollutingKey } from './isPrototypePollutingKey.js';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
 import { Subschema } from './Subschema.js';
@@ -83,11 +84,12 @@ export function mergeFields<TContext>(
   context: any,
   info: GraphQLResolveInfo,
 ): MaybePromise<any> {
+  const variableValues = getCoercedVariableValues(info.variableValues);
   const delegationMaps = mergedTypeInfo.delegationPlanBuilder(
     info.schema,
     sourceSubschema,
-    info.variableValues != null && Object.keys(info.variableValues).length > 0
-      ? info.variableValues
+    variableValues != null && Object.keys(variableValues).length > 0
+      ? variableValues
       : EMPTY_OBJECT,
     info.fragments != null && Object.keys(info.fragments).length > 0
       ? info.fragments
@@ -143,7 +145,7 @@ export function handleResolverResult(
     const { fields } = collectFields(
       schema,
       info.fragments,
-      info.variableValues,
+      getCoercedVariableValues(info.variableValues) ?? EMPTY_OBJECT,
       type,
       selectionSet,
     );

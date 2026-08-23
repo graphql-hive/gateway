@@ -12,6 +12,7 @@ import {
   responsePathAsArray,
   SelectionSetNode,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import {
   DelegationPlanLeftOver,
   getPlanLeftOverFromParent,
@@ -287,14 +288,17 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                 responseKey,
               ) as Subschema;
               if (sourceSubschema && nestedTypeName) {
+                const variableValues = getCoercedVariableValues(
+                  info.variableValues,
+                );
                 const delegationPlan = stitchingInfo.mergedTypes[
                   nestedTypeName
                 ]?.delegationPlanBuilder(
                   info.schema,
                   sourceSubschema,
-                  info.variableValues != null &&
-                    Object.keys(info.variableValues).length > 0
-                    ? info.variableValues
+                  variableValues != null &&
+                    Object.keys(variableValues).length > 0
+                    ? variableValues
                     : EMPTY_OBJECT,
                   info.fragments != null &&
                     Object.keys(info.fragments).length > 0
