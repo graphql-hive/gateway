@@ -206,26 +206,41 @@ export interface GatewayCLIBuiltinPluginConfig {
   blockFieldSuggestions?: boolean;
 }
 
-export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
-  type: 'localforage';
-};
+export interface GatewayCLICacheKeyPrefixConfig {
+  /**
+   * Prefix prepended to every key used by this cache, for all get/set/delete
+   * operations. Useful for namespacing cache records when sharing a single
+   * backend (e.g. a Redis instance) across multiple gateways or environments.
+   *
+   * @default ''
+   */
+  keyPrefix?: string;
+}
+
+export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig &
+  GatewayCLICacheKeyPrefixConfig & {
+    type: 'localforage';
+  };
 
 export type GatewayCLIRedisCacheConfig = (
   | YamlConfig.RedisConfigSingle
   | YamlConfig.RedisConfigSentinel
   | YamlConfig.RedisConfigCluster
-) & {
-  type: 'redis';
-};
+) &
+  GatewayCLICacheKeyPrefixConfig & {
+    type: 'redis';
+  };
 
 export type GatewayCLICloudflareKVCacheConfig =
-  YamlConfig.CFWorkersKVCacheConfig & {
-    type: 'cfw-kv';
-  };
+  YamlConfig.CFWorkersKVCacheConfig &
+    GatewayCLICacheKeyPrefixConfig & {
+      type: 'cfw-kv';
+    };
 
 export type GatewayCLIUpstashRedisCacheConfig = {
   type: 'upstash-redis';
-} & ConstructorParameters<typeof UpstashRedisCache>[0];
+} & GatewayCLICacheKeyPrefixConfig &
+  ConstructorParameters<typeof UpstashRedisCache>[0];
 
 /**
  * Type helper for defining the config.
