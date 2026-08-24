@@ -74,7 +74,7 @@ export function splitResult(
     }
   }
 
-  const rootDataIsNull = data === null;
+  const isRootDataNull = data === null;
 
   // A batched response can omit some sub-requests entirely: if the merged result
   // carries neither a data key nor a path-scoped error for an index, that slot is
@@ -91,8 +91,8 @@ export function splitResult(
   for (let i = 0; i < numResults; i++) {
     const splitResult = splitResults[i];
     if (splitResult == null) {
-      splitResults[i] = { data: rootDataIsNull ? null : {} };
-    } else if (rootDataIsNull && splitResult.data === undefined) {
+      splitResults[i] = { data: isRootDataNull ? null : {} };
+    } else if (isRootDataNull && splitResult.data === undefined) {
       splitResult.data = null;
     }
   }
