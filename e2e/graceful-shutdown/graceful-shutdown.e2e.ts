@@ -1,7 +1,9 @@
 import { setTimeout } from 'timers/promises';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
+import { createClient } from 'graphql-ws';
 import { expect, it } from 'vitest';
+import WebSocket from 'ws';
 
 const { gateway, service, gatewayRunner } = createTenv(__dirname);
 
@@ -165,3 +167,181 @@ it
     ).resolves.toBeUndefined();
   },
 );
+
+it
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
+  .each(['SIGINT', 'SIGTERM'] as const)(
+  'should close live WebSocket subscriptions with 1001 on %s',
+  async (signal) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      env: { GRACEFUL_SHUTDOWN_TIMEOUT: 1_000 },
+    });
+
+    const subscribers = await Promise.all(
+      [1, 2, 3].map(() => subscribeOverWS(gw.port)),
+    );
+
+    gw.kill(signal);
+
+    for (const { closed } of subscribers) {
+      await expect(closed).resolves.toEqual({
+        code: 1001,
+        reason: 'Going away',
+      });
+    }
+
+    await gw.waitForExit;
+  },
+);
+
+it
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
+  .each(['SIGINT', 'SIGTERM'] as const)(
+  'should exit promptly with live WebSocket subscriptions on %s',
+  async (signal) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      env: { GRACEFUL_SHUTDOWN_TIMEOUT: 1_000 },
+    });
+
+    await subscribeOverWS(gw.port);
+
+    gw.kill(signal);
+
+    await expect(
+      Promise.race([
+        gw.waitForExit,
+        setTimeout(1_000).then(() =>
+          Promise.reject(new Error('Gateway did not exit after drain')),
+        ),
+      ]),
+    ).resolves.toBeUndefined();
+  },
+);
+
+it
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
+  .each(['SIGINT', 'SIGTERM'] as const)(
+  'should close live WebSocket subscriptions with 1001 without a drain window on %s',
+  async (signal) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      env: { GRACEFUL_SHUTDOWN_TIMEOUT: 0 },
+    });
+
+    const { closed } = await subscribeOverWS(gw.port);
+
+    gw.kill(signal);
+
+    await expect(closed).resolves.toEqual({
+      code: 1001,
+      reason: 'Going away',
+    });
+
+    await gw.waitForExit;
+  },
+);
+
+it
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
+  .each([
+    ['SIGINT', 1_000],
+    ['SIGTERM', 1_000],
+    ['SIGINT', 0],
+    ['SIGTERM', 0],
+  ] as const)(
+  'should force-close WebSocket clients that never answer the close handshake on %s with a %dms drain window',
+  async (signal, gracefulShutdownTimeout) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      env: { GRACEFUL_SHUTDOWN_TIMEOUT: gracefulShutdownTimeout },
+    });
+
+    const socket = await connectOverWS(gw.port);
+    socket.pause();
+
+    const start = Date.now();
+    gw.kill(signal);
+    await gw.waitForExit;
+
+    expect(Date.now() - start).toBeLessThan(3_000);
+  },
+);
+
+interface SocketClose {
+  code: number;
+  reason: string;
+}
+
+/** Opens a `graphql-ws` subscription that is live once this resolves. */
+async function subscribeOverWS(port: number) {
+  let onClose: (close: SocketClose) => void;
+  const closed = new Promise<SocketClose>((resolve) => {
+    onClose = resolve;
+  });
+  const client = createClient({
+    url: `ws://0.0.0.0:${port}/graphql`,
+    webSocketImpl: WebSocket,
+    retryAttempts: 0,
+    on: {
+      closed: (event) => {
+        const { code, reason } = event as SocketClose;
+        onClose({ code, reason });
+      },
+    },
+  });
+
+  const subscription = client.iterate({
+    query: 'subscription{emitsOnceAndStalls}',
+  });
+  await expect(subscription.next()).resolves.toHaveProperty(
+    'value.data.emitsOnceAndStalls',
+    'world',
+  );
+
+  return { closed };
+}
+
+/** Opens a raw `graphql-transport-ws` connection and resolves once acknowledged. */
+async function connectOverWS(port: number) {
+  const socket = new WebSocket(
+    `ws://0.0.0.0:${port}/graphql`,
+    'graphql-transport-ws',
+  );
+  await new Promise((resolve) => socket.once('open', resolve));
+  socket.send(JSON.stringify({ type: 'connection_init' }));
+  const [ack] = await new Promise<[string]>((resolve) =>
+    socket.once('message', (data) => resolve([String(data)])),
+  );
+  expect(JSON.parse(ack)).toHaveProperty('type', 'connection_ack');
+  return socket;
+}
