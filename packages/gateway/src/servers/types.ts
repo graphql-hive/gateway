@@ -60,6 +60,11 @@ export interface ServerConfig {
    * After the timeout expires, {@link https://nodejs.org/api/http.html#servercloseallconnections | server.closeAllConnections()} is called
    * as a hard fuse so the process can exit.
    *
+   * WebSocket clients are closed with `1001 Going away`. The timeout also
+   * bounds the closing handshake, after which the socket is destroyed -
+   * `closeAllConnections()` does not reach connections that have been upgraded.
+   * This part has no effect in Bun, which serves WebSockets itself.
+   *
    * Set to `0` to skip the drain window and close all connections immediately.
    *
    * @default 0
