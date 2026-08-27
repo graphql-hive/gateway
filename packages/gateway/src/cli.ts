@@ -330,7 +330,7 @@ let cli = new Command()
     new Option(
       '-h, --host <hostname>',
       `host to use for serving (default: ${defaultOptions.host})`,
-    ),
+    ).env('HOST'),
   )
   .addOption(
     new Option(
