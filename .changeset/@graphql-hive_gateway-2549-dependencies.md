@@ -4,6 +4,7 @@
 
 dependencies updates: 
 
+- Updated dependency [`@graphql-hive/render-laboratory@^0.1.16` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.16) (from `^0.1.14`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.108.1) (from `^0.105.35`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/cache-localforage@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.108.1) (from `^0.105.36`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/cache-redis@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.108.1) (from `^0.106.0`, in `dependencies`)
