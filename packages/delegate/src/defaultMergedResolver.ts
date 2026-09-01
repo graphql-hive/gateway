@@ -24,6 +24,7 @@ import {
   getUnpathedErrors,
   handleResolverResult,
   isExternalObject,
+  mergeFields,
 } from './mergeFields.js';
 import { resolveExternalValue } from './resolveExternalValue.js';
 import { Subschema } from './Subschema.js';
@@ -113,6 +114,37 @@ export function defaultMergedResolver(
     // way graphql-js default resolution would on a plain object
     if (Object.prototype.hasOwnProperty.call(parent, info.fieldName)) {
       return defaultFieldResolver(parent, args, context, info);
+    }
+    const stitchingInfo = info.schema?.extensions?.[
+      'stitchingInfo'
+    ] as StitchingInfo;
+    const parentTypeName = parent.__typename || info.parentType?.name;
+    const mergedTypeInfo = parentTypeName
+      ? stitchingInfo?.mergedTypes[parentTypeName]
+      : undefined;
+    const sourceSubschema = parent[OBJECT_SUBSCHEMA_SYMBOL] as Subschema;
+    if (mergedTypeInfo && sourceSubschema) {
+      const fieldNode: FieldNode = {
+        kind: Kind.FIELD,
+        name: info.fieldNodes[0]?.name ?? {
+          kind: Kind.NAME,
+          value: info.fieldName,
+        },
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: info.fieldNodes,
+        },
+      };
+      return handleMaybePromise(
+        () =>
+          mergeFields(mergedTypeInfo, parent, sourceSubschema, context, info, [
+            fieldNode,
+          ]),
+        () =>
+          Object.prototype.hasOwnProperty.call(parent, responseKey)
+            ? handleResult(parent, responseKey, context, info)
+            : undefined,
+      );
     }
     return undefined;
   }
