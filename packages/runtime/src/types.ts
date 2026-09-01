@@ -529,11 +529,14 @@ export interface GatewayHivePersistedDocumentsOptions {
  * Incremental-delivery operations (`@defer` / `@stream`) are kept alive until
  * their stream ends.
  *
- * Subscriptions are NOT pinned: they are long-lived, so a subscription on a
- * superseded generation ends with `SCHEMA_RELOAD` when that generation is
- * disposed — immediately on reload when it has no in-flight operations,
- * otherwise once it finishes draining (at the latest after
+ * Subscriptions are NOT pinned by default: they are long-lived, so a
+ * subscription on a superseded generation ends with `SCHEMA_RELOAD` when that
+ * generation is disposed — immediately on reload when it has no in-flight
+ * operations, otherwise once it finishes draining (at the latest after
  * {@link drainTimeout}) — and the client reconnects against the new schema.
+ * {@link pinSubscriptions} opts them into the overlap as well, and
+ * {@link subscriptionRetirementSpread} then retires them gradually instead of
+ * all at once.
  *
  * Schema-replacing plugins must preserve the schema object supplied by the
  * gateway. If a plugin replaces or rebuilds it, the gateway cannot associate
@@ -558,6 +561,30 @@ export interface GracefulSchemaReloadConfig {
    * @default 10
    */
   maxConcurrentGenerations?: number;
+  /**
+   * Pin subscriptions to the schema generation that admitted them, the way
+   * queries and mutations are pinned. A reload then no longer ends every
+   * subscription on the instance at once: the superseded generation keeps
+   * serving its subscriptions until each stream ends, or until
+   * {@link drainTimeout} force-disposes it (ending whatever is left with
+   * `SCHEMA_RELOAD`). Combine with {@link subscriptionRetirementSpread} to
+   * retire them gradually before the timeout.
+   *
+   * @default false
+   */
+  pinSubscriptions?: boolean;
+  /**
+   * Time window, in milliseconds, over which the subscriptions of a superseded
+   * generation are retired after a reload. Each pinned subscription is ended
+   * (a plain stream completion, no error) at an evenly spaced, randomly
+   * assigned moment inside the window, so their clients resubscribe against
+   * the new schema as a steady trickle instead of a burst. Until its moment a
+   * subscription keeps receiving events from the superseded generation.
+   *
+   * Requires {@link pinSubscriptions}. Should be shorter than
+   * {@link drainTimeout}, which remains the hard bound.
+   */
+  subscriptionRetirementSpread?: number;
 }
 
 export interface GatewayConfigBase<TContext extends Record<string, any>> {
