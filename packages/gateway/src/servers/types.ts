@@ -70,6 +70,24 @@ export interface ServerConfig {
    * @default 0
    */
   gracefulShutdownTimeout?: number;
+  /**
+   * How long in milliseconds to spread the WebSocket client closes over when
+   * shutting down.
+   *
+   * Every client is otherwise closed at once, which sends the whole fleet into
+   * its reconnect backoff together - `graphql-ws` retries a `1001` close just as
+   * it does a network error, with only a few seconds of jitter by default. With
+   * a window the clients are closed in batches of roughly a second each, so the
+   * reconnects arrive spread out instead.
+   *
+   * {@link gracefulShutdownTimeout} still bounds the closing handshake of the
+   * last batch, so a shutdown can take as long as both together.
+   *
+   * This has no effect in Bun, which serves WebSockets itself.
+   *
+   * @default 0
+   */
+  websocketDrainTimeout?: number;
 }
 
 export interface ServerConfigSSLCredentials {
