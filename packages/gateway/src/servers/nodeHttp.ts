@@ -23,6 +23,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     requestTimeout,
     keepAliveTimeout,
     gracefulShutdownTimeout = 0,
+    websocketDrainTimeout = 0,
   } = opts;
   let server: Server;
   let protocol: string;
@@ -102,8 +103,35 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       wsServer,
     );
 
+    const drainWebSocketClients = async () => {
+      const clients = [...wsServer.clients];
+      if (websocketDrainTimeout <= 0 || !clients.length) {
+        return;
+      }
+      const batches = Math.min(
+        clients.length,
+        Math.max(1, Math.round(websocketDrainTimeout / 1000)),
+      );
+      const size = Math.ceil(clients.length / batches);
+      const interval = Math.floor(websocketDrainTimeout / batches);
+      log.info(
+        { clients: clients.length, batches, interval },
+        'Draining WebSocket clients',
+      );
+      for (let i = 0; i < clients.length; i += size) {
+        for (const client of clients.slice(i, i + size)) {
+          client.close(1001, 'Going away');
+        }
+        if (i + size < clients.length) {
+          await new Promise((resolve) => setTimeout(resolve, interval));
+        }
+      }
+      log.info('Drained WebSocket clients');
+    };
+
     stopWebSocketServer = async () => {
       log.info('Stopping the WebSocket server');
+      await drainWebSocketClients();
       const closeHandshakeTimeout = Math.max(gracefulShutdownTimeout, 1000);
       const fuse = setTimeout(() => {
         for (const client of wsServer.clients) {

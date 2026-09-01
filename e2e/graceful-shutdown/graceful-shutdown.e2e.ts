@@ -297,6 +297,52 @@ it
   },
 );
 
+it
+  .skipIf(
+    // "cannot send signals to containers" from dockerode - tenv limitation
+    gatewayRunner.includes('docker'),
+  )
+  .each(['SIGINT', 'SIGTERM'] as const)(
+  'should spread WebSocket closes across the drain window on %s',
+  async (signal) => {
+    const slowSvc = await service('slow');
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [slowSvc],
+      },
+      env: {
+        GRACEFUL_SHUTDOWN_TIMEOUT: 1_000,
+        WEBSOCKET_DRAIN_TIMEOUT: 3_000,
+      },
+    });
+
+    const subscribers = await Promise.all(
+      [1, 2, 3, 4, 5, 6].map(() => subscribeOverWS(gw.port)),
+    );
+
+    const start = Date.now();
+    gw.kill(signal);
+
+    const closedAt = await Promise.all(
+      subscribers.map(async ({ closed }) => {
+        await expect(closed).resolves.toEqual({
+          code: 1001,
+          reason: 'Going away',
+        });
+        return Date.now() - start;
+      }),
+    );
+
+    // six clients over three batches, a second apart
+    expect(Math.max(...closedAt) - Math.min(...closedAt)).toBeGreaterThan(
+      1_500,
+    );
+
+    await gw.waitForExit;
+  },
+);
+
 interface SocketClose {
   code: number;
   reason: string;
