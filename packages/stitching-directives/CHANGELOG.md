@@ -1,5 +1,11 @@
 # @graphql-tools/stitching-directives
 
+## 4.0.28
+### Patch Changes
+
+- Updated dependencies [[`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f)]:
+  - @graphql-tools/delegate@12.1.2
+
 ## 4.0.27
 ### Patch Changes
 
