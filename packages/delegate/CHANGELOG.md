@@ -1,5 +1,12 @@
 # @graphql-tools/delegate
 
+## 12.1.2
+### Patch Changes
+
+
+
+- [#2544](https://github.com/graphql-hive/gateway/pull/2544) [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f) Thanks [@egoodwinx](https://github.com/egoodwinx)! - Create new getCoercedVariableValues to support graphql-js 17
+
 ## 12.1.1
 ### Patch Changes
 
