@@ -1,5 +1,35 @@
 # @graphql-hive/gateway
 
+## 2.13.0
+### Minor Changes
+
+
+
+- [#2543](https://github.com/graphql-hive/gateway/pull/2543) [`f8ad168`](https://github.com/graphql-hive/gateway/commit/f8ad168710bc228758cbeb483281f2e21cb3d709) Thanks [@dotansimha](https://github.com/dotansimha)! - Add a `keyPrefix` cache option, supported by all built-in cache backends (`redis`,
+  `cfw-kv`, `upstash-redis`, `localforage`).
+  
+  When set, every key used for `get`/`set`/`delete` operations is namespaced with this prefix, regardless of the configured backend. Useful for
+  sharing a single cache instance (e.g. Redis) across multiple gateways or environments.
+  
+  ```ts
+  export const gatewayConfig = defineConfig({
+    cache: {
+      type: 'redis',
+      host: 'localhost',
+      port: 6379,
+      keyPrefix: 'my-gateway:',
+    },
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.9
+  - @graphql-hive/plugin-aws-sigv4@2.0.62
+  - @graphql-hive/plugin-opentelemetry@1.4.45
+  - @graphql-mesh/plugin-prometheus@2.1.61
+
 ## 2.12.0
 ### Minor Changes
 
