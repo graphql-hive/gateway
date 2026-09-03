@@ -1,5 +1,14 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.11.9
+### Patch Changes
+
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - ### Expose `cache` instance to unified graph handler
+  
+  The gateway `UnifiedGraphHandlerOpts` now includes an optinal `cache` instance that can be passed to the handler from the gateway.
+
 ## 1.11.8
 ### Patch Changes
 

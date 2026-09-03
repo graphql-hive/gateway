@@ -1,5 +1,30 @@
 # @graphql-hive/router-runtime
 
+## 1.5.0
+### Minor Changes
+
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - ### Support remote cache for `router-runtime`
+  
+  The (remote) `cache` provided for the gateway is now used also to store query plans object created by the Router (Rust) runtime.
+
+### Patch Changes
+
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.44` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.44) (from `^0.0.38`, in `dependencies`)
+  - Added dependency [`@whatwg-node/fetch@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.13) (to `dependencies`)
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - ### Improve cache key calculation
+  
+  The router-runtime package now uses a native hash mechanism, provided by the Rust runtime, instead of using the operationName for the cache key. This ensure a more robust caching.
+- Updated dependencies [[`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351)]:
+  - @graphql-mesh/fusion-runtime@1.11.9
+
 ## 1.4.25
 ### Patch Changes
 

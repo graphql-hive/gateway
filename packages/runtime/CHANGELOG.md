@@ -1,5 +1,11 @@
 # @graphql-hive/gateway-runtime
 
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [[`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351)]:
+  - @graphql-mesh/fusion-runtime@1.11.9
+
 ## 2.10.9
 ### Patch Changes
 
