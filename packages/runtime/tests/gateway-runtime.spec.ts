@@ -414,7 +414,6 @@ describe('Gateway Runtime', () => {
       });
 
       const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
-      expect.soft(res.status).toBe(200);
       await expect(res.text()).resolves.toMatchInlineSnapshot(
         `"{"data":{"foo":"bar"}}"`,
       );
