@@ -3,30 +3,35 @@ import type { KeyValueCache } from '@graphql-mesh/types';
 import { expect, it, vi } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
 
-function createMockCache(): KeyValueCache {
+function createMockCache() {
   const store = new Map<string, unknown>();
-  return {
-    get: vi.fn(async (key: string) => store.get(key)),
-    set: vi.fn(async (key: string, value: unknown) => {
-      store.set(key, value);
-    }),
+  const get = vi.fn(async (key: string) => store.get(key));
+  const set = vi.fn(async (key: string, value: unknown, _options?: unknown) => {
+    store.set(key, value);
+  });
+  const cache = {
+    get,
+    set,
     delete: vi.fn(async (key: string) => store.delete(key)),
     getKeysByPrefix: vi.fn(async (prefix: string) =>
       [...store.keys()].filter((key) => key.startsWith(prefix)),
     ),
-  };
+  } satisfies KeyValueCache;
+  return { cache, get, set };
 }
 
 const QUERY_PLAN_CACHE_KEY_PREFIX = 'hive-gateway:query-plan:';
 
-function getQueryPlanCacheSetCalls(cache: KeyValueCache) {
-  return vi
-    .mocked(cache.set)
-    .mock.calls.filter(([key]) => key.startsWith(QUERY_PLAN_CACHE_KEY_PREFIX));
+function getQueryPlanCacheSetCalls(
+  set: ReturnType<typeof createMockCache>['set'],
+) {
+  return set.mock.calls.filter(([key]) =>
+    key.startsWith(QUERY_PLAN_CACHE_KEY_PREFIX),
+  );
 }
 
 it('caches the computed query plan in the provided cache', async () => {
-  const cache = createMockCache();
+  const { cache, set } = createMockCache();
   await using gw = createGatewayTester({
     unifiedGraphHandler,
     cache,
@@ -53,7 +58,7 @@ it('caches the computed query plan in the provided cache', async () => {
     data: { hello: 'world' },
   });
 
-  const setCalls = getQueryPlanCacheSetCalls(cache);
+  const setCalls = getQueryPlanCacheSetCalls(set);
   expect(setCalls).toHaveLength(1);
   const [key, value, options] = setCalls[0]!;
   expect(key.startsWith(QUERY_PLAN_CACHE_KEY_PREFIX)).toBe(true);
@@ -62,7 +67,7 @@ it('caches the computed query plan in the provided cache', async () => {
 });
 
 it('reuses a query plan cached by another gateway instance through the shared cache', async () => {
-  const cache = createMockCache();
+  const { cache, get, set } = createMockCache();
   const subgraphs = [
     {
       name: 'upstream',
@@ -98,14 +103,14 @@ it('reuses a query plan cached by another gateway instance through the shared ca
   await expect(gwA.execute({ query: '{ hello }' })).resolves.toMatchObject({
     data: { hello: 'world' },
   });
-  expect(getQueryPlanCacheSetCalls(cache)).toHaveLength(1);
-  const [cachedKey] = getQueryPlanCacheSetCalls(cache)[0]!;
+  expect(getQueryPlanCacheSetCalls(set)).toHaveLength(1);
+  const [cachedKey] = getQueryPlanCacheSetCalls(set)[0]!;
 
   await expect(gwB.execute({ query: '{ hello }' })).resolves.toMatchObject({
     data: { hello: 'world' },
   });
 
   // gwB found the plan gwA cached, so it never recomputed/re-cached it.
-  expect(getQueryPlanCacheSetCalls(cache)).toHaveLength(1);
-  expect(cache.get).toHaveBeenCalledWith(cachedKey);
+  expect(getQueryPlanCacheSetCalls(set)).toHaveLength(1);
+  expect(get).toHaveBeenCalledWith(cachedKey);
 });
