@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { QueryPlan } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
@@ -12,6 +11,7 @@ import {
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
+import { crypto, TextEncoder } from '@whatwg-node/fetch';
 import {
   handleMaybePromise,
   isPromise,
@@ -35,8 +35,19 @@ import {
   queryPlanForExecutionRequestContext,
 } from './utils';
 
-function sha256(input: string) {
-  return createHash('sha256').update(input).digest('hex');
+function sha256(str: string) {
+  const textEncoder = new TextEncoder();
+  const utf8 = textEncoder.encode(str);
+  return handleMaybePromise(
+    () => crypto.subtle.digest('SHA-256', utf8),
+    (hashBuffer) => {
+      let hashHex = '';
+      for (const bytes of new Uint8Array(hashBuffer)) {
+        hashHex += bytes.toString(16).padStart(2, '0');
+      }
+      return hashHex;
+    },
+  );
 }
 
 /** Query plans only depend on the supergraph and the operation, so they're safe to keep for a while. */
@@ -96,8 +107,9 @@ export async function unifiedGraphHandler(
   // Scoping the key by the supergraph itself means a schema reload (or a
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
+  const supergraphHash = await sha256(supergraphSdl);
   const remotePlanCacheKeyPrefix = opts.cache
-    ? `hive-gateway:query-plan:${sha256(supergraphSdl)}:`
+    ? `hive-gateway:query-plan:${supergraphHash}:`
     : undefined;
 
   const documentOperationPlanCache = new WeakMap<
