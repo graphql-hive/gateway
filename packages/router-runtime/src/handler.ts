@@ -107,9 +107,8 @@ export async function unifiedGraphHandler(
   // Scoping the key by the supergraph itself means a schema reload (or a
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
-  const supergraphHash = await sha256(supergraphSdl);
   const remotePlanCacheKeyPrefix = opts.cache
-    ? `hive-gateway:query-plan:${supergraphHash}:`
+    ? `hive-gateway:query-plan:${await sha256(supergraphSdl)}:`
     : undefined;
 
   const documentOperationPlanCache = new WeakMap<
