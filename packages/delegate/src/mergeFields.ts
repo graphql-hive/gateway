@@ -70,7 +70,6 @@ export function getUnpathedErrors(object: ExternalObject): Array<GraphQLError> {
   return object[UNPATHED_ERRORS_SYMBOL];
 }
 
-export const EMPTY_ARRAY: any[] = [];
 export const EMPTY_OBJECT = Object.create(null);
 
 export const getActualFieldNodes = memoize1(function (fieldNode: FieldNode) {
@@ -83,6 +82,7 @@ export function mergeFields<TContext>(
   sourceSubschema: Subschema<any, any, any, TContext>,
   context: any,
   info: GraphQLResolveInfo,
+  fieldNodes = info.fieldNodes as FieldNode[],
 ): MaybePromise<any> {
   const variableValues = getCoercedVariableValues(info.variableValues);
   const delegationMaps = mergedTypeInfo.delegationPlanBuilder(
@@ -94,11 +94,9 @@ export function mergeFields<TContext>(
     info.fragments != null && Object.keys(info.fragments).length > 0
       ? info.fragments
       : EMPTY_OBJECT,
-    info.fieldNodes?.length
-      ? info.fieldNodes.length === 1 && info.fieldNodes[0]
-        ? getActualFieldNodes(info.fieldNodes[0])
-        : (info.fieldNodes as FieldNode[])
-      : EMPTY_ARRAY,
+    fieldNodes.length === 1 && fieldNodes[0]
+      ? getActualFieldNodes(fieldNodes[0])
+      : fieldNodes,
     context,
     info,
   );

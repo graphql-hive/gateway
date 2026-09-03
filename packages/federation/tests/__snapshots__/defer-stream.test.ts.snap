@@ -53,6 +53,11 @@ exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
         },
         "path": [],
       },
+    ],
+  },
+  {
+    "hasNext": true,
+    "incremental": [
       {
         "data": {
           "name": "Ada Lovelace",
@@ -113,7 +118,7 @@ exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
     ],
   },
   {
-    "hasNext": false,
+    "hasNext": true,
     "incremental": [
       {
         "data": {
@@ -137,6 +142,11 @@ exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
           0,
         ],
       },
+    ],
+  },
+  {
+    "hasNext": false,
+    "incremental": [
       {
         "data": {
           "name": "Ada Lovelace",
