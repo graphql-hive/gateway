@@ -1,5 +1,28 @@
 # @graphql-hive/gateway-testing
 
+## 9.0.10
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.10
+
+## 9.0.9
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.9
+
+## 9.0.8
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/fusion-composition@^0.11.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/fusion-composition/v/0.11.2) (from `^0.8.46`, in `dependencies`)
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2)]:
+  - @graphql-hive/gateway-runtime@2.10.8
+
 ## 9.0.7
 ### Patch Changes
 

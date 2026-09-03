@@ -26,6 +26,7 @@ import {
   typeFromAST,
   visit,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { ICreateRequest } from './types.js';
 
 export function getDelegatingOperation(
@@ -86,7 +87,8 @@ export function createRequest({
     );
   }
 
-  const newVariables = info?.variableValues ? { ...info.variableValues } : {};
+  const outerVariableValues = getCoercedVariableValues(info?.variableValues);
+  const newVariables = outerVariableValues ? { ...outerVariableValues } : {};
   const variableDefinitions = info?.operation.variableDefinitions
     ? [...info.operation.variableDefinitions]
     : [];
@@ -145,7 +147,7 @@ export function createRequest({
           // It should not conflict with the variable on the gateway request
           // Because the gateway request can have a variable that has nothing to do with
           // this argument
-          info?.variableValues?.[varName] != null;
+          outerVariableValues?.[varName] != null;
         let varName = argName;
         // Try `<argName>`, then `<rootFieldName>_<argName>`, then `_0_<rootFieldName>_<argName>`, etc.
         if (varExists(varName)) {

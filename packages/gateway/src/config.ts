@@ -7,7 +7,11 @@ import type {
 } from '@graphql-hive/gateway-runtime';
 import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { PubSub } from '@graphql-hive/pubsub';
-import type { KeyValueCache } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  KeyValueCacheSetOptions,
+} from '@graphql-mesh/types';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import { useRateLimiting } from './plugins/useRateLimiting';
 import type { ServerConfig } from './servers/types';
@@ -188,6 +192,40 @@ export async function getBuiltinPluginsFromConfig(
   return plugins;
 }
 
+export function wrapCacheWithKeyPrefix(
+  cache: KeyValueCache,
+  keyPrefix: string | undefined,
+): KeyValueCache {
+  if (!keyPrefix) {
+    return cache;
+  }
+
+  return new Proxy(cache, {
+    get(target, prop: keyof KeyValueCache, receiver) {
+      switch (prop) {
+        case 'get':
+          return (key: string) => target.get(keyPrefix + key);
+        case 'set':
+          return (
+            key: string,
+            value: unknown,
+            options?: KeyValueCacheSetOptions,
+          ) => target.set(keyPrefix + key, value, options);
+        case 'delete':
+          return (key: string) => target.delete(keyPrefix + key);
+        case 'getKeysByPrefix':
+          return (prefix: string) =>
+            handleMaybePromise(
+              () => target.getKeysByPrefix(keyPrefix + prefix),
+              (keys) => keys.map((key) => key.slice(keyPrefix.length)),
+            );
+        default:
+          return Reflect.get(target, prop, receiver);
+      }
+    },
+  });
+}
+
 /**
  * This is an internal API and might have breaking changes in the future.
  * So use it with caution.
@@ -201,32 +239,42 @@ export async function getCacheInstanceFromConfig(
   }
 
   if (config.cache && 'type' in config.cache) {
+    const { keyPrefix } = config.cache;
     switch (config.cache.type) {
       case 'redis': {
         const { default: RedisCache } =
           await import('@graphql-mesh/cache-redis');
-        return new RedisCache({
-          ...ctx,
-          ...config.cache,
-          // TODO: use new logger
-          logger: LegacyLogger.from(ctx.log),
-        }) as KeyValueCache;
+        return wrapCacheWithKeyPrefix(
+          new RedisCache({
+            ...ctx,
+            ...config.cache,
+            // TODO: use new logger
+            logger: LegacyLogger.from(ctx.log),
+          }) as KeyValueCache,
+          keyPrefix,
+        );
       }
       case 'cfw-kv': {
         const { default: CloudflareKVCacheStorage } =
           await import('@graphql-mesh/cache-cfw-kv');
-        return new CloudflareKVCacheStorage({
-          ...ctx,
-          ...config.cache,
-        });
+        return wrapCacheWithKeyPrefix(
+          new CloudflareKVCacheStorage({
+            ...ctx,
+            ...config.cache,
+          }),
+          keyPrefix,
+        );
       }
       case 'upstash-redis': {
         const { default: UpstashRedisCache } =
           await import('@graphql-mesh/cache-upstash-redis');
-        return new UpstashRedisCache({
-          ...ctx,
-          ...config.cache,
-        });
+        return wrapCacheWithKeyPrefix(
+          new UpstashRedisCache({
+            ...ctx,
+            ...config.cache,
+          }),
+          keyPrefix,
+        );
       }
     }
     if (config.cache.type !== 'localforage') {
@@ -237,10 +285,13 @@ export async function getCacheInstanceFromConfig(
     }
     const { default: LocalforageCache } =
       await import('@graphql-mesh/cache-localforage');
-    return new LocalforageCache({
-      ...ctx,
-      ...config.cache,
-    });
+    return wrapCacheWithKeyPrefix(
+      new LocalforageCache({
+        ...ctx,
+        ...config.cache,
+      }),
+      keyPrefix,
+    );
   }
   if (config.cache) {
     return config.cache as KeyValueCache;

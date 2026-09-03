@@ -1,5 +1,108 @@
 # @graphql-hive/gateway
 
+## 2.13.1
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.63
+  - @graphql-hive/gateway-runtime@2.10.10
+  - @graphql-hive/plugin-opentelemetry@1.4.46
+  - @graphql-mesh/plugin-prometheus@2.1.62
+
+## 2.13.0
+### Minor Changes
+
+
+
+- [#2543](https://github.com/graphql-hive/gateway/pull/2543) [`f8ad168`](https://github.com/graphql-hive/gateway/commit/f8ad168710bc228758cbeb483281f2e21cb3d709) Thanks [@dotansimha](https://github.com/dotansimha)! - Add a `keyPrefix` cache option, supported by all built-in cache backends (`redis`,
+  `cfw-kv`, `upstash-redis`, `localforage`).
+  
+  When set, every key used for `get`/`set`/`delete` operations is namespaced with this prefix, regardless of the configured backend. Useful for
+  sharing a single cache instance (e.g. Redis) across multiple gateways or environments.
+  
+  ```ts
+  export const gatewayConfig = defineConfig({
+    cache: {
+      type: 'redis',
+      host: 'localhost',
+      port: 6379,
+      keyPrefix: 'my-gateway:',
+    },
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.9
+  - @graphql-hive/plugin-aws-sigv4@2.0.62
+  - @graphql-hive/plugin-opentelemetry@1.4.45
+  - @graphql-mesh/plugin-prometheus@2.1.61
+
+## 2.12.0
+### Minor Changes
+
+
+
+- [#2548](https://github.com/graphql-hive/gateway/pull/2548) [`98403d3`](https://github.com/graphql-hive/gateway/commit/98403d3cb90fa9e49f84178d2bce73477242d314) Thanks [@studioego](https://github.com/studioego)! - Support the `HOST` environment variable for the `--host` CLI option
+  
+  The `--host` option can now be configured through the `HOST` environment variable, matching the existing behaviour of `--port` / `PORT` and the other global CLI options.
+  
+  ```sh
+  HOST=127.0.0.1 PORT=4000 hive-gateway supergraph
+  ```
+
+### Patch Changes
+
+
+
+- [#2537](https://github.com/graphql-hive/gateway/pull/2537) [`e5fa81f`](https://github.com/graphql-hive/gateway/commit/e5fa81f6e1fab2c9b296ae35903ac780abfc1470) Thanks [@jdolle](https://github.com/jdolle)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/render-laboratory@^0.1.16` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.16) (from `^0.1.14`, in `dependencies`)
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/render-laboratory@^0.1.16` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.16) (from `^0.1.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.108.1) (from `^0.105.35`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.108.1) (from `^0.105.36`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.108.1) (from `^0.106.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.4.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.4.1) (from `^0.1.31`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.16) (from `^0.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/hmac-upstream-signature@^2.0.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/hmac-upstream-signature/v/2.0.14) (from `workspace:^`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.108.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.108.1) (from `^0.105.37`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.5.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.5.1) (from `^0.2.35`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.107.1) (from `^0.104.36`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/string-interpolation@^0.5.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/string-interpolation/v/0.5.18) (from `^0.5.17`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.107.1) (from `^0.105.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.107.1) (from `^0.104.38`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/api-logs@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-zone@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-jaeger@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-jaeger/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-zipkin@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-b3@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-jaeger@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-metrics@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+
+
+- [#2537](https://github.com/graphql-hive/gateway/pull/2537) [`e5fa81f`](https://github.com/graphql-hive/gateway/commit/e5fa81f6e1fab2c9b296ae35903ac780abfc1470) Thanks [@jdolle](https://github.com/jdolle)! - Upgrade hive laboratory to support defaultCollections argument
+
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2)]:
+  - @graphql-hive/gateway-runtime@2.10.8
+  - @graphql-hive/plugin-opentelemetry@1.4.44
+  - @graphql-mesh/hmac-upstream-signature@2.0.15
+  - @graphql-mesh/plugin-jwt-auth@2.0.14
+  - @graphql-mesh/plugin-prometheus@2.1.60
+  - @graphql-mesh/transport-http@1.1.5
+  - @graphql-mesh/transport-http-callback@1.0.25
+  - @graphql-mesh/transport-ws@2.0.25
+  - @graphql-hive/plugin-aws-sigv4@2.0.61
+
 ## 2.11.2
 ### Patch Changes
 

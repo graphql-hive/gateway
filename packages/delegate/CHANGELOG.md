@@ -1,5 +1,21 @@
 # @graphql-tools/delegate
 
+## 12.1.3
+### Patch Changes
+
+
+
+- [#2555](https://github.com/graphql-hive/gateway/pull/2555) [`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Flush deferred merged fields without blocking the initial payload
+  
+  Deferred fields on merged entity types are now delegated when their deferred resolvers run instead of being included in the initial delegation plan. This allows the initial payload to be delivered before slower merged subgraph fields resolve.
+
+## 12.1.2
+### Patch Changes
+
+
+
+- [#2544](https://github.com/graphql-hive/gateway/pull/2544) [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f) Thanks [@egoodwinx](https://github.com/egoodwinx)! - Create new getCoercedVariableValues to support graphql-js 17
+
 ## 12.1.1
 ### Patch Changes
 

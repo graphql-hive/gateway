@@ -24,8 +24,12 @@ updates:
         exclude-patterns:
           - 'ScribeMD/docker-cache' # dont update docker-cache because we use a custom fix, see test.yml and memtest.yml
   - package-ecosystem: 'npm' # See documentation for possible values
-    # only scan packages because exclude-paths does not reliably ignore generated examples
-    directory: '/packages' # Location of package manifests
+    directory: '/'
+    # the examples are auto-generated from the e2es, whose packages we do auto-update
+    # TODO: whatever we do, dependabot will keep reporting vulnerabilities in the examples
+    #       `exclude-paths` doesnt work, neither does changing the `directory`
+    exclude-paths:
+      - 'examples/**'
     schedule:
       interval: 'daily'
     cooldown:

@@ -1,5 +1,43 @@
 # @graphql-hive/gateway-runtime
 
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [[`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351)]:
+  - @graphql-mesh/fusion-runtime@1.11.9
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies [[`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520)]:
+  - @graphql-tools/federation@4.4.14
+  - @graphql-tools/delegate@12.1.3
+  - @graphql-tools/stitch@10.2.4
+  - @graphql-mesh/fusion-runtime@1.11.8
+  - @graphql-tools/batch-delegate@10.0.31
+  - @graphql-tools/wrap@11.1.23
+
+## 2.10.8
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.16) (from `^0.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.107.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.107.2) (from `^0.104.42`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.107.1) (from `^0.105.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.107.1) (from `^0.104.38`, in `dependencies`)
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f)]:
+  - @graphql-mesh/fusion-runtime@1.11.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.15
+  - @graphql-mesh/transport-common@1.0.21
+  - @graphql-tools/delegate@12.1.2
+  - @graphql-tools/batch-delegate@10.0.30
+  - @graphql-tools/federation@4.4.13
+  - @graphql-tools/stitch@10.2.3
+  - @graphql-tools/wrap@11.1.22
+
 ## 2.10.7
 ### Patch Changes
 

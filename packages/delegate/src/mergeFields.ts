@@ -21,6 +21,7 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { isPrototypePollutingKey } from './isPrototypePollutingKey.js';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
 import { Subschema } from './Subschema.js';
@@ -69,7 +70,6 @@ export function getUnpathedErrors(object: ExternalObject): Array<GraphQLError> {
   return object[UNPATHED_ERRORS_SYMBOL];
 }
 
-export const EMPTY_ARRAY: any[] = [];
 export const EMPTY_OBJECT = Object.create(null);
 
 export const getActualFieldNodes = memoize1(function (fieldNode: FieldNode) {
@@ -82,21 +82,21 @@ export function mergeFields<TContext>(
   sourceSubschema: Subschema<any, any, any, TContext>,
   context: any,
   info: GraphQLResolveInfo,
+  fieldNodes = info.fieldNodes as FieldNode[],
 ): MaybePromise<any> {
+  const variableValues = getCoercedVariableValues(info.variableValues);
   const delegationMaps = mergedTypeInfo.delegationPlanBuilder(
     info.schema,
     sourceSubschema,
-    info.variableValues != null && Object.keys(info.variableValues).length > 0
-      ? info.variableValues
+    variableValues != null && Object.keys(variableValues).length > 0
+      ? variableValues
       : EMPTY_OBJECT,
     info.fragments != null && Object.keys(info.fragments).length > 0
       ? info.fragments
       : EMPTY_OBJECT,
-    info.fieldNodes?.length
-      ? info.fieldNodes.length === 1 && info.fieldNodes[0]
-        ? getActualFieldNodes(info.fieldNodes[0])
-        : (info.fieldNodes as FieldNode[])
-      : EMPTY_ARRAY,
+    fieldNodes.length === 1 && fieldNodes[0]
+      ? getActualFieldNodes(fieldNodes[0])
+      : fieldNodes,
     context,
     info,
   );
@@ -143,7 +143,7 @@ export function handleResolverResult(
     const { fields } = collectFields(
       schema,
       info.fragments,
-      info.variableValues,
+      getCoercedVariableValues(info.variableValues) ?? EMPTY_OBJECT,
       type,
       selectionSet,
     );

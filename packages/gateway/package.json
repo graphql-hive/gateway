@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway",
-  "version": "2.11.2",
+  "version": "2.13.1",
   "type": "module",
   "repository": {
     "type": "git",
@@ -108,7 +108,7 @@
     "@graphql-mesh/cache-redis": "^0.108.1",
     "@graphql-mesh/cache-upstash-redis": "^0.4.1",
     "@graphql-mesh/cross-helpers": "^0.4.16",
-    "@graphql-mesh/hmac-upstream-signature": "^2.0.14",
+    "@graphql-mesh/hmac-upstream-signature": "^2.0.15",
     "@graphql-mesh/plugin-http-cache": "^0.108.1",
     "@graphql-mesh/plugin-jit": "^0.5.1",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
