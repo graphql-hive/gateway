@@ -150,4 +150,86 @@ describe('stitchSchemas does not mutate the resolvers it is given', () => {
       });
     }
   });
+
+  // The mutation is not only a leak: `wrappedResolve` closes over its own
+  // call's `stitchingInfo`, and when the wrappers nest the innermost (oldest)
+  // one runs first. So a field reusing the caller's config hydrates through a
+  // superseded call's stitching plan and executors, and once that hydration
+  // fills the selection the newest wrapper finds nothing missing to resolve.
+  it('resolves through the current subschemas after the resolvers are reused', async () => {
+    const subschemaForGeneration = (generation: string) => ({
+      schema: makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Person {
+            id: ID!
+            name: String
+          }
+          type Account {
+            id: ID!
+            ownerId: ID!
+          }
+          type Query {
+            personById(id: ID!): Person
+            account(id: ID!): Account
+          }
+        `,
+        resolvers: {
+          Query: {
+            // the generation is baked into this subschema's data, so the answer
+            // names whichever generation actually served the delegation
+            personById: (_: unknown, { id }: { id: string }) => ({
+              id,
+              name: `person-${id}-from-${generation}`,
+            }),
+            account: (_: unknown, { id }: { id: string }) => ({
+              id,
+              ownerId: '7',
+            }),
+          },
+        },
+      }),
+      merge: { Person: personMerge },
+    });
+
+    // the long-lived object: built once, handed to every call
+    const additionalResolvers = {
+      Account: {
+        owner: {
+          selectionSet: '{ ownerId }',
+          // returns only the merge key, so `name` must be delegated
+          resolve: (account: { ownerId: string }) => ({ id: account.ownerId }),
+        },
+      },
+    };
+
+    const ownerName = async (generation: string) => {
+      const schema = stitchSchemas({
+        subschemas: [subschemaForGeneration(generation)],
+        typeDefs: /* GraphQL */ `
+          extend type Account {
+            owner: Person
+          }
+        `,
+        resolvers: [additionalResolvers],
+      });
+      const result = await graphql({
+        schema,
+        source: /* GraphQL */ `
+          {
+            account(id: "1") {
+              owner {
+                name
+              }
+            }
+          }
+        `,
+      });
+      expect(result.errors).toBeUndefined();
+      return (result.data as any).account.owner.name;
+    };
+
+    expect(await ownerName('generation-1')).toBe('person-7-from-generation-1');
+    expect(await ownerName('generation-2')).toBe('person-7-from-generation-2');
+    expect(await ownerName('generation-3')).toBe('person-7-from-generation-3');
+  });
 });
