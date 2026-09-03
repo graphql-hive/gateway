@@ -103,7 +103,7 @@ export async function unifiedGraphHandler(
   const documentOperationPlanCache = new WeakMap<
     DocumentNode,
     Map<string | null, MaybePromise<QueryPlan>>
-    >();
+  >();
 
   function planDocument(executionRequest: ExecutionRequest) {
     let operationCache = documentOperationPlanCache.get(
@@ -136,7 +136,6 @@ export async function unifiedGraphHandler(
       operationCache = new Map<string, MaybePromise<QueryPlan>>();
       documentOperationPlanCache.set(executionRequest.document, operationCache);
     }
-
 
     function computePlan() {
       return queryPlanner.planAsync(

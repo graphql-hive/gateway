@@ -17,7 +17,7 @@ function createMockCache(): KeyValueCache {
   };
 }
 
-const QUERY_PLAN_CACHE_KEY_PREFIX = "hive-gateway:query-plan:";
+const QUERY_PLAN_CACHE_KEY_PREFIX = 'hive-gateway:query-plan:';
 
 function getQueryPlanCacheSetCalls(cache: KeyValueCache) {
   return vi
