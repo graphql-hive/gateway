@@ -301,11 +301,16 @@ describe('Gateway Runtime', () => {
 
   describe('Cache', () => {
     function createCache(cachedSupergraph?: string) {
+      const store = new Map<string, unknown>();
+      if (cachedSupergraph != null) {
+        store.set('hive-gateway:supergraph', cachedSupergraph);
+      }
       return {
-        get: vi.fn((_key) => {
-          return fakePromise(cachedSupergraph);
+        get: vi.fn((key: string) => {
+          return fakePromise(store.get(key));
         }),
-        set: vi.fn((_key, _value, _options) => {
+        set: vi.fn((key: string, value: unknown) => {
+          store.set(key, value);
           return fakePromise();
         }),
         delete() {
