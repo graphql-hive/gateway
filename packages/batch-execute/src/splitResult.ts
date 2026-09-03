@@ -74,6 +74,8 @@ export function splitResult(
     }
   }
 
+  const isRootDataNull = data === null;
+
   // A batched response can omit some sub-requests entirely: if the merged result
   // carries neither a data key nor a path-scoped error for an index, that slot is
   // never assigned and stays a hole. A hole at the final slot makes the array fail
@@ -81,9 +83,17 @@ export function splitResult(
   // even though `Array.isArray` is true — so `getBatchingExecutor`'s DataLoader
   // throws "did not return a Promise of an Array". Densify to `numResults` with an
   // empty result so every caller gets a well-formed `ExecutionResult`.
+  //
+  // A non-nullable field returning `null` propagates to the root `data`,
+  // as per GraphQL's spec: https://spec.graphql.org/October2021/#sec-Handling-Field-Errors.
+  // Batched sub-requests share one merged document so `null` propagates
+  // to every result and not just the one whose fields actually failed.
   for (let i = 0; i < numResults; i++) {
-    if (splitResults[i] == null) {
-      splitResults[i] = { data: {} };
+    const splitResult = splitResults[i];
+    if (splitResult == null) {
+      splitResults[i] = { data: isRootDataNull ? null : {} };
+    } else if (isRootDataNull && splitResult.data === undefined) {
+      splitResult.data = null;
     }
   }
 
