@@ -309,7 +309,7 @@ describe('Gateway Runtime', () => {
         get: vi.fn((key: string) => {
           return fakePromise(store.get(key));
         }),
-        set: vi.fn((key: string, value: unknown) => {
+        set: vi.fn((key: string, value: unknown, _options?: unknown) => {
           store.set(key, value);
           return fakePromise();
         }),
