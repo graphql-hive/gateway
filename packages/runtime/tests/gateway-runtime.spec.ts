@@ -395,6 +395,7 @@ describe('Gateway Runtime', () => {
 
       await using gw = createGatewayRuntime({
         logging: isDebug(),
+        maskedErrors: false,
         cache,
         supergraph: () => {
           throw new Error('Not using cache!');
@@ -408,12 +409,10 @@ describe('Gateway Runtime', () => {
       });
 
       const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
-      expect(res.ok).toBeTruthy();
-      expect(await res.json()).toEqual({
-        data: {
-          foo: 'bar',
-        },
-      });
+      expect.soft(res.status).toBe(200);
+      await expect(res.text()).resolves.toMatchInlineSnapshot(
+        `"{"data":{"foo":"bar"}}"`,
+      );
     });
   });
 
