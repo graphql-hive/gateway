@@ -9,6 +9,7 @@ import {
   MergedFieldConfig,
   MergedTypeConfig,
   OBJECT_SUBSCHEMA_SYMBOL,
+  removePrototypePollutingKeys,
   SubschemaConfig,
   subtractSelectionSets,
   Transform,
@@ -2472,7 +2473,7 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     } else if (result instanceof Error) {
       errors.push(result);
     } else if (result != null) {
-      datas.push(result);
+      datas.push(removePrototypePollutingKeys(result));
     }
   }
   if (datas.length) {

@@ -646,4 +646,200 @@ describe('Shared Root Fields', () => {
       ],
     });
   });
+
+  it('Aliased shared root fields named after object built-ins', async () => {
+    const subgraphA = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Query {
+          shared: Shared @shareable
+        }
+
+        type Shared @key(fields: "id") {
+          id: ID!
+          fieldA: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          shared: () => ({ id: '1', fieldA: 'from subgraph A' }),
+        },
+      },
+    });
+
+    const subgraphB = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Query {
+          shared: Shared @shareable
+        }
+
+        type Shared @key(fields: "id") {
+          id: ID!
+          fieldB: Child1
+        }
+
+        type Child1 {
+          child: Child2
+        }
+
+        type Child2 {
+          value: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          shared: () => ({
+            id: '1',
+            fieldB: { child: { value: 'from subgraph B' } },
+          }),
+        },
+      },
+    });
+
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { a: subgraphA, b: subgraphB },
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        {
+          shared {
+            fieldA
+            constructor: fieldB {
+              __proto__: child {
+                call: value
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    // the aliased dangerous keys are dropped, the rest of the response is intact
+    expect(result).toEqual({
+      data: {
+        shared: {
+          fieldA: 'from subgraph A',
+          constructor: null,
+        },
+      },
+    });
+    expect(({} as any).call).toBeUndefined();
+    expect(Object.prototype).not.toHaveProperty('call');
+    expect(typeof Function.prototype.call).toBe('function');
+    expect(() => (() => 'still works').call(null)).not.toThrow();
+  });
+
+  it('Aliased entity fields named after object built-ins', async () => {
+    const subgraphA = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type Query {
+          user: User
+        }
+
+        type User @key(fields: "id") {
+          id: ID!
+          profile: Profile @shareable
+        }
+
+        type Profile @shareable {
+          name: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          user: () => ({ id: '1', profile: { name: 'from subgraph A' } }),
+        },
+      },
+    });
+
+    const subgraphB = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.3"
+            import: ["@key", "@shareable"]
+          )
+
+        type User @key(fields: "id") {
+          id: ID!
+          profile: Profile @shareable
+        }
+
+        type Profile @shareable {
+          deep: Deep
+        }
+
+        type Deep {
+          inner: Inner
+        }
+
+        type Inner {
+          value: String
+        }
+      `),
+      resolvers: {
+        User: {
+          __resolveReference: (ref: { id: string }) => ({
+            id: ref.id,
+            profile: { deep: { inner: { value: 'from subgraph B' } } },
+          }),
+        },
+      },
+    });
+
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: { a: subgraphA, b: subgraphB },
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        {
+          user {
+            profile {
+              name
+              constructor: deep {
+                __proto__: inner {
+                  call: value
+                }
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        user: {
+          profile: {
+            name: 'from subgraph A',
+            constructor: null,
+          },
+        },
+      },
+    });
+    expect(({} as any).call).toBeUndefined();
+    expect(Object.prototype).not.toHaveProperty('call');
+    expect(typeof Function.prototype.call).toBe('function');
+  });
 });
