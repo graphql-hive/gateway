@@ -1,5 +1,20 @@
 # @graphql-tools/federation
 
+## 4.4.15
+### Patch Changes
+
+
+
+- [#2600](https://github.com/graphql-hive/gateway/pull/2600) [`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop prototype polluting keys from subgraph results before merging them
+  
+  Response keys named `__proto__`, `constructor` or `prototype`, which a client can produce with a field alias, were only filtered at the top level of a merged result. Nested occurrences were passed to `mergeDeep`, which walks the prototype chain and could end up writing to `Object.prototype` or `Function.prototype`.
+  
+  Such keys are now removed at every depth of a subgraph result before it takes part in a merge, and `projectDataSelectionSet` no longer treats an inherited property as an already projected field.
+- Updated dependencies [[`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7)]:
+  - @graphql-tools/delegate@12.1.4
+  - @graphql-tools/stitch@10.2.5
+  - @graphql-tools/wrap@11.1.24
+
 ## 4.4.14
 ### Patch Changes
 

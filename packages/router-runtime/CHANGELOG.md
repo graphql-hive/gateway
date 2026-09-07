@@ -1,5 +1,20 @@
 # @graphql-hive/router-runtime
 
+## 1.5.1
+### Patch Changes
+
+
+
+- [#2599](https://github.com/graphql-hive/gateway/pull/2599) [`4959645`](https://github.com/graphql-hive/gateway/commit/4959645239276d8827957a27fcfe266cfc54b9c7) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix prototype pollution when projecting a field aliased to `__proto__`
+  
+  Response keys come from client-controlled GraphQL aliases. Projecting a selection set into a plain object made `result['__proto__']` resolve to `Object.prototype`, and the merge branch then assigned attacker-controlled fields onto it - polluting the global prototype for the lifetime of the gateway process.
+  
+  Projected objects are now created with a `null` prototype, so `__proto__` is treated as an ordinary response key.
+- Updated dependencies [[`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7)]:
+  - @graphql-tools/federation@4.4.15
+  - @graphql-tools/delegate@12.1.4
+  - @graphql-mesh/fusion-runtime@1.11.10
+
 ## 1.5.0
 ### Minor Changes
 
