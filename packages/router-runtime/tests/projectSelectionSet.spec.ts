@@ -44,7 +44,7 @@ it('does not pollute Object.prototype through a __proto__ alias', async () => {
       {
         field1 {
           __proto__: field2 {
-            poc: echo(input: "pwned")
+            poc: echo(input: "go")
           }
         }
       }
