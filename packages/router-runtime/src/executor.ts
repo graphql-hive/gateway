@@ -1546,7 +1546,9 @@ function projectSelectionSet(
       return null;
     }
   }
-  const result: Record<string, any> = {};
+  // null proto because response keys come from client-controlled aliases, `__proto__` would
+  // otherwise hit Object.prototype on read and merge attacker data into it
+  const result: Record<string, any> = Object.create(null);
   selectionLoop: for (const selection of selectionSet.selections) {
     if (selection.directives?.length) {
       for (const directiveNode of selection.directives) {
