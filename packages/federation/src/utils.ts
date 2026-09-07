@@ -53,7 +53,10 @@ export function projectDataSelectionSet(
           data[responseKey],
           selection.selectionSet,
         );
-        if (projectedData[fieldName]) {
+        if (
+          Object.prototype.hasOwnProperty.call(projectedData, fieldName) &&
+          projectedData[fieldName]
+        ) {
           if (
             projectedKeyData != null &&
             !(projectedKeyData instanceof Error)
