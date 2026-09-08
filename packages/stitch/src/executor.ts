@@ -65,28 +65,29 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
         fieldNode!,
         executorRequest.variables,
       );
+      const info = {
+        schema: stitchedSchema,
+        fieldName,
+        fieldNodes,
+        operation,
+        fragments,
+        parentType: rootType,
+        returnType: fieldInstance.type,
+        variableValues: executorRequest.variables,
+        rootValue: executorRequest.rootValue,
+        path: { typename: undefined, key: responseKey, prev: undefined },
+        getAbortSignal: () => executorRequest.signal,
+        getAsyncHelpers: () => ({
+          promiseAll: Promise.all.bind(Promise),
+          track: () => undefined,
+        }),
+      };
       let result = await delegateToSchema({
         schema: subschemaForField || stitchedSchema,
         rootValue: executorRequest.rootValue,
         args,
         context: executorRequest.context,
-        info: {
-          schema: stitchedSchema,
-          fieldName,
-          fieldNodes,
-          operation,
-          fragments,
-          parentType: rootType,
-          returnType: fieldInstance.type,
-          variableValues: executorRequest.variables,
-          rootValue: executorRequest.rootValue,
-          path: { typename: undefined, key: responseKey, prev: undefined },
-          getAbortSignal: () => executorRequest.signal,
-          getAsyncHelpers: () => ({
-            promiseAll: (values) => Promise.all(values),
-            track: () => undefined,
-          }),
-        },
+        info,
       });
       if (Array.isArray(result)) {
         result = await Promise.all(result);

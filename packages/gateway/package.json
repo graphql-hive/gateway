@@ -149,7 +149,7 @@
   "devDependencies": {
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/transport-soap": "^0.13.1",
-    "@graphql-tools/executor": "^1.4.13",
+    "@graphql-tools/executor": "^2.0.1",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",

@@ -13,5 +13,6 @@ export * from './leftOver.js';
 export * from './symbols.js';
 export * from './getTypeInfo.js';
 export * from './getCoercedVariableValues.js';
+export * from './getGraphQLResolveInfo.js';
 export * from './isPrototypePollutingKey.js';
 export * from './handleOverrideByDelegation.js';
