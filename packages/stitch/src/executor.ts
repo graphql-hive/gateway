@@ -12,7 +12,7 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
-import { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 
 /**
  * Creates an executor that uses the schema created by stitching together multiple subschemas.
@@ -81,7 +81,12 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
           variableValues: executorRequest.variables,
           rootValue: executorRequest.rootValue,
           path: { typename: undefined, key: responseKey, prev: undefined },
-        } as unknown as GraphQLResolveInfo,
+          getAbortSignal: () => executorRequest.signal,
+          getAsyncHelpers: () => ({
+            promiseAll: (values) => Promise.all(values),
+            track: () => undefined,
+          }),
+        },
       });
       if (Array.isArray(result)) {
         result = await Promise.all(result);
