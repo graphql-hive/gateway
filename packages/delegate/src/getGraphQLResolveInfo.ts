@@ -12,10 +12,7 @@ const asyncHelpers: GraphQLResolveInfoHelpers = {
 export function getGraphQLResolveInfo(
   info: GraphQLResolveInfo | undefined,
 ): ExecutorGraphQLResolveInfo | undefined {
-  if (
-    info == null ||
-    ('getAbortSignal' in info && 'getAsyncHelpers' in info)
-  ) {
+  if (info == null || ('getAbortSignal' in info && 'getAsyncHelpers' in info)) {
     return info as ExecutorGraphQLResolveInfo | undefined;
   }
   return Object.assign(info, {

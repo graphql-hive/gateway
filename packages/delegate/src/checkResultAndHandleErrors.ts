@@ -1,7 +1,4 @@
-import {
-  ExecutionResult,
-  relocatedError,
-} from '@graphql-tools/utils';
+import { ExecutionResult, relocatedError } from '@graphql-tools/utils';
 import {
   GraphQLError,
   GraphQLOutputType,
