@@ -2806,7 +2806,7 @@ __metadata:
   resolution: "@e2e/config-syntax-error@workspace:e2e/config-syntax-error"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.8.2"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     graphql: "npm:^16.12.0"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -4652,7 +4652,7 @@ __metadata:
     "@graphql-tools/executor-http": "workspace:^"
     "@graphql-tools/federation": "workspace:^"
     "@graphql-tools/stitch": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-tools/wrap": "workspace:^"
     "@graphql-yoga/plugin-apollo-usage-report": "npm:^0.16.0"
     "@graphql-yoga/plugin-csrf-prevention": "npm:^3.16.2"
@@ -4691,7 +4691,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.13.3"
     "@graphql-mesh/fusion-composition": "npm:^0.11.2"
     "@graphql-tools/executor-http": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.21.1"
     pkgroll: "npm:2.27.1"
@@ -4742,7 +4742,7 @@ __metadata:
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/graphql-file-loader": "npm:^8.1.6"
     "@graphql-tools/load": "npm:^8.1.6"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-yoga/render-graphiql": "npm:^5.16.2"
     "@opentelemetry/api": "npm:^1.9.1"
     "@opentelemetry/api-logs": "npm:^0.221.0"
@@ -4863,7 +4863,7 @@ __metadata:
     "@graphql-hive/gateway": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/types": "npm:^0.107.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@nestjs/common": "npm:11.1.27"
     "@nestjs/core": "npm:11.1.27"
     "@nestjs/graphql": "npm:13.4.2"
@@ -4913,7 +4913,7 @@ __metadata:
     "@graphql-hive/gateway-runtime": "workspace:*"
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.12.0"
@@ -4959,7 +4959,7 @@ __metadata:
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@opentelemetry/api": "npm:^1.9.1"
     "@opentelemetry/api-logs": "npm:^0.221.0"
     "@opentelemetry/auto-instrumentations-node": "npm:^0.79.0"
@@ -5046,7 +5046,7 @@ __metadata:
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/federation": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.9.0"
@@ -5294,7 +5294,7 @@ __metadata:
     "@graphql-tools/merge": "npm:^9.1.5"
     "@graphql-tools/stitch": "workspace:^"
     "@graphql-tools/stitching-directives": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -5317,7 +5317,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
     "@graphql-tools/executor-common": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.21.1"
@@ -5430,7 +5430,7 @@ __metadata:
     "@graphql-mesh/cross-helpers": "npm:^0.4.16"
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-yoga/plugin-prometheus": "npm:^6.11.3"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.21.1"
@@ -5523,7 +5523,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.107.1"
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/executor-common": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
@@ -5543,7 +5543,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
     "@graphql-tools/executor-common": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -5565,7 +5565,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
     "@graphql-tools/executor-http": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
@@ -5674,7 +5674,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.107.1"
     "@graphql-mesh/utils": "npm:^0.107.1"
     "@graphql-tools/executor-graphql-ws": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@types/ws": "npm:^8"
     graphql: "npm:^16.12.0"
     graphql-ws: "npm:^6.0.6"
@@ -5805,7 +5805,7 @@ __metadata:
   dependencies:
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/schema": "npm:^10.0.29"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     dataloader: "npm:^2.2.3"
     graphql: "npm:^16.12.0"
@@ -5820,7 +5820,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-tools/batch-execute@workspace:packages/batch-execute"
   dependencies:
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     dataloader: "npm:^2.2.3"
     graphql: "npm:^16.12.0"
@@ -5868,7 +5868,7 @@ __metadata:
     "@graphql-tools/batch-execute": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.13"
     "@graphql-tools/schema": "npm:^10.0.29"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@types/lodash": "npm:4.17.24"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -5898,7 +5898,7 @@ __metadata:
   resolution: "@graphql-tools/executor-common@workspace:packages/executors/common"
   dependencies:
     "@envelop/core": "npm:^5.4.0"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
   peerDependencies:
@@ -5911,7 +5911,7 @@ __metadata:
   resolution: "@graphql-tools/executor-graphql-ws@workspace:packages/executors/graphql-ws"
   dependencies:
     "@graphql-tools/executor-common": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@types/ws": "npm:^8.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     graphql: "npm:^16.12.0"
@@ -5932,7 +5932,7 @@ __metadata:
     "@apollo/server": "npm:^5.4.0"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-tools/executor-common": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@types/extract-files": "npm:13.0.2"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -6027,7 +6027,7 @@ __metadata:
     "@graphql-tools/merge": "npm:^9.1.5"
     "@graphql-tools/schema": "npm:^10.0.29"
     "@graphql-tools/stitch": "workspace:^"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-tools/wrap": "workspace:^"
     "@graphql-yoga/plugin-defer-stream": "npm:^3.20.0"
     "@graphql-yoga/typed-event-target": "npm:^3.0.2"
@@ -6309,7 +6309,7 @@ __metadata:
     "@graphql-tools/merge": "npm:^9.1.5"
     "@graphql-tools/mock": "npm:^9.1.3"
     "@graphql-tools/schema": "npm:^10.0.29"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     array-shuffle: "npm:4.1.0"
@@ -6329,7 +6329,7 @@ __metadata:
   dependencies:
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/schema": "npm:^10.0.29"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
@@ -6430,6 +6430,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/utils@npm:^12.0.1":
+  version: 12.0.1
+  resolution: "@graphql-tools/utils@npm:12.0.1"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.1.1"
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
+    cross-inspect: "npm:1.0.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/46a8878618090524241fd434c5e08d5f2885c7c8d8ec762b3828eff064f74fd446d03c1379d1bce80039e7d4f730fa9a3cfd6e005d3c70b852c712cdb6139f7a
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/utils@npm:^8.5.2":
   version: 8.13.1
   resolution: "@graphql-tools/utils@npm:8.13.1"
@@ -6448,7 +6462,7 @@ __metadata:
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/mock": "npm:^9.1.3"
     "@graphql-tools/schema": "npm:^10.0.29"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
@@ -7314,7 +7328,7 @@ __metadata:
   dependencies:
     "@graphql-hive/pubsub": "workspace:*"
     "@graphql-mesh/types": "npm:^0.107.1"
-    "@graphql-tools/utils": "npm:^11.0.0"
+    "@graphql-tools/utils": "npm:^12.0.1"
     "@types/node": "npm:^25.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
