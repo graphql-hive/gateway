@@ -1,5 +1,33 @@
 # @graphql-hive/gateway
 
+## 2.14.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-hive/gateway-runtime@2.11.0
+  - @graphql-hive/plugin-opentelemetry@1.5.0
+  - @graphql-mesh/hmac-upstream-signature@2.1.0
+  - @graphql-mesh/plugin-prometheus@2.2.0
+  - @graphql-mesh/transport-http@1.2.0
+  - @graphql-mesh/transport-http-callback@1.1.0
+  - @graphql-mesh/transport-ws@2.1.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.65
+
 ## 2.13.2
 ### Patch Changes
 
