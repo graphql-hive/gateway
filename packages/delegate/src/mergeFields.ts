@@ -21,7 +21,10 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
-import { getCoercedVariableValues } from './getCoercedVariableValues.js';
+import {
+  getCoercedVariableValues,
+  getVariableValues,
+} from './getCoercedVariableValues.js';
 import {
   isPrototypePollutingKey,
   removePrototypePollutingKeys,
@@ -146,7 +149,7 @@ export function handleResolverResult(
     const { fields } = collectFields(
       schema,
       info.fragments,
-      getCoercedVariableValues(info.variableValues) ?? EMPTY_OBJECT,
+      getVariableValues(info.variableValues),
       type,
       selectionSet,
     );

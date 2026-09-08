@@ -1,4 +1,5 @@
 import {
+  getVariableValues,
   MergedFieldConfig,
   MergedTypeConfig,
   SubschemaConfig,
@@ -43,6 +44,7 @@ export function isolateComputedFieldsTransformer(
   const baseSchemaTypes: Record<string, MergedTypeConfig> = Object.create(null);
   const isolatedSchemaTypes: Record<string, ComputedTypeConfig> =
     Object.create(null);
+  const variableValues = getVariableValues(undefined);
 
   for (const typeName in subschemaConfig.merge) {
     const mergedTypeConfig = subschemaConfig.merge[typeName]!;
@@ -90,7 +92,7 @@ export function isolateComputedFieldsTransformer(
             const keyFields = collectFields(
               subschemaConfig.schema,
               {},
-              {},
+              variableValues,
               objectType,
               parsedSelectionSet,
             );
@@ -105,7 +107,7 @@ export function isolateComputedFieldsTransformer(
               const keyFields = collectFields(
                 subschemaConfig.schema,
                 {},
-                {},
+                variableValues,
                 objectType,
                 parsedSelectionSet,
               );
@@ -178,7 +180,7 @@ export function isolateComputedFieldsTransformer(
                 const keyFields = collectFields(
                   subschemaConfig.schema,
                   {},
-                  {},
+                  variableValues,
                   type,
                   parsedSelectionSet,
                 );
@@ -193,7 +195,7 @@ export function isolateComputedFieldsTransformer(
                     const keyFields = collectFields(
                       subschemaConfig.schema,
                       {},
-                      {},
+                      variableValues,
                       type,
                       parsedSelectionSet,
                     );

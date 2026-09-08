@@ -1,5 +1,6 @@
 import {
   extractUnavailableFields,
+  getVariableValues,
   handleOverrideByDelegation,
   StitchingInfo,
   Subschema,
@@ -36,10 +37,11 @@ export function getFieldsNotInSubschema(
   info: GraphQLResolveInfo | undefined,
 ): Array<FieldNode> {
   const sourceSchema = subschema.transformedSchema;
+  const normalizedVariableValues = getVariableValues(variableValues);
   let { fields: subFieldNodesByResponseKey } = collectSubFields(
     schema,
     fragments,
-    variableValues,
+    normalizedVariableValues,
     gatewayType,
     fieldNodes,
   );
@@ -62,7 +64,7 @@ export function getFieldsNotInSubschema(
       const { fields: subFieldNodesOfPossibleType } = collectSubFields(
         schema,
         fragments,
-        variableValues,
+        normalizedVariableValues,
         possibleType,
         fieldNodes,
       );

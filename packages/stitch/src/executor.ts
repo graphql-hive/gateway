@@ -1,5 +1,6 @@
 import {
   delegateToSchema,
+  getVariableValues,
   isSubschemaConfig,
   StitchingInfo,
 } from '@graphql-tools/delegate';
@@ -11,7 +12,7 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
 
 /**
  * Creates an executor that uses the schema created by stitching together multiple subschemas.
@@ -34,7 +35,7 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
     const { fields } = collectFields(
       stitchedSchema,
       fragments,
-      executorRequest.variables,
+      getVariableValues(executorRequest.variables),
       rootType,
       operation.selectionSet,
     );
@@ -80,7 +81,7 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
           variableValues: executorRequest.variables,
           rootValue: executorRequest.rootValue,
           path: { typename: undefined, key: responseKey, prev: undefined },
-        },
+        } as unknown as GraphQLResolveInfo,
       });
       if (Array.isArray(result)) {
         result = await Promise.all(result);

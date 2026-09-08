@@ -51,7 +51,7 @@ describe('Errors', () => {
       rootValue: {},
       operation: {} as any,
       variableValues: {},
-    };
+    } as unknown as GraphQLResolveInfo;
 
     test('should return single error', () => {
       const result = checkResultAndHandleErrors(
