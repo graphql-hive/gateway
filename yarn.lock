@@ -4763,7 +4763,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.5"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:1.3.14"
+    "@types/bun": "npm:1.4.1"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -9692,6 +9692,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-darwin-aarch64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-darwin-aarch64@npm:1.4.2"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@oven/bun-darwin-x64-baseline@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-darwin-x64-baseline@npm:1.3.14"
@@ -9706,9 +9713,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-darwin-x64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-darwin-x64@npm:1.4.2"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@oven/bun-freebsd-aarch64@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-freebsd-aarch64@npm:1.3.14"
+  conditions: os=freebsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-freebsd-aarch64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-freebsd-aarch64@npm:1.4.2"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
@@ -9720,9 +9741,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-freebsd-x64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-freebsd-x64@npm:1.4.2"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@oven/bun-linux-aarch64-android@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-linux-aarch64-android@npm:1.3.14"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-aarch64-android@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-aarch64-android@npm:1.4.2"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
@@ -9734,6 +9769,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-linux-aarch64-musl@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-aarch64-musl@npm:1.4.2"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
 "@oven/bun-linux-aarch64@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-linux-aarch64@npm:1.3.14"
@@ -9741,9 +9783,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-linux-aarch64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-aarch64@npm:1.4.2"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@oven/bun-linux-x64-android@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-linux-x64-android@npm:1.3.14"
+  conditions: os=android & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-x64-android@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-x64-android@npm:1.4.2"
   conditions: os=android & cpu=x64
   languageName: node
   linkType: hard
@@ -9769,6 +9825,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-linux-x64-musl@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-x64-musl@npm:1.4.2"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
 "@oven/bun-linux-x64@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-linux-x64@npm:1.3.14"
@@ -9776,9 +9839,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-linux-x64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-linux-x64@npm:1.4.2"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@oven/bun-windows-aarch64@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-windows-aarch64@npm:1.3.14"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-aarch64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-windows-aarch64@npm:1.4.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -9793,6 +9870,13 @@ __metadata:
 "@oven/bun-windows-x64@npm:1.3.14":
   version: 1.3.14
   resolution: "@oven/bun-windows-x64@npm:1.3.14"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-x64@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@oven/bun-windows-x64@npm:1.4.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -12347,12 +12431,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:1.3.14":
-  version: 1.3.14
-  resolution: "@types/bun@npm:1.3.14"
+"@types/bun@npm:1.4.1":
+  version: 1.4.1
+  resolution: "@types/bun@npm:1.4.1"
   dependencies:
-    bun-types: "npm:1.3.14"
-  checksum: 10c0/5531e17062f48da00d7d1e70bae8252fb5b61f6d699505ace74e60a1cecbafd624cc9d1694500857f261822c00e75fcbad9269f91adee790d6240875d46bb3f9
+    bun-types: "npm:1.4.1"
+  checksum: 10c0/1a9c52ea308f6668e102f2c21a1ae0d51ecde30d97cb0eee90aff25381e2e0064d91640d3458b35ed3e1364e83ff7dab9659b126ec27ca5f2ca1d6f114eb9578
   languageName: node
   linkType: hard
 
@@ -15022,16 +15106,65 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.3.14":
-  version: 1.3.14
-  resolution: "bun-types@npm:1.3.14"
+"bun-types@npm:1.4.1":
+  version: 1.4.1
+  resolution: "bun-types@npm:1.4.1"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/5aef8b13d6a0c0f218b5995aa74148c6a2536639a94560bbc80ee1b50a6ce05f011c93052340c7bf3469b9705af70737ff9d5cd7eb8ebbd49dbb8f55ed3eaeaf
+  checksum: 10c0/23c3043242455e672d73e866a53576d2c8f07b49147b2b4d6ca0fde8e2f736bf1e4efaf974ee01e815748c412192a649e71187f756f437004c24bc251e1ad739
   languageName: node
   linkType: hard
 
-"bun@npm:1.3.14, bun@npm:^1.3.2":
+"bun@npm:1.4.2":
+  version: 1.4.2
+  resolution: "bun@npm:1.4.2"
+  dependencies:
+    "@oven/bun-darwin-aarch64": "npm:1.4.2"
+    "@oven/bun-darwin-x64": "npm:1.4.2"
+    "@oven/bun-freebsd-aarch64": "npm:1.4.2"
+    "@oven/bun-freebsd-x64": "npm:1.4.2"
+    "@oven/bun-linux-aarch64": "npm:1.4.2"
+    "@oven/bun-linux-aarch64-android": "npm:1.4.2"
+    "@oven/bun-linux-aarch64-musl": "npm:1.4.2"
+    "@oven/bun-linux-x64": "npm:1.4.2"
+    "@oven/bun-linux-x64-android": "npm:1.4.2"
+    "@oven/bun-linux-x64-musl": "npm:1.4.2"
+    "@oven/bun-windows-aarch64": "npm:1.4.2"
+    "@oven/bun-windows-x64": "npm:1.4.2"
+  dependenciesMeta:
+    "@oven/bun-darwin-aarch64":
+      optional: true
+    "@oven/bun-darwin-x64":
+      optional: true
+    "@oven/bun-freebsd-aarch64":
+      optional: true
+    "@oven/bun-freebsd-x64":
+      optional: true
+    "@oven/bun-linux-aarch64":
+      optional: true
+    "@oven/bun-linux-aarch64-android":
+      optional: true
+    "@oven/bun-linux-aarch64-musl":
+      optional: true
+    "@oven/bun-linux-x64":
+      optional: true
+    "@oven/bun-linux-x64-android":
+      optional: true
+    "@oven/bun-linux-x64-musl":
+      optional: true
+    "@oven/bun-windows-aarch64":
+      optional: true
+    "@oven/bun-windows-x64":
+      optional: true
+  bin:
+    bun: bin/bun.exe
+    bunx: bin/bunx.exe
+  checksum: 10c0/0f517d095947840d01916c1c0f43b39d18438fb06d1dd9cd87b1b9327f8d45a0e3180b5e31f6acc5f2253cc215fe93b1ca76856fcc268004180da9854c097963
+  conditions: (os=darwin | os=linux | os=android | os=freebsd | os=win32) & (cpu=arm64 | cpu=x64)
+  languageName: node
+  linkType: hard
+
+"bun@npm:^1.3.2":
   version: 1.3.14
   resolution: "bun@npm:1.3.14"
   dependencies:
@@ -17882,7 +18015,7 @@ __metadata:
     "@yarnpkg/cli": "npm:4.17.0"
     "@yarnpkg/core": "npm:4.9.0"
     "@yarnpkg/plugin-pack": "npm:4.0.3"
-    bun: "npm:1.3.14"
+    bun: "npm:1.4.2"
     cross-env: "npm:10.1.0"
     eslint: "npm:10.5.0"
     eslint-plugin-import: "npm:2.32.0"
