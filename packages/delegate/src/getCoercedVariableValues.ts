@@ -1,3 +1,10 @@
+import type { VariableValues } from '@graphql-tools/utils';
+
+type VersionedVariableValues =
+  | Record<string, unknown>
+  | VariableValues<Record<string, unknown>>
+  | undefined;
+
 /**
  * Returns the runtime variable values, regardless of the graphql-js version.
  *
@@ -6,10 +13,7 @@
  *   values live under `.coerced`.
  */
 export function getCoercedVariableValues(
-  variableValues:
-    | Record<string, unknown>
-    | { coerced?: Record<string, unknown>; sources?: unknown }
-    | undefined,
+  variableValues: VersionedVariableValues,
 ): Record<string, unknown> | undefined {
   if (variableValues == null) {
     return undefined;
@@ -20,7 +24,23 @@ export function getCoercedVariableValues(
     Object.hasOwn(variableValues, 'coerced') &&
     Object.hasOwn(variableValues, 'sources')
   ) {
-    return (variableValues as { coerced?: Record<string, unknown> }).coerced;
+    return (variableValues as VariableValues<Record<string, unknown>>).coerced;
   }
   return variableValues as Record<string, unknown>;
+}
+
+export function getVariableValues(
+  variableValues: VersionedVariableValues,
+): VariableValues<Record<string, unknown>> {
+  if (
+    variableValues != null &&
+    Object.hasOwn(variableValues, 'coerced') &&
+    Object.hasOwn(variableValues, 'sources')
+  ) {
+    return variableValues as VariableValues<Record<string, unknown>>;
+  }
+  return {
+    coerced: (variableValues ?? {}) as Record<string, unknown>,
+    sources: {},
+  };
 }

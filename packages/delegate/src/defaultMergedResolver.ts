@@ -1,4 +1,3 @@
-import { getResponseKeyFromInfo } from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   handleMaybePromise,
@@ -53,7 +52,7 @@ export function defaultMergedResolver(
     return null;
   }
 
-  const responseKey = getResponseKeyFromInfo(info);
+  const responseKey = info.fieldNodes[0]!.alias?.value ?? info.fieldName;
 
   // check to see if parent is not a proxied result, i.e. if parent resolver was manually overwritten
   // See https://github.com/ardatan/graphql-tools/issues/967

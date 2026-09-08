@@ -51,6 +51,11 @@ describe('Errors', () => {
       rootValue: {},
       operation: {} as any,
       variableValues: {},
+      getAbortSignal: () => undefined,
+      getAsyncHelpers: () => ({
+        promiseAll: (values) => Promise.all(values),
+        track: () => undefined,
+      }),
     };
 
     test('should return single error', () => {

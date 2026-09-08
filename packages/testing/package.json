@@ -46,7 +46,7 @@
     "@apollo/subgraph": "^2.13.3",
     "@graphql-mesh/fusion-composition": "^0.11.2",
     "@graphql-tools/executor-http": "workspace:^",
-    "@graphql-tools/utils": "^11.0.0",
+    "@graphql-tools/utils": "^12.0.1",
     "graphql-yoga": "^5.21.1"
   },
   "devDependencies": {

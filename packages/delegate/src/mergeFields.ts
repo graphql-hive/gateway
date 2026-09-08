@@ -21,11 +21,11 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
-import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import {
-  isPrototypePollutingKey,
-  removePrototypePollutingKeys,
-} from './isPrototypePollutingKey.js';
+  getCoercedVariableValues,
+  getVariableValues,
+} from './getCoercedVariableValues.js';
+import { isPrototypePollutingKey } from './isPrototypePollutingKey.js';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
 import { Subschema } from './Subschema.js';
 import {
@@ -146,7 +146,7 @@ export function handleResolverResult(
     const { fields } = collectFields(
       schema,
       info.fragments,
-      getCoercedVariableValues(info.variableValues) ?? EMPTY_OBJECT,
+      getVariableValues(info.variableValues),
       type,
       selectionSet,
     );
@@ -190,10 +190,7 @@ export function handleResolverResult(
       continue;
     }
     const existingPropValue = object[responseKey];
-    // nested keys are dangerous too, the merges below recurse into them
-    const sourcePropValue = removePrototypePollutingKeys(
-      resolverResult[responseKey],
-    );
+    const sourcePropValue = resolverResult[responseKey];
     if (
       responseKey === '__typename' &&
       existingPropValue !== sourcePropValue &&

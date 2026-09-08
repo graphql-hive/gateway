@@ -23,6 +23,7 @@ import {
   printSchemaWithDirectives,
   type ExecutionRequest,
   type Executor,
+  type GraphQLResolveInfoHelpers,
   type Maybe,
   type MaybePromise,
 } from '@graphql-tools/utils';
@@ -277,6 +278,8 @@ export interface WrapExecuteWithHooksOptions {
 declare module 'graphql' {
   interface GraphQLResolveInfo {
     executionRequest?: ExecutionRequest;
+    readonly getAbortSignal: () => AbortSignal | undefined;
+    readonly getAsyncHelpers: () => GraphQLResolveInfoHelpers;
   }
 }
 

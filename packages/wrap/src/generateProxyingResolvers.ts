@@ -7,7 +7,7 @@ import {
   resolveExternalValue,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
-import { getResponseKeyFromInfo, getRootTypeMap } from '@graphql-tools/utils';
+import { getRootTypeMap } from '@graphql-tools/utils';
 import { GraphQLFieldResolver } from 'graphql';
 
 export function generateProxyingResolvers<TContext extends Record<string, any>>(
@@ -65,7 +65,7 @@ function createPossiblyNestedProxyingResolver<
 ): GraphQLFieldResolver<any, TContext, any> {
   return function possiblyNestedProxyingResolver(parent, args, context, info) {
     if (parent != null) {
-      const responseKey = getResponseKeyFromInfo(info);
+      const responseKey = info.fieldNodes[0]!.alias?.value ?? info.fieldName;
 
       // Check to see if the parent contains a proxied result
       if (isExternalObject(parent)) {

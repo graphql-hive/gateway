@@ -27,6 +27,7 @@ import {
   visit,
 } from 'graphql';
 import { getCoercedVariableValues } from './getCoercedVariableValues.js';
+import { getGraphQLResolveInfo } from './getGraphQLResolveInfo.js';
 import { ICreateRequest } from './types.js';
 
 export function getDelegatingOperation(
@@ -274,7 +275,7 @@ export function createRequest({
     rootValue,
     operationName: targetOperationName,
     context,
-    info,
+    info: getGraphQLResolveInfo(info),
     operationType: targetOperation,
   };
 }

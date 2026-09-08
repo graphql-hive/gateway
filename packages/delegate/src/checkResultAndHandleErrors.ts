@@ -1,8 +1,4 @@
-import {
-  ExecutionResult,
-  getResponseKeyFromInfo,
-  relocatedError,
-} from '@graphql-tools/utils';
+import { ExecutionResult, relocatedError } from '@graphql-tools/utils';
 import {
   GraphQLError,
   GraphQLOutputType,
@@ -138,7 +134,7 @@ function getResponseKey(info: GraphQLResolveInfo | undefined): string {
       `Data cannot be extracted from result without an explicit key or source schema.`,
     );
   }
-  return getResponseKeyFromInfo(info);
+  return info.fieldNodes[0]!.alias?.value ?? info.fieldName;
 }
 
 function getReturnType(

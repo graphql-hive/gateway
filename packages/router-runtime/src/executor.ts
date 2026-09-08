@@ -188,20 +188,16 @@ function createQueryPlanExecutionContext({
       operation.variableDefinitions,
       variableValues || globalEmpty,
     );
-    if (variableValuesResult.errors?.length) {
+    if (variableValuesResult.errors) {
       if (variableValuesResult.errors.length === 1) {
         throw variableValuesResult.errors[0];
       }
-      if (variableValuesResult.errors.length > 1) {
-        throw new AggregateError(
-          variableValuesResult.errors,
-          'Variable parsing error',
-        );
-      }
+      throw new AggregateError(
+        variableValuesResult.errors,
+        'Variable parsing error',
+      );
     }
-    if (variableValuesResult.coerced) {
-      variableValues = variableValuesResult.coerced;
-    }
+    variableValues = variableValuesResult.variableValues.coerced;
   }
   return {
     supergraphSchema,
