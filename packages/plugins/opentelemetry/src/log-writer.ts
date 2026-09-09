@@ -78,18 +78,22 @@ export class OpenTelemetryLogWriter implements LogWriter {
       if (options.exporter) {
         if (options.batching !== false) {
           processors.push(
-            new BatchLogRecordProcessor(
-              options.exporter,
-              options.batching === true ? {} : options.batching,
-            ),
+            new BatchLogRecordProcessor({
+              exporter: options.exporter,
+              ...(options.batching === true ? {} : options.batching),
+            }),
           );
         }
-        processors.push(new SimpleLogRecordProcessor(options.exporter));
+        processors.push(
+          new SimpleLogRecordProcessor({ exporter: options.exporter }),
+        );
       }
 
       if (options.console) {
         processors.push(
-          new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
+          new SimpleLogRecordProcessor({
+            exporter: new ConsoleLogRecordExporter(),
+          }),
         );
       }
 

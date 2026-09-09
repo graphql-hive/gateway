@@ -1,4 +1,5 @@
-import { GraphQLResolveInfo, memoize3 } from '@graphql-tools/utils';
+import { memoize3 } from '@graphql-tools/utils';
+import { GraphQLResolveInfo } from 'graphql';
 import { OverrideHandler } from './types';
 
 export const handleOverrideByDelegation = memoize3(

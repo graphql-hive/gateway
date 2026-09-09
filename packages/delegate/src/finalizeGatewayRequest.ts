@@ -33,6 +33,7 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
@@ -340,7 +341,9 @@ export function finalizeGatewayRequest<TContext>(
   );
 
   const newVariables: Record<string, any> = {};
-  const outerVariables = delegationContext.info?.variableValues;
+  const outerVariables = getCoercedVariableValues(
+    delegationContext.info?.variableValues,
+  );
 
   for (const varName of usedVariables) {
     const existingVar = originalRequest.variables?.[varName];

@@ -1,5 +1,57 @@
 # @graphql-tools/delegate
 
+## 12.2.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^2.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/2.0.1) (from `^1.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/schema@^10.1.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/schema/v/10.1.1) (from `^10.0.29`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-tools/batch-execute@10.2.0
+
+## 12.1.4
+### Patch Changes
+
+
+
+- [#2600](https://github.com/graphql-hive/gateway/pull/2600) [`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop prototype polluting keys from subgraph results before merging them
+  
+  Response keys named `__proto__`, `constructor` or `prototype`, which a client can produce with a field alias, were only filtered at the top level of a merged result. Nested occurrences were passed to `mergeDeep`, which walks the prototype chain and could end up writing to `Object.prototype` or `Function.prototype`.
+  
+  Such keys are now removed at every depth of a subgraph result before it takes part in a merge, and `projectDataSelectionSet` no longer treats an inherited property as an already projected field.
+- Updated dependencies [[`8cbdfd0`](https://github.com/graphql-hive/gateway/commit/8cbdfd01b2682e304eec51f3dd56ce57e4ec76c9)]:
+  - @graphql-tools/batch-execute@10.1.0
+
+## 12.1.3
+### Patch Changes
+
+
+
+- [#2555](https://github.com/graphql-hive/gateway/pull/2555) [`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Flush deferred merged fields without blocking the initial payload
+  
+  Deferred fields on merged entity types are now delegated when their deferred resolvers run instead of being included in the initial delegation plan. This allows the initial payload to be delivered before slower merged subgraph fields resolve.
+
+## 12.1.2
+### Patch Changes
+
+
+
+- [#2544](https://github.com/graphql-hive/gateway/pull/2544) [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f) Thanks [@egoodwinx](https://github.com/egoodwinx)! - Create new getCoercedVariableValues to support graphql-js 17
+
 ## 12.1.1
 ### Patch Changes
 

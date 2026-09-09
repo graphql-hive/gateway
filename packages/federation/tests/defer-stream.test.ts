@@ -431,6 +431,134 @@ describe('Defer/Stream', () => {
   });
 });
 
+describe('Defer/Stream - entity-level defer on merged types', () => {
+  const slowSubgraphDelayMs = 1000;
+  const menuItems = [
+    { id: '1', name: 'Item 1', prepSequenceMultiLocationId: 'p1' },
+    { id: '2', name: 'Item 2', prepSequenceMultiLocationId: 'p2' },
+  ];
+  const menusSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        menuItems: [MenuItem]
+      }
+
+      type MenuItem @key(fields: "id") {
+        id: ID!
+        name: String!
+        prepSequenceMultiLocationId: ID
+      }
+    `),
+    resolvers: {
+      Query: {
+        menuItems: () => menuItems,
+      },
+    },
+  });
+  const kitchenSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type PrepSequence {
+        id: ID!
+      }
+
+      type MenuItem @key(fields: "id") {
+        id: ID!
+        prepSequenceMultiLocationId: ID @external
+        prepSequence: PrepSequence
+          @requires(fields: "prepSequenceMultiLocationId")
+      }
+    `),
+    resolvers: {
+      MenuItem: {
+        __resolveReference: (ref: { id: string }) => ref,
+        prepSequence: async (ref: { prepSequenceMultiLocationId: string }) => {
+          await setTimeout(slowSubgraphDelayMs);
+          return { id: `seq-${ref.prepSequenceMultiLocationId}` };
+        },
+      },
+    },
+  });
+  const menusServer = createYoga({
+    schema: menusSubgraph,
+    plugins: [useDeferStream()],
+  });
+  const kitchenServer = createYoga({
+    schema: kitchenSubgraph,
+    plugins: [useDeferStream()],
+  });
+  let schema: GraphQLSchema;
+  beforeAll(async () => {
+    const supergraphSdl = await composeLocalSchemasWithApollo([
+      { name: 'menus', schema: menusSubgraph },
+      { name: 'kitchen', schema: kitchenSubgraph },
+    ]);
+    schema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl,
+      onSubschemaConfig(subschemaConfig) {
+        const server =
+          subschemaConfig.name.toLowerCase() === 'kitchen'
+            ? kitchenServer
+            : menusServer;
+        const origExecutor = buildHTTPExecutor({
+          endpoint: 'http://localhost:4003/graphql',
+          fetch: server.fetch,
+        });
+        subschemaConfig.executor = origExecutor;
+      },
+    });
+  });
+  it('flushes the initial payload before deferred merged fields resolve', async () => {
+    const start = Date.now();
+    const result = await normalizedExecutor({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          menuItems {
+            ... on MenuItem {
+              id
+              name
+            }
+            ... on MenuItem @defer {
+              prepSequence {
+                id
+              }
+            }
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(result);
+    const values: ExecutionResult[] = [];
+    let initialPayload: ExecutionResult | undefined;
+    for await (const value of result) {
+      if (!initialPayload) {
+        initialPayload = value;
+        // the initial payload must not wait for the deferred merged fields
+        expect(Date.now() - start).toBeLessThan(slowSubgraphDelayMs);
+      }
+      values.push(value);
+    }
+    expect(initialPayload).toEqual({
+      data: {
+        menuItems: [
+          { id: '1', name: 'Item 1' },
+          { id: '2', name: 'Item 2' },
+        ],
+      },
+      hasNext: true,
+    });
+    const mergedResult = mergeIncrementalResults(values);
+    expect(mergedResult).toEqual({
+      data: {
+        menuItems: [
+          { id: '1', name: 'Item 1', prepSequence: { id: 'seq-p1' } },
+          { id: '2', name: 'Item 2', prepSequence: { id: 'seq-p2' } },
+        ],
+      },
+    });
+  });
+});
+
 describe('Defer/Stream - scalar streaming via HTTP', () => {
   const letters = ['a', 'b', 'c', 'd', 'e'];
 

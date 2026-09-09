@@ -1,5 +1,6 @@
 import {
   extractUnavailableFields,
+  getVariableValues,
   handleOverrideByDelegation,
   StitchingInfo,
   Subschema,
@@ -36,10 +37,11 @@ export function getFieldsNotInSubschema(
   info: GraphQLResolveInfo | undefined,
 ): Array<FieldNode> {
   const sourceSchema = subschema.transformedSchema;
-  let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
+  const normalizedVariableValues = getVariableValues(variableValues);
+  let { fields: subFieldNodesByResponseKey } = collectSubFields(
     schema,
     fragments,
-    variableValues,
+    normalizedVariableValues,
     gatewayType,
     fieldNodes,
   );
@@ -47,24 +49,7 @@ export function getFieldsNotInSubschema(
   let mapChanged = false;
 
   // Collect deferred fields
-  if (patches.length) {
-    subFieldNodesByResponseKey = new Map(subFieldNodesByResponseKey);
-    for (const patch of patches) {
-      for (const [responseKey, fields] of patch.fields) {
-        if (!mapChanged) {
-          subFieldNodesByResponseKey = new Map(subFieldNodesByResponseKey);
-          mapChanged = true;
-        }
-        const existingSubFieldNodes =
-          subFieldNodesByResponseKey.get(responseKey);
-        if (existingSubFieldNodes) {
-          existingSubFieldNodes.push(...fields);
-        } else {
-          subFieldNodesByResponseKey.set(responseKey, fields);
-        }
-      }
-    }
-  }
+  // delegate them when their resolver runs so the parent can be released
 
   const fieldsNotInSchema = new Set<FieldNode>();
   if (isAbstractType(gatewayType)) {
@@ -76,29 +61,13 @@ export function getFieldsNotInSubschema(
       },
     });
     for (const possibleType of schema.getPossibleTypes(gatewayType)) {
-      const { fields: subFieldNodesOfPossibleType, patches } = collectSubFields(
+      const { fields: subFieldNodesOfPossibleType } = collectSubFields(
         schema,
         fragments,
-        variableValues,
+        normalizedVariableValues,
         possibleType,
         fieldNodes,
       );
-
-      for (const patch of patches) {
-        for (const [responseKey, fields] of patch.fields) {
-          if (!mapChanged) {
-            subFieldNodesByResponseKey = new Map(subFieldNodesByResponseKey);
-            mapChanged = true;
-          }
-          const existingSubFieldNodes =
-            subFieldNodesByResponseKey.get(responseKey);
-          if (existingSubFieldNodes) {
-            existingSubFieldNodes.push(...fields);
-          } else {
-            subFieldNodesByResponseKey.set(responseKey, fields);
-          }
-        }
-      }
 
       for (const [responseKey, subFieldNodes] of subFieldNodesOfPossibleType) {
         if (!mapChanged) {

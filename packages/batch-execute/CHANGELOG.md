@@ -1,5 +1,34 @@
 # @graphql-tools/batch-execute
 
+## 10.2.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+
+## 10.1.0
+### Minor Changes
+
+
+
+- [#2545](https://github.com/graphql-hive/gateway/pull/2545) [`8cbdfd0`](https://github.com/graphql-hive/gateway/commit/8cbdfd01b2682e304eec51f3dd56ce57e4ec76c9) Thanks [@omahili](https://github.com/omahili)! - Fixes [#1288](https://github.com/graphql-hive/gateway/issues/1288).
+  
+  Per the [GraphQL spec](https://spec.graphql.org/October2021/#sec-Handling-Field-Errors) a non-nullable field returning null should propagate to the parent, in this case it should propagate to data.
+  Batched sub-requests share one merged document so null should propagate to every result and not just the one whose fields actually failed.
+
 ## 10.0.9
 ### Patch Changes
 

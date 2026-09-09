@@ -301,11 +301,16 @@ describe('Gateway Runtime', () => {
 
   describe('Cache', () => {
     function createCache(cachedSupergraph?: string) {
+      const store = new Map<string, unknown>();
+      if (cachedSupergraph != null) {
+        store.set('hive-gateway:supergraph', cachedSupergraph);
+      }
       return {
-        get: vi.fn((_key) => {
-          return fakePromise(cachedSupergraph);
+        get: vi.fn((key: string) => {
+          return fakePromise(store.get(key));
         }),
-        set: vi.fn((_key, _value, _options) => {
+        set: vi.fn((key: string, value: unknown, _options?: unknown) => {
+          store.set(key, value);
           return fakePromise();
         }),
         delete() {
@@ -395,6 +400,7 @@ describe('Gateway Runtime', () => {
 
       await using gw = createGatewayRuntime({
         logging: isDebug(),
+        maskedErrors: false,
         cache,
         supergraph: () => {
           throw new Error('Not using cache!');
@@ -408,12 +414,9 @@ describe('Gateway Runtime', () => {
       });
 
       const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
-      expect(res.ok).toBeTruthy();
-      expect(await res.json()).toEqual({
-        data: {
-          foo: 'bar',
-        },
-      });
+      await expect(res.text()).resolves.toMatchInlineSnapshot(
+        `"{"data":{"foo":"bar"}}"`,
+      );
     });
   });
 

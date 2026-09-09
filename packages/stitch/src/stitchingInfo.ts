@@ -1,4 +1,5 @@
 import {
+  getVariableValues,
   MergedTypeInfo,
   MergedTypeResolver,
   StitchingInfo,
@@ -502,7 +503,7 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     }
   }
 
-  const variableValues = Object.create(null);
+  const variableValues = getVariableValues(undefined);
   const fragments = Object.create(null);
 
   const fieldNodeMap: Record<string, FieldNode> = Object.create(null);
