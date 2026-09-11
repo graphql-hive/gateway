@@ -2,11 +2,12 @@ import {
   getInstrumented,
   OnExecuteEventPayload,
   OnSubscribeEventPayload,
+  OnSubscribeResultEventPayload,
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
-import { LegacyLogger } from '@graphql-hive/logger';
+import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -249,6 +250,18 @@ export function createGatewayRuntime<
   let retainGenerationFor:
     | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
     | undefined;
+  // gracefulSchemaReload.pinSubscriptions / .subscriptionRetirementSpread, only
+  // meaningful once retainGenerationFor is set.
+  let pinSubscriptions = false;
+  let subscriptionRetirementSpread = 0;
+  // Gradual retirement of a superseded generation's pinned subscriptions
+  // (gracefulSchemaReload.subscriptionRetirementSpread). Driven from the
+  // unified graph manager's swap callback below, which runs synchronously
+  // with the generation change.
+  const retirement = createSubscriptionRetirement({
+    getSpread: () => subscriptionRetirementSpread,
+    log: configContext.log,
+  });
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
@@ -680,6 +693,21 @@ export function createGatewayRuntime<
           'gracefulSchemaReload.maxConcurrentGenerations must be a finite number that is at least 1',
         );
       }
+      if (gracefulSchemaReload.subscriptionRetirementSpread != null) {
+        if (
+          !Number.isFinite(gracefulSchemaReload.subscriptionRetirementSpread) ||
+          gracefulSchemaReload.subscriptionRetirementSpread <= 0
+        ) {
+          throw new Error(
+            'gracefulSchemaReload.subscriptionRetirementSpread must be a finite positive number of milliseconds',
+          );
+        }
+        if (!gracefulSchemaReload.pinSubscriptions) {
+          throw new Error(
+            'gracefulSchemaReload.subscriptionRetirementSpread requires gracefulSchemaReload.pinSubscriptions',
+          );
+        }
+      }
     }
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
@@ -687,6 +715,7 @@ export function createGatewayRuntime<
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
+        retirement.onSchemaChange();
       },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
@@ -743,6 +772,9 @@ export function createGatewayRuntime<
       // warning) entirely.
       retainGenerationFor = (schema) =>
         unifiedGraphManager.retainGenerationFor(schema);
+      pinSubscriptions = gracefulSchemaReload.pinSubscriptions === true;
+      subscriptionRetirementSpread =
+        gracefulSchemaReload.subscriptionRetirementSpread ?? 0;
     }
     unifiedGraphPlugin = {
       onDispose() {
@@ -867,22 +899,56 @@ export function createGatewayRuntime<
       );
     };
     const onSubscribe = ({
+      args,
       setSubscribeFn,
-    }: OnSubscribeEventPayload<GatewayContext>) =>
-      // Subscriptions are intentionally NOT pinned to a generation (no
-      // retainGenerationFor here): they are long-lived, so rather than keeping
-      // the old generation alive indefinitely they end — when that generation
-      // is disposed (immediately on reload when idle, otherwise once it
-      // finishes draining) — and the client reconnects against the new schema.
-      handleMaybePromise(
-        () => getExecutor?.(),
+    }: OnSubscribeEventPayload<GatewayContext>) => {
+      // Subscriptions are NOT pinned to a generation by default: they are
+      // long-lived, so rather than keeping the old generation alive
+      // indefinitely they end — when that generation is disposed (immediately
+      // on reload when idle, otherwise once it finishes draining) — and the
+      // client reconnects against the new schema. With pinSubscriptions they
+      // are pinned exactly like queries in onExecute: the superseded generation
+      // keeps serving them until each stream ends (or drainTimeout), and the
+      // retirement spread ends them gradually before that.
+      const lease = pinSubscriptions
+        ? retainGenerationFor?.(args.schema)
+        : undefined;
+      const admittedGeneration = retirement.currentGeneration();
+      return handleMaybePromise(
+        () => (lease ? lease.executor : getExecutor?.()),
         (executor) => {
           if (executor) {
             const subscribeFn = getExecuteFnFromExecutor(executor);
             setSubscribeFn(subscribeFn);
           }
+          if (!lease) {
+            return undefined;
+          }
+          return {
+            onSubscribeResult({
+              result,
+              setResult,
+            }: OnSubscribeResultEventPayload<GatewayContext>) {
+              if (!isAsyncIterable(result)) {
+                lease.release();
+                return undefined;
+              }
+              if (subscriptionRetirementSpread > 0) {
+                setResult(retirement.track(result, admittedGeneration));
+              }
+              return { onEnd: lease.release };
+            },
+            onSubscribeError() {
+              lease.release();
+            },
+          };
+        },
+        (error) => {
+          lease?.release();
+          throw error;
         },
       );
+    };
     defaultGatewayPlugin.onExecute = onExecute;
     defaultGatewayPlugin.onSubscribe = onSubscribe;
   }
@@ -1342,3 +1408,178 @@ function isDynamicUnifiedGraphSchema(
   // anything else is dynamic
   return true;
 }
+
+interface RetirableSubscription {
+  generation: number;
+  /** Ends the client-facing stream with a plain completion and releases the source. */
+  end(): void;
+}
+
+/**
+ * Gradual retirement of a superseded generation's pinned subscriptions.
+ *
+ * Generation identity is a counter bumped on every schema change (the runtime
+ * fires it synchronously with the swap), captured when a subscription is
+ * admitted. On a change, every live subscription of an older generation is
+ * assigned an evenly spaced, randomly ordered moment inside the spread window
+ * and ended there with a plain completion — the same thing a client sees when
+ * a gateway instance shuts down — so clients resubscribe as a trickle. Until
+ * its moment a subscription keeps streaming from the generation it is pinned
+ * to. drainTimeout stays the hard bound: whatever is still open when it fires
+ * ends with SCHEMA_RELOAD as before.
+ */
+function createSubscriptionRetirement({
+  getSpread,
+  log,
+}: {
+  getSpread: () => number;
+  log: Logger;
+}) {
+  const live = new Set<RetirableSubscription>();
+  let generation = 0;
+
+  function retire(retiring: RetirableSubscription[], fromGeneration: number) {
+    // Fisher–Yates: a random sample per moment rather than "oldest first",
+    // which would correlate by client.
+    for (let i = retiring.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [retiring[i], retiring[j]] = [retiring[j]!, retiring[i]!];
+    }
+    const spread = getSpread();
+    const step = spread / retiring.length;
+    log.debug(
+      { subscriptions: retiring.length, fromGeneration, spread },
+      "Retiring the superseded schema generation's subscriptions gradually",
+    );
+    let index = 0;
+    const startedAt = Date.now();
+    const tick = () => {
+      // Every subscription whose moment has come (also catches up after a late
+      // timer), skipping the ones the client has already ended.
+      const elapsed = Date.now() - startedAt;
+      while (index < retiring.length && index * step <= elapsed) {
+        const subscription = retiring[index++]!;
+        if (live.has(subscription)) {
+          subscription.end();
+        }
+      }
+      if (index < retiring.length) {
+        const timer = setTimeout(
+          tick,
+          Math.max(0, Math.ceil(index * step - (Date.now() - startedAt))),
+        );
+        (timer as { unref?: () => void }).unref?.();
+      }
+    };
+    tick();
+  }
+
+  return {
+    currentGeneration: () => generation,
+    onSchemaChange() {
+      const previous = generation;
+      generation += 1;
+      const retiring = [...live].filter((s) => s.generation < generation);
+      if (retiring.length > 0 && getSpread() > 0) {
+        retire(retiring, previous);
+      }
+    },
+    /**
+     * Wraps a subscription stream so it can be ended from the outside. A single
+     * wake slot suffices because a consumer awaits at most one next() at a time,
+     * so nothing accumulates on a long-lived stream.
+     */
+    track<T>(
+      source: AsyncIterable<T>,
+      admittedGeneration: number,
+    ): AsyncIterableIterator<T> {
+      const iterator = source[Symbol.asyncIterator]();
+      let ended = false;
+      let finished = false;
+      let wake: ((outcome: Outcome<T>) => void) | null = null;
+      const entry: RetirableSubscription = {
+        generation: admittedGeneration,
+        end() {
+          if (ended) return;
+          ended = true;
+          wake?.({ kind: 'end' });
+        },
+      };
+      live.add(entry);
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        live.delete(entry);
+      };
+      // A consumer that receives done never calls return(), so release the
+      // source here. Not awaited: the client's completion must not wait on the
+      // upstream teardown.
+      const closeSource = () => {
+        if (typeof iterator.return !== 'function') return;
+        Promise.resolve()
+          .then(() => iterator.return?.())
+          .catch((error: unknown) => {
+            log.error(
+              { err: error },
+              "Failed to release a retired subscription's source",
+            );
+          });
+      };
+      const DONE: IteratorReturnResult<undefined> = {
+        value: undefined,
+        done: true,
+      };
+      return {
+        [Symbol.asyncIterator]() {
+          return this;
+        },
+        async next(): Promise<IteratorResult<T>> {
+          if (ended) {
+            finish();
+            closeSource();
+            return DONE;
+          }
+          const outcome = await new Promise<Outcome<T>>((resolve) => {
+            wake = resolve;
+            iterator.next().then(
+              (result) => resolve({ kind: 'result', result }),
+              (error: unknown) => resolve({ kind: 'error', error }),
+            );
+          });
+          wake = null;
+          if (outcome.kind === 'end') {
+            finish();
+            closeSource();
+            return DONE;
+          }
+          if (outcome.kind === 'error') {
+            finish();
+            throw outcome.error;
+          }
+          if (outcome.result.done) finish();
+          return outcome.result;
+        },
+        async return(value?: unknown): Promise<IteratorResult<T>> {
+          ended = true;
+          finish();
+          if (typeof iterator.return === 'function') {
+            return iterator.return(value);
+          }
+          return DONE;
+        },
+        async throw(error?: unknown): Promise<IteratorResult<T>> {
+          finish();
+          if (typeof iterator.throw === 'function') {
+            return iterator.throw(error);
+          }
+          throw error;
+        },
+      };
+    },
+  };
+}
+
+type Outcome<T> =
+  | { kind: 'result'; result: IteratorResult<T> }
+  | { kind: 'error'; error: unknown }
+  | { kind: 'end' };
