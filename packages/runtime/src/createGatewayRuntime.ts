@@ -5,7 +5,7 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
+import { createCDNArtifactFetcher, createDevFetcher, joinUrl } from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
@@ -616,6 +616,22 @@ export function createGatewayRuntime<
         });
         unifiedGraphFetcher = {
           fetch: graphosFetcherContainer.unifiedGraphFetcher,
+        };
+      } else if (config.supergraph.type === 'dev') {
+        const devFetcher = createDevFetcher({
+          ...config.supergraph,
+          cwd: configContext.cwd,
+          // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
+          fetch: configContext.fetch,
+          logger: LegacyLogger.from(
+            configContext.log.child('[hiveDevFetcher] '),
+          ),
+          cache: configContext.cache,
+          version: globalThis.__VERSION__,
+        });
+        unifiedGraphFetcher = {
+          fetch: () => devFetcher.fetch(),
+          dispose: () => devFetcher.dispose(),
         };
       } else {
         unifiedGraphFetcher = {

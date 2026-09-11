@@ -1,13 +1,20 @@
 import cluster from 'node:cluster';
 import { lstat, watch as watchFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
-import { Command, Option } from '@commander-js/extra-typings';
+import {
+  Command,
+  InvalidArgumentError,
+  Option,
+} from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
   createLoggerFromLogging,
+  type DevFetcherTargetReference,
   type GatewayConfigSupergraph,
   type GatewayGraphOSManagedFederationOptions,
   type GatewayHiveCDNOptions,
+  type GatewayHiveDevOptions,
+  type HiveDevService,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
 import { MemPubSub } from '@graphql-hive/pubsub';
@@ -32,6 +39,100 @@ import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
 import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Parses a `--dev-target` value into a {@link DevFetcherTargetReference}. Accepts either a
+ * target UUID, or a "$organizationSlug/$projectSlug/$targetSlug" slug path.
+ */
+function parseDevTarget(target: string): DevFetcherTargetReference | null {
+  if (UUID_RE.test(target)) {
+    return { byId: target };
+  }
+  const parts = target.split('/');
+  const [organizationSlug, projectSlug, targetSlug] = parts;
+  if (parts.length !== 3 || !organizationSlug || !projectSlug || !targetSlug) {
+    return null;
+  }
+  return { bySelector: { organizationSlug, projectSlug, targetSlug } };
+}
+
+/**
+ * Parses a `<service-name>=<value>` option occurrence into a map keyed by service name. A name
+ * repeated across occurrences of the same option overrides its previous value.
+ */
+function collectByServiceName(
+  raw: string,
+  previous: Record<string, string>,
+): Record<string, string> {
+  const eqIdx = raw.indexOf('=');
+  const name = raw.slice(0, eqIdx).trim();
+  if (eqIdx === -1 || !name) {
+    throw new InvalidArgumentError(`invalid entry "${raw}", expected "<service-name>=<value>".`);
+  }
+  return { ...previous, [name]: raw.slice(eqIdx + 1).trim() };
+}
+
+const DEV_SERVICE_SOURCES = new Set(['federation', 'graphql', 'file']);
+
+function collectDevServiceSource(
+  raw: string,
+  previous: Record<string, string>,
+): Record<string, string> {
+  const source = raw.slice(raw.indexOf('=') + 1).trim();
+  if (!DEV_SERVICE_SOURCES.has(source)) {
+    throw new InvalidArgumentError(
+      `invalid source "${source}", expected "federation", "graphql" or "file".`,
+    );
+  }
+  return collectByServiceName(raw, previous);
+}
+
+/**
+ * Builds {@link HiveDevService} objects, one per key of `urlByName` (which is the set of dev
+ * service names), overlaying the optional `sourceByName`/`schemaByName` for that name and erroring
+ * out via `onError` on any inconsistency.
+ */
+function buildDevServices(
+  urlByName: Record<string, string>,
+  sourceByName: Record<string, string>,
+  schemaByName: Record<string, string>,
+  onError: (message: string) => never,
+): HiveDevService[] {
+  const names = Object.keys(urlByName);
+  for (const name of [...Object.keys(sourceByName), ...Object.keys(schemaByName)]) {
+    if (!(name in urlByName)) {
+      onError(
+        `--dev-service-source/--dev-service-schema references unknown service "${name}". ` +
+          `Expected one of the services given via --dev-service-url: ${names.join(', ') || '(none)'}.`,
+      );
+    }
+  }
+  return names.map((name) => {
+    const url = urlByName[name]!;
+    const source = sourceByName[name];
+    const schema = schemaByName[name];
+    if (source === 'file') {
+      if (!schema) {
+        onError(
+          `--dev-service-schema is required for service "${name}" (--dev-service-source file).`,
+        );
+      }
+      return { name, url, source: 'file', schema };
+    }
+    if (schema) {
+      onError(
+        `--dev-service-schema is only valid when --dev-service-source is "file" (service "${name}").`,
+      );
+    }
+    return {
+      name,
+      url,
+      ...(source ? { source: source as 'federation' | 'graphql' } : {}),
+    };
+  });
+}
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
@@ -65,6 +166,61 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'env',
       );
     })
+    .addOption(
+      new Option(
+        '--dev-remote',
+        'Compose the dev supergraph remotely via the Hive registry instead of composing locally. Only applies when the supergraph source is a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file).',
+      ).env('DEV_REMOTE'),
+    )
+    .addOption(
+      new Option(
+        '--dev-registry <endpoint>',
+        'Hive registry endpoint used for remote composition of a dev supergraph source. Requires --dev-remote and --dev-registry-token.',
+      ).env('DEV_REGISTRY'),
+    )
+    .addOption(
+      new Option(
+        '--dev-registry-token <token>',
+        'Hive registry access token used for remote composition of a dev supergraph source. Requires --dev-remote and --dev-registry.',
+      ).env('DEV_REGISTRY_TOKEN'),
+    )
+    .addOption(
+      new Option(
+        '--dev-target <target>',
+        'The target to compose against when using a dev supergraph source, as "$organizationSlug/$projectSlug/$targetSlug" or a target UUID.',
+      ).env('DEV_TARGET'),
+    )
+    .addOption(
+      new Option(
+        '--dev-service-url <name>=<url>',
+        'Add a service to the dev supergraph source, as "<service-name>=<url>". Repeat once per ' +
+          'service. When provided, this defines the dev supergraph source services in full, ' +
+          'overriding any "services" configured in the config file.',
+      )
+        .argParser(collectByServiceName)
+        .default({} as Record<string, string>),
+    )
+    .addOption(
+      new Option(
+        '--dev-service-source <name>=<federation|graphql|file>',
+        'How to obtain the schema for a dev supergraph source service, as "<service-name>=<source>": ' +
+          '"federation" (default, via the federation `_service { sdl }` field), "graphql" (via ' +
+          'introspection), or "file" (from a local SDL file, requires --dev-service-schema for the ' +
+          'same service name). The service name must match one given via --dev-service-url.',
+      )
+        .argParser(collectDevServiceSource)
+        .default({} as Record<string, string>),
+    )
+    .addOption(
+      new Option(
+        '--dev-service-schema <name>=<path>',
+        'Path to a local SDL file for a dev supergraph source service, as "<service-name>=<path>". ' +
+          'Required (and only valid) for a service using --dev-service-source file for the same ' +
+          'service name.',
+      )
+        .argParser(collectByServiceName)
+        .default({} as Record<string, string>),
+    )
     .action(async function supergraph(schemaPathOrUrl) {
       const {
         opentelemetry,
@@ -85,6 +241,13 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsToken,
         hivePersistedDocumentsCacheTtl,
         hivePersistedDocumentsCacheNotFoundTtl,
+        devRemote,
+        devRegistry,
+        devRegistryToken,
+        devTarget,
+        devServiceUrl,
+        devServiceSource,
+        devServiceSchema,
         ...opts
       } = this.optsWithGlobals();
 
@@ -114,7 +277,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
       let supergraph:
         | UnifiedGraphConfig
         | GatewayHiveCDNOptions
-        | GatewayGraphOSManagedFederationOptions = './supergraph.graphql';
+        | GatewayGraphOSManagedFederationOptions
+        | GatewayHiveDevOptions = './supergraph.graphql';
       if (schemaPathOrUrl) {
         ctx.log.info(`Supergraph will be loaded from "${schemaPathOrUrl}"`);
         if (hiveCdnKey) {
@@ -191,6 +355,64 @@ export const addCommand: AddCommand = (ctx, cli) =>
         // TODO: how to provide hive-cdn-key?
       } else {
         ctx.log.info(`Using default supergraph location "${supergraph}"`);
+      }
+
+      const onDevOptionError = (message: string): never => {
+        ctx.log.error(message);
+        return process.exit(1);
+      };
+      const devServices = buildDevServices(
+        devServiceUrl,
+        devServiceSource,
+        devServiceSchema,
+        onDevOptionError,
+      );
+
+      let devSupergraph: GatewayHiveDevOptions | undefined;
+      if (typeof supergraph === 'object' && 'type' in supergraph && supergraph.type === 'dev') {
+        devSupergraph = supergraph;
+      } else if (devServices.length) {
+        if (schemaPathOrUrl || hiveCdnEndpoint || apolloGraphRef) {
+          onDevOptionError(
+            '--dev-service-* options cannot be combined with a schema path/url, --hive-cdn-endpoint, or --apollo-graph-ref.',
+          );
+        }
+        devSupergraph = { type: 'dev', services: [] };
+        supergraph = devSupergraph;
+      }
+
+      if (devSupergraph) {
+        if (devServices.length) {
+          devSupergraph.services = devServices;
+        }
+        if (devRemote != null) {
+          devSupergraph.remote = devRemote;
+        }
+        if (devRegistry) {
+          devSupergraph.registry = devRegistry;
+        }
+        if (devRegistryToken) {
+          devSupergraph.token = devRegistryToken;
+        }
+        if (devTarget) {
+          const target = parseDevTarget(devTarget);
+          if (!target) {
+            onDevOptionError(
+              `Invalid --dev-target "${devTarget}". Expected "$organizationSlug/$projectSlug/$targetSlug" or a UUID.`,
+            );
+          }
+          devSupergraph.target = target;
+        }
+      } else if (
+        devRemote != null ||
+        devRegistry ||
+        devRegistryToken ||
+        devTarget ||
+        devServices.length
+      ) {
+        onDevOptionError(
+          'The --dev-* options require the supergraph source to be a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file, or set via --dev-service-url).',
+        );
       }
 
       const registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
@@ -448,6 +670,15 @@ export async function runSupergraph(
     log.info(
       { endpoint: config.supergraph.endpoint },
       'Loading supergraph from Hive CDN',
+    );
+  } else if (
+    typeof config.supergraph === 'object' &&
+    'type' in config.supergraph &&
+    config.supergraph.type === 'dev'
+  ) {
+    log.info(
+      { remote: !!config.supergraph.remote },
+      'Composing supergraph from local subgraphs using the Hive dev fetcher',
     );
   } else {
     log.info('Loading supergraph from config');
