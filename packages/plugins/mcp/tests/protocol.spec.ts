@@ -2327,7 +2327,7 @@ describe('JSON-RPC validation', () => {
   it('rejects non-notification request with missing id', async () => {
     const body = await handleMCPRequest(
       { log: logger },
-      { jsonrpc: '2.0', method: 'tools/list' } as any,
+      { jsonrpc: '2.0', method: 'tools/list' },
       opts,
     );
     expect(body!.error!.code).toBe(-32600);
@@ -2337,7 +2337,7 @@ describe('JSON-RPC validation', () => {
   it('allows notification without id', async () => {
     const body = await handleMCPRequest(
       { log: logger },
-      { jsonrpc: '2.0', method: 'notifications/initialized' } as any,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
       opts,
     );
     expect(body).toBeNull();
@@ -2351,5 +2351,28 @@ describe('JSON-RPC validation', () => {
     );
     expect(body!.error!.code).toBe(-32601);
     expect(body!.error!.message).toContain('Method not found');
+  });
+
+  it('silently drops unknown notification methods (no wire response)', async () => {
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+    const body = await handleMCPRequest(
+      { log: logger },
+      { jsonrpc: '2.0', method: 'notifications/something-unknown' },
+      opts,
+    );
+    expect(body).toBeNull();
+    expect(debugSpy).toHaveBeenCalledWith(
+      expect.stringContaining('notifications/something-unknown'),
+    );
+    debugSpy.mockRestore();
+  });
+
+  it('drops unknown notification-named methods even when an id is sent', async () => {
+    const body = await handleMCPRequest(
+      { log: logger },
+      { jsonrpc: '2.0', id: 7, method: 'notifications/something-unknown' },
+      opts,
+    );
+    expect(body).toBeNull();
   });
 });
