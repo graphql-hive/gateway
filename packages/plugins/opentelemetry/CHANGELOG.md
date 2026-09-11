@@ -1,5 +1,203 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.5.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-hive/gateway-runtime@2.11.0
+  - @graphql-mesh/transport-common@1.1.0
+
+## 1.4.47
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.11
+
+## 1.4.46
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.10
+
+## 1.4.45
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.9
+
+## 1.4.44
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.16) (from `^0.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.107.1) (from `^0.105.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.107.1) (from `^0.104.38`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/api-logs@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/auto-instrumentations-node@^0.79.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.79.0) (from `^0.77.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/resources@^2.10.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/resources/v/2.10.0) (from `^2.8.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-node@^0.221.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.221.0) (from `^0.219.0`, in `dependencies`)
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2)]:
+  - @graphql-hive/gateway-runtime@2.10.8
+  - @graphql-mesh/transport-common@1.0.21
+
+## 1.4.43
+### Patch Changes
+
+
+
+- [#2523](https://github.com/graphql-hive/gateway/pull/2523) [`90c41c8`](https://github.com/graphql-hive/gateway/commit/90c41c8cc3c65af3184d9dc1f1a194edba141a79) Thanks [@jdolle](https://github.com/jdolle)! - Upgrade `@graphql-hive/core` to 0.22.1.
+  
+  This version improves error handling inside the usage collector to prevent unhandled exceptions from being raised that can kill the application.
+- Updated dependencies [[`90c41c8`](https://github.com/graphql-hive/gateway/commit/90c41c8cc3c65af3184d9dc1f1a194edba141a79)]:
+  - @graphql-hive/gateway-runtime@2.10.7
+
+## 1.4.42
+### Patch Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.105.0) (from `^0.104.27`, in `dependencies`)
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-hive/gateway-runtime@2.10.6
+  - @graphql-mesh/transport-common@1.0.20
+
+## 1.4.41
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.5
+
+## 1.4.40
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.4
+
+## 1.4.39
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.3
+  - @graphql-mesh/transport-common@1.0.19
+
+## 1.4.38
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-hive/gateway-runtime@2.10.2
+  - @graphql-mesh/transport-common@1.0.18
+
+## 1.4.37
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.10.1
+
+## 1.4.36
+### Patch Changes
+
+- Updated dependencies [[`65ecf28`](https://github.com/graphql-hive/gateway/commit/65ecf2829c379e1d3758b6ee61e83728ba9dd99f)]:
+  - @graphql-hive/gateway-runtime@2.10.0
+
+## 1.4.35
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.10
+
+## 1.4.34
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api@^1.9.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.1) (from `^1.9.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/resources@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/resources/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/semantic-conventions@^1.41.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/semantic-conventions/v/1.41.1) (from `^1.38.0`, in `dependencies`)
+- Updated dependencies [[`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6), [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6), [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6)]:
+  - @graphql-hive/gateway-runtime@2.9.9
+  - @graphql-hive/logger@1.1.1
+  - @graphql-mesh/transport-common@1.0.17
+
+## 1.4.33
+### Patch Changes
+
+
+
+- [#2460](https://github.com/graphql-hive/gateway/pull/2460) [`71ac628`](https://github.com/graphql-hive/gateway/commit/71ac628faedacbe1f3254d7085af02929d04e3f0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api@^1.9.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.1) (from `^1.9.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/resources@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/resources/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^2.8.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.8.0) (from `^2.2.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/semantic-conventions@^1.41.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/semantic-conventions/v/1.41.1) (from `^1.38.0`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.8
+
+## 1.4.32
+### Patch Changes
+
+
+
+- [#2442](https://github.com/graphql-hive/gateway/pull/2442) [`bff3ce4`](https://github.com/graphql-hive/gateway/commit/bff3ce44180bbc232dae0387e705f196a0838875) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/auto-instrumentations-node@^0.77.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.77.0) (from `^0.76.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-node@^0.219.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.219.0) (from `^0.218.0`, in `dependencies`)
+
+## 1.4.31
+### Patch Changes
+
+
+
+- [#2389](https://github.com/graphql-hive/gateway/pull/2389) [`8f00140`](https://github.com/graphql-hive/gateway/commit/8f00140d2f4f2bbf5ff0ba7da31267294906c7cc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Attach `hive.request.id` to the root HTTP span at all times
+
+## 1.4.30
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.9.7
+
 ## 1.4.29
 ### Patch Changes
 

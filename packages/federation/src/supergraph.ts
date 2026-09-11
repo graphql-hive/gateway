@@ -543,16 +543,46 @@ export function getStitchingOptionsFromSupergraphSdl(
                       typeNameFieldProvidedSelectionMap,
                     );
                   }
-                  let fieldProvidedSelectionMap =
-                    typeNameFieldProvidedSelectionMap.get(typeNode.name.value);
-                  if (!fieldProvidedSelectionMap) {
-                    fieldProvidedSelectionMap = new Map();
-                    typeNameFieldProvidedSelectionMap.set(
-                      typeNode.name.value,
-                      fieldProvidedSelectionMap,
-                    );
+                  // Helper used both for the top-level @provides registration
+                  // and for nested propagation. We propagate provides info to
+                  // every (parentType, field) pair along the path so that the
+                  // delegation planner stops re-fetching fields that the
+                  // providing subgraph already returned at deeper levels (e.g.
+                  // `@provides(fields: "categories { name subCategories { name } }")`).
+                  function registerProvidedSelectionForField(
+                    parentTypeName: string,
+                    fieldName: string,
+                    selectionSet: SelectionSetNode,
+                  ) {
+                    let fieldMap =
+                      typeNameFieldProvidedSelectionMap!.get(parentTypeName);
+                    if (!fieldMap) {
+                      fieldMap = new Map();
+                      typeNameFieldProvidedSelectionMap!.set(
+                        parentTypeName,
+                        fieldMap,
+                      );
+                    }
+                    const existing = fieldMap.get(fieldName);
+                    if (existing) {
+                      // Merge selections from multiple @provides declarations
+                      // touching the same (parentType, field). Duplicates are
+                      // harmless – stitchingInfo.ts later visits the selection
+                      // set and ensures __typename and uniqueness via the
+                      // subtraction logic.
+                      fieldMap.set(fieldName, {
+                        kind: Kind.SELECTION_SET,
+                        selections: [
+                          ...existing.selections,
+                          ...selectionSet.selections,
+                        ],
+                      });
+                    } else {
+                      fieldMap.set(fieldName, selectionSet);
+                    }
                   }
-                  fieldProvidedSelectionMap.set(
+                  registerProvidedSelectionForField(
+                    typeNode.name.value,
                     fieldNode.name.value,
                     providesSelectionSet,
                   );
@@ -596,6 +626,11 @@ export function getStitchingOptionsFromSupergraphSdl(
                             providedFields.add(selection.name.value);
 
                             if (selection.selectionSet) {
+                              registerProvidedSelectionForField(
+                                fieldNodeTypeName,
+                                selection.name.value,
+                                selection.selectionSet,
+                              );
                               const extraFieldNodeNamedType = getNamedTypeNode(
                                 extraFieldNodeInType.type,
                               );

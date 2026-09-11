@@ -47,7 +47,8 @@ group "e2e" {
     "gateway_e2e_edfs-subgraph-defs",
     "gateway_e2e_edfs-gateway-defs",
     "gateway_e2e_edfs-mesh-defs-with-entity-resolution",
-    "gateway_e2e_hive-tracing-circuit-breaker"
+    "gateway_e2e_hive-tracing-circuit-breaker",
+    "gateway_e2e_edfs-additional-resolver-with-cursor"
   ]
 }
 
@@ -59,7 +60,8 @@ group "e2e_bun" {
     "gateway_e2e_distributed-subscriptions-webhooks_bun",
     "gateway_e2e_edfs-subgraph-defs_bun",
     "gateway_e2e_edfs-gateway-defs_bun",
-    "gateway_e2e_edfs-mesh-defs-with-entity-resolution_bun"
+    "gateway_e2e_edfs-mesh-defs-with-entity-resolution_bun",
+    "gateway_e2e_edfs-additional-resolver-with-cursor_bun"
   ]
 }
 
@@ -199,5 +201,22 @@ target "gateway_e2e_hive-tracing-circuit-breaker" {
   tags = ["ghcr.io/graphql-hive/gateway:e2e.hive-tracing-circuit-breaker"]
   contexts = {
     "gateway_e2e": "target:gateway_e2e"
+  }
+}
+
+target "gateway_e2e_edfs-additional-resolver-with-cursor" {
+  context = "e2e/edfs-additional-resolver-with-cursor"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-additional-resolver-with-cursor"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
+target "gateway_e2e_edfs-additional-resolver-with-cursor_bun" {
+  context = "e2e/edfs-additional-resolver-with-cursor"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-additional-resolver-with-cursor-bun"]
+  contexts = {
+    "gateway_e2e-bun": "target:gateway_e2e-bun"
   }
 }

@@ -1,5 +1,169 @@
 # @graphql-hive/nestjs
 
+## 2.1.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-hive/gateway@2.14.0
+
+## 2.0.97
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.13.2
+
+## 2.0.96
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.13.1
+
+## 2.0.95
+### Patch Changes
+
+- Updated dependencies [[`f8ad168`](https://github.com/graphql-hive/gateway/commit/f8ad168710bc228758cbeb483281f2e21cb3d709)]:
+  - @graphql-hive/gateway@2.13.0
+
+## 2.0.94
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.107.1) (from `^0.105.0`, in `dependencies`)
+- Updated dependencies [[`e5fa81f`](https://github.com/graphql-hive/gateway/commit/e5fa81f6e1fab2c9b296ae35903ac780abfc1470), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`98403d3`](https://github.com/graphql-hive/gateway/commit/98403d3cb90fa9e49f84178d2bce73477242d314), [`e5fa81f`](https://github.com/graphql-hive/gateway/commit/e5fa81f6e1fab2c9b296ae35903ac780abfc1470)]:
+  - @graphql-hive/gateway@2.12.0
+
+## 2.0.93
+### Patch Changes
+
+- Updated dependencies [[`60111ef`](https://github.com/graphql-hive/gateway/commit/60111ef99f36a6285ba4feb5d31077838d1c1dbe), [`60111ef`](https://github.com/graphql-hive/gateway/commit/60111ef99f36a6285ba4feb5d31077838d1c1dbe)]:
+  - @graphql-hive/gateway@2.11.2
+
+## 2.0.92
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.11.1
+
+## 2.0.91
+### Patch Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.105.0) (from `^0.104.28`, in `dependencies`)
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-hive/gateway@2.11.0
+
+## 2.0.90
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.10
+
+## 2.0.89
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.9
+
+## 2.0.88
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.8
+
+## 2.0.87
+### Patch Changes
+
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-hive/gateway@2.10.7
+
+## 2.0.86
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.6
+
+## 2.0.85
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.5
+
+## 2.0.84
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.10.4
+
+## 2.0.83
+### Patch Changes
+
+- Updated dependencies [[`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6), [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6)]:
+  - @graphql-hive/gateway@2.10.3
+  - @graphql-hive/logger@1.1.1
+
+## 2.0.82
+### Patch Changes
+
+- Updated dependencies [[`71ac628`](https://github.com/graphql-hive/gateway/commit/71ac628faedacbe1f3254d7085af02929d04e3f0)]:
+  - @graphql-hive/gateway@2.10.2
+
+## 2.0.81
+### Patch Changes
+
+- Updated dependencies [[`736a7dd`](https://github.com/graphql-hive/gateway/commit/736a7ddfd8f9d1a5a57f009d6dbc062b2686d38a)]:
+  - @graphql-hive/gateway@2.10.1
+
+## 2.0.80
+### Patch Changes
+
+- Updated dependencies [[`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53), [`bff3ce4`](https://github.com/graphql-hive/gateway/commit/bff3ce44180bbc232dae0387e705f196a0838875), [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53), [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53), [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53), [`6ff1264`](https://github.com/graphql-hive/gateway/commit/6ff126445d61f595262ea52b067bf257bf043d53)]:
+  - @graphql-hive/gateway@2.10.0
+
+## 2.0.79
+### Patch Changes
+
+- Updated dependencies [[`43bc433`](https://github.com/graphql-hive/gateway/commit/43bc433e9752cefad9f8b8646610ce71b9751ecf)]:
+  - @graphql-hive/gateway@2.9.0
+
+## 2.0.78
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.8.5
+
+## 2.0.77
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway@2.8.4
+
+## 2.0.76
+### Patch Changes
+
+- Updated dependencies [[`45f935d`](https://github.com/graphql-hive/gateway/commit/45f935d7a064777b5c0c2933d7fa062f4550434d)]:
+  - @graphql-hive/gateway@2.8.3
+
 ## 2.0.75
 ### Patch Changes
 

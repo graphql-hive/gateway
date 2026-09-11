@@ -1,4 +1,5 @@
 import {
+  getVariableValues,
   MergedTypeInfo,
   MergedTypeResolver,
   StitchingInfo,
@@ -259,7 +260,9 @@ function createMergedTypes<
                   info,
                   subschema,
                   selectionSet,
+                  keyOrType,
                   type,
+                  skipTypeMerging,
                 ) {
                   return handleMaybePromise(
                     () => keyFn(originalResult),
@@ -271,7 +274,8 @@ function createMergedTypes<
                         subschema,
                         selectionSet,
                         key,
-                        type,
+                        keyOrType ?? type,
+                        skipTypeMerging,
                       ),
                   );
                 }
@@ -499,7 +503,7 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     }
   }
 
-  const variableValues = Object.create(null);
+  const variableValues = getVariableValues(undefined);
   const fragments = Object.create(null);
 
   const fieldNodeMap: Record<string, FieldNode> = Object.create(null);

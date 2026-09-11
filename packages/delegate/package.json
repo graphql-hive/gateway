@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/delegate",
-  "version": "12.0.17",
+  "version": "12.2.0",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "@graphql-tools/batch-execute": "workspace:^",
-    "@graphql-tools/executor": "^1.4.13",
-    "@graphql-tools/schema": "^10.0.29",
-    "@graphql-tools/utils": "^11.0.0",
+    "@graphql-tools/executor": "^2.0.1",
+    "@graphql-tools/schema": "^10.1.1",
+    "@graphql-tools/utils": "^12.0.1",
     "@repeaterjs/repeater": "^3.0.6",
     "@whatwg-node/promise-helpers": "^1.3.2",
     "dataloader": "^2.2.3",
@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/lodash": "4.17.24",
     "graphql": "^16.12.0",
-    "pkgroll": "2.27.0"
+    "pkgroll": "2.27.1"
   },
   "sideEffects": false
 }

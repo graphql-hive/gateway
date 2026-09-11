@@ -1,5 +1,196 @@
 # @graphql-tools/stitch
 
+## 10.3.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^2.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/2.0.1) (from `^1.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/merge@^9.2.4` ↗︎](https://www.npmjs.com/package/@graphql-tools/merge/v/9.2.4) (from `^9.1.5`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/schema@^10.1.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/schema/v/10.1.1) (from `^10.0.29`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-tools/batch-delegate@10.1.0
+  - @graphql-tools/delegate@12.2.0
+  - @graphql-tools/wrap@11.2.0
+
+## 10.2.5
+### Patch Changes
+
+- Updated dependencies [[`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7)]:
+  - @graphql-tools/delegate@12.1.4
+  - @graphql-tools/batch-delegate@10.0.32
+  - @graphql-tools/wrap@11.1.24
+
+## 10.2.4
+### Patch Changes
+
+
+
+- [#2555](https://github.com/graphql-hive/gateway/pull/2555) [`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Flush deferred merged fields without blocking the initial payload
+  
+  Deferred fields on merged entity types are now delegated when their deferred resolvers run instead of being included in the initial delegation plan. This allows the initial payload to be delivered before slower merged subgraph fields resolve.
+- Updated dependencies [[`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520)]:
+  - @graphql-tools/delegate@12.1.3
+  - @graphql-tools/batch-delegate@10.0.31
+  - @graphql-tools/wrap@11.1.23
+
+## 10.2.3
+### Patch Changes
+
+- Updated dependencies [[`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f)]:
+  - @graphql-tools/delegate@12.1.2
+  - @graphql-tools/batch-delegate@10.0.30
+  - @graphql-tools/wrap@11.1.22
+
+## 10.2.2
+### Patch Changes
+
+- Updated dependencies [[`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24)]:
+  - @graphql-tools/delegate@12.1.1
+  - @graphql-tools/batch-delegate@10.0.29
+  - @graphql-tools/wrap@11.1.21
+
+## 10.2.1
+### Patch Changes
+
+
+
+- [#2484](https://github.com/graphql-hive/gateway/pull/2484) [`a589a2d`](https://github.com/graphql-hive/gateway/commit/a589a2d9797e67623b28439d0bd30a17e3a247d6) Thanks [@jdolle](https://github.com/jdolle)! - Reduce peak memory consumption for `stitchSchemas` function
+
+## 10.2.0
+### Minor Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Automatically resolve plain merged-type references returned by local stitching resolvers
+  
+  Local fields introduced through `typeDefs` or `resolvers` are wrapped by `stitchSchemas`. When they return a partial merged type containing a usable key, stitching performs one initial delegation with type merging enabled. The existing stitching planner then handles computed fields, `@requires` dependencies, batching, nested entities, and fields owned by other subschemas.
+
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fields that are not provided by any subschema (added through `typeDefs` or `resolvers`) can now return partial objects of merged types; the missing fields are resolved from the owning subschema automatically
+  
+  ```graphql
+  type Query {
+    personCreated: PersonCreated
+  }
+  
+  type PersonCreated {
+    person: Person # merged type, owned by a subschema
+    cursor: String
+  }
+  ```
+  
+  ```ts
+  const resolvers = {
+    Query: {
+      // only the key of `Person` is provided locally
+      personCreated: () => ({ person: { id: '1' }, cursor: 'c1' }),
+    },
+  };
+  ```
+  
+  Before, `person` had to be resolved manually even though the stitched schema knows `Person` and its keys. Now the key is enough: `{ person { name } }` runs through the standard stitching planner, while local data (`cursor`) and local field resolvers on `Person` keep working as before. Computed fields, `@requires` dependencies, batching, and fields from other subschemas use the same type-merging flow as regular delegated results.
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-tools/batch-delegate@10.0.28
+  - @graphql-tools/wrap@11.1.20
+
+## 10.1.25
+### Patch Changes
+
+- Updated dependencies [[`8a08de3`](https://github.com/graphql-hive/gateway/commit/8a08de36be598f975ba500a28a9bd9710ead2d66), [`65ce370`](https://github.com/graphql-hive/gateway/commit/65ce3702231068c946d4f95147b556cab57ad28c)]:
+  - @graphql-tools/delegate@12.0.20
+  - @graphql-tools/batch-delegate@10.0.27
+  - @graphql-tools/wrap@11.1.19
+
+## 10.1.24
+### Patch Changes
+
+
+
+- [#2351](https://github.com/graphql-hive/gateway/pull/2351) [`0bbdbbc`](https://github.com/graphql-hive/gateway/commit/0bbdbbc22b75d9705a77f96144af002c796a695d) Thanks [@ardatan](https://github.com/ardatan)! - Fix `@provides` so the gateway only requests the provided fields the client actually selected, and stops delegating to the owner subgraph when `@provides` already covers the request.
+  
+  Previously, when a subgraph declared `@provides(fields: "...")` on a field, the gateway would still:
+  
+  1. Forward **every** field listed in `@provides` to that subgraph, even when the client never asked for them.
+  2. After receiving the response, plan additional delegations to the owner subgraph for `@provides`-covered fields whenever the providing subgraph declared them as `@external`, even though the data was already returned.
+  
+  For example with:
+  
+  ```graphql
+  # subgraph B (provider)
+  type Query {
+    entity: Entity @provides(fields: "name description")
+  }
+  
+  type Entity @key(fields: "id") {
+    id: ID!
+    name: String! @external
+    description: String! @external
+  }
+  ```
+  
+  a client query of `{ entity { id name } }` would still cause the gateway to ask subgraph B for `description` *and* fetch `name` again from subgraph A (the owner of `Entity`).
+  
+  After this fix:
+  
+  - Only the `@provides` fields the client actually selected are forwarded to the providing subgraph (request side).
+  - The delegation planner now recognises `@provides` declarations at every nested level (e.g. `@provides(fields: "nested { nestedNested { name description } }")`) and `@provides` declarations made via inline fragments on union/interface members (e.g. `@provides(fields: "... on Book { title }")`), so the gateway no longer round-trips to the owner subgraph for fields that the providing subgraph has already returned.
+  - Fragment spreads in the client query are correctly handled when selecting nested `@provides`-covered fields. Previously, using a fragment spread (e.g. `...MyFrag`) for nested `@external` fields could cause an unnecessary delegation to the owner because selection subtraction compared only the spread name with the explicit `@provides` fields. The planner now resolves fragment spreads before subtracting provided selections, while preserving the fragment type condition and directives when only part of a fragment remains.
+  
+  Aliases, direct field selections, fragments, fragment spreads, `@include`/`@skip` directives wrapping a `@provides` field, and nested `@provides` selections are preserved without unnecessary owner delegations.
+- Updated dependencies [[`0bbdbbc`](https://github.com/graphql-hive/gateway/commit/0bbdbbc22b75d9705a77f96144af002c796a695d)]:
+  - @graphql-tools/delegate@12.0.19
+  - @graphql-tools/batch-delegate@10.0.26
+  - @graphql-tools/wrap@11.1.18
+
+## 10.1.23
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@12.0.18
+  - @graphql-tools/batch-delegate@10.0.25
+  - @graphql-tools/wrap@11.1.17
+
+## 10.1.22
+### Patch Changes
+
+
+
+- [#2401](https://github.com/graphql-hive/gateway/pull/2401) [`83465de`](https://github.com/graphql-hive/gateway/commit/83465def4d854d1f0912f635bd9621433fd33c8b) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Fix `mergeDirectives` option and default it to `true`
+  
+  Custom directive definitions from subschemas were silently dropped from the stitched schema unless `mergeDirectives: true` was explicitly passed to `stitchSchemas`. This meant a schema like:
+  
+  ```graphql
+  directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+  
+  type Query @public {
+    isAnExample: Boolean @public
+  }
+  ```
+  
+  would stitch into a broken schema where `@public` was used on types and fields but never defined.
+  
+  The default is now `true`, so directive definitions are always collected and retained in the stitched schema, this is the expected behaviour since the merging was partial before this fix (usages got merged, but definitions not).
+  
+  Passing `mergeDirectives: false` now produces a fully clean result - both directive definitions and all their usages on types, fields, input fields, and enum values are stripped.
+
 ## 10.1.21
 ### Patch Changes
 

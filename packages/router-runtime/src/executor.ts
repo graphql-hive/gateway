@@ -188,20 +188,16 @@ function createQueryPlanExecutionContext({
       operation.variableDefinitions,
       variableValues || globalEmpty,
     );
-    if (variableValuesResult.errors?.length) {
+    if (variableValuesResult.errors) {
       if (variableValuesResult.errors.length === 1) {
         throw variableValuesResult.errors[0];
       }
-      if (variableValuesResult.errors.length > 1) {
-        throw new AggregateError(
-          variableValuesResult.errors,
-          'Variable parsing error',
-        );
-      }
+      throw new AggregateError(
+        variableValuesResult.errors,
+        'Variable parsing error',
+      );
     }
-    if (variableValuesResult.coerced) {
-      variableValues = variableValuesResult.coerced;
-    }
+    variableValues = variableValuesResult.variableValues.coerced;
   }
   return {
     supergraphSchema,
@@ -631,9 +627,13 @@ function buildBatchFetchVariables(
     variableName,
     state,
   ] of batchContext.representationsByVariableName.entries()) {
-    if (!state.representations.length) {
-      continue;
-    }
+    // Always attach the representations variable, even when it resolved to an
+    // empty list. The batched `_entities` document declares every alias's
+    // `$representations` as a required `[_Any!]!`, so skipping an empty alias
+    // sends an operation that declares a variable it never provides — which the
+    // subgraph rejects wholesale, failing the sibling aliases that *did* have
+    // representations. Sending `[]` keeps the operation valid
+    // (`_entities(representations: [])` simply returns `[]`).
     const targetVariables =
       variablesForFetch ?? (Object.create(null) as Record<string, any>);
     if (!variablesForFetch) {
@@ -1022,10 +1022,9 @@ function normalizeFetchErrors(
   const fallbackPath = options.defaultPath ?? getDefaultErrorPath(fetchNode);
 
   if (!flattenState) {
-    if (!fallbackPath) {
-      return [...errors];
-    }
-    return errors.map((error) => relocatedError(error, fallbackPath));
+    return errors.map((error) =>
+      error.path || !fallbackPath ? error : relocatedError(error, fallbackPath),
+    );
   }
 
   const entityPathMap = buildFlattenEntityPathMap(flattenState);
@@ -1543,7 +1542,9 @@ function projectSelectionSet(
       return null;
     }
   }
-  const result: Record<string, any> = {};
+  // null proto because response keys come from client-controlled aliases, `__proto__` would
+  // otherwise hit Object.prototype on read and merge attacker data into it
+  const result: Record<string, any> = Object.create(null);
   selectionLoop: for (const selection of selectionSet.selections) {
     if (selection.directives?.length) {
       for (const directiveNode of selection.directives) {

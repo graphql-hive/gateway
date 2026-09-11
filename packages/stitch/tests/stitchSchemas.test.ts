@@ -16,6 +16,7 @@ import {
   ExecutionResult,
   getResolversFromSchema,
   IResolvers,
+  printSchemaWithDirectives,
 } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
 import {
@@ -30,6 +31,7 @@ import {
   subscriptionPubSubTrigger,
 } from '@internal/testing/fixtures/schemas';
 import {
+  buildASTSchema,
   buildSchema,
   graphql,
   GraphQLObjectType,
@@ -3845,4 +3847,47 @@ it('should be able to extend a transformed schema', async () => {
       },
     },
   ]);
+});
+
+describe('directive merging', () => {
+  const directiveMergeTestSdl = /* GraphQL */ `
+    directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+
+    type Query @public {
+      isAnExample: Boolean @public
+    }
+  `;
+
+  it('stitch schemas retains directive definitions and usages by default (mergeDirectives: true)', () => {
+    const stitchedSchema = stitchSchemas({
+      subschemas: [buildASTSchema(parse(directiveMergeTestSdl))],
+    });
+    expect(printSchemaWithDirectives(stitchedSchema)).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      directive @public on SCHEMA | OBJECT | FIELD_DEFINITION
+
+      type Query @public {
+        isAnExample: Boolean @public
+      }"
+    `);
+  });
+
+  it('stitch schemas strips directive definitions and usages when mergeDirectives: false', () => {
+    const stitchedSchema = stitchSchemas({
+      subschemas: [buildASTSchema(parse(directiveMergeTestSdl))],
+      mergeDirectives: false,
+    });
+    expect(printSchemaWithDirectives(stitchedSchema)).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        isAnExample: Boolean
+      }"
+    `);
+  });
 });

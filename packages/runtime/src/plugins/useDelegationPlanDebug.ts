@@ -11,8 +11,7 @@ export function useMaybeDelegationPlanDebug<
   let activePlugin: GatewayPlugin<TContext> | undefined;
   return {
     onPluginInit({ plugins }) {
-      let shouldLog = false;
-      rootLog.debug(() => (shouldLog = true));
+      const shouldLog = rootLog.level === 'trace' || rootLog.level === 'debug';
       if (shouldLog) {
         activePlugin = useDelegationPlanDebug();
         // plugins.push will run the plugin last, but addPlugin will run it after this plugin. we dont care?

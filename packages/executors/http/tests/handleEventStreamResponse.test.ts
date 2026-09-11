@@ -288,6 +288,64 @@ data:
     expect(secondResult.done).toBe(true);
   });
 
+  it('should cancel the response body when the subscription is disposed', async () => {
+    // NOTE: this test deliberately uses the platform-native ReadableStream and
+    // Response instead of the ones from '@whatwg-node/fetch'. The ponyfill
+    // implements reader.releaseLock() and reader.cancel() identically (both
+    // just call iterator.return() on the underlying node stream), so it cannot
+    // observe the difference between the two. A native/undici body can, and
+    // that is the implementation that leaks the connection when the body is
+    // released instead of cancelled.
+    const NativeReadableStream = globalThis.ReadableStream;
+    const NativeResponse = globalThis.Response;
+
+    let onCancel!: (reason?: unknown) => void;
+    const cancelled = new Promise<'cancelled'>((resolve) => {
+      onCancel = () => resolve('cancelled');
+    });
+
+    const body = new NativeReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode('event: next\ndata: { "foo": "bar" }\n\n'),
+        );
+        // deliberately never closed: an open subscription with a live upstream
+      },
+      cancel(reason) {
+        onCancel(reason);
+      },
+    });
+
+    const response = new NativeResponse(body);
+    const asyncIterable = handleEventStreamResponse(response as Response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    expect(await iterator.next()).toEqual({
+      done: false,
+      value: { foo: 'bar' },
+    });
+
+    // dispose the subscription. not awaited: pump() is parked on reader.read()
+    // and only settles once the body is actually cancelled.
+    const returned = iterator.return?.();
+
+    // the timeout handle is always cleared: a pending timer left behind here
+    // keeps the suite alive and trips `jest --detectLeaks` in the leaks job.
+    let timeout: ReturnType<typeof globalThis.setTimeout>;
+    const stillOpen = new Promise<'still open'>((resolve) => {
+      timeout = globalThis.setTimeout(() => resolve('still open'), 1000);
+    });
+    try {
+      await expect(Promise.race([cancelled, stillOpen])).resolves.toBe(
+        'cancelled',
+      );
+    } finally {
+      globalThis.clearTimeout(timeout!);
+    }
+
+    await returned;
+  });
+
   it.todo('should consume messages on an immediately closed stream', () => {
     // the order of execution in handleEventStreamResponse should be:
     // 1. start waiting for `reader.read()`

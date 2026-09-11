@@ -16,13 +16,18 @@ import {
   isInputObjectType,
   isListType,
   isNonNullType,
+  isTypeSubTypeOf,
   Kind,
   NameNode,
   OperationDefinitionNode,
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
+  typeFromAST,
+  visit,
 } from 'graphql';
+import { getCoercedVariableValues } from './getCoercedVariableValues.js';
+import { getGraphQLResolveInfo } from './getGraphQLResolveInfo.js';
 import { ICreateRequest } from './types.js';
 
 export function getDelegatingOperation(
@@ -83,11 +88,13 @@ export function createRequest({
     );
   }
 
-  const newVariables = info?.variableValues ? { ...info.variableValues } : {};
+  const outerVariableValues = getCoercedVariableValues(info?.variableValues);
+  const newVariables = outerVariableValues ? { ...outerVariableValues } : {};
   const variableDefinitions = info?.operation.variableDefinitions
     ? [...info.operation.variableDefinitions]
     : [];
   const argNodes: ArgumentNode[] = [];
+  const replacedVariableNames = new Set<string>();
 
   if (args != null) {
     const rootType =
@@ -102,13 +109,32 @@ export function createRequest({
       const existingArgNode = fieldNode?.arguments?.find(
         (argNode) => argNode.name.value === argName,
       );
-      // Check if we can re-use the variable from the original request for this argument
+      // If we can't resolve the argument type from the target schema, preserve the original argument AST (variable or literal) to avoid losing enum literal kinds.
+      if (existingArgNode && !argInstance) {
+        argNodes.push(existingArgNode);
+        continue;
+      }
       if (existingArgNode?.value.kind === Kind.VARIABLE) {
         const varName = existingArgNode.value.name.value;
         const varValue = newVariables[varName];
-        // If the variable value is the same as the argument value,
-        // we can re-use the variable and its definition
-        if (varValue === argValue) {
+        const variableDefinition = variableDefinitions.find(
+          (definition) => definition.variable.name.value === varName,
+        );
+        const variableType =
+          variableDefinition && targetSchema
+            ? typeFromAST(info?.schema ?? targetSchema, variableDefinition.type)
+            : undefined;
+        // If the variable value and type are compatible, we can re-use them
+        if (
+          varValue === argValue &&
+          variableType &&
+          argInstance &&
+          isTypeSubTypeOf(
+            info?.schema ?? targetSchema!,
+            variableType,
+            argInstance.type,
+          )
+        ) {
           argNodes.push(existingArgNode);
           continue;
         }
@@ -122,7 +148,7 @@ export function createRequest({
           // It should not conflict with the variable on the gateway request
           // Because the gateway request can have a variable that has nothing to do with
           // this argument
-          info?.variableValues?.[varName] != null;
+          outerVariableValues?.[varName] != null;
         let varName = argName;
         // Try `<argName>`, then `<rootFieldName>_<argName>`, then `_0_<rootFieldName>_<argName>`, etc.
         if (varExists(varName)) {
@@ -131,6 +157,9 @@ export function createRequest({
           while (varExists(varName)) {
             varName = `_${i++}_${rootFieldName}_${argName}`;
           }
+        }
+        if (existingArgNode?.value.kind === Kind.VARIABLE) {
+          replacedVariableNames.add(existingArgNode.value.name.value);
         }
         variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
@@ -218,6 +247,27 @@ export function createRequest({
     definitions,
   };
 
+  if (replacedVariableNames.size > 0) {
+    const usedVariableNames = new Set<string>();
+    visit(document, {
+      VariableDefinition: () => false,
+      Variable: (variableNode) => {
+        usedVariableNames.add(variableNode.name.value);
+      },
+    });
+    for (const variableName of replacedVariableNames) {
+      if (!usedVariableNames.has(variableName)) {
+        const variableIndex = variableDefinitions.findIndex(
+          (definition) => definition.variable.name.value === variableName,
+        );
+        if (variableIndex !== -1) {
+          variableDefinitions.splice(variableIndex, 1);
+          delete newVariables[variableName];
+        }
+      }
+    }
+  }
+
   return {
     subgraphName,
     document,
@@ -225,7 +275,7 @@ export function createRequest({
     rootValue,
     operationName: targetOperationName,
     context,
-    info,
+    info: getGraphQLResolveInfo(info),
     operationType: targetOperation,
   };
 }

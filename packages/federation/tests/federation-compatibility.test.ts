@@ -21,7 +21,7 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from 'graphql';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
 describe('Federation Compatibility', () => {
@@ -35,7 +35,9 @@ describe('Federation Compatibility', () => {
   const supergraphSdlMap = new Map<string, string>();
   type SupergraphTestDefinition = { query: string; expected: any }[];
   const supergraphTestMap = new Map<string, SupergraphTestDefinition>();
+  const oldPunishForPoorPlans = process.env['PUNISH_FOR_POOR_PLANS'];
   beforeAll(async () => {
+    process.env['PUNISH_FOR_POOR_PLANS'] = '1';
     const supergraphPathListRes = await auditRouter.fetch(
       'http://localhost/supergraphs',
     );
@@ -58,6 +60,10 @@ describe('Federation Compatibility', () => {
         supergraphTestMap.set(supergraphName, testsContent);
       }
     }
+  });
+
+  afterAll(() => {
+    process.env['PUNISH_FOR_POOR_PLANS'] = oldPunishForPoorPlans;
   });
 
   for (const supergraphName of supergraphList) {

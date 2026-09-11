@@ -1,5 +1,245 @@
 # @graphql-hive/gateway-runtime
 
+## 2.11.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-mesh/fusion-runtime@1.12.0
+  - @graphql-mesh/hmac-upstream-signature@2.1.0
+  - @graphql-mesh/transport-common@1.1.0
+  - @graphql-tools/batch-delegate@10.1.0
+  - @graphql-tools/delegate@12.2.0
+  - @graphql-tools/executor-common@1.1.0
+  - @graphql-tools/executor-http@3.4.0
+  - @graphql-tools/federation@4.5.0
+  - @graphql-tools/stitch@10.3.0
+  - @graphql-tools/wrap@11.2.0
+
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [[`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7)]:
+  - @graphql-tools/federation@4.4.15
+  - @graphql-tools/delegate@12.1.4
+  - @graphql-mesh/fusion-runtime@1.11.10
+  - @graphql-tools/batch-delegate@10.0.32
+  - @graphql-tools/stitch@10.2.5
+  - @graphql-tools/wrap@11.1.24
+
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [[`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351)]:
+  - @graphql-mesh/fusion-runtime@1.11.9
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies [[`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520)]:
+  - @graphql-tools/federation@4.4.14
+  - @graphql-tools/delegate@12.1.3
+  - @graphql-tools/stitch@10.2.4
+  - @graphql-mesh/fusion-runtime@1.11.8
+  - @graphql-tools/batch-delegate@10.0.31
+  - @graphql-tools/wrap@11.1.23
+
+## 2.10.8
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.16) (from `^0.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.107.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.107.2) (from `^0.104.42`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.107.1) (from `^0.105.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.107.1) (from `^0.104.38`, in `dependencies`)
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f)]:
+  - @graphql-mesh/fusion-runtime@1.11.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.15
+  - @graphql-mesh/transport-common@1.0.21
+  - @graphql-tools/delegate@12.1.2
+  - @graphql-tools/batch-delegate@10.0.30
+  - @graphql-tools/federation@4.4.13
+  - @graphql-tools/stitch@10.2.3
+  - @graphql-tools/wrap@11.1.22
+
+## 2.10.7
+### Patch Changes
+
+
+
+- [#2523](https://github.com/graphql-hive/gateway/pull/2523) [`90c41c8`](https://github.com/graphql-hive/gateway/commit/90c41c8cc3c65af3184d9dc1f1a194edba141a79) Thanks [@jdolle](https://github.com/jdolle)! - Upgrade `@graphql-hive/core` to 0.22.1.
+  
+  This version improves error handling inside the usage collector to prevent unhandled exceptions from being raised that can kill the application.
+
+## 2.10.6
+### Patch Changes
+
+
+
+- [#2328](https://github.com/graphql-hive/gateway/pull/2328) [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.105.0) (from `^0.104.28`, in `dependencies`)
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-mesh/fusion-runtime@1.11.6
+  - @graphql-mesh/hmac-upstream-signature@2.0.14
+  - @graphql-mesh/transport-common@1.0.20
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [[`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24)]:
+  - @graphql-tools/delegate@12.1.1
+  - @graphql-tools/batch-delegate@10.0.29
+  - @graphql-tools/federation@4.4.12
+  - @graphql-mesh/fusion-runtime@1.11.5
+  - @graphql-tools/stitch@10.2.2
+  - @graphql-tools/wrap@11.1.21
+
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [[`a589a2d`](https://github.com/graphql-hive/gateway/commit/a589a2d9797e67623b28439d0bd30a17e3a247d6)]:
+  - @graphql-tools/stitch@10.2.1
+  - @graphql-tools/federation@4.4.11
+  - @graphql-mesh/fusion-runtime@1.11.4
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [[`96a19f2`](https://github.com/graphql-hive/gateway/commit/96a19f2dc63be7ff1c9a1c6d2d239d153b82153b)]:
+  - @graphql-hive/pubsub@2.2.1
+  - @graphql-mesh/transport-common@1.0.19
+  - @graphql-mesh/fusion-runtime@1.11.3
+
+## 2.10.2
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-hive/pubsub@2.2.0
+  - @graphql-mesh/fusion-runtime@1.11.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.13
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-tools/stitch@10.2.0
+  - @graphql-mesh/transport-common@1.0.18
+  - @graphql-tools/batch-delegate@10.0.28
+  - @graphql-tools/federation@4.4.10
+  - @graphql-tools/wrap@11.1.20
+
+## 2.10.1
+### Patch Changes
+
+- Updated dependencies [[`8a08de3`](https://github.com/graphql-hive/gateway/commit/8a08de36be598f975ba500a28a9bd9710ead2d66), [`65ce370`](https://github.com/graphql-hive/gateway/commit/65ce3702231068c946d4f95147b556cab57ad28c)]:
+  - @graphql-tools/delegate@12.0.20
+  - @graphql-tools/batch-delegate@10.0.27
+  - @graphql-tools/federation@4.4.9
+  - @graphql-mesh/fusion-runtime@1.11.1
+  - @graphql-tools/stitch@10.1.25
+  - @graphql-tools/wrap@11.1.19
+
+## 2.10.0
+### Minor Changes
+
+
+
+- [#2449](https://github.com/graphql-hive/gateway/pull/2449) [`65ecf28`](https://github.com/graphql-hive/gateway/commit/65ecf2829c379e1d3758b6ee61e83728ba9dd99f) Thanks [@advoretsky](https://github.com/advoretsky)! - Add opt-in graceful supergraph reload ("generation overlap").
+  
+  By default, when the supergraph reloads, the previous generation (executor +
+  subgraph transports) is disposed immediately, aborting any in-flight operation
+  on it with a `SCHEMA_RELOAD` / 503 error (queries are retried on the new schema;
+  mutations are not).
+  
+  With the new `gracefulSchemaReload` config the previous generation is kept alive
+  and only new requests are routed to the new one, so in-flight queries and
+  mutations finish on the schema they were admitted under. Operations are
+  reference-counted per generation for their whole lifetime (across all subgraph
+  hops, and until `@defer`/`@stream` streams end). A superseded generation is
+  disposed once idle, or force-disposed after `drainTimeout`; `maxConcurrentGenerations`
+  caps how many generations may overlap. Subscriptions are not pinned: one on a
+  superseded generation ends with `SCHEMA_RELOAD` when that generation is
+  disposed — immediately on reload when nothing is draining, otherwise once the
+  last in-flight operation finishes (at the latest after `drainTimeout`) — and
+  the client then reconnects against the new schema. Disabled by default.
+  
+  ```ts
+  export const gatewayConfig = defineConfig({
+    gracefulSchemaReload: { drainTimeout: 10_000 }, // ms; default off
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies [[`65ecf28`](https://github.com/graphql-hive/gateway/commit/65ecf2829c379e1d3758b6ee61e83728ba9dd99f)]:
+  - @graphql-mesh/fusion-runtime@1.11.0
+
+## 2.9.10
+### Patch Changes
+
+- Updated dependencies [[`0bbdbbc`](https://github.com/graphql-hive/gateway/commit/0bbdbbc22b75d9705a77f96144af002c796a695d)]:
+  - @graphql-tools/delegate@12.0.19
+  - @graphql-tools/stitch@10.1.24
+  - @graphql-tools/federation@4.4.8
+  - @graphql-mesh/fusion-runtime@1.10.10
+  - @graphql-tools/batch-delegate@10.0.26
+  - @graphql-tools/wrap@11.1.18
+
+## 2.9.9
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/yoga@^0.48.2` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.48.2) (from `^0.48.0`, in `dependencies`)
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove an empty and unnecessary log during debug
+
+- Updated dependencies [[`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6)]:
+  - @graphql-hive/logger@1.1.1
+  - @graphql-mesh/fusion-runtime@1.10.9
+  - @graphql-mesh/transport-common@1.0.17
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.10.8
+  - @graphql-tools/delegate@12.0.18
+  - @graphql-tools/batch-delegate@10.0.25
+  - @graphql-tools/federation@4.4.7
+  - @graphql-tools/stitch@10.1.23
+  - @graphql-tools/wrap@11.1.17
+
+## 2.9.7
+### Patch Changes
+
+- Updated dependencies [[`83465de`](https://github.com/graphql-hive/gateway/commit/83465def4d854d1f0912f635bd9621433fd33c8b)]:
+  - @graphql-tools/stitch@10.1.22
+  - @graphql-tools/federation@4.4.6
+  - @graphql-mesh/fusion-runtime@1.10.7
+
 ## 2.9.6
 ### Patch Changes
 

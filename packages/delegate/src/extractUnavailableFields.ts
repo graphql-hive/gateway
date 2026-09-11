@@ -208,6 +208,7 @@ export function extractUnavailableFields(
 export function subtractSelectionSets(
   selectionSetA: SelectionSetNode,
   selectionSetB: SelectionSetNode,
+  fragments: Record<string, FragmentDefinitionNode> = {},
 ): SelectionSetNode {
   const newSelections: SelectionNode[] = [];
   for (const selectionA of selectionSetA.selections) {
@@ -229,7 +230,7 @@ export function subtractSelectionSets(
           const newSubSelection = fieldsInOtherSelectionSet.reduce(
             (acc, fieldB) =>
               fieldB.selectionSet
-                ? subtractSelectionSets(acc, fieldB.selectionSet)
+                ? subtractSelectionSets(acc, fieldB.selectionSet, fragments)
                 : acc,
             {
               kind: Kind.SELECTION_SET,
@@ -265,7 +266,11 @@ export function subtractSelectionSets(
           const newSubSelection = inlineFragmentsFromB.reduce(
             (acc, subselectionB) =>
               subselectionB.selectionSet
-                ? subtractSelectionSets(acc, subselectionB.selectionSet)
+                ? subtractSelectionSets(
+                    acc,
+                    subselectionB.selectionSet,
+                    fragments,
+                  )
                 : acc,
             {
               kind: Kind.SELECTION_SET,
@@ -295,7 +300,27 @@ export function subtractSelectionSets(
       }
       case Kind.FRAGMENT_SPREAD: {
         const fragmentSpreadA = selectionA as FragmentSpreadNode;
-        if (
+        const fragment = fragments[fragmentSpreadA.name.value];
+        if (fragment) {
+          // compare the fragment's fields directly so nested @provides fields can be removed
+          const newSubSelection = subtractSelectionSets(
+            fragment.selectionSet,
+            selectionSetB,
+            fragments,
+          );
+          if (newSubSelection.selections.length) {
+            // keep the type condition and directives when only part of the fragment remains
+            newSelections.push({
+              kind: Kind.INLINE_FRAGMENT,
+              typeCondition: fragment.typeCondition,
+              directives: [
+                ...(fragment.directives ?? []),
+                ...(fragmentSpreadA.directives ?? []),
+              ],
+              selectionSet: newSubSelection,
+            });
+          }
+        } else if (
           !selectionSetB.selections.some(
             (subselectionB) =>
               subselectionB.kind === Kind.FRAGMENT_SPREAD &&

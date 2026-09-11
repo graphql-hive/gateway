@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "repository": {
     "type": "git",
@@ -71,10 +71,10 @@
   "devDependencies": {
     "@graphql-hive/gateway-runtime": "workspace:*",
     "@langfuse/client": "^5.0.2",
-    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api": "^1.9.1",
     "graphql": "^16.13.2",
     "graphql-yoga": "^5.21.1",
-    "pkgroll": "2.27.0"
+    "pkgroll": "2.27.1"
   },
   "sideEffects": false
 }

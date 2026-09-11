@@ -1,5 +1,218 @@
 # @graphql-hive/router-runtime
 
+## 1.6.0
+### Minor Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL 16 with @graphql-tools/utils v12
+  
+  Preserves GraphQL 16 compatibility while upgrading to `@graphql-tools/utils` v12, `@graphql-tools/executor` v2, and the compatible `@graphql-tools/schema` and `@graphql-tools/merge` releases. Consumers now receive consistent resolver and execution request types without conflicts between different GraphQL Tools versions.
+  
+  Stitched and delegated operations handle the new executor variable result shape correctly, including variables used by directives. Resolver execution also supports the executor's cancellation and asynchronous work helpers while remaining compatible with the GraphQL 16 `GraphQLResolveInfo` API.
+
+### Patch Changes
+
+
+
+- [#2604](https://github.com/graphql-hive/gateway/pull/2604) [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^2.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/2.0.1) (from `^1.4.13`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^12.0.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.0.1) (from `^11.0.0`, in `dependencies`)
+- Updated dependencies [[`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830), [`ee4cc07`](https://github.com/graphql-hive/gateway/commit/ee4cc07097926293a8628c075a264e272cad8830)]:
+  - @graphql-mesh/fusion-runtime@1.12.0
+  - @graphql-mesh/transport-common@1.1.0
+  - @graphql-tools/delegate@12.2.0
+  - @graphql-tools/executor-common@1.1.0
+  - @graphql-tools/federation@4.5.0
+
+## 1.5.1
+### Patch Changes
+
+
+
+- [#2599](https://github.com/graphql-hive/gateway/pull/2599) [`4959645`](https://github.com/graphql-hive/gateway/commit/4959645239276d8827957a27fcfe266cfc54b9c7) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix prototype pollution when projecting a field aliased to `__proto__`
+  
+  Response keys come from client-controlled GraphQL aliases. Projecting a selection set into a plain object made `result['__proto__']` resolve to `Object.prototype`, and the merge branch then assigned attacker-controlled fields onto it - polluting the global prototype for the lifetime of the gateway process.
+  
+  Projected objects are now created with a `null` prototype, so `__proto__` is treated as an ordinary response key.
+- Updated dependencies [[`e5ea5f4`](https://github.com/graphql-hive/gateway/commit/e5ea5f419bb27abe24e6962f07fd98fb886464f7)]:
+  - @graphql-tools/federation@4.4.15
+  - @graphql-tools/delegate@12.1.4
+  - @graphql-mesh/fusion-runtime@1.11.10
+
+## 1.5.0
+### Minor Changes
+
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - ### Support remote cache for `router-runtime`
+  
+  The (remote) `cache` provided for the gateway is now used also to store query plans object created by the Router (Rust) runtime.
+
+### Patch Changes
+
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.44` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.44) (from `^0.0.38`, in `dependencies`)
+  - Added dependency [`@whatwg-node/fetch@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.13) (to `dependencies`)
+
+
+- [#2542](https://github.com/graphql-hive/gateway/pull/2542) [`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351) Thanks [@dotansimha](https://github.com/dotansimha)! - ### Improve cache key calculation
+  
+  The router-runtime package now uses a native hash mechanism, provided by the Rust runtime, instead of using the operationName for the cache key. This ensure a more robust caching.
+- Updated dependencies [[`48e4ab3`](https://github.com/graphql-hive/gateway/commit/48e4ab36ac50dbd29c4855bb8087989b128e4351)]:
+  - @graphql-mesh/fusion-runtime@1.11.9
+
+## 1.4.25
+### Patch Changes
+
+- Updated dependencies [[`eb6569b`](https://github.com/graphql-hive/gateway/commit/eb6569b3ee21bdc16c67c6d356101e66e206d520)]:
+  - @graphql-tools/federation@4.4.14
+  - @graphql-tools/delegate@12.1.3
+  - @graphql-mesh/fusion-runtime@1.11.8
+
+## 1.4.24
+### Patch Changes
+
+
+
+- [#2549](https://github.com/graphql-hive/gateway/pull/2549) [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2) Thanks [@dotansimha](https://github.com/dotansimha)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.107.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.107.1) (from `^0.104.38`, in `dependencies`)
+- Updated dependencies [[`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`091fcd2`](https://github.com/graphql-hive/gateway/commit/091fcd282af0842d24cdb994c8e0a0d635e8c1e2), [`af2cccb`](https://github.com/graphql-hive/gateway/commit/af2cccb7150db504ce42ab6b463166341377614f)]:
+  - @graphql-mesh/fusion-runtime@1.11.7
+  - @graphql-mesh/transport-common@1.0.21
+  - @graphql-tools/delegate@12.1.2
+  - @graphql-tools/federation@4.4.13
+
+## 1.4.23
+### Patch Changes
+
+
+
+- [#2532](https://github.com/graphql-hive/gateway/pull/2532) [`ae78edc`](https://github.com/graphql-hive/gateway/commit/ae78edcb39700415a5df2a90a5ffb69024cd63ab) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Preserve complete GraphQL error paths returned by subgraphs when executing router query plans, including aliases, list indices, and nested fields
+
+## 1.4.22
+### Patch Changes
+
+- Updated dependencies [[`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c), [`530eca8`](https://github.com/graphql-hive/gateway/commit/530eca85a7745d53145ced209b6b2ce4b3798e1c)]:
+  - @graphql-mesh/fusion-runtime@1.11.6
+  - @graphql-mesh/transport-common@1.0.20
+
+## 1.4.21
+### Patch Changes
+
+- Updated dependencies [[`9ff0daf`](https://github.com/graphql-hive/gateway/commit/9ff0dafdfaa1db829dbde2c28e98c78e47fc7b24)]:
+  - @graphql-tools/delegate@12.1.1
+  - @graphql-tools/federation@4.4.12
+  - @graphql-mesh/fusion-runtime@1.11.5
+
+## 1.4.20
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.4.11
+  - @graphql-mesh/fusion-runtime@1.11.4
+
+## 1.4.19
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.0.19
+  - @graphql-mesh/fusion-runtime@1.11.3
+
+## 1.4.18
+### Patch Changes
+
+
+
+- [#2473](https://github.com/graphql-hive/gateway/pull/2473) [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.38` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.38) (from `^0.104.36`, in `dependencies`)
+- Updated dependencies [[`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc), [`6f2c3b6`](https://github.com/graphql-hive/gateway/commit/6f2c3b64b05f6ba17928fd098915c2167f3daedc)]:
+  - @graphql-mesh/fusion-runtime@1.11.2
+  - @graphql-tools/delegate@12.1.0
+  - @graphql-mesh/transport-common@1.0.18
+  - @graphql-tools/federation@4.4.10
+
+## 1.4.17
+### Patch Changes
+
+- Updated dependencies [[`8a08de3`](https://github.com/graphql-hive/gateway/commit/8a08de36be598f975ba500a28a9bd9710ead2d66), [`65ce370`](https://github.com/graphql-hive/gateway/commit/65ce3702231068c946d4f95147b556cab57ad28c)]:
+  - @graphql-tools/delegate@12.0.20
+  - @graphql-tools/federation@4.4.9
+  - @graphql-mesh/fusion-runtime@1.11.1
+
+## 1.4.16
+### Patch Changes
+
+- Updated dependencies [[`65ecf28`](https://github.com/graphql-hive/gateway/commit/65ecf2829c379e1d3758b6ee61e83728ba9dd99f)]:
+  - @graphql-mesh/fusion-runtime@1.11.0
+
+## 1.4.15
+### Patch Changes
+
+
+
+- [#2467](https://github.com/graphql-hive/gateway/pull/2467) [`d51423d`](https://github.com/graphql-hive/gateway/commit/d51423d14a0aa97429c3d7d013a07e2c48d6eb62) Thanks [@vyacheslav-voloshyn](https://github.com/vyacheslav-voloshyn)! - Fix `BatchFetch` execution dropping the `$representations` variable for an entity alias that resolved to zero representations.
+  
+  When a `BatchFetch` plan node groups several entity fetches for the same subgraph into one aliased `_entities` request and one alias resolves to an empty representation list (e.g. a nullable federated field that is `null`), `buildBatchFetchVariables` omitted that alias's variable. The batched document still declares it as a required `[_Any!]!`, so the operation declared a variable it never provided and the subgraph rejected the whole request — failing the sibling aliases that *did* have representations.
+  
+  Empty aliases now send `[]`, keeping the operation valid (`_entities(representations: [])` simply returns `[]`).
+- Updated dependencies [[`0bbdbbc`](https://github.com/graphql-hive/gateway/commit/0bbdbbc22b75d9705a77f96144af002c796a695d)]:
+  - @graphql-tools/delegate@12.0.19
+  - @graphql-tools/federation@4.4.8
+  - @graphql-mesh/fusion-runtime@1.10.10
+
+## 1.4.14
+### Patch Changes
+
+
+
+- [#2457](https://github.com/graphql-hive/gateway/pull/2457) [`2337cb9`](https://github.com/graphql-hive/gateway/commit/2337cb917efd72626c319d952f7713bf3da676d6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.38` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.38) (from `^0.0.35`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.10.9
+  - @graphql-mesh/transport-common@1.0.17
+
+## 1.4.13
+### Patch Changes
+
+
+
+- [#2458](https://github.com/graphql-hive/gateway/pull/2458) [`d1d8ee2`](https://github.com/graphql-hive/gateway/commit/d1d8ee2b64edf1ebeafd4b3a5d8d41382a6cd728) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.38` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.38) (from `^0.0.35`, in `dependencies`)
+
+
+- [#2458](https://github.com/graphql-hive/gateway/pull/2458) [`d1d8ee2`](https://github.com/graphql-hive/gateway/commit/d1d8ee2b64edf1ebeafd4b3a5d8d41382a6cd728) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Various fixes and improvements to the Rust query planner
+  
+  For full information, please refer to the [Hive Router Node addon releases](https://github.com/graphql-hive/router/releases?q=node-addon&expanded=true).
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.10.8
+  - @graphql-tools/delegate@12.0.18
+  - @graphql-tools/federation@4.4.7
+
+## 1.4.12
+### Patch Changes
+
+
+
+- [#2441](https://github.com/graphql-hive/gateway/pull/2441) [`c23fe21`](https://github.com/graphql-hive/gateway/commit/c23fe2194ed42fbf303da2bd9b058ac6771febe4) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/router-query-planner@^0.0.35` ↗︎](https://www.npmjs.com/package/@graphql-hive/router-query-planner/v/0.0.35) (from `^0.0.28`, in `dependencies`)
+
+## 1.4.11
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.4.6
+  - @graphql-mesh/fusion-runtime@1.10.7
+
 ## 1.4.10
 ### Patch Changes
 

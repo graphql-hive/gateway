@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -52,7 +52,7 @@ jobs:
           - 1
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -62,7 +62,7 @@ jobs:
         env:
           HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
         with:
-          timeout_minutes: 10
+          timeout_minutes: 15
           max_attempts: 3
           command: yarn test:bun
 
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -93,7 +93,7 @@ jobs:
         env:
           HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
         with:
-          timeout_minutes: 10
+          timeout_minutes: 15
           max_attempts: 3
           command: yarn test:leaks
 
@@ -179,7 +179,7 @@ jobs:
     name: E2E / ${{matrix.setup.workflow-name}}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Configure Docker daemon mirror
         run: |
@@ -187,7 +187,7 @@ jobs:
           sudo systemctl reload docker
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -214,7 +214,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
+        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
         with:
           source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
@@ -229,7 +229,7 @@ jobs:
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
-          timeout_minutes: 10
+          timeout_minutes: 15
           max_attempts: 3
           command: yarn test:e2e
         env:
@@ -247,13 +247,13 @@ jobs:
     name: Security / ${{matrix.runtime}} Docker Image
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Configure Docker daemon mirror
         run: |
           echo '{"registry-mirrors":["https://mirror.gcr.io"]}' | sudo tee /etc/docker/daemon.json
           sudo systemctl reload docker
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -265,7 +265,7 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
-        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
+        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
         with:
           source: .
           # we build the e2e image because the release image cant be loaded due to annotations and platforms

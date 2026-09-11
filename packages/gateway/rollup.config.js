@@ -145,6 +145,10 @@ const deps = {
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
     ]),
   ),
+  // sdk-trace-base's ESM entry is a shim re-exporting from @opentelemetry/sdk-trace
+  // this will override the common api base for OTEL declared above
+  'node_modules/@opentelemetry/sdk-trace-base/index':
+    '../../node_modules/@opentelemetry/sdk-trace-base/build/esm/index-shim.js',
 };
 
 if (

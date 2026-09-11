@@ -30,6 +30,7 @@ import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
+import { RateLimitingOptions } from './plugins/useRateLimiting';
 import type { ServerConfig } from './servers/types';
 
 export type GatewayCLIConfig<
@@ -154,10 +155,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
    */
-  rateLimiting?:
-    | boolean
-    | YamlConfig.RateLimitPluginConfig['config']
-    | YamlConfig.RateLimitPluginConfig; // deprecated
+  rateLimiting?: boolean | RateLimitingOptions['config'] | RateLimitingOptions; // deprecated
   /**
    * Enable and configure AWS Sigv4 signing
    */
@@ -208,25 +206,41 @@ export interface GatewayCLIBuiltinPluginConfig {
   blockFieldSuggestions?: boolean;
 }
 
-export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
-  type: 'localforage';
-};
+export interface GatewayCLICacheKeyPrefixConfig {
+  /**
+   * Prefix prepended to every key used by this cache, for all get/set/delete
+   * operations. Useful for namespacing cache records when sharing a single
+   * backend (e.g. a Redis instance) across multiple gateways or environments.
+   *
+   * @default ''
+   */
+  keyPrefix?: string;
+}
+
+export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig &
+  GatewayCLICacheKeyPrefixConfig & {
+    type: 'localforage';
+  };
 
 export type GatewayCLIRedisCacheConfig = (
   | YamlConfig.RedisConfigSingle
   | YamlConfig.RedisConfigSentinel
-) & {
-  type: 'redis';
-};
+  | YamlConfig.RedisConfigCluster
+) &
+  GatewayCLICacheKeyPrefixConfig & {
+    type: 'redis';
+  };
 
 export type GatewayCLICloudflareKVCacheConfig =
-  YamlConfig.CFWorkersKVCacheConfig & {
-    type: 'cfw-kv';
-  };
+  YamlConfig.CFWorkersKVCacheConfig &
+    GatewayCLICacheKeyPrefixConfig & {
+      type: 'cfw-kv';
+    };
 
 export type GatewayCLIUpstashRedisCacheConfig = {
   type: 'upstash-redis';
-} & ConstructorParameters<typeof UpstashRedisCache>[0];
+} & GatewayCLICacheKeyPrefixConfig &
+  ConstructorParameters<typeof UpstashRedisCache>[0];
 
 /**
  * Type helper for defining the config.
@@ -331,7 +345,7 @@ let cli = new Command()
     new Option(
       '-h, --host <hostname>',
       `host to use for serving (default: ${defaultOptions.host})`,
-    ),
+    ).env('HOST'),
   )
   .addOption(
     new Option(

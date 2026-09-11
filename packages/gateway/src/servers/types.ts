@@ -51,6 +51,20 @@ export interface ServerConfig {
    * @default "Node's default (5 seconds)"
    */
   keepAliveTimeout?: number;
+  /**
+   * How long in milliseconds to wait for in-flight requests to complete after
+   * receiving a termination signal before forcefully closing all connections.
+   *
+   * During this window the server stops accepting new connections and idles
+   * out keep-alive connections, but lets active requests finish naturally.
+   * After the timeout expires, {@link https://nodejs.org/api/http.html#servercloseallconnections | server.closeAllConnections()} is called
+   * as a hard fuse so the process can exit.
+   *
+   * Set to `0` to skip the drain window and close all connections immediately.
+   *
+   * @default 0
+   */
+  gracefulShutdownTimeout?: number;
 }
 
 export interface ServerConfigSSLCredentials {

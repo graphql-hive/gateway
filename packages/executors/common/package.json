@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/executor-common",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
@@ -40,11 +40,11 @@
   },
   "dependencies": {
     "@envelop/core": "^5.4.0",
-    "@graphql-tools/utils": "^11.0.0"
+    "@graphql-tools/utils": "^12.0.1"
   },
   "devDependencies": {
     "graphql": "^16.12.0",
-    "pkgroll": "2.27.0"
+    "pkgroll": "2.27.1"
   },
   "sideEffects": false
 }

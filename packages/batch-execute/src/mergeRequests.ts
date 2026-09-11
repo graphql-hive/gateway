@@ -7,7 +7,6 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
-  GraphQLResolveInfo,
   InlineFragmentNode,
   Kind,
   OperationDefinitionNode,
@@ -77,7 +76,7 @@ export function mergeRequests(
   let operationName: string | undefined;
   let operationType: OperationTypeNode | undefined;
   let context;
-  let info: GraphQLResolveInfo | undefined;
+  let info: ExecutionRequest['info'];
   let rootValue;
 
   for (let index = 0; index < requestCount; index++) {

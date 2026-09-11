@@ -316,4 +316,292 @@ describe('finalizeGatewayRequest', () => {
         `);
     });
   });
+
+  describe('@provides conditional injection', () => {
+    // Mirrors the @provides scenario in Federation: the gateway should
+    // only forward the @provides fields the client actually requested, never
+    // the full @provides selection set.
+    function buildEntityScenario() {
+      // The provided fields (`name`, `description`) are listed on `Entity`
+      // here so that the finalized subgraph document remains valid against
+      // `targetSchema`; in a real federation setup the providing subgraph
+      // would declare them as `@external`. Because the schema-based filter
+      // now keeps the user's selection of `name`/`description`, the
+      // snapshots below show those fields **twice** - once from the user's
+      // own selection set and once from the @provides injection. That is
+      // valid GraphQL (the subgraph merges identical response keys) and
+      // matches the behavior real federation subgraphs see today; further
+      // dedup-on-injection would require recursive merging into nested
+      // selections (e.g. preserving `subCategories { name }` injection
+      // when only `subCategories { id }` is in the user's filtered set)
+      // and is intentionally out of scope for this fix.
+      const targetSchema = buildSchema(/* GraphQL */ `
+        type Query {
+          entity: Entity
+        }
+
+        type Entity {
+          id: ID!
+          name: String
+          description: String
+        }
+      `);
+      const subschema = {} as any;
+      function makeContext(): DelegationContext {
+        return {
+          targetSchema,
+          subschema,
+          info: {
+            schema: {
+              extensions: {
+                stitchingInfo: {
+                  mergedTypes: {
+                    Query: {
+                      providedSelectionsByField: new Map([
+                        [
+                          subschema,
+                          {
+                            entity: (
+                              parse(/* GraphQL */ `
+                                {
+                                  name
+                                  description
+                                }
+                              `).definitions[0] as any
+                            ).selectionSet,
+                          },
+                        ],
+                      ]),
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as unknown as DelegationContext;
+      }
+      return { targetSchema, makeContext };
+    }
+
+    test('only injects the @provides fields that the client actually requested', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            name
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            name
+            id
+            name
+          }
+        }"
+      `);
+    });
+
+    test('does not inject any @provides field when none were requested', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            id
+          }
+        }"
+      `);
+    });
+
+    test('preserves the alias of the originally requested field', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            displayName: name
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            displayName: name
+            id
+            displayName: name
+          }
+        }"
+      `);
+    });
+
+    test('injects every @provides field that was requested, regardless of how many', () => {
+      const { makeContext } = buildEntityScenario();
+      const query = parse(/* GraphQL */ `
+        query {
+          entity {
+            id
+            name
+            description
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        makeContext(),
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "{
+          entity {
+            name
+            description
+            id
+            name
+            description
+          }
+        }"
+      `);
+    });
+
+    // When two concrete implementations of an interface declare the same
+    // field with different nullabilities, the gateway rewrites one of the
+    // two with a synthetic `_nullable_` / `_nonNullable_` alias so the
+    // outgoing subgraph query stays valid under
+    // OverlappingFieldsCanBeMerged. The `@provides` injection step must
+    // still find the user's original selection set when looking up by the
+    // post-rewrite path; otherwise the providing branch silently drops
+    // requested fields. The fallback path lookup keyed by field name (not
+    // alias) is what makes this work.
+    test('still resolves @provides when the field is rewritten with a synthetic _nullable_ alias', () => {
+      const targetSchema = buildSchema(/* GraphQL */ `
+        type Query {
+          thing: Thing
+        }
+
+        interface Thing {
+          id: ID!
+        }
+
+        type ConcreteA implements Thing {
+          id: ID!
+          entity: Entity!
+        }
+
+        type ConcreteB implements Thing {
+          id: ID!
+          entity: Entity
+        }
+
+        type Entity {
+          id: ID!
+          name: String
+          description: String
+        }
+      `);
+
+      const subschema = {} as any;
+      const providedSelectionSet = (
+        parse(/* GraphQL */ `
+          {
+            name
+            description
+          }
+        `).definitions[0] as any
+      ).selectionSet;
+      const providedSelectionsByField = new Map([
+        [
+          subschema,
+          {
+            entity: providedSelectionSet,
+          },
+        ],
+      ]);
+      const context = {
+        targetSchema,
+        subschema,
+        info: {
+          schema: {
+            extensions: {
+              stitchingInfo: {
+                mergedTypes: {
+                  ConcreteA: { providedSelectionsByField },
+                  ConcreteB: { providedSelectionsByField },
+                },
+              },
+            },
+          },
+        },
+      } as unknown as DelegationContext;
+
+      const query = parse(/* GraphQL */ `
+        query {
+          thing {
+            ... on ConcreteA {
+              entity {
+                id
+                description
+              }
+            }
+            ... on ConcreteB {
+              entity {
+                id
+                description
+              }
+            }
+          }
+        }
+      `);
+
+      let aliasRewriteCount = 0;
+      const filteredQuery = finalizeGatewayRequest(
+        { document: query },
+        context,
+        () => {
+          aliasRewriteCount++;
+        },
+      );
+
+      // Sanity check: the alias rewrite was actually triggered, otherwise
+      // this test no longer covers the fallback path.
+      expect(aliasRewriteCount).toBeGreaterThan(0);
+
+      const printed = print(filteredQuery.document);
+      // The alias appears on the nullable branch.
+      expect(printed).toMatch(/_nullable_entity:\s*entity/);
+      // The aliased branch still receives the requested @provides field
+      // (`description`), proving the lookup found the original selection
+      // set via the field-name fallback rather than the synthetic alias.
+      const aliasMatch = printed.match(
+        /_nullable_entity:\s*entity\s*\{([^}]*)\}/,
+      );
+      expect(aliasMatch?.[1]).toMatch(/\bdescription\b/);
+      // And the unrequested @provides field (`name`) must NOT have been
+      // injected on either branch.
+      expect(printed).not.toMatch(/(?<!__type)\bname\b/);
+    });
+  });
 });
