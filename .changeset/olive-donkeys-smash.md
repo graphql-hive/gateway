@@ -12,3 +12,5 @@ disposed subscription.
 
 It now calls `reader.cancel()`, which propagates cancellation and closes the
 connection. The error path already used `cancel()`; only the normal path did not.
+
+Closes https://github.com/graphql-hive/gateway/issues/2486
