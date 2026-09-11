@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.12.1
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.5.1
+
 ## 1.12.0
 ### Minor Changes
 

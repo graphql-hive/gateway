@@ -1,5 +1,23 @@
 # @graphql-tools/executor-http
 
+## 3.4.1
+### Patch Changes
+
+
+
+- [#2485](https://github.com/graphql-hive/gateway/pull/2485) [`47fe3d6`](https://github.com/graphql-hive/gateway/commit/47fe3d6846f3c6227985168cac6bb2d5f1db91cc) Thanks [@adam-drag](https://github.com/adam-drag)! - Release the connection when an SSE subscription is torn down
+  
+  `handleEventStreamResponse` called `reader.releaseLock()` on normal teardown,
+  which detaches the reader but leaves the response body un-cancelled, so the
+  underlying HTTP connection was never released and the socket stayed open until
+  the process exited. Long-running consumers accumulated one leaked connection per
+  disposed subscription.
+  
+  It now calls `reader.cancel()`, which propagates cancellation and closes the
+  connection. The error path already used `cancel()`; only the normal path did not.
+  
+  Closes https://github.com/graphql-hive/gateway/issues/2486
+
 ## 3.4.0
 ### Minor Changes
 
