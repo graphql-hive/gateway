@@ -362,34 +362,88 @@ resources: [
 
 Agents discover resources via `resources/list` and fetch them with `resources/read`. Templates allow dynamic URIs with parameters.
 
+### Hive App Deployment loader
+
+The `createHiveLoader` function creates an `MCPOperationsLoader` that fetches persisted GraphQL documents from a [Hive App Deployment](https://the-guild.dev/graphql/hive/docs/features/app-deployments) on every MCP request.
+
+```typescript
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { useMCP } from '@graphql-hive/plugin-mcp';
+import { createHiveLoader } from '@graphql-hive/plugin-mcp/loaders/hive';
+
+const gateway = createGatewayRuntime({
+  supergraph: 'supergraph.graphql',
+  plugins: (ctx) => [
+    useMCP(ctx, {
+      name: 'my-api',
+      loader: createHiveLoader(ctx, {
+        endpoint:
+          'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+        accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+        appDeployment: {
+          appName: 'my-app',
+          appVersion: '1.0.0',
+        },
+      }),
+    }),
+  ],
+});
+```
+
+The loader resolves the app deployment manifest from the Hive CDN, then fetches every persisted document listed in that manifest. All documents are concatenated and returned as a single GraphQL operations string. The plugin parses that string, registers tools from any operations carrying `@mcpTool` directives, and caches the result so identical sources skip the rebuild. The cache holds up to 10 entries; when the limit is reached the oldest entry is evicted.
+
+If the manifest is not found or any document cannot be resolved, the loader throws and the plugin falls back to the static tool registry.
+
+#### CDN failover
+
+Pass two CDN endpoint URLs to automatically fall back to the second if the first fails:
+
+```typescript
+createHiveLoader(ctx, {
+  endpoint: [
+    'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+    'https://cdn-mirror.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+  ],
+  accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+  appDeployment: { appName: 'my-app', appVersion: '1.0.0' },
+});
+```
+
+#### Dynamic app deployment
+
+`appDeployment` can be a function that receives `{ request, serverContext }` and returns `{ appName, appVersion }`. Use this for multi-tenant setups where the deployment varies per request (for example, driven by a request header):
+
+```typescript
+createHiveLoader(ctx, {
+  endpoint:
+    'https://cdn.graphql-hive.com/artifacts/v1/9fb37bc4-e520-4019-843a-0c8698c25688',
+  accessToken: 'hv2ZjUxNGUzN2MtNjVhNS0=',
+  appDeployment: ({ request }) => ({
+    appName: request.headers.get('x-app-name'),
+    appVersion: request.headers.get('x-app-version'),
+  }),
+});
+```
+
+> ⚠️ When `appDeployment` is a function, the loader fetches the manifest and all persisted documents on **every** MCP request. The plugin-level string cache still applies (identical responses reuse the cached registry and pre-built handler options), but if the deployment config changes frequently you should add your own caching inside the function to avoid repeated CDN round-trips.
+
 ## Dynamic operations loader
 
-Supply a custom `loader` to fetch operations from any external source at startup and optionally subscribe to live updates. The plugin handles parsing, tool registration, and registry rebuilds.
+Supply a custom `loader` to fetch operations from any external source on every MCP request. The plugin handles parsing, tool registration, and caching.
 
 ```typescript
 useMCP(ctx, {
   name: 'my-api',
   loader: {
-    async load() {
+    async load({ request, serverContext }) {
       const res = await fetch('https://my-cdn.example.com/operations.graphql');
       return res.text();
-    },
-    onUpdate(callback) {
-      const interval = setInterval(async () => {
-        const res = await fetch(
-          'https://my-cdn.example.com/operations.graphql',
-        );
-        callback(await res.text());
-      }, 60_000);
-      return () => clearInterval(interval);
     },
   },
 });
 ```
 
-The `load()` method is called once at startup. If `onUpdate` is provided, it is called after `load()` succeeds and should invoke the callback whenever the source changes. Optionally return a cleanup function from `onUpdate` to unsubscribe on dispose.
-
-If `load()` rejects, the error is logged and `onUpdate` is not called. The plugin continues without loader-sourced operations. Implement retry logic inside `load()` if you need automatic recovery.
+The `load()` method is called on every MCP request and receives `{ request, serverContext }`. If `load()` returns the same string as a previous call, the cached registry and pre-built handler options are reused without rebuilding. The cache holds up to 10 entries; when the limit is reached the oldest entry is evicted. If `load()` rejects, the error is logged and the plugin falls back to the static tool registry.
 
 ## Langfuse integration
 
@@ -514,7 +568,7 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 - **Resource templates**: dynamic URI-based resources with custom handlers
 - **Annotations**: tool hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and content annotations (`audience`, `priority`)
 - **Task support**: per-tool `execution.taskSupport` (`'forbidden'`, `'optional'`, `'required'`) for long-running operations
-- **Dynamic loader**: fetch operations from any external source with optional live updates
+- **Dynamic loader**: fetch operations from any external source per request with built-in string caching
 
 ## Examples
 

@@ -29,6 +29,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./loaders/hive": {
+      "require": {
+        "types": "./dist/loaders/hive.d.cts",
+        "default": "./dist/loaders/hive.cjs"
+      },
+      "import": {
+        "types": "./dist/loaders/hive.d.ts",
+        "default": "./dist/loaders/hive.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -49,9 +59,12 @@
     }
   },
   "dependencies": {
+    "@graphql-hive/core": "0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-tools/graphql-file-loader": "^8.1.12",
     "@graphql-tools/load": "^8.1.8",
+    "@whatwg-node/promise-helpers": "^1.3.2",
+    "@whatwg-node/server": "^0.11.0",
     "sofa-api": "0.18.10",
     "tslib": "^2.8.1"
   },
