@@ -4581,6 +4581,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/core@npm:0.23.0-alpha-20260910214706-54ac3f3b7bbd1cc0e7a7c4ee7ca116256d0b9d75":
+  version: 0.23.0-alpha-20260910214706-54ac3f3b7bbd1cc0e7a7c4ee7ca116256d0b9d75
+  resolution: "@graphql-hive/core@npm:0.23.0-alpha-20260910214706-54ac3f3b7bbd1cc0e7a7c4ee7ca116256d0b9d75"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.1.0"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^12.0.0"
+    "@theguild/federation-composition": "npm:^0.26.1"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^11.4.7"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/340704ec0940731c7b48a7400b8abfcce51045c63327a9ec00dedbfb70b2fa1fba6d1cef742e974e07584571895d536a6f7f4ef3a2c65d2103a99dc26ea39d00
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/core@npm:^0.22.1":
   version: 0.22.1
   resolution: "@graphql-hive/core@npm:0.22.1"
@@ -4632,7 +4653,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.22.1"
+    "@graphql-hive/core": "npm:0.23.0-alpha-20260910214706-54ac3f3b7bbd1cc0e7a7c4ee7ca116256d0b9d75"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -12176,6 +12197,20 @@ __metadata:
   peerDependencies:
     graphql: ^16.0.0
   checksum: 10c0/58e13aba99969ea6a67bec2bfecf5634d47070193da542a9b8a64b85a1f7137f5c2de73d196b6d85e248e547e3120ce3c56d1b7000e8ff53813ac3da6691d528
+  languageName: node
+  linkType: hard
+
+"@theguild/federation-composition@npm:^0.26.1":
+  version: 0.26.2
+  resolution: "@theguild/federation-composition@npm:0.26.2"
+  dependencies:
+    constant-case: "npm:^3.0.4"
+    debug: "npm:4.4.3"
+    json5: "npm:^2.2.3"
+    lodash.sortby: "npm:^4.7.0"
+  peerDependencies:
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10c0/d142ff9803f7cf2860103fb74078f1ef012bdc8d67358ed9d5bd488d277e7f3bac7c995b43aa9be2832ae43e1cd0ac01ee010a885b7060615413c673323653c0
   languageName: node
   linkType: hard
 

@@ -1,6 +1,11 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { GenericAuthPluginOptions } from '@envelop/generic-auth';
-import { CircuitBreakerConfiguration } from '@graphql-hive/core';
+import {
+  CircuitBreakerConfiguration,
+  type DevFetcherTargetReference,
+  type HiveDevFetcherOptions,
+  type HiveDevService,
+} from '@graphql-hive/core';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
@@ -61,6 +66,7 @@ import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
 export type { CircuitBreakerConfiguration };
+export type { DevFetcherTargetReference, HiveDevService };
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -232,12 +238,14 @@ export interface GatewayConfigSupergraph<
   /**
    * SDL, path or an URL to the Federation Supergraph schema.
    *
-   * Alternatively, CDN options for pulling a remote Federation Supergraph.
+   * Alternatively, CDN or GraphOS options for pulling a remote Federation Supergraph, or dev
+   * fetcher options for composing one from local/introspected subgraphs.
    */
   supergraph:
     | UnifiedGraphConfig
     | GatewayHiveCDNOptions
-    | GatewayGraphOSManagedFederationOptions;
+    | GatewayGraphOSManagedFederationOptions
+    | GatewayHiveDevOptions;
   /**
    * GraphQL schema polling interval in milliseconds when the {@link supergraph} is an URL.
    *
@@ -362,6 +370,11 @@ export interface GatewayHiveCDNOptions {
    */
   key: string;
   circuitBreaker?: CircuitBreakerConfiguration;
+}
+
+export interface GatewayHiveDevOptions
+  extends Omit<HiveDevFetcherOptions, 'fetch' | 'cwd' | 'cache' | 'logger' | 'version'> {
+  type: 'dev';
 }
 
 export interface GatewayHiveReportingOptions extends Omit<
