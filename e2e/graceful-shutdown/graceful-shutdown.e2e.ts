@@ -7,6 +7,9 @@ import WebSocket from 'ws';
 
 const { gateway, service, gatewayRunner } = createTenv(__dirname);
 
+const skipWebSocketShutdown =
+  gatewayRunner.includes('docker') || gatewayRunner.includes('bun');
+
 it
   .skipIf(
     // "cannot send signals to containers" from dockerode - tenv limitation
@@ -168,12 +171,7 @@ it
   },
 );
 
-it
-  .skipIf(
-    // "cannot send signals to containers" from dockerode - tenv limitation
-    gatewayRunner.includes('docker'),
-  )
-  .each(['SIGINT', 'SIGTERM'] as const)(
+it.skipIf(skipWebSocketShutdown).each(['SIGINT', 'SIGTERM'] as const)(
   'should close live WebSocket subscriptions with 1001 on %s',
   async (signal) => {
     const slowSvc = await service('slow');
@@ -202,12 +200,7 @@ it
   },
 );
 
-it
-  .skipIf(
-    // "cannot send signals to containers" from dockerode - tenv limitation
-    gatewayRunner.includes('docker'),
-  )
-  .each(['SIGINT', 'SIGTERM'] as const)(
+it.skipIf(skipWebSocketShutdown).each(['SIGINT', 'SIGTERM'] as const)(
   'should exit promptly with live WebSocket subscriptions on %s',
   async (signal) => {
     const slowSvc = await service('slow');
@@ -234,12 +227,7 @@ it
   },
 );
 
-it
-  .skipIf(
-    // "cannot send signals to containers" from dockerode - tenv limitation
-    gatewayRunner.includes('docker'),
-  )
-  .each(['SIGINT', 'SIGTERM'] as const)(
+it.skipIf(skipWebSocketShutdown).each(['SIGINT', 'SIGTERM'] as const)(
   'should close live WebSocket subscriptions with 1001 without a drain window on %s',
   async (signal) => {
     const slowSvc = await service('slow');
