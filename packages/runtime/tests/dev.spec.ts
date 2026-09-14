@@ -100,6 +100,71 @@ describe('Hive dev fetcher supergraph source', () => {
     });
 
     const registry = 'http://registry.localhost/graphql';
+    const remoteSupergraphSdl = /* GraphQL */ `
+      schema
+        @link(url: "https://specs.apollo.dev/link/v1.0")
+        @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) {
+        query: Query
+      }
+
+      directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+      directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+      directive @join__field(
+        graph: join__Graph
+        requires: join__FieldSet
+        provides: join__FieldSet
+        type: String
+        external: Boolean
+        override: String
+        usedOverridden: Boolean
+      ) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+      directive @join__implements(
+        graph: join__Graph!
+        interface: String!
+      ) repeatable on OBJECT | INTERFACE
+      directive @join__type(
+        graph: join__Graph!
+        key: join__FieldSet
+        extension: Boolean! = false
+        resolvable: Boolean! = true
+        isInterfaceObject: Boolean! = false
+      ) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+      directive @join__unionMember(
+        graph: join__Graph!
+        member: String!
+      ) repeatable on UNION
+      scalar join__FieldSet
+
+      directive @link(
+        url: String
+        as: String
+        for: link__Purpose
+        import: [link__Import]
+      ) repeatable on SCHEMA
+      scalar link__Import
+      enum link__Purpose {
+        SECURITY
+        EXECUTION
+      }
+
+      enum join__Graph {
+        PRODUCTS
+          @join__graph(
+            name: "products"
+            url: "http://products.localhost/graphql"
+          )
+      }
+
+      type Query @join__type(graph: PRODUCTS) {
+        product(id: ID!): Product
+        remoteField: String
+      }
+
+      type Product @join__type(graph: PRODUCTS) {
+        id: ID!
+        name: String!
+      }
+    `;
     const registryFetch = vi.fn(
       async (_url: string, _init?: RequestInit) =>
         new Response(
@@ -109,11 +174,7 @@ describe('Hive dev fetcher supergraph source', () => {
                 __typename: 'SchemaComposeSuccess',
                 valid: true,
                 compositionResult: {
-                  supergraphSdl: /* GraphQL */ `
-                    type Query {
-                      remoteField: String
-                    }
-                  `,
+                  supergraphSdl: remoteSupergraphSdl,
                 },
               },
             },
@@ -121,6 +182,10 @@ describe('Hive dev fetcher supergraph source', () => {
           { headers: { 'content-type': 'application/json' } },
         ),
     );
+    const productsFetch = async (_url: string, _init?: RequestInit) =>
+      new Response(JSON.stringify({ data: { remoteField: null } }), {
+        headers: { 'content-type': 'application/json' },
+      });
 
     await using gateway = createGatewayRuntime({
       cwd,
@@ -144,6 +209,8 @@ describe('Hive dev fetcher supergraph source', () => {
           onFetch({ url, setFetchFn }) {
             if (url === registry) {
               setFetchFn(registryFetch);
+            } else if (url === 'http://products.localhost/graphql') {
+              setFetchFn(productsFetch);
             }
           },
         },
