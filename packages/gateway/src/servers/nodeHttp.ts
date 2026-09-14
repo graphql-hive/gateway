@@ -23,9 +23,11 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     requestTimeout,
     keepAliveTimeout,
     gracefulShutdownTimeout = 0,
+    websocketDrainTimeout = 0,
   } = opts;
   let server: Server;
   let protocol: string;
+  let stopWebSocketServer: (() => Promise<void>) | undefined;
 
   if (sslCredentials) {
     protocol = 'https';
@@ -92,7 +94,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     });
     const { useServer } = await import('graphql-ws/use/ws');
 
-    useServer(
+    const wsDisposable = useServer(
       getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
         req: ctx.extra.request,
         socket: ctx.extra.socket,
@@ -101,50 +103,84 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       wsServer,
     );
 
-    gwRuntime.disposableStack.defer(
-      () =>
-        new Promise<void>((resolve, reject) => {
-          log.info('Stopping the WebSocket server');
-          wsServer.close((err) => {
-            if (err) {
-              return reject(err);
-            }
-            log.info('Stopped the WebSocket server successfully');
-            return resolve();
-          });
-        }),
-    );
+    const drainWebSocketClients = async () => {
+      const clients = [...wsServer.clients];
+      if (websocketDrainTimeout <= 0 || !clients.length) {
+        return;
+      }
+      const batches = Math.min(
+        clients.length,
+        Math.max(1, Math.round(websocketDrainTimeout / 1000)),
+      );
+      const size = Math.ceil(clients.length / batches);
+      const interval = Math.floor(websocketDrainTimeout / batches);
+      log.info(
+        { clients: clients.length, batches, interval },
+        'Draining WebSocket clients',
+      );
+      for (let i = 0; i < clients.length; i += size) {
+        for (const client of clients.slice(i, i + size)) {
+          client.close(1001, 'Going away');
+        }
+        if (i + size < clients.length) {
+          await new Promise((resolve) => setTimeout(resolve, interval));
+        }
+      }
+      log.info('Drained WebSocket clients');
+    };
+
+    stopWebSocketServer = async () => {
+      log.info('Stopping the WebSocket server');
+      await drainWebSocketClients();
+      const closeHandshakeTimeout = Math.max(gracefulShutdownTimeout, 1000);
+      const fuse = setTimeout(() => {
+        for (const client of wsServer.clients) {
+          client.terminate();
+        }
+      }, closeHandshakeTimeout);
+      fuse.unref();
+      try {
+        await wsDisposable.dispose();
+        clearTimeout(fuse);
+        log.info('Stopped the WebSocket server successfully');
+      } catch (err) {
+        log.warn({ err }, 'Failed to stop the WebSocket server');
+      }
+    };
+    gwRuntime.disposableStack.defer(() => stopWebSocketServer?.());
   }
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => {
       log.info(`Listening on ${url}`);
-      gwRuntime.disposableStack.defer(
-        () =>
-          new Promise<void>((resolve) => {
-            process.stderr.write('\n');
-            log.info('Stopping the server');
-            const fuse =
-              gracefulShutdownTimeout > 0
-                ? setTimeout(() => {
-                    log.warn(
-                      `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-closing remaining connections`,
-                    );
-                    server.closeAllConnections();
-                  }, gracefulShutdownTimeout)
-                : (server.closeAllConnections(), undefined);
-            if (fuse) {
-              // allow the process to exit even if the fuse is still running
-              fuse.unref();
-            }
-            server.closeIdleConnections();
-            server.close(() => {
-              log.info('Stopped the server successfully');
-              clearTimeout(fuse);
-              return resolve();
-            });
-          }),
-      );
+      gwRuntime.disposableStack.defer(async () => {
+        process.stderr.write('\n');
+        log.info('Stopping the server');
+        const fuse =
+          gracefulShutdownTimeout > 0
+            ? setTimeout(() => {
+                log.warn(
+                  `Graceful shutdown timed out after ${gracefulShutdownTimeout}ms, force-closing remaining connections`,
+                );
+                server.closeAllConnections();
+              }, gracefulShutdownTimeout)
+            : (server.closeAllConnections(), undefined);
+        if (fuse) {
+          // allow the process to exit even if the fuse is still running
+          fuse.unref();
+        }
+        server.closeIdleConnections();
+        const closed = new Promise<void>((resolve) =>
+          server.close(() => resolve()),
+        );
+        if (stopWebSocketServer) {
+          await stopWebSocketServer();
+          stopWebSocketServer = undefined;
+        }
+        await closed;
+        clearTimeout(fuse);
+        log.info('Stopped the server successfully');
+      });
       return resolve();
     });
   });
