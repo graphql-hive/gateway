@@ -5,8 +5,11 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
-import type { createDevFetcher } from '@graphql-hive/core';
+import {
+  createCDNArtifactFetcher,
+  createDevFetcher,
+  joinUrl,
+} from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
@@ -619,42 +622,20 @@ export function createGatewayRuntime<
           fetch: graphosFetcherContainer.unifiedGraphFetcher,
         };
       } else if (config.supergraph.type === 'dev') {
-        // `createDevFetcher` is only imported dynamically (as opposed to the
-        // other fetchers above) because it pulls in `node:fs/promises` and
-        // `node:path` to read local subgraph/supergraph files, which don't
-        // exist in non-Node runtimes (e.g. Cloudflare Workers). Importing it
-        // eagerly would break bundling for those runtimes even when the dev
-        // supergraph source isn't used.
-        const devSupergraphConfig = config.supergraph;
-        let devFetcherPromise:
-          | Promise<ReturnType<typeof createDevFetcher>>
-          | undefined;
-        const getDevFetcher = () => {
-          if (!devFetcherPromise) {
-            devFetcherPromise = import('@graphql-hive/core').then(
-              ({ createDevFetcher }) =>
-                createDevFetcher({
-                  ...devSupergraphConfig,
-                  cwd: configContext.cwd,
-                  // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
-                  fetch: configContext.fetch,
-                  logger: LegacyLogger.from(
-                    configContext.log.child('[hiveDevFetcher] '),
-                  ),
-                  cache: configContext.cache,
-                  version: globalThis.__VERSION__,
-                }),
-            );
-          }
-          return devFetcherPromise;
-        };
+        const devFetcher = createDevFetcher({
+          ...config.supergraph,
+          cwd: configContext.cwd,
+          // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
+          fetch: configContext.fetch,
+          logger: LegacyLogger.from(
+            configContext.log.child('[hiveDevFetcher] '),
+          ),
+          cache: configContext.cache,
+          version: globalThis.__VERSION__,
+        });
         unifiedGraphFetcher = {
-          fetch: async () => (await getDevFetcher()).fetch(),
-          dispose: async () => {
-            if (devFetcherPromise) {
-              await (await devFetcherPromise).dispose();
-            }
-          },
+          fetch: () => devFetcher.fetch(),
+          dispose: () => devFetcher.dispose(),
         };
       } else {
         unifiedGraphFetcher = {
