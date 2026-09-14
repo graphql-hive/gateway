@@ -372,8 +372,10 @@ export interface GatewayHiveCDNOptions {
   circuitBreaker?: CircuitBreakerConfiguration;
 }
 
-export interface GatewayHiveDevOptions
-  extends Omit<HiveDevFetcherOptions, 'fetch' | 'cwd' | 'cache' | 'logger' | 'version'> {
+export interface GatewayHiveDevOptions extends Omit<
+  HiveDevFetcherOptions,
+  'fetch' | 'cwd' | 'cache' | 'logger' | 'version'
+> {
   type: 'dev';
 }
 

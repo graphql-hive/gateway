@@ -5,7 +5,11 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import { createCDNArtifactFetcher, createDevFetcher, joinUrl } from '@graphql-hive/core';
+import {
+  createCDNArtifactFetcher,
+  createDevFetcher,
+  joinUrl,
+} from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,

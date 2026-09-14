@@ -40,7 +40,8 @@ import { handleFork } from './handleFork';
 import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Parses a `--dev-target` value into a {@link DevFetcherTargetReference}. Accepts either a
@@ -69,7 +70,9 @@ function collectByServiceName(
   const eqIdx = raw.indexOf('=');
   const name = raw.slice(0, eqIdx).trim();
   if (eqIdx === -1 || !name) {
-    throw new InvalidArgumentError(`invalid entry "${raw}", expected "<service-name>=<value>".`);
+    throw new InvalidArgumentError(
+      `invalid entry "${raw}", expected "<service-name>=<value>".`,
+    );
   }
   return { ...previous, [name]: raw.slice(eqIdx + 1).trim() };
 }
@@ -101,7 +104,10 @@ function buildDevServices(
   onError: (message: string) => never,
 ): HiveDevService[] {
   const names = Object.keys(urlByName);
-  for (const name of [...Object.keys(sourceByName), ...Object.keys(schemaByName)]) {
+  for (const name of [
+    ...Object.keys(sourceByName),
+    ...Object.keys(schemaByName),
+  ]) {
     if (!(name in urlByName)) {
       onError(
         `--dev-service-source/--dev-service-schema references unknown service "${name}". ` +
@@ -369,7 +375,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       );
 
       let devSupergraph: GatewayHiveDevOptions | undefined;
-      if (typeof supergraph === 'object' && 'type' in supergraph && supergraph.type === 'dev') {
+      if (
+        typeof supergraph === 'object' &&
+        'type' in supergraph &&
+        supergraph.type === 'dev'
+      ) {
         devSupergraph = supergraph;
       } else if (devServices.length) {
         if (schemaPathOrUrl || hiveCdnEndpoint || apolloGraphRef) {
