@@ -1,5 +1,12 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 2.0.67
+### Patch Changes
+
+
+
+- [`fd2a194`](https://github.com/graphql-hive/gateway/commit/fd2a194f309c6e7e2b52cd82c0e3aee28e1d79e4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Verify incoming AWS SigV4 request bodies against the signed `x-amz-content-sha256` value
+
 ## 2.0.66
 ### Patch Changes
 
