@@ -4581,22 +4581,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479":
-  version: 0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479
-  resolution: "@graphql-hive/core@npm:0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479"
+"@graphql-hive/core@npm:0.23.0-alpha-20260914224503-69a7393911c35547d78f9d746dc1b7e9c94c2b39":
+  version: 0.23.0-alpha-20260914224503-69a7393911c35547d78f9d746dc1b7e9c94c2b39
+  resolution: "@graphql-hive/core@npm:0.23.0-alpha-20260914224503-69a7393911c35547d78f9d746dc1b7e9c94c2b39"
   dependencies:
     "@graphql-hive/logger": "npm:^1.1.0"
     "@graphql-hive/signal": "npm:^2.0.0"
-    "@graphql-tools/utils": "npm:^10.0.0"
+    "@graphql-tools/utils": "npm:^12.0.0"
+    "@theguild/federation-composition": "npm:^0.26.1"
     "@whatwg-node/fetch": "npm:^0.10.13"
     async-retry: "npm:^1.3.3"
     events: "npm:^3.3.0"
     js-md5: "npm:0.8.3"
     lodash.sortby: "npm:^4.7.0"
     tiny-lru: "npm:^11.4.7"
+    tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/fa149d422c55aa1873c1b0ae2266133a886c865eef269758c9cad011ca37d3e6a4d617eebe4228ba56c7a0116a4a337f82e4728ce4518141929105f1cdb4bf79
+  checksum: 10c0/09e558b7dab12ee26c9700031c6cdec5ffd6b4a6dc0cd75c819f29a88b48ebdccfc09e980ac6e7db15f1d72fc099038078e7d11dff048c23e74927f46d3d8a0d
   languageName: node
   linkType: hard
 
@@ -4651,7 +4653,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.22.1"
+    "@graphql-hive/core": "npm:0.23.0-alpha-20260914224503-69a7393911c35547d78f9d746dc1b7e9c94c2b39"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -4946,7 +4948,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-mcp@workspace:packages/plugins/mcp"
   dependencies:
-    "@graphql-hive/core": "npm:0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479"
+    "@graphql-hive/core": "npm:0.23.0-alpha-20260914224503-69a7393911c35547d78f9d746dc1b7e9c94c2b39"
     "@graphql-hive/gateway-runtime": "workspace:*"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-tools/graphql-file-loader": "npm:^8.1.12"
@@ -12104,6 +12106,20 @@ __metadata:
   peerDependencies:
     graphql: ^16.0.0
   checksum: 10c0/58e13aba99969ea6a67bec2bfecf5634d47070193da542a9b8a64b85a1f7137f5c2de73d196b6d85e248e547e3120ce3c56d1b7000e8ff53813ac3da6691d528
+  languageName: node
+  linkType: hard
+
+"@theguild/federation-composition@npm:^0.26.1":
+  version: 0.26.2
+  resolution: "@theguild/federation-composition@npm:0.26.2"
+  dependencies:
+    constant-case: "npm:^3.0.4"
+    debug: "npm:4.4.3"
+    json5: "npm:^2.2.3"
+    lodash.sortby: "npm:^4.7.0"
+  peerDependencies:
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10c0/d142ff9803f7cf2860103fb74078f1ef012bdc8d67358ed9d5bd488d277e7f3bac7c995b43aa9be2832ae43e1cd0ac01ee010a885b7060615413c673323653c0
   languageName: node
   linkType: hard
 
@@ -22750,13 +22766,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.11.2, qs@npm:^6.14.0, qs@npm:^6.14.1, qs@npm:^6.14.2, qs@npm:^6.15.1, qs@npm:^6.15.3":
+"qs@npm:^6.11.2, qs@npm:^6.14.0, qs@npm:^6.14.1, qs@npm:^6.14.2, qs@npm:^6.15.1":
   version: 6.16.0
   resolution: "qs@npm:6.16.0"
   dependencies:
     es-define-property: "npm:^1.0.1"
     side-channel: "npm:^1.1.1"
   checksum: 10c0/eb3e31992fbd70e31a1791e571ed817d70975de7d3bfcbbbec93d77d1dd305877e9e8fdbcc62303c228ee5c3606685622cd6231c042dbc4790bb4e7c65fcbe18
+  languageName: node
+  linkType: hard
+
+"qs@npm:^6.15.3":
+  version: 6.15.3
+  resolution: "qs@npm:6.15.3"
+  dependencies:
+    es-define-property: "npm:^1.0.1"
+    side-channel: "npm:^1.1.1"
+  checksum: 10c0/8f3f6e45ece255347d57696628401cde29e9ec649fff698b53bd3150dea7cefdf33036e1bc1826b9f110bfa7cb0ec4ab9f5297eca628ce216c55af82c304e08e
   languageName: node
   linkType: hard
 
