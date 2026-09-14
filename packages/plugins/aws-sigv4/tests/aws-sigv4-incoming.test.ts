@@ -6,15 +6,26 @@ import { describe, expect, it } from 'vitest';
 import { useAWSSigv4 } from '../src';
 
 describe('AWS Sigv4 Incoming requests', () => {
+  let mutationCalls = 0;
   const subgraphSchema = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Query {
         hello: String
       }
+
+      type Mutation {
+        flip: String
+      }
     `),
     resolvers: {
       Query: {
         hello: () => 'world',
+      },
+      Mutation: {
+        flip: () => {
+          mutationCalls++;
+          return 'mutated';
+        },
       },
     },
   });
@@ -36,29 +47,30 @@ describe('AWS Sigv4 Incoming requests', () => {
         }),
       ],
     });
+    const headers = {
+      accept:
+        'application/graphql-response+json, application/json, multipart/mixed',
+      Date: 'Mon, 29 Dec 2015 00:00:00 GMT',
+      'content-type': 'application/json',
+      Host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+      'Content-Length': '30',
+      'X-Amz-Content-Sha256':
+        '34c77dc7b593717e0231ac99a16ae3be5ee2e8d652bce6518738a6449dfd2647',
+      'X-Amz-Date': '20151229T000000Z',
+      Authorization:
+        'AWS4-HMAC-SHA256 ' +
+        [
+          // s3 and eu-central-1 extracted from the URL
+          'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
+          'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
+          'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
+        ].join(', '),
+    };
     const response = await gw.fetch(
       'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
       {
         method: 'POST',
-        headers: {
-          accept:
-            'application/graphql-response+json, application/json, multipart/mixed',
-          Date: 'Mon, 29 Dec 2015 00:00:00 GMT',
-          'content-type': 'application/json',
-          Host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
-          'Content-Length': '30',
-          'X-Amz-Content-Sha256':
-            '34c77dc7b593717e0231ac99a16ae3be5ee2e8d652bce6518738a6449dfd2647',
-          'X-Amz-Date': '20151229T000000Z',
-          Authorization:
-            'AWS4-HMAC-SHA256 ' +
-            [
-              // s3 and eu-central-1 extracted from the URL
-              'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
-              'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
-              'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
-            ].join(', '),
-        },
+        headers,
         body: JSON.stringify({
           query: '{__typename hello}',
         }),
@@ -66,6 +78,63 @@ describe('AWS Sigv4 Incoming requests', () => {
     );
     const result = await response.json();
     expect(result).toEqual({ data: { __typename: 'Query', hello: 'world' } });
+
+    mutationCalls = 0;
+    const tamperedResponse = await gw.fetch(
+      'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ query: 'mutation { flip } ' }),
+      },
+    );
+    expect(tamperedResponse.status).toBe(401);
+    expect(mutationCalls).toBe(0);
+  });
+  it('rejects a tampered body when content-length is not signed', async () => {
+    await using gw = createGatewayTester({
+      subgraphs: [
+        {
+          name: 'subgraph',
+          schema: subgraphSchema,
+        },
+      ],
+      landingPage: false,
+      graphqlEndpoint: '/',
+      plugins: () => [
+        useAWSSigv4({
+          incoming: {
+            secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          },
+        }),
+      ],
+    });
+
+    mutationCalls = 0;
+    const response = await gw.fetch(
+      'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+          'X-Amz-Content-Sha256':
+            '34c77dc7b593717e0231ac99a16ae3be5ee2e8d652bce6518738a6449dfd2647',
+          'X-Amz-Date': '20151229T000000Z',
+          Authorization:
+            'AWS4-HMAC-SHA256 ' +
+            [
+              'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
+              'SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date',
+              'Signature=d6bf13baa676d5257b59a05134106d37f2db86d6517e3f7fbed26c7d3eae98d8',
+            ].join(', '),
+        },
+        body: JSON.stringify({ query: 'mutation { flip }' }),
+      },
+    );
+
+    expect(response.status).toBe(401);
+    expect(mutationCalls).toBe(0);
   });
   it('works with JWT', async () => {
     const JWT_SECRET = 'a-string-secret-at-least-256-bits-long';

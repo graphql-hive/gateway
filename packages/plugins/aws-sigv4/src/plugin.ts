@@ -256,7 +256,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 },
               );
             },
-            (payload: AWSSignv4PluginIncomingPayload | false | void) => {
+            async (payload: AWSSignv4PluginIncomingPayload | false | void) => {
               if (!payload) {
                 return;
               }
@@ -344,6 +344,19 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 'Signature=' + signature,
               ].join(', ');
               if (calculatedAuthorization !== payload?.authorization) {
+                return incomingOptions.onSignatureMismatch?.(
+                  request,
+                  serverContext,
+                );
+              }
+              // unsigned payloads opt out explicitly; otherwise bind the signature to the actual body
+              if (
+                payload.bodyHash !== 'UNSIGNED-PAYLOAD' &&
+                payload.bodyHash !==
+                  createHash('sha256')
+                    .update(Buffer.from(await request.clone().arrayBuffer()))
+                    .digest('hex')
+              ) {
                 return incomingOptions.onSignatureMismatch?.(
                   request,
                   serverContext,
