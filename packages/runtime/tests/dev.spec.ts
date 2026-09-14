@@ -1,6 +1,6 @@
-import { mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdtemp, writeFile } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { executeFetch, isDebug } from '@internal/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
