@@ -12,7 +12,7 @@
   "overrides": {
     "tmp": "0.2.4",
     "minimatch": "^10.2.5",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.6",
     "protobufjs": "^8.2.1",
     "esbuild": "^0.25.12"
   },
