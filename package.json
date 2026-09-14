@@ -94,7 +94,7 @@
     "jest-leak-detector": "patch:jest-leak-detector@npm:^29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "lodash": "4.18.1",
     "minimatch": "10.2.5",
-    "multer": "2.1.1",
+    "multer": "2.3.0",
     "path-to-regexp": "8.4.0",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "protobufjs": "8.2.1",
