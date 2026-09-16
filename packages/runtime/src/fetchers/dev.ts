@@ -113,9 +113,7 @@ async function postJson<TBody>(
   return response.json();
 }
 
-export async function composeSupergraphLocally(
-  services: Service[],
-): Promise<string> {
+async function composeSupergraphLocally(services: Service[]): Promise<string> {
   const compositionResult = await new Promise<CompositionResult>(
     (resolvePromise, reject) => {
       try {
@@ -143,7 +141,7 @@ export async function composeSupergraphLocally(
   return compositionResult.supergraphSdl;
 }
 
-export async function composeSupergraphRemotely(input: {
+async function composeSupergraphRemotely(input: {
   services: Service[];
   registry: string;
   token: string;

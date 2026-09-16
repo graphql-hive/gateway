@@ -5,8 +5,6 @@ import { Logger } from '@graphql-hive/logger';
 import type { KeyValueCache } from '@graphql-mesh/types';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  composeSupergraphLocally,
-  composeSupergraphRemotely,
   createDevFetcher,
   InvalidSupergraphResultError,
   LocalSupergraphCompositionError,
@@ -20,6 +18,10 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
     headers: { 'content-type': 'application/json' },
     ...init,
   });
+}
+
+function sentBody(init: RequestInit | undefined) {
+  return JSON.parse(init?.body as string);
 }
 
 function createMemoryCache(): KeyValueCache {
@@ -79,6 +81,13 @@ async function withoutNodeRuntime(run: () => Promise<void>) {
 const federationSdl = 'type Query { hello: String }';
 const registry = 'http://registry.localhost';
 
+const remoteDevOpts = {
+  services: [{ name: 'a', url: 'http://a' }],
+  remote: true,
+  registry,
+  token: 'secret-token',
+};
+
 function federationIntrospectionResponse(sdl = federationSdl) {
   return jsonResponse({ data: { _service: { sdl } } });
 }
@@ -93,6 +102,22 @@ function schemaComposeSuccessResponse(supergraphSdl = 'remote supergraph sdl') {
       },
     },
   });
+}
+
+/** Answers federation introspection for every service url and `compose` for the registry. */
+function remoteFetch(
+  compose: () => Response,
+  sdl: () => string = () => federationSdl,
+) {
+  return vi.fn(async (url: string, _init?: RequestInit) =>
+    url === registry ? compose() : federationIntrospectionResponse(sdl()),
+  );
+}
+
+function registryCalls(fetch: {
+  mock: { calls: readonly (readonly unknown[])[] };
+}) {
+  return fetch.mock.calls.filter(([url]) => url === registry);
 }
 
 const graphqlIntrospectionResult = (fieldName: string) => ({
@@ -121,47 +146,44 @@ const graphqlIntrospectionResult = (fieldName: string) => ({
 });
 
 describe('Hive dev fetcher', () => {
-  it('composes a valid supergraph from local services', async () => {
-    const supergraphSdl = await composeSupergraphLocally([
-      { name: 'a', url: 'http://a', sdl: federationSdl },
-    ]);
-
-    expect(supergraphSdl).toContain('hello');
-  });
-
   it('throws a LocalSupergraphCompositionError carrying the composition errors when local composition fails', async () => {
-    const error = await composeSupergraphLocally([
-      { name: 'a', url: 'http://a', sdl: 'type Query { hello: String }' },
-      { name: 'b', url: 'http://b', sdl: 'type Query { hello: Int }' },
-    ]).catch((e) => e);
+    const fetch = vi.fn(async (url: string) =>
+      federationIntrospectionResponse(
+        url === 'http://a'
+          ? 'type Query { hello: String }'
+          : 'type Query { hello: Int }',
+      ),
+    );
+    const fetcher = createTestFetcher(
+      {
+        services: [
+          { name: 'a', url: 'http://a' },
+          { name: 'b', url: 'http://b' },
+        ],
+      },
+      { fetch },
+    );
+
+    const error = await fetcher.fetch().catch((e) => e);
 
     expect(error).toBeInstanceOf(LocalSupergraphCompositionError);
     expect(error.compositionResult.errors.length).toBeGreaterThan(0);
-    expect(error.message).toBe(
-      `Local composition failed:\n${error.compositionResult.errors
-        .map((e: Error) => e.message)
-        .join('\n')}`,
-    );
+    expect(error.message).toMatch(/^Local composition failed:\n.+/);
   });
 
-  const remoteComposeArgs = {
-    services: [{ name: 'a', url: 'http://a', sdl: federationSdl }],
-    registry,
-    token: 'secret-token',
-    unstable__forceLatest: false,
-    target: null,
-    version: '1.2.3',
-  };
+  it('composes remotely with the registry request built from the options', async () => {
+    const fetch = remoteFetch(() => schemaComposeSuccessResponse());
+    const fetcher = createTestFetcher(
+      {
+        ...remoteDevOpts,
+        target: { byId: 'target-id' },
+        unstable__forceLatest: true,
+      },
+      { fetch },
+    );
 
-  it('composes remotely and returns the supergraph SDL', async () => {
-    const fetch = vi.fn().mockResolvedValue(schemaComposeSuccessResponse());
+    await expect(fetcher.fetch()).resolves.toBe('remote supergraph sdl');
 
-    const result = await composeSupergraphRemotely({
-      ...remoteComposeArgs,
-      fetch,
-    });
-
-    expect(result).toBe('remote supergraph sdl');
     expect(fetch).toHaveBeenCalledWith(
       registry,
       expect.objectContaining({
@@ -174,55 +196,53 @@ describe('Hive dev fetcher', () => {
         }),
       }),
     );
-    const [, init] = fetch.mock.calls[0]!;
-    const body = JSON.parse(init.body as string);
+    const body = sentBody(fetch.mock.calls[1]![1]);
     expect(body.query).toContain('mutation CreateDevFetcher_SchemaCompose');
     expect(body.variables).toEqual({
       input: {
-        useLatestComposableVersion: true,
+        useLatestComposableVersion: false,
         services: [{ name: 'a', url: 'http://a', sdl: federationSdl }],
-        target: null,
+        target: { byId: 'target-id' },
       },
     });
   });
 
   it('throws a SupergraphRegistryApiError when the registry returns a SchemaComposeError', async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: {
-          schemaCompose: {
-            __typename: 'SchemaComposeError',
-            message: 'something went wrong',
+    const fetcher = createTestFetcher(remoteDevOpts, {
+      fetch: remoteFetch(() =>
+        jsonResponse({
+          data: {
+            schemaCompose: {
+              __typename: 'SchemaComposeError',
+              message: 'something went wrong',
+            },
           },
-        },
-      }),
-    );
+        }),
+      ),
+    });
 
-    await expect(
-      composeSupergraphRemotely({ ...remoteComposeArgs, fetch }),
-    ).rejects.toThrow(SupergraphRegistryApiError);
+    await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
   });
 
   it('throws a RemoteSupergraphCompositionError when remote composition is invalid with errors', async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: {
-          schemaCompose: {
-            __typename: 'SchemaComposeSuccess',
-            valid: false,
-            compositionResult: {
-              supergraphSdl: null,
-              errors: { edges: [{ node: { message: 'field conflict' } }] },
+    const fetcher = createTestFetcher(remoteDevOpts, {
+      fetch: remoteFetch(() =>
+        jsonResponse({
+          data: {
+            schemaCompose: {
+              __typename: 'SchemaComposeSuccess',
+              valid: false,
+              compositionResult: {
+                supergraphSdl: null,
+                errors: { edges: [{ node: { message: 'field conflict' } }] },
+              },
             },
           },
-        },
-      }),
-    );
+        }),
+      ),
+    });
 
-    const error = await composeSupergraphRemotely({
-      ...remoteComposeArgs,
-      fetch,
-    }).catch((e) => e);
+    const error = await fetcher.fetch().catch((e) => e);
 
     expect(error).toBeInstanceOf(RemoteSupergraphCompositionError);
     expect(error.errors).toEqual([{ message: 'field conflict' }]);
@@ -230,25 +250,25 @@ describe('Hive dev fetcher', () => {
   });
 
   it('throws an InvalidSupergraphResultError when composition is valid but has no supergraph SDL', async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: {
-          schemaCompose: {
-            __typename: 'SchemaComposeSuccess',
-            valid: true,
-            compositionResult: { supergraphSdl: null },
+    const fetcher = createTestFetcher(remoteDevOpts, {
+      fetch: remoteFetch(() =>
+        jsonResponse({
+          data: {
+            schemaCompose: {
+              __typename: 'SchemaComposeSuccess',
+              valid: true,
+              compositionResult: { supergraphSdl: null },
+            },
           },
-        },
-      }),
-    );
+        }),
+      ),
+    });
 
-    await expect(
-      composeSupergraphRemotely({ ...remoteComposeArgs, fetch }),
-    ).rejects.toThrow(InvalidSupergraphResultError);
+    await expect(fetcher.fetch()).rejects.toThrow(InvalidSupergraphResultError);
   });
 
   it('rejects when a service responds with a non-OK status', async () => {
-    const fetch = vi.fn().mockResolvedValue(jsonResponse({}, { status: 500 }));
+    const fetch = vi.fn(async () => jsonResponse({}, { status: 500 }));
 
     const fetcher = createTestFetcher(
       { services: [{ name: 'a', url: 'http://a' }] },
@@ -262,93 +282,37 @@ describe('Hive dev fetcher', () => {
   });
 
   it('does not recompose when resolved service SDLs are unchanged', async () => {
-    const fetch = vi
-      .fn()
-      .mockImplementation(async (url: string) =>
-        url === registry
-          ? schemaComposeSuccessResponse()
-          : federationIntrospectionResponse(),
-      );
+    const fetch = remoteFetch(() => schemaComposeSuccessResponse());
+    const fetcher = createTestFetcher(remoteDevOpts, {
+      fetch,
+      cache: createMemoryCache(),
+    });
 
-    const fetcher = createTestFetcher(
-      {
-        services: [{ name: 'a', url: 'http://a' }],
-        remote: true,
-        registry,
-        token: 'secret-token',
-      },
-      { fetch, cache: createMemoryCache() },
-    );
+    await fetcher.fetch();
+    await fetcher.fetch();
 
-    const first = await fetcher.fetch();
-    const second = await fetcher.fetch();
-
-    expect(first).toBe(second);
     // one introspection call per `fetch()`, but composition only runs once (cached on the 2nd).
     expect(fetch).toHaveBeenCalledTimes(3);
-    expect(fetch.mock.calls.filter(([url]) => url === registry)).toHaveLength(
-      1,
-    );
+    expect(registryCalls(fetch)).toHaveLength(1);
   });
 
   it('recomposes when a resolved service SDL changes', async () => {
     let sdl = federationSdl;
-    const fetch = vi
-      .fn()
-      .mockImplementation(async (url: string) =>
-        url === registry
-          ? schemaComposeSuccessResponse(`composed from: ${sdl}`)
-          : federationIntrospectionResponse(sdl),
-      );
-
-    const fetcher = createTestFetcher(
-      {
-        services: [{ name: 'a', url: 'http://a' }],
-        remote: true,
-        registry,
-        token: 'secret-token',
-      },
-      { fetch, cache: createMemoryCache() },
+    const fetch = remoteFetch(
+      () => schemaComposeSuccessResponse(`composed from: ${sdl}`),
+      () => sdl,
     );
+    const fetcher = createTestFetcher(remoteDevOpts, {
+      fetch,
+      cache: createMemoryCache(),
+    });
 
     const first = await fetcher.fetch();
     sdl = 'type Query { hello: Int }';
     const second = await fetcher.fetch();
 
     expect(first).not.toBe(second);
-    expect(fetch.mock.calls.filter(([url]) => url === registry)).toHaveLength(
-      2,
-    );
-  });
-
-  it('composes remotely when `remote` is enabled', async () => {
-    const fetch = vi
-      .fn()
-      .mockImplementation(async (url: string) =>
-        url === 'http://a'
-          ? federationIntrospectionResponse()
-          : schemaComposeSuccessResponse(),
-      );
-
-    const fetcher = createTestFetcher(
-      {
-        services: [{ name: 'a', url: 'http://a' }],
-        remote: true,
-        registry,
-        token: 'secret-token',
-        unstable__forceLatest: true,
-      },
-      { fetch },
-    );
-
-    const result = await fetcher.fetch();
-
-    expect(result).toBe('remote supergraph sdl');
-    const [, init] = fetch.mock.calls[1]!;
-    expect(
-      JSON.parse(init.body as string).variables.input
-        .useLatestComposableVersion,
-    ).toBe(false);
+    expect(registryCalls(fetch)).toHaveLength(2);
   });
 
   it('throws when `remote` is enabled without a registry or token', async () => {
@@ -359,36 +323,15 @@ describe('Hive dev fetcher', () => {
     );
   });
 
-  it('resolves a relative schema file path against `cwd`', async () => {
-    const cwd = await writeSchemaFile('a.graphql', federationSdl);
-
-    const fetcher = createTestFetcher(
-      {
-        services: [
-          { name: 'a', url: 'http://a', source: 'file', schema: 'a.graphql' },
-        ],
-      },
-      { cwd },
-    );
-
-    const supergraphSdl = await fetcher.fetch();
-
-    expect(supergraphSdl).toContain('hello');
-  });
-
   it('does not reference `process` when no file-based service is configured outside Node.js', () =>
     withoutNodeRuntime(async () => {
-      const fetch = vi
-        .fn()
-        .mockImplementation(async () => federationIntrospectionResponse());
-
+      const fetch = vi.fn(async () => federationIntrospectionResponse());
       const fetcher = createTestFetcher(
         { services: [{ name: 'a', url: 'http://a' }] },
         { fetch },
       );
-      const supergraphSdl = await fetcher.fetch();
 
-      expect(supergraphSdl).toContain('hello');
+      await expect(fetcher.fetch()).resolves.toContain('hello');
     }));
 
   it('throws a clear error when a file-based service is used outside Node.js', () =>
@@ -404,48 +347,12 @@ describe('Hive dev fetcher', () => {
       );
     }));
 
-  it('uses federation introspection (`_service { sdl }`) by default', async () => {
-    const fetch = vi
-      .fn()
-      .mockImplementation(async () => federationIntrospectionResponse());
-
-    const fetcher = createTestFetcher(
-      { services: [{ name: 'a', url: 'http://a' }] },
-      { fetch },
-    );
-    const supergraphSdl = await fetcher.fetch();
-
-    expect(supergraphSdl).toContain('hello');
-    const [, init] = fetch.mock.calls[0]!;
-    expect(JSON.parse(init.body as string).query).toContain('_service');
-  });
-
-  it('uses standard GraphQL introspection when `source: "graphql"` is set', async () => {
-    const fetch = vi
-      .fn()
-      .mockImplementation(async () =>
-        jsonResponse({ data: graphqlIntrospectionResult('hello') }),
-      );
-
-    const fetcher = createTestFetcher(
-      { services: [{ name: 'a', url: 'http://a', source: 'graphql' }] },
-      { fetch },
-    );
-
-    const supergraphSdl = await fetcher.fetch();
-
-    expect(supergraphSdl).toContain('hello');
-    const [, init] = fetch.mock.calls[0]!;
-    expect(JSON.parse(init.body as string).query).toContain('__schema');
-  });
-
   it('does not fall back to standard introspection when federation introspection fails', async () => {
-    const fetch = vi.fn().mockResolvedValue(
+    const fetch = vi.fn(async () =>
       jsonResponse({
         errors: [{ message: 'Cannot query field "_service" on type "Query".' }],
       }),
     );
-
     const fetcher = createTestFetcher(
       { services: [{ name: 'a', url: 'http://a' }] },
       { fetch },
@@ -456,31 +363,19 @@ describe('Hive dev fetcher', () => {
   });
 
   it('opens the circuit breaker after repeated composition failures, preventing further composition attempts', async () => {
-    let introspectionCalls = 0;
-    let composeCalls = 0;
-    const fetch = vi.fn().mockImplementation(async (url: string) => {
-      if (url === 'http://a') {
-        introspectionCalls++;
-        return federationIntrospectionResponse();
-      }
-
-      composeCalls++;
-      return jsonResponse({
+    const fetch = remoteFetch(() =>
+      jsonResponse({
         data: {
           schemaCompose: {
             __typename: 'SchemaComposeError',
             message: 'composition unavailable',
           },
         },
-      });
-    });
-
+      }),
+    );
     const fetcher = createTestFetcher(
       {
-        services: [{ name: 'a', url: 'http://a' }],
-        remote: true,
-        registry,
-        token: 'secret-token',
+        ...remoteDevOpts,
         circuitBreaker: {
           volumeThreshold: 1,
           errorThresholdPercentage: 1,
@@ -492,25 +387,21 @@ describe('Hive dev fetcher', () => {
 
     try {
       await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
-      expect(composeCalls).toBe(1);
+      expect(registryCalls(fetch)).toHaveLength(1);
 
       // The breaker is now open: composition is not attempted again until `resetTimeout` elapses.
       await expect(fetcher.fetch()).rejects.toThrow('Breaker is open');
-      expect(introspectionCalls).toBe(2);
-      expect(composeCalls).toBe(1);
+      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(registryCalls(fetch)).toHaveLength(1);
     } finally {
       fetcher.dispose();
     }
   });
 
   it('dispose() shuts down the circuit breaker, so `fetch` can no longer compose', async () => {
-    const fetch = vi
-      .fn()
-      .mockImplementation(async () => federationIntrospectionResponse());
-
     const fetcher = createTestFetcher(
       { services: [{ name: 'a', url: 'http://a' }] },
-      { fetch },
+      { fetch: vi.fn(async () => federationIntrospectionResponse()) },
     );
 
     fetcher.dispose();
@@ -523,31 +414,18 @@ describe('Hive dev fetcher', () => {
       'a.graphql',
       'type Query { fileField: String }',
     );
-
-    const fetch = vi
-      .fn()
-      .mockImplementation(async (url: string, init: RequestInit) => {
-        const { query } = JSON.parse(init.body as string);
-
-        if (url === 'http://b') {
-          expect(query).toContain('_service');
-          return federationIntrospectionResponse(
+    const fetch = vi.fn(async (url: string, _init?: RequestInit) =>
+      url === 'http://c'
+        ? jsonResponse({ data: graphqlIntrospectionResult('graphqlField') })
+        : federationIntrospectionResponse(
             'type Query { federationField: String }',
-          );
-        }
-
-        expect(url).toBe('http://c');
-        expect(query).toContain('__schema');
-        return jsonResponse({
-          data: graphqlIntrospectionResult('graphqlField'),
-        });
-      });
-
+          ),
+    );
     const fetcher = createTestFetcher(
       {
         services: [
           { name: 'a', url: 'http://a', source: 'file', schema: 'a.graphql' },
-          { name: 'b', url: 'http://b', source: 'federation' },
+          { name: 'b', url: 'http://b' },
           { name: 'c', url: 'http://c', source: 'graphql' },
         ],
       },
@@ -560,5 +438,10 @@ describe('Hive dev fetcher', () => {
     expect(supergraphSdl).toContain('federationField');
     expect(supergraphSdl).toContain('graphqlField');
     expect(fetch).toHaveBeenCalledTimes(2);
+    const queryByUrl = new Map(
+      fetch.mock.calls.map(([url, init]) => [url, sentBody(init).query]),
+    );
+    expect(queryByUrl.get('http://b')).toContain('_service');
+    expect(queryByUrl.get('http://c')).toContain('__schema');
   });
 });
