@@ -1,11 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { GenericAuthPluginOptions } from '@envelop/generic-auth';
-import {
-  CircuitBreakerConfiguration,
-  type DevFetcherTargetReference,
-  type HiveDevFetcherOptions,
-  type HiveDevService,
-} from '@graphql-hive/core';
+import type { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
@@ -66,7 +61,6 @@ import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
 export type { CircuitBreakerConfiguration };
-export type { DevFetcherTargetReference, HiveDevService };
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -372,11 +366,60 @@ export interface GatewayHiveCDNOptions {
   circuitBreaker?: CircuitBreakerConfiguration;
 }
 
-export interface GatewayHiveDevOptions extends Omit<
-  HiveDevFetcherOptions,
-  'fetch' | 'cwd' | 'cache' | 'logger' | 'version'
-> {
+export type DevFetcherTargetReference =
+  | { byId: string | number; bySelector?: never }
+  | {
+      byId?: never;
+      bySelector: {
+        organizationSlug: string;
+        projectSlug: string;
+        targetSlug: string;
+      };
+    };
+
+export type HiveDevService = {
+  name: string;
+  url: string;
+} & (
+  | {
+      /**
+       * Read the schema from an SDL file rather than introspecting `url`.
+       * Only supported when running in Node.js.
+       */
+      source: 'file';
+      /** Path to the service's SDL file, resolved against the gateway's working directory. */
+      schema: string;
+    }
+  | {
+      /**
+       * How to obtain the schema from `url`.
+       * - `federation` (default): query the federation `_service { sdl }` field.
+       * - `graphql`: perform standard GraphQL introspection (the `IntrospectionQuery`) and print
+       *   the resulting schema.
+       */
+      source?: 'federation' | 'graphql';
+    }
+);
+
+export interface GatewayHiveDevOptions {
   type: 'dev';
+  /** Subgraphs to compose into the supergraph. */
+  services: HiveDevService[];
+  /**
+   * Compose through the Hive registry instead of locally. The registry composes the target's
+   * latest schema with these services replaced by name. Requires {@link registry} and {@link token}.
+   */
+  remote?: boolean;
+  /** Hive registry GraphQL API endpoint used for remote composition. */
+  registry?: string;
+  /** Hive registry access token used for remote composition. */
+  token?: string;
+  /** The target to compose against when composing remotely. */
+  target?: DevFetcherTargetReference | null;
+  /** Compose against the target's latest schema version even if it isn't composable. */
+  unstable__forceLatest?: boolean;
+  /** Guards composition so it isn't attempted more frequently than the circuit breaker allows. */
+  circuitBreaker?: CircuitBreakerConfiguration;
 }
 
 export interface GatewayHiveReportingOptions extends Omit<

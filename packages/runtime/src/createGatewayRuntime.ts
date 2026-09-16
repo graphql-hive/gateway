@@ -5,11 +5,7 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import {
-  createCDNArtifactFetcher,
-  createDevFetcher,
-  joinUrl,
-} from '@graphql-hive/core';
+import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
@@ -95,6 +91,7 @@ import {
   type YogaServerInstance,
 } from 'graphql-yoga';
 import { createLoggerFromLogging } from './createLoggerFromLogging';
+import { createDevFetcher } from './fetchers/dev';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
@@ -622,21 +619,14 @@ export function createGatewayRuntime<
           fetch: graphosFetcherContainer.unifiedGraphFetcher,
         };
       } else if (config.supergraph.type === 'dev') {
-        const devFetcher = createDevFetcher({
-          ...config.supergraph,
-          cwd: configContext.cwd,
-          // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
-          fetch: configContext.fetch,
-          logger: LegacyLogger.from(
-            configContext.log.child('[hiveDevFetcher] '),
-          ),
-          cache: configContext.cache,
+        unifiedGraphFetcher = createDevFetcher({
+          devOpts: config.supergraph,
+          configContext: {
+            ...configContext,
+            log: configContext.log.child('[hiveDevFetcher] '),
+          },
           version: globalThis.__VERSION__,
         });
-        unifiedGraphFetcher = {
-          fetch: () => devFetcher.fetch(),
-          dispose: () => devFetcher.dispose(),
-        };
       } else {
         unifiedGraphFetcher = {
           fetch: () => {

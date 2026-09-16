@@ -3,9 +3,9 @@
 '@graphql-hive/gateway': minor
 ---
 
-Add a `dev` supergraph source backed by `@graphql-hive/core`'s `createDevFetcher`, letting the
-gateway compose a supergraph directly from local/introspected subgraphs (optionally via remote
-Hive registry composition) without running a separate `hive dev` process.
+Add a `dev` supergraph source that lets the gateway compose a supergraph directly from
+local/introspected subgraphs (optionally via remote Hive registry composition) without running a
+separate `hive dev` process.
 
 Configure it via `supergraph: { type: 'dev', services: [...] }` in the config file, with
 `--dev-remote`, `--dev-registry`, `--dev-registry-token` and `--dev-target` CLI/env overrides for
