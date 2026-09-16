@@ -54,6 +54,10 @@ const defaultCircuitBreakerConfiguration: CircuitBreakerConfiguration = {
 
 const CACHE_KEY = 'hive:dev-fetcher:supergraph';
 
+/** The Hive Cloud registry GraphQL API endpoint, used when `registry` is not configured. */
+export const DEFAULT_HIVE_REGISTRY_ENDPOINT =
+  'https://app.graphql-hive.com/graphql';
+
 export class LocalSupergraphCompositionError extends Error {
   constructor(public compositionResult: CompositionFailure) {
     super(
@@ -377,16 +381,14 @@ export function createDevFetcher({
   const composeBreaker = new CircuitBreaker(
     async (services: Service[]) => {
       if (devOpts.remote) {
-        if (!devOpts.registry || !devOpts.token) {
-          throw new Error(
-            '`registry` and `token` are required when `remote` is enabled.',
-          );
+        if (!devOpts.token) {
+          throw new Error('`token` is required when `remote` is enabled.');
         }
 
         log.debug('Composing supergraph remotely via the Hive registry');
         return composeSupergraphRemotely({
           services,
-          registry: devOpts.registry,
+          registry: devOpts.registry ?? DEFAULT_HIVE_REGISTRY_ENDPOINT,
           token: devOpts.token,
           unstable__forceLatest: devOpts.unstable__forceLatest ?? false,
           target: devOpts.target ?? null,

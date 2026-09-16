@@ -9,6 +9,7 @@ import {
 import {
   createGatewayRuntime,
   createLoggerFromLogging,
+  DEFAULT_HIVE_REGISTRY_ENDPOINT,
   type DevFetcherTargetReference,
   type GatewayConfigSupergraph,
   type GatewayGraphOSManagedFederationOptions,
@@ -181,13 +182,13 @@ export const addCommand: AddCommand = (ctx, cli) =>
     .addOption(
       new Option(
         '--dev-registry <endpoint>',
-        'Hive registry endpoint used for remote composition of a dev supergraph source. Requires --dev-remote and --dev-registry-token.',
+        `Hive registry endpoint used for remote composition of a dev supergraph source. Defaults to ${DEFAULT_HIVE_REGISTRY_ENDPOINT} (Hive Cloud); set it for self-hosted Hive. Only applies with --dev-remote.`,
       ).env('DEV_REGISTRY'),
     )
     .addOption(
       new Option(
         '--dev-registry-token <token>',
-        'Hive registry access token used for remote composition of a dev supergraph source. Requires --dev-remote and --dev-registry.',
+        'Hive registry access token used for remote composition of a dev supergraph source. Requires --dev-remote.',
       ).env('DEV_REGISTRY_TOKEN'),
     )
     .addOption(

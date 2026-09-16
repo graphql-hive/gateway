@@ -407,10 +407,13 @@ export interface GatewayHiveDevOptions {
   services: HiveDevService[];
   /**
    * Compose through the Hive registry instead of locally. The registry composes the target's
-   * latest schema with these services replaced by name. Requires {@link registry} and {@link token}.
+   * latest schema with these services replaced by name. Requires {@link token}.
    */
   remote?: boolean;
-  /** Hive registry GraphQL API endpoint used for remote composition. */
+  /**
+   * Hive registry GraphQL API endpoint used for remote composition.
+   * Defaults to `https://app.graphql-hive.com/graphql` (Hive Cloud); set it for self-hosted Hive.
+   */
   registry?: string;
   /** Hive registry access token used for remote composition. */
   token?: string;

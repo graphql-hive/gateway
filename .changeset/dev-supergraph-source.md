@@ -17,8 +17,9 @@ supergraph is recomposed only when a schema changed; composition is guarded by t
 Remote composition takes `remote`, `registry`, `token` and `target` (`{ byId }` or
 `{ bySelector: { organizationSlug, projectSlug, targetSlug } }`), with `--dev-remote`,
 `--dev-registry`, `--dev-registry-token` and `--dev-target` (slug path or target UUID) CLI/env
-overrides for the `supergraph` command. The services themselves can also be defined entirely from
-the CLI using `--dev-service <name>=<url>` (repeated once per service), with `--dev-service-source
-<name>=federation|graphql|file` and `--dev-service-schema <name>=<path>` as optional per-service
-overlays keyed by the same service name; when used, these take precedence over any `services`
-configured in the config file.
+overrides for the `supergraph` command. `registry` defaults to
+`https://app.graphql-hive.com/graphql` (Hive Cloud) and only needs to be set for self-hosted Hive.
+The services themselves can also be defined entirely from the CLI using `--dev-service <name>=<url>`
+(repeated once per service), with `--dev-service-source <name>=federation|graphql|file` and
+`--dev-service-schema <name>=<path>` as optional per-service overlays keyed by the same service
+name; when used, these take precedence over any `services` configured in the config file.

@@ -6,6 +6,7 @@ import type { KeyValueCache } from '@graphql-mesh/types';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createDevFetcher,
+  DEFAULT_HIVE_REGISTRY_ENDPOINT,
   InvalidSupergraphResultError,
   LocalSupergraphCompositionError,
   RemoteSupergraphCompositionError,
@@ -108,9 +109,10 @@ function schemaComposeSuccessResponse(supergraphSdl = 'remote supergraph sdl') {
 function remoteFetch(
   compose: () => Response,
   sdl: () => string = () => federationSdl,
+  registryUrl = registry,
 ) {
   return vi.fn(async (url: string, _init?: RequestInit) =>
-    url === registry ? compose() : federationIntrospectionResponse(sdl()),
+    url === registryUrl ? compose() : federationIntrospectionResponse(sdl()),
   );
 }
 
@@ -315,11 +317,30 @@ describe('Hive dev fetcher', () => {
     expect(registryCalls(fetch)).toHaveLength(2);
   });
 
-  it('throws when `remote` is enabled without a registry or token', async () => {
-    const fetcher = createTestFetcher({ services: [], remote: true });
+  it('composes against the Hive Cloud registry when `registry` is omitted', async () => {
+    const fetch = remoteFetch(
+      () => schemaComposeSuccessResponse(),
+      undefined,
+      DEFAULT_HIVE_REGISTRY_ENDPOINT,
+    );
+    const fetcher = createTestFetcher(
+      { ...remoteDevOpts, registry: undefined },
+      { fetch },
+    );
+
+    await expect(fetcher.fetch()).resolves.toBe('remote supergraph sdl');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://app.graphql-hive.com/graphql',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('throws when `remote` is enabled without a token', async () => {
+    const fetcher = createTestFetcher({ services: [], remote: true, registry });
 
     await expect(fetcher.fetch()).rejects.toThrow(
-      '`registry` and `token` are required when `remote` is enabled.',
+      '`token` is required when `remote` is enabled.',
     );
   });
 
