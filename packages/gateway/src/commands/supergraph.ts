@@ -111,7 +111,7 @@ function buildDevServices(
     if (!(name in urlByName)) {
       onError(
         `--dev-service-source/--dev-service-schema references unknown service "${name}". ` +
-          `Expected one of the services given via --dev-service-url: ${names.join(', ') || '(none)'}.`,
+          `Expected one of the services given via --dev-service: ${names.join(', ') || '(none)'}.`,
       );
     }
   }
@@ -198,7 +198,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
     )
     .addOption(
       new Option(
-        '--dev-service-url <name>=<url>',
+        '--dev-service <name>=<url>',
         'Add a service to the dev supergraph source, as "<service-name>=<url>". Repeat once per ' +
           'service. When provided, this defines the dev supergraph source services in full, ' +
           'overriding any "services" configured in the config file.',
@@ -212,7 +212,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'How to obtain the schema for a dev supergraph source service, as "<service-name>=<source>": ' +
           '"federation" (default, via the federation `_service { sdl }` field), "graphql" (via ' +
           'introspection), or "file" (from a local SDL file, requires --dev-service-schema for the ' +
-          'same service name). The service name must match one given via --dev-service-url.',
+          'same service name). The service name must match one given via --dev-service.',
       )
         .argParser(collectDevServiceSource)
         .default({} as Record<string, string>),
@@ -251,7 +251,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         devRegistry,
         devRegistryToken,
         devTarget,
-        devServiceUrl,
+        devService,
         devServiceSource,
         devServiceSchema,
         ...opts
@@ -368,7 +368,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         return process.exit(1);
       };
       const devServices = buildDevServices(
-        devServiceUrl,
+        devService,
         devServiceSource,
         devServiceSchema,
         onDevOptionError,
@@ -384,7 +384,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       } else if (devServices.length) {
         if (schemaPathOrUrl || hiveCdnEndpoint || apolloGraphRef) {
           onDevOptionError(
-            '--dev-service-* options cannot be combined with a schema path/url, --hive-cdn-endpoint, or --apollo-graph-ref.',
+            'The --dev-service, --dev-service-source and --dev-service-schema options cannot be combined with a schema path/url, --hive-cdn-endpoint, or --apollo-graph-ref.',
           );
         }
         devSupergraph = { type: 'dev', services: [] };
@@ -421,7 +421,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         devServices.length
       ) {
         onDevOptionError(
-          'The --dev-* options require the supergraph source to be a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file, or set via --dev-service-url).',
+          'The --dev-* options require the supergraph source to be a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file, or set via --dev-service).',
         );
       }
 
