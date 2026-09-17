@@ -91,6 +91,7 @@ import {
   type YogaServerInstance,
 } from 'graphql-yoga';
 import { createLoggerFromLogging } from './createLoggerFromLogging';
+import { createDevFetcher } from './fetchers/dev';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
@@ -617,6 +618,15 @@ export function createGatewayRuntime<
         unifiedGraphFetcher = {
           fetch: graphosFetcherContainer.unifiedGraphFetcher,
         };
+      } else if (config.supergraph.type === 'dev') {
+        unifiedGraphFetcher = createDevFetcher({
+          devOpts: config.supergraph,
+          configContext: {
+            ...configContext,
+            log: configContext.log.child('[hiveDevFetcher] '),
+          },
+          version: globalThis.__VERSION__,
+        });
       } else {
         unifiedGraphFetcher = {
           fetch: () => {
