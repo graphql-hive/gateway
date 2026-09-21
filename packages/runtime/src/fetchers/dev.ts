@@ -403,6 +403,8 @@ export function createDevFetcher({
     {
       ...circuitBreakerConfig,
       timeout: false,
+      // nothing listens to the `snapshot` event, so don't schedule its interval
+      enableSnapshots: false,
     },
   );
 

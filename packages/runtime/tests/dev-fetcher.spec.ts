@@ -1,9 +1,9 @@
-import { mkdtemp, writeFile } from 'fs/promises';
+import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { Logger } from '@graphql-hive/logger';
 import type { KeyValueCache } from '@graphql-mesh/types';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createDevFetcher,
   DEFAULT_HIVE_REGISTRY_ENDPOINT,
@@ -11,6 +11,7 @@ import {
   LocalSupergraphCompositionError,
   RemoteSupergraphCompositionError,
   SupergraphRegistryApiError,
+  type DevFetcher,
 } from '../src/fetchers/dev';
 import type { GatewayConfigContext, GatewayHiveDevOptions } from '../src/types';
 
@@ -38,11 +39,20 @@ function createMemoryCache(): KeyValueCache {
   };
 }
 
+const tempDirs: string[] = [];
+
 async function writeSchemaFile(name: string, sdl: string): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'hive-gateway-dev-fetcher-'));
+  tempDirs.push(cwd);
   await writeFile(join(cwd, name), sdl, 'utf8');
   return cwd;
 }
+
+afterAll(() =>
+  Promise.all(
+    tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
+  ),
+);
 
 const log = new Logger({ level: process.env['DEBUG'] ? 'debug' : false });
 
@@ -50,11 +60,14 @@ function unexpectedFetch(): never {
   throw new Error('Unexpected fetch call');
 }
 
+/** Fetchers created during a test; each one's circuit breaker is shut down in `afterEach`. */
+const fetchers: DevFetcher[] = [];
+
 function createTestFetcher(
   devOpts: Omit<GatewayHiveDevOptions, 'type'>,
   configContext: Partial<GatewayConfigContext> = {},
 ) {
-  return createDevFetcher({
+  const fetcher = createDevFetcher({
     devOpts: { type: 'dev', ...devOpts },
     configContext: {
       log,
@@ -64,7 +77,15 @@ function createTestFetcher(
     },
     version: '1.2.3',
   });
+  fetchers.push(fetcher);
+  return fetcher;
 }
+
+afterEach(() => {
+  for (const fetcher of fetchers.splice(0)) {
+    fetcher.dispose();
+  }
+});
 
 /** Simulates a non-Node runtime (e.g. Cloudflare Workers), where `process` lacks `.versions.node`. */
 async function withoutNodeRuntime(run: () => Promise<void>) {
@@ -406,17 +427,13 @@ describe('Hive dev fetcher', () => {
       { fetch },
     );
 
-    try {
-      await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
-      expect(registryCalls(fetch)).toHaveLength(1);
+    await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
+    expect(registryCalls(fetch)).toHaveLength(1);
 
-      // The breaker is now open: composition is not attempted again until `resetTimeout` elapses.
-      await expect(fetcher.fetch()).rejects.toThrow('Breaker is open');
-      expect(fetch).toHaveBeenCalledTimes(3);
-      expect(registryCalls(fetch)).toHaveLength(1);
-    } finally {
-      fetcher.dispose();
-    }
+    // The breaker is now open: composition is not attempted again until `resetTimeout` elapses.
+    await expect(fetcher.fetch()).rejects.toThrow('Breaker is open');
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(registryCalls(fetch)).toHaveLength(1);
   });
 
   it('dispose() shuts down the circuit breaker, so `fetch` can no longer compose', async () => {
