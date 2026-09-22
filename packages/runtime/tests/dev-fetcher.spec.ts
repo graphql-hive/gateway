@@ -340,15 +340,57 @@ describe('Hive dev fetcher', () => {
 
   it('recomposes when a service URL changes even though its SDL is unchanged', async () => {
     const fetch = remoteFetch(() => schemaComposeSuccessResponse());
+    const services = [{ name: 'a', url: 'http://a' }];
+    const fetcher = createTestFetcher(
+      { ...remoteDevOpts, services },
+      { fetch, cache: createMemoryCache() },
+    );
+
+    await fetcher.fetch();
+    services[0]!.url = 'http://a-moved';
+    await fetcher.fetch();
+
+    // same SDL from both URLs, but the supergraph routes to the URL, so it must be recomposed.
+    expect(registryCalls(fetch)).toHaveLength(2);
+  });
+
+  it('always composes on boot, even when the cache holds an entry for unchanged services', async () => {
+    const fetch = remoteFetch(() => schemaComposeSuccessResponse());
+    // shared across fetchers, simulating a cache that outlives the process (e.g. Redis)
     const cache = createMemoryCache();
 
     await createTestFetcher(remoteDevOpts, { fetch, cache }).fetch();
-    await createTestFetcher(
-      { ...remoteDevOpts, services: [{ name: 'a', url: 'http://a-moved' }] },
-      { fetch, cache },
-    ).fetch();
+    await createTestFetcher(remoteDevOpts, { fetch, cache }).fetch();
 
-    // same SDL from both URLs, but the supergraph routes to the URL, so it must be recomposed.
+    // the persisted entry may stem from a different configuration or an outdated target,
+    // so a freshly booted fetcher must not reuse it.
+    expect(registryCalls(fetch)).toHaveLength(2);
+  });
+
+  it('does not trust the cache until this process has composed successfully once', async () => {
+    const cache = createMemoryCache();
+    await createTestFetcher(remoteDevOpts, {
+      fetch: remoteFetch(() => schemaComposeSuccessResponse('stale')),
+      cache,
+    }).fetch();
+
+    let registryFailures = 1;
+    const fetch = remoteFetch(() =>
+      registryFailures-- > 0
+        ? jsonResponse({
+            data: {
+              schemaCompose: {
+                __typename: 'SchemaComposeError',
+                message: 'composition unavailable',
+              },
+            },
+          })
+        : schemaComposeSuccessResponse('fresh'),
+    );
+    const fetcher = createTestFetcher(remoteDevOpts, { fetch, cache });
+
+    await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
+    await expect(fetcher.fetch()).resolves.toBe('fresh');
     expect(registryCalls(fetch)).toHaveLength(2);
   });
 

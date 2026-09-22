@@ -351,12 +351,12 @@ function servicesUnchanged(previous: Service[], next: Service[]): boolean {
     return false;
   }
 
-  return next.every(
-    (service) => {
-      const prevServiceDef = previous.find((p) => p.name === service.name);
-      return prevServiceDef?.sdl === service.sdl && prevServiceDef.url === service.url
-    },
-  );
+  return next.every((service) => {
+    const prevServiceDef = previous.find((p) => p.name === service.name);
+    return (
+      prevServiceDef?.sdl === service.sdl && prevServiceDef.url === service.url
+    );
+  });
 }
 
 /**
@@ -366,8 +366,11 @@ function servicesUnchanged(previous: Service[], next: Service[]): boolean {
  *
  * This is an alternative to running `@graphql-hive/cli`'s `dev` command next to the gateway.
  *
- * The composed supergraph is cached and only recomposed when the resolved service SDLs change,
- * but introspection and file reading run on every call, so set the gateway's polling interval
+ * The supergraph is always composed on the first successful fetch after boot, so a persisted
+ * cache (e.g. Redis) never carries a result composed under a previous configuration (or, when
+ * composing remotely, against an outdated target) across restarts. Afterwards, the composed
+ * supergraph is cached and only recomposed when the resolved service SDLs change, but
+ * introspection and file reading run on every call, so set the gateway's polling interval
  * accordingly. Composition is guarded by a circuit breaker so the expensive composition request
  * is guaranteed not to run too frequently.
  */
@@ -410,19 +413,27 @@ export function createDevFetcher({
     },
   );
 
+  // The cache may outlive the process (e.g. Redis), so an entry is only trusted once this
+  // process has composed at least once; the first fetch after boot always recomposes.
+  let composedSinceBoot = false;
+
   return {
     async fetch() {
       const services = await resolveServices(devOpts.services, cwd, fetch);
 
-      const cached: CachedSupergraph | undefined = await cache?.get(CACHE_KEY);
-      if (cached && servicesUnchanged(cached.services, services)) {
-        log.debug(
-          'Service SDLs are unchanged, reusing the composed supergraph',
-        );
-        return cached.supergraphSdl;
+      if (composedSinceBoot) {
+        const cached: CachedSupergraph | undefined =
+          await cache?.get(CACHE_KEY);
+        if (cached && servicesUnchanged(cached.services, services)) {
+          log.debug(
+            'Service SDLs are unchanged, reusing the composed supergraph',
+          );
+          return cached.supergraphSdl;
+        }
       }
 
       const supergraphSdl = await composeBreaker.fire(services);
+      composedSinceBoot = true;
 
       await cache?.set(CACHE_KEY, { services, supergraphSdl });
 
