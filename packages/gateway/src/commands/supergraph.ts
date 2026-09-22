@@ -176,9 +176,18 @@ export const addCommand: AddCommand = (ctx, cli) =>
     .addOption(
       new Option(
         '--dev-remote',
-        'Compose the dev supergraph remotely via the Hive registry instead of composing locally. Only applies when the supergraph source is a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file).',
+        'Compose the dev supergraph remotely via the Hive registry instead of composing locally. Only applies when the supergraph source is a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file). Overrides "remote" from the config file; set DEV_REMOTE=0 to force local composition.',
       ).env('DEV_REMOTE'),
     )
+    .on('optionEnv:dev-remote', function (this: Command) {
+      // we need this because commanderjs only checks for the existence of the
+      // variable, and not whether it is truthy (DEV_REMOTE=0 would be still true)
+      this.setOptionValueWithSource(
+        'devRemote', // must be camelCase
+        getEnvBool('DEV_REMOTE'),
+        'env',
+      );
+    })
     .addOption(
       new Option(
         '--dev-registry <endpoint>',
@@ -415,7 +424,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           devSupergraph.target = target;
         }
       } else if (
-        devRemote != null ||
+        devRemote ||
         devRegistry ||
         devRegistryToken ||
         devTarget ||
