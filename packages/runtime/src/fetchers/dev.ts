@@ -352,8 +352,10 @@ function servicesUnchanged(previous: Service[], next: Service[]): boolean {
   }
 
   return next.every(
-    (service) =>
-      previous.find((p) => p.name === service.name)?.sdl === service.sdl,
+    (service) => {
+      const prevServiceDef = previous.find((p) => p.name === service.name);
+      return prevServiceDef?.sdl === service.sdl && prevServiceDef.url === service.url
+    },
   );
 }
 

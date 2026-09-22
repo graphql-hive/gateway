@@ -338,6 +338,20 @@ describe('Hive dev fetcher', () => {
     expect(registryCalls(fetch)).toHaveLength(2);
   });
 
+  it('recomposes when a service URL changes even though its SDL is unchanged', async () => {
+    const fetch = remoteFetch(() => schemaComposeSuccessResponse());
+    const cache = createMemoryCache();
+
+    await createTestFetcher(remoteDevOpts, { fetch, cache }).fetch();
+    await createTestFetcher(
+      { ...remoteDevOpts, services: [{ name: 'a', url: 'http://a-moved' }] },
+      { fetch, cache },
+    ).fetch();
+
+    // same SDL from both URLs, but the supergraph routes to the URL, so it must be recomposed.
+    expect(registryCalls(fetch)).toHaveLength(2);
+  });
+
   it('composes against the Hive Cloud registry when `registry` is omitted', async () => {
     const fetch = remoteFetch(
       () => schemaComposeSuccessResponse(),
