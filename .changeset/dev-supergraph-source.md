@@ -15,13 +15,15 @@ supergraph is recomposed only when a schema changed; composition is guarded by t
 `circuitBreaker` option.
 
 Remote composition takes `remote`, `registry`, `token` and `target` (`{ byId }` or
-`{ bySelector: { organizationSlug, projectSlug, targetSlug } }`), with `--dev-remote`
-(`DEV_REMOTE`), `--dev-registry` (`DEV_REGISTRY`), `--dev-registry-token`
-(`DEV_REGISTRY_TOKEN`) and `--dev-target` (`DEV_TARGET`, slug path or target UUID) CLI/env
-overrides for the `supergraph` command. `DEV_REMOTE` accepts truthy/falsy values: `1`, `true`,
-`yes` or `on` enable remote composition, while `0`, `false`, `off` or an empty value disable it
-and override `remote: true` from the config file. `registry` defaults to
-`https://app.graphql-hive.com/graphql` (Hive Cloud) and only needs to be set for self-hosted Hive.
+`{ bySelector: { organizationSlug, projectSlug, targetSlug } }`). On the `supergraph` command the
+target and token are inherited from the global `--hive-target` (`HIVE_TARGET`, slug path or
+target UUID) and `--hive-access-token` (`HIVE_ACCESS_TOKEN`) options, so a target and token
+already configured for usage reporting or tracing are reused; `--dev-remote` (`DEV_REMOTE`) and
+`--dev-registry` (`DEV_REGISTRY`) are the dev-specific CLI/env overrides. `DEV_REMOTE` accepts
+truthy/falsy values: `1`, `true`, `yes` or `on` enable remote composition, while `0`, `false`,
+`off` or an empty value disable it and override `remote: true` from the config file. `registry`
+defaults to `https://app.graphql-hive.com/graphql` (Hive Cloud) and only needs to be set for
+self-hosted Hive.
 The services themselves can also be defined entirely from the CLI using `--dev-service <name>=<url>`
 (repeated once per service), with `--dev-service-source <name>=federation|graphql|file` and
 `--dev-service-schema <name>=<path>` as optional per-service overlays keyed by the same service

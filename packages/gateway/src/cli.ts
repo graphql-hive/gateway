@@ -420,13 +420,13 @@ let cli = new Command()
   .addOption(
     new Option(
       '--hive-target <target>',
-      'Hive registry target to which the usage and tracing data should be reported to. Requires either "--hive-access-token <token>", "--hive-usage-access-token <token>" or "--hive-trace-access-token" option',
+      'Hive registry target to which the usage and tracing data should be reported to, and against which a dev supergraph source is composed remotely (see "--dev-remote"). Requires either "--hive-access-token <token>", "--hive-usage-access-token <token>" or "--hive-trace-access-token" option',
     ).env('HIVE_TARGET'),
   )
   .addOption(
     new Option(
       '--hive-access-token <token>',
-      'Hive registry access token for usage metrics reporting and tracing. Enables both usage reporting and tracing. Requires the "--hive-target <target>" option',
+      'Hive registry access token for usage metrics reporting and tracing. Enables both usage reporting and tracing. Also used for remote composition of a dev supergraph source (see "--dev-remote"). Requires the "--hive-target <target>" option',
     ).env('HIVE_ACCESS_TOKEN'),
   )
   .addOption(
