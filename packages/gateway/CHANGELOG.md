@@ -1,5 +1,52 @@
 # @graphql-hive/gateway
 
+## 2.15.0
+### Minor Changes
+
+
+
+- [#2614](https://github.com/graphql-hive/gateway/pull/2614) [`f549a09`](https://github.com/graphql-hive/gateway/commit/f549a099824d1eb37a7a77f321db766e16b2f0fd) Thanks [@jdolle](https://github.com/jdolle)! - Add a `dev` supergraph source that lets the gateway compose a supergraph directly from
+  local/introspected subgraphs (optionally via remote Hive registry composition) without running a
+  separate `hive dev` process.
+  
+  Configure it via `supergraph: { type: 'dev', services: [...] }` in the config file. Each service
+  has a `name`, the `url` the gateway routes to, and an optional `source`: `federation` (default,
+  via the `_service { sdl }` field), `graphql` (standard introspection) or `file` (an SDL file given
+  in `schema`, Node.js only). The services are re-resolved on every polling interval and the
+  supergraph is recomposed only when a schema changed; composition is guarded by the optional
+  `circuitBreaker` option.
+  
+  Remote composition takes `remote`, `registry`, `token` and `target` (`{ byId }` or
+  `{ bySelector: { organizationSlug, projectSlug, targetSlug } }`). On the `supergraph` command the
+  target and token are inherited from the global `--hive-target` (`HIVE_TARGET`, slug path or
+  target UUID) and `--hive-access-token` (`HIVE_ACCESS_TOKEN`) options, so a target and token
+  already configured for usage reporting or tracing are reused; `--dev-remote` (`DEV_REMOTE`) and
+  `--dev-registry` (`DEV_REGISTRY`) are the dev-specific CLI/env overrides. `DEV_REMOTE` accepts
+  truthy/falsy values: `1`, `true`, `yes` or `on` enable remote composition, while `0`, `false`,
+  `off` or an empty value disable it and override `remote: true` from the config file. `registry`
+  defaults to `https://app.graphql-hive.com/graphql` (Hive Cloud) and only needs to be set for
+  self-hosted Hive.
+  The services themselves can also be defined entirely from the CLI using `--dev-service <name>=<url>`
+  (repeated once per service), with `--dev-service-source <name>=federation|graphql|file` and
+  `--dev-service-schema <name>=<path>` as optional per-service overlays keyed by the same service
+  name; when used, these take precedence over any `services` configured in the config file.
+
+### Patch Changes
+
+
+
+- [#2553](https://github.com/graphql-hive/gateway/pull/2553) [`c0e1c7d`](https://github.com/graphql-hive/gateway/commit/c0e1c7dff4432eb0483de0d89d10ba506ecaa819) Thanks [@m-sanders](https://github.com/m-sanders)! - Close WebSocket clients with `1001 Going away` on shutdown
+  
+  `useServer()`'s disposable was discarded and the deferred cleanup called `wsServer.close()` instead. `ws` does not close any clients from `close()` when it was constructed with `options.server`; it drops its listeners and waits for `clients.size` to reach zero. Nothing ever told the clients to go away, so the only thing ending a subscription was `server.closeAllConnections()` in the HTTP server's disposer, which destroys the sockets and surfaces to clients as a network error (`1006`) instead of a normal close.
+  
+  The disposable is now used, and the WebSocket drain shares a disposer with the HTTP shutdown so it completes before the HTTP close is awaited. That ordering matters: `server.close()` does not call back while a socket is still upgraded, and `closeAllConnections()` cannot cut it short because it does not reach upgraded sockets either, so a live subscription would otherwise hold the shutdown open indefinitely.
+  
+  `gracefulShutdownTimeout` now also bounds the closing handshake. A client that never answers is terminated once the window expires, rather than keeping `ws` waiting for its 30 second `closeTimeout`. With no drain window configured a one second floor applies, so the close frames still have time to flush.
+- Updated dependencies [[`f549a09`](https://github.com/graphql-hive/gateway/commit/f549a099824d1eb37a7a77f321db766e16b2f0fd), [`f549a09`](https://github.com/graphql-hive/gateway/commit/f549a099824d1eb37a7a77f321db766e16b2f0fd)]:
+  - @graphql-hive/gateway-runtime@2.12.0
+  - @graphql-hive/plugin-opentelemetry@1.5.2
+  - @graphql-mesh/plugin-prometheus@2.2.2
+
 ## 2.14.2
 ### Patch Changes
 

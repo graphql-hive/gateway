@@ -1,5 +1,17 @@
 # @graphql-hive/plugin-mcp
 
+## 0.2.1
+### Patch Changes
+
+
+
+- [#2614](https://github.com/graphql-hive/gateway/pull/2614) [`f549a09`](https://github.com/graphql-hive/gateway/commit/f549a099824d1eb37a7a77f321db766e16b2f0fd) Thanks [@jdolle](https://github.com/jdolle)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@0.22.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.22.1) (from `0.21.1-alpha-20260604213042-0d6112116193a921a379bbc3b917702c29368479`, in `dependencies`)
+
+
+- [#2614](https://github.com/graphql-hive/gateway/pull/2614) [`f549a09`](https://github.com/graphql-hive/gateway/commit/f549a099824d1eb37a7a77f321db766e16b2f0fd) Thanks [@jdolle](https://github.com/jdolle)! - Depend on the `0.22.1` release of `@graphql-hive/core` instead of a `0.21.1` alpha snapshot.
+
 ## 0.2.0
 ### Minor Changes
 
