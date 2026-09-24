@@ -1,6 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { GenericAuthPluginOptions } from '@envelop/generic-auth';
-import { CircuitBreakerConfiguration } from '@graphql-hive/core';
+import type { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
@@ -232,12 +232,14 @@ export interface GatewayConfigSupergraph<
   /**
    * SDL, path or an URL to the Federation Supergraph schema.
    *
-   * Alternatively, CDN options for pulling a remote Federation Supergraph.
+   * Alternatively, CDN or GraphOS options for pulling a remote Federation Supergraph, or dev
+   * fetcher options for composing one from local/introspected subgraphs.
    */
   supergraph:
     | UnifiedGraphConfig
     | GatewayHiveCDNOptions
-    | GatewayGraphOSManagedFederationOptions;
+    | GatewayGraphOSManagedFederationOptions
+    | GatewayHiveDevOptions;
   /**
    * GraphQL schema polling interval in milliseconds when the {@link supergraph} is an URL.
    *
@@ -361,6 +363,65 @@ export interface GatewayHiveCDNOptions {
    * GraphQL Hive CDN access key.
    */
   key: string;
+  circuitBreaker?: CircuitBreakerConfiguration;
+}
+
+export type DevFetcherTargetReference =
+  | { byId: string | number; bySelector?: never }
+  | {
+      byId?: never;
+      bySelector: {
+        organizationSlug: string;
+        projectSlug: string;
+        targetSlug: string;
+      };
+    };
+
+export type HiveDevService = {
+  name: string;
+  url: string;
+} & (
+  | {
+      /**
+       * Read the schema from an SDL file rather than introspecting `url`.
+       * Only supported when running in Node.js.
+       */
+      source: 'file';
+      /** Path to the service's SDL file, resolved against the gateway's working directory. */
+      schema: string;
+    }
+  | {
+      /**
+       * How to obtain the schema from `url`.
+       * - `federation` (default): query the federation `_service { sdl }` field.
+       * - `graphql`: perform standard GraphQL introspection (the `IntrospectionQuery`) and print
+       *   the resulting schema.
+       */
+      source?: 'federation' | 'graphql';
+    }
+);
+
+export interface GatewayHiveDevOptions {
+  type: 'dev';
+  /** Subgraphs to compose into the supergraph. */
+  services: HiveDevService[];
+  /**
+   * Compose through the Hive registry instead of locally. The registry composes the target's
+   * latest schema with these services replaced by name. Requires {@link token}.
+   */
+  remote?: boolean;
+  /**
+   * Hive registry GraphQL API endpoint used for remote composition.
+   * Defaults to `https://app.graphql-hive.com/graphql` (Hive Cloud); set it for self-hosted Hive.
+   */
+  registry?: string;
+  /** Hive registry access token used for remote composition. */
+  token?: string;
+  /** The target to compose against when composing remotely. */
+  target?: DevFetcherTargetReference | null;
+  /** Compose against the target's latest schema version even if it isn't composable. */
+  unstable__forceLatest?: boolean;
+  /** Guards composition so it isn't attempted more frequently than the circuit breaker allows. */
   circuitBreaker?: CircuitBreakerConfiguration;
 }
 

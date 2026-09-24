@@ -21,4 +21,5 @@ export {
 } from './plugins/useUpstreamRetry';
 export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 export { getGraphQLWSOptions } from './getGraphQLWSOptions';
+export { DEFAULT_HIVE_REGISTRY_ENDPOINT } from './fetchers/dev';
 export { withState } from '@envelop/core';

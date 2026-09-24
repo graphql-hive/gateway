@@ -5,10 +5,8 @@ import { Command, Option } from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
   createLoggerFromLogging,
+  DEFAULT_HIVE_REGISTRY_ENDPOINT,
   type GatewayConfigSupergraph,
-  type GatewayGraphOSManagedFederationOptions,
-  type GatewayHiveCDNOptions,
-  type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
 import { MemPubSub } from '@graphql-hive/pubsub';
 import { isUrl, registerTerminateHandler } from '@graphql-mesh/utils';
@@ -29,6 +27,12 @@ import {
   loadConfig,
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
+import {
+  collectByServiceName,
+  collectDevServiceSource,
+  handleDevSupergraphConfig,
+  type SupergraphSource,
+} from './handleDevSupergraphConfig';
 import { handleFork } from './handleFork';
 import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
@@ -65,6 +69,58 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'env',
       );
     })
+    .addOption(
+      new Option(
+        '--dev-remote',
+        'Compose the dev supergraph remotely via the Hive registry instead of composing locally. Only applies when the supergraph source is a Hive dev fetcher (`supergraph: { type: "dev", ... }` in the config file). Uses "--hive-target" and "--hive-access-token" for the registry target and token. Overrides "remote" from the config file.',
+      ).env('DEV_REMOTE'),
+    )
+    .on('optionEnv:dev-remote', function (this: Command) {
+      // we need this because commanderjs only checks for the existence of the
+      // variable, and not whether it is truthy (DEV_REMOTE=0 would be still true)
+      this.setOptionValueWithSource(
+        'devRemote', // must be camelCase
+        getEnvBool('DEV_REMOTE'),
+        'env',
+      );
+    })
+    .addOption(
+      new Option(
+        '--dev-registry <endpoint>',
+        `Hive registry endpoint used for remote composition of a dev supergraph source. Overrides "registry" from the config file. Defaults to ${DEFAULT_HIVE_REGISTRY_ENDPOINT} (Hive Cloud); set it for self-hosted Hive. Only applies with --dev-remote.`,
+      ).env('DEV_REGISTRY'),
+    )
+    .addOption(
+      new Option(
+        '--dev-service <name>=<url>',
+        'Add a service to the dev supergraph source, as "<service-name>=<url>". Repeat once per ' +
+          'service. When provided, this defines the dev supergraph source services in full, ' +
+          'overriding any "services" configured in the config file.',
+      )
+        .argParser(collectByServiceName)
+        .default({} as Record<string, string>),
+    )
+    .addOption(
+      new Option(
+        '--dev-service-source <name>=<federation|graphql|file>',
+        'How to obtain the schema for a dev supergraph source service, as "<service-name>=<source>": ' +
+          '"federation" (default, via the federation `_service { sdl }` field), "graphql" (via ' +
+          'introspection), or "file" (from a local SDL file, requires --dev-service-schema for the ' +
+          'same service name). The service name must match one given via --dev-service.',
+      )
+        .argParser(collectDevServiceSource)
+        .default({} as Record<string, string>),
+    )
+    .addOption(
+      new Option(
+        '--dev-service-schema <name>=<path>',
+        'Path to a local SDL file for a dev supergraph source service, as "<service-name>=<path>". ' +
+          'Required (and only valid) for a service using --dev-service-source file for the same ' +
+          'service name.',
+      )
+        .argParser(collectByServiceName)
+        .default({} as Record<string, string>),
+    )
     .action(async function supergraph(schemaPathOrUrl) {
       const {
         opentelemetry,
@@ -85,6 +141,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsToken,
         hivePersistedDocumentsCacheTtl,
         hivePersistedDocumentsCacheNotFoundTtl,
+        devRemote,
+        devRegistry,
+        devService,
+        devServiceSource,
+        devServiceSchema,
         ...opts
       } = this.optsWithGlobals();
 
@@ -111,10 +172,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         configFileName: ctx.configFileName,
       });
 
-      let supergraph:
-        | UnifiedGraphConfig
-        | GatewayHiveCDNOptions
-        | GatewayGraphOSManagedFederationOptions = './supergraph.graphql';
+      let supergraph: SupergraphSource = './supergraph.graphql';
       if (schemaPathOrUrl) {
         ctx.log.info(`Supergraph will be loaded from "${schemaPathOrUrl}"`);
         if (hiveCdnKey) {
@@ -192,6 +250,19 @@ export const addCommand: AddCommand = (ctx, cli) =>
       } else {
         ctx.log.info(`Using default supergraph location "${supergraph}"`);
       }
+
+      supergraph = handleDevSupergraphConfig(ctx, supergraph, {
+        schemaPathOrUrl,
+        hiveCdnEndpoint,
+        apolloGraphRef,
+        hiveTarget,
+        hiveAccessToken,
+        devRemote,
+        devRegistry,
+        devService,
+        devServiceSource,
+        devServiceSchema,
+      });
 
       const registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
@@ -448,6 +519,15 @@ export async function runSupergraph(
     log.info(
       { endpoint: config.supergraph.endpoint },
       'Loading supergraph from Hive CDN',
+    );
+  } else if (
+    typeof config.supergraph === 'object' &&
+    'type' in config.supergraph &&
+    config.supergraph.type === 'dev'
+  ) {
+    log.info(
+      { remote: !!config.supergraph.remote },
+      'Composing supergraph from local subgraphs using the Hive dev fetcher',
     );
   } else {
     log.info('Loading supergraph from config');
