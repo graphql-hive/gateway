@@ -52,8 +52,6 @@ const defaultCircuitBreakerConfiguration: CircuitBreakerConfiguration = {
   resetTimeout: 30_000,
 };
 
-const CACHE_KEY = 'hive:dev-fetcher:supergraph';
-
 /** The Hive Cloud registry GraphQL API endpoint, used when `registry` is not configured. */
 export const DEFAULT_HIVE_REGISTRY_ENDPOINT =
   'https://app.graphql-hive.com/graphql';
@@ -366,20 +364,17 @@ function servicesUnchanged(previous: Service[], next: Service[]): boolean {
  *
  * This is an alternative to running `@graphql-hive/cli`'s `dev` command next to the gateway.
  *
- * The supergraph is always composed on the first successful fetch after boot, so a persisted
- * cache (e.g. Redis) never carries a result composed under a previous configuration (or, when
- * composing remotely, against an outdated target) across restarts. Afterwards, the composed
- * supergraph is cached and only recomposed when the resolved service SDLs change, but
- * introspection and file reading run on every call, so set the gateway's polling interval
- * accordingly. Composition is guarded by a circuit breaker so the expensive composition request
- * is guaranteed not to run too frequently.
+ * The composed supergraph is cached in this fetcher instance and only recomposed when the
+ * resolved service SDLs or URLs change. Introspection and file reading run on every call, so set
+ * the gateway's polling interval accordingly. Composition is guarded by a circuit breaker so the
+ * expensive composition request is guaranteed not to run too frequently.
  */
 export function createDevFetcher({
   devOpts,
   configContext,
   version = 'unknown',
 }: CreateDevFetcherOpts): DevFetcher {
-  const { fetch, log, cwd, cache } = configContext;
+  const { fetch, log, cwd } = configContext;
   const circuitBreakerConfig =
     devOpts.circuitBreaker ?? defaultCircuitBreakerConfiguration;
 
@@ -413,29 +408,21 @@ export function createDevFetcher({
     },
   );
 
-  // The cache may outlive the process (e.g. Redis), so an entry is only trusted once this
-  // process has composed at least once; the first fetch after boot always recomposes.
-  let composedSinceBoot = false;
+  let cached: CachedSupergraph | undefined;
 
   return {
     async fetch() {
       const services = await resolveServices(devOpts.services, cwd, fetch);
 
-      if (composedSinceBoot) {
-        const cached: CachedSupergraph | undefined =
-          await cache?.get(CACHE_KEY);
-        if (cached && servicesUnchanged(cached.services, services)) {
-          log.debug(
-            'Service SDLs are unchanged, reusing the composed supergraph',
-          );
-          return cached.supergraphSdl;
-        }
+      if (cached && servicesUnchanged(cached.services, services)) {
+        log.debug(
+          'Service SDLs are unchanged, reusing the composed supergraph',
+        );
+        return cached.supergraphSdl;
       }
 
       const supergraphSdl = await composeBreaker.fire(services);
-      composedSinceBoot = true;
-
-      await cache?.set(CACHE_KEY, { services, supergraphSdl });
+      cached = { services, supergraphSdl };
 
       return supergraphSdl;
     },

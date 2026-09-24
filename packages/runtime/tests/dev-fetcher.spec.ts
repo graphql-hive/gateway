@@ -306,10 +306,7 @@ describe('Hive dev fetcher', () => {
 
   it('does not recompose when resolved service SDLs are unchanged', async () => {
     const fetch = remoteFetch(() => schemaComposeSuccessResponse());
-    const fetcher = createTestFetcher(remoteDevOpts, {
-      fetch,
-      cache: createMemoryCache(),
-    });
+    const fetcher = createTestFetcher(remoteDevOpts, { fetch });
 
     await fetcher.fetch();
     await fetcher.fetch();
@@ -325,10 +322,7 @@ describe('Hive dev fetcher', () => {
       () => schemaComposeSuccessResponse(`composed from: ${sdl}`),
       () => sdl,
     );
-    const fetcher = createTestFetcher(remoteDevOpts, {
-      fetch,
-      cache: createMemoryCache(),
-    });
+    const fetcher = createTestFetcher(remoteDevOpts, { fetch });
 
     const first = await fetcher.fetch();
     sdl = 'type Query { hello: Int }';
@@ -343,7 +337,7 @@ describe('Hive dev fetcher', () => {
     const services = [{ name: 'a', url: 'http://a' }];
     const fetcher = createTestFetcher(
       { ...remoteDevOpts, services },
-      { fetch, cache: createMemoryCache() },
+      { fetch },
     );
 
     await fetcher.fetch();
@@ -354,44 +348,26 @@ describe('Hive dev fetcher', () => {
     expect(registryCalls(fetch)).toHaveLength(2);
   });
 
-  it('always composes on boot, even when the cache holds an entry for unchanged services', async () => {
-    const fetch = remoteFetch(() => schemaComposeSuccessResponse());
-    // shared across fetchers, simulating a cache that outlives the process (e.g. Redis)
+  it('keeps composed supergraphs isolated between fetcher instances', async () => {
+    // shared across fetchers, simulating gateways configured with the same Redis cache
     const cache = createMemoryCache();
-
-    await createTestFetcher(remoteDevOpts, { fetch, cache }).fetch();
-    await createTestFetcher(remoteDevOpts, { fetch, cache }).fetch();
-
-    // the persisted entry may stem from a different configuration or an outdated target,
-    // so a freshly booted fetcher must not reuse it.
-    expect(registryCalls(fetch)).toHaveLength(2);
-  });
-
-  it('does not trust the cache until this process has composed successfully once', async () => {
-    const cache = createMemoryCache();
-    await createTestFetcher(remoteDevOpts, {
-      fetch: remoteFetch(() => schemaComposeSuccessResponse('stale')),
-      cache,
-    }).fetch();
-
-    let registryFailures = 1;
-    const fetch = remoteFetch(() =>
-      registryFailures-- > 0
-        ? jsonResponse({
-            data: {
-              schemaCompose: {
-                __typename: 'SchemaComposeError',
-                message: 'composition unavailable',
-              },
-            },
-          })
-        : schemaComposeSuccessResponse('fresh'),
+    const firstFetch = remoteFetch(() => schemaComposeSuccessResponse('first'));
+    const secondFetch = remoteFetch(() =>
+      schemaComposeSuccessResponse('second'),
     );
-    const fetcher = createTestFetcher(remoteDevOpts, { fetch, cache });
+    const first = createTestFetcher(remoteDevOpts, {
+      fetch: firstFetch,
+      cache,
+    });
+    const second = createTestFetcher(remoteDevOpts, {
+      fetch: secondFetch,
+      cache,
+    });
 
-    await expect(fetcher.fetch()).rejects.toThrow(SupergraphRegistryApiError);
-    await expect(fetcher.fetch()).resolves.toBe('fresh');
-    expect(registryCalls(fetch)).toHaveLength(2);
+    await expect(first.fetch()).resolves.toBe('first');
+    await expect(second.fetch()).resolves.toBe('second');
+    await expect(first.fetch()).resolves.toBe('first');
+    expect(registryCalls(firstFetch)).toHaveLength(1);
   });
 
   it('composes against the Hive Cloud registry when `registry` is omitted', async () => {
