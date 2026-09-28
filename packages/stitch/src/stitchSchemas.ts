@@ -103,7 +103,16 @@ export function stitchSchemas<
     } as any);
   }
 
-  const resolverMap: IResolvers = mergeResolvers(resolvers);
+  // addLocalFieldResolvers writes the wrappers it builds back into this map, so
+  // clone it two levels first and leave the caller's resolver objects untouched.
+  // A resolver map reused across stitchSchemas calls (a gateway's additional
+  // resolvers on every schema reload) would otherwise gain one wrapper per call,
+  // each closing over that call's stitchingInfo and keeping the whole superseded
+  // schema alive.
+  const resolverMap: IResolvers = cloneResolverMap(
+    mergeResolvers(resolvers),
+    schema,
+  );
 
   const finalResolvers = inheritResolversFromInterfaces
     ? extendResolversFromInterfaces(schema, resolverMap)
@@ -189,6 +198,47 @@ function stripCustomDirectiveUsages(types: GraphQLNamedType[]): void {
       }
     }
   }
+}
+
+function isResolverRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Copies the resolver map one level, and the field configs of object and
+ * interface types one level more, so addLocalFieldResolvers can write its
+ * wrappers into the copy. Every other entry (enum value maps, scalar
+ * instances or configs, union and input type resolvers, functions) is passed
+ * through by reference: it is never mutated, and enum internal values in
+ * particular must keep their identity.
+ */
+function cloneResolverMap(
+  resolverMap: IResolvers,
+  schema: GraphQLSchema,
+): IResolvers {
+  const cloned: IResolvers = {};
+  for (const typeName in resolverMap) {
+    const typeResolvers = resolverMap[typeName];
+    if (typeResolvers === undefined) {
+      continue;
+    }
+    const type = schema.getType(typeName);
+    if (
+      !isResolverRecord(typeResolvers) ||
+      (!isObjectType(type) && !isInterfaceType(type))
+    ) {
+      cloned[typeName] = typeResolvers;
+      continue;
+    }
+    const fieldConfigs: Record<string, unknown> = typeResolvers;
+    const clonedType: Record<string, unknown> = {};
+    for (const fieldName in fieldConfigs) {
+      const field = fieldConfigs[fieldName];
+      clonedType[fieldName] = isResolverRecord(field) ? { ...field } : field;
+    }
+    cloned[typeName] = clonedType as IResolvers[string];
+  }
+  return cloned;
 }
 
 /**
