@@ -1,4 +1,11 @@
 export { useMCP } from './plugin.js';
+export { MCPMethodError } from './method-handler.js';
+export type {
+  MCPGraphQLOperation,
+  MCPMethodContext,
+  MCPMethodHandler,
+  MCPMethodTransport,
+} from './method-handler.js';
 export type {
   MCPConfig,
   MCPOperationsLoader,
