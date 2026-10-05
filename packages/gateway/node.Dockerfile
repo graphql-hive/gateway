@@ -19,6 +19,11 @@ RUN apt-get update && \
   wget curl \
   dumb-init
 
+# fix pcre2 out-of-bounds write vulnerability (CVE-2026-103111) by updating libpcre2-8-0
+# fixed in 10.42-1+deb12u2
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y libpcre2-8-0
+
 # cleanup
 RUN apt-get autoremove -y && \
   apt-get clean && \
