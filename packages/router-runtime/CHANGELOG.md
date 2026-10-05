@@ -1,5 +1,12 @@
 # @graphql-hive/router-runtime
 
+## 1.6.3
+### Patch Changes
+
+
+
+- [`9b4d72d`](https://github.com/graphql-hive/gateway/commit/9b4d72dfaa8da239b6025ecd5fcbc414e13104f9) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Rust Query Planner Stability and Accuracy Improvements
+
 ## 1.6.2
 ### Patch Changes
 
