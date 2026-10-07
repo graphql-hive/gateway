@@ -37,7 +37,7 @@ describe('delegateToSchema', () => {
   test
     .skipIf(
       // bun does not support reset modules or mocking like this, sufficient to just test in node
-      typeof Bun !== undefined,
+      typeof Bun !== 'undefined',
     )
     .each(['query', 'mutation'])(
     'should delegate %s when OperationTypeNode is unavailable in GraphQL 14 and 15',
