@@ -34,64 +34,64 @@ function assertSome<T>(
 }
 
 describe('delegateToSchema', () => {
-  test
-    .skipIf(
-      // bun does not support reset modules or mocking like this, sufficient to just test in node
-      typeof Bun !== 'undefined',
-    )
-    .each(['query', 'mutation'])(
-    'should delegate %s when OperationTypeNode is unavailable in GraphQL 14 and 15',
-    async (operation) => {
-      vi.resetModules();
-      vi.doMock('graphql', async () => ({
-        ...(await vi.importActual<typeof import('graphql')>('graphql')),
-        // graphql <=15 does not have OperationTypeNode
-        OperationTypeNode: undefined,
-      }));
-
-      try {
-        const { delegateToSchema: delegate } =
-          await import('../src/delegateToSchema.js');
-        const typeDefs = /* GraphQL */ `
-          type Query {
-            value: String
-          }
-          type Mutation {
-            value: String
-          }
-        `;
-        const innerSchema = makeExecutableSchema({
-          typeDefs,
-          resolvers: {
-            Query: { value: () => 'query' },
-            Mutation: { value: () => 'mutation' },
-          },
-        });
-        const resolve: GraphQLFieldResolver<
-          unknown,
-          Record<string, unknown>
-        > = (_root, _args, context, info) =>
-          delegate({ schema: innerSchema, context, info });
-        const outerSchema = makeExecutableSchema({
-          typeDefs,
-          resolvers: {
-            Query: { value: resolve },
-            Mutation: { value: resolve },
-          },
-        });
-
-        expect(
-          await graphql({
-            schema: outerSchema,
-            source: `${operation} { value }`,
-          }),
-        ).toEqual({ data: { value: operation } });
-      } finally {
-        vi.doUnmock('graphql');
+  if (
+    // bun does not support reset modules or mocking like this, sufficient to just test in node
+    typeof Bun !== 'undefined'
+  ) {
+    test.each(['query', 'mutation'])(
+      'should delegate %s when OperationTypeNode is unavailable in GraphQL 14 and 15',
+      async (operation) => {
         vi.resetModules();
-      }
-    },
-  );
+        vi.doMock('graphql', async () => ({
+          ...(await vi.importActual<typeof import('graphql')>('graphql')),
+          // graphql <=15 does not have OperationTypeNode
+          OperationTypeNode: undefined,
+        }));
+
+        try {
+          const { delegateToSchema: delegate } =
+            await import('../src/delegateToSchema.js');
+          const typeDefs = /* GraphQL */ `
+            type Query {
+              value: String
+            }
+            type Mutation {
+              value: String
+            }
+          `;
+          const innerSchema = makeExecutableSchema({
+            typeDefs,
+            resolvers: {
+              Query: { value: () => 'query' },
+              Mutation: { value: () => 'mutation' },
+            },
+          });
+          const resolve: GraphQLFieldResolver<
+            unknown,
+            Record<string, unknown>
+          > = (_root, _args, context, info) =>
+            delegate({ schema: innerSchema, context, info });
+          const outerSchema = makeExecutableSchema({
+            typeDefs,
+            resolvers: {
+              Query: { value: resolve },
+              Mutation: { value: resolve },
+            },
+          });
+
+          expect(
+            await graphql({
+              schema: outerSchema,
+              source: `${operation} { value }`,
+            }),
+          ).toEqual({ data: { value: operation } });
+        } finally {
+          vi.doUnmock('graphql');
+          vi.resetModules();
+        }
+      },
+    );
+  }
 
   test('should work', async () => {
     const innerSchema = makeExecutableSchema({
