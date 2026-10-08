@@ -26,8 +26,8 @@ import {
   GraphQLSchema,
   isListType,
   isSchema,
-  OperationTypeNode,
   validate,
+  type OperationTypeNode,
 } from 'graphql';
 import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
@@ -85,9 +85,9 @@ export function delegateToSchema<
 
   const fragments = info ? getFragmentDefinitions(info) : undefined;
   const targetRootType =
-    operation === OperationTypeNode.MUTATION
+    operation === 'mutation'
       ? targetSchema.getMutationType()
-      : operation === OperationTypeNode.SUBSCRIPTION
+      : operation === 'subscription'
         ? targetSchema.getSubscriptionType()
         : targetSchema.getQueryType();
 
