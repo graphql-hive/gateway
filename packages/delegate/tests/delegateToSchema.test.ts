@@ -36,7 +36,9 @@ function assertSome<T>(
 describe('delegateToSchema', () => {
   if (
     // bun does not support reset modules or mocking like this, sufficient to just test in node
-    typeof Bun === 'undefined'
+    // and neither does jest, so we skip leak tests too
+    !globalThis.Bun &&
+    !process.env['LEAK_TEST']
   ) {
     test.each(['query', 'mutation'])(
       'should delegate %s when OperationTypeNode is unavailable in GraphQL 14 and 15',
