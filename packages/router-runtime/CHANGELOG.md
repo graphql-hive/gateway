@@ -1,5 +1,12 @@
 # @graphql-hive/router-runtime
 
+## 1.6.5
+### Patch Changes
+
+
+
+- [`a934fcf`](https://github.com/graphql-hive/gateway/commit/a934fcf80ac70cf9b427a5f815b8ffc616b56b42) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Bump Rust QP with planner and caching improvements
+
 ## 1.6.4
 ### Patch Changes
 
