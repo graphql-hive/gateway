@@ -92,5 +92,9 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/ip-address
 RUN npm install undici@^6.27.0 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/undici/package.json
 
+# fix postcss-selector-parser vulnerability (CVE-2026-104844) by updating to ^7.1.6
+RUN npm install postcss-selector-parser@^7.1.6 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/postcss-selector-parser
+
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
