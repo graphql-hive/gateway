@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.2.1
+### Patch Changes
+
+
+
+- [#2644](https://github.com/graphql-hive/gateway/pull/2644) [`abf4091`](https://github.com/graphql-hive/gateway/commit/abf40919725f57d81ede935bee27a7b408e7d99b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix compatibility with GraphQL 14 and 15 by avoiding runtime access to the `OperationTypeNode` enum, which is only available in GraphQL 16 and later
+  
+  Closes [#2643](https://github.com/graphql-hive/gateway/issues/2643)
+
 ## 12.2.0
 ### Minor Changes
 
