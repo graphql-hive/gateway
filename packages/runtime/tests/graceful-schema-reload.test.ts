@@ -12,9 +12,13 @@ import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
 } from '@internal/testing';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
 import { lexicographicSortSchema, parse, type GraphQLSchema } from 'graphql';
-import { createYoga } from 'graphql-yoga';
+import { createClient as createSSEClient } from 'graphql-sse';
+import { createYoga, Repeater } from 'graphql-yoga';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 /**
@@ -1066,5 +1070,210 @@ describe('Graceful schema reload — config validation', () => {
         logging: false,
       }),
     ).toThrow(/gracefulSchemaReload/);
+  });
+});
+
+describe('Graceful schema reload for subscriptions', () => {
+  const SUB_TYPE_DEFS = /* GraphQL */ `
+    type Query {
+      ping: String
+    }
+    type Subscription {
+      tick: String
+    }
+  `;
+
+  /** A subgraph whose subscription emits its generation label every 30ms. */
+  function tickingSubgraph(gen: string) {
+    return buildSubgraphSchema({
+      typeDefs: parse(SUB_TYPE_DEFS),
+      resolvers: {
+        Query: { ping: () => gen },
+        Subscription: {
+          tick: {
+            subscribe: () =>
+              new Repeater<string>(async (push, stop) => {
+                const timer = setInterval(() => push(gen), 30);
+                await stop;
+                clearInterval(timer);
+              }),
+            resolve: (value: string) => value,
+          },
+        },
+      },
+    });
+  }
+
+  type SubState = {
+    values: { value: string; at: number }[];
+    last: unknown;
+    endedAt: number | null;
+    done: Promise<void>;
+    dispose(): void;
+  };
+
+  /** Subscribes over SSE the way a client would; records every event with a timestamp. */
+  function subscribeTicks(gw: GatewayRuntime): SubState {
+    const client = createSSEClient({
+      url: GW_URL,
+      fetchFn: gw.fetch,
+      retryAttempts: 0,
+    });
+    const state: SubState = {
+      values: [],
+      last: null,
+      endedAt: null,
+      done: Promise.resolve(),
+      dispose: () => client.dispose(),
+    };
+    state.done = (async () => {
+      for await (const msg of client.iterate({
+        query: /* GraphQL */ `
+          subscription {
+            tick
+          }
+        `,
+      })) {
+        state.last = msg;
+        const value = (msg as { data?: { tick?: string } }).data?.tick;
+        if (typeof value === 'string') {
+          state.values.push({ value, at: Date.now() });
+        }
+      }
+      state.endedAt = Date.now();
+    })();
+    return state;
+  }
+
+  async function until(
+    predicate: () => boolean,
+    what: string,
+    timeoutMs = 5_000,
+  ) {
+    const deadline = Date.now() + timeoutMs;
+    while (!predicate()) {
+      if (Date.now() > deadline)
+        throw new Error(`timed out waiting for ${what}`);
+      await delay(15);
+    }
+  }
+
+  async function setup(gracefulSchemaReload: {
+    drainTimeout: number;
+    pinSubscriptions?: boolean;
+    subscriptionRetirementSpread?: number;
+  }) {
+    const stack = new AsyncDisposableStack();
+    const schemaA = tickingSubgraph('genA');
+    const schemaB = tickingSubgraph('genB');
+    const yogaA = stack.use(createYoga({ schema: schemaA, logging: false }));
+    const serverA = stack.use(await createDisposableServer(yogaA));
+    const yogaB = stack.use(createYoga({ schema: schemaB, logging: false }));
+    const serverB = stack.use(await createDisposableServer(yogaB));
+    const sdlA = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema: schemaA, url: `${serverA.url}/graphql` },
+    ]);
+    const sdlB = await composeLocalSchemasWithApollo([
+      { name: 'upstream', schema: schemaB, url: `${serverB.url}/graphql` },
+    ]);
+    const state = { useSecond: false };
+    const gw = stack.use(
+      createGatewayRuntime({
+        supergraph: () => (state.useSecond ? sdlB : sdlA),
+        pollingInterval: 100,
+        gracefulSchemaReload,
+        logging: false,
+      }),
+    );
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('genA');
+    return { gw, state, stack };
+  }
+
+  it('keeps a pinned subscription streaming on the superseded generation until the drain timeout', async () => {
+    const { gw, state, stack } = await setup({
+      drainTimeout: 1_500,
+      pinSubscriptions: true,
+    });
+    await using _ = stack;
+
+    const old = subscribeTicks(gw);
+    await until(() => old.values.length >= 2, 'first ticks from genA');
+
+    state.useSecond = true;
+    await waitForGeneration(gw, 'genB');
+    const swappedAt = Date.now();
+
+    // The old subscription is still served by generation A after the swap...
+    await until(
+      () => old.values.filter((v) => v.at > swappedAt).length >= 3,
+      'ticks after the swap',
+    );
+    expect(old.endedAt).toBeNull();
+    expect(new Set(old.values.map((v) => v.value))).toEqual(new Set(['genA']));
+
+    // ...while a new subscription lands on generation B.
+    const fresh = subscribeTicks(gw);
+    await until(() => fresh.values.length >= 1, 'first tick from genB');
+    expect(fresh.values[0]!.value).toBe('genB');
+
+    // drainTimeout is still the hard bound: it force-disposes generation A and
+    // the pinned subscription ends the way it always did.
+    await old.done;
+    expect(old.endedAt! - swappedAt).toBeGreaterThanOrEqual(1_000);
+    expect(JSON.stringify(old.last)).toContain('SCHEMA_RELOAD');
+    expect(fresh.endedAt).toBeNull();
+    fresh.dispose();
+  });
+
+  it("retires the superseded generation's subscriptions spread over subscriptionRetirementSpread", async () => {
+    const spread = 900;
+    const { gw, state, stack } = await setup({
+      drainTimeout: 10_000,
+      pinSubscriptions: true,
+      subscriptionRetirementSpread: spread,
+    });
+    await using _ = stack;
+
+    const subs = [subscribeTicks(gw), subscribeTicks(gw), subscribeTicks(gw)];
+    await until(
+      () => subs.every((s) => s.values.length >= 1),
+      'every subscription ticking',
+    );
+
+    state.useSecond = true;
+    await waitForGeneration(gw, 'genB');
+    const swappedAt = Date.now();
+
+    await Promise.all(subs.map((s) => s.done));
+    const endedAt = subs.map((s) => s.endedAt!).sort((a, b) => a - b);
+
+    // Not a burst: three subscriptions spaced spread/3 apart (0, 300, 600ms).
+    expect(endedAt[2]! - endedAt[0]!).toBeGreaterThanOrEqual(400);
+    expect(endedAt[2]! - swappedAt).toBeLessThan(spread + 1_000);
+    // A plain completion, no SCHEMA_RELOAD notice: the last message is a tick.
+    for (const s of subs) {
+      expect(s.last).toMatchObject({ data: { tick: 'genA' } });
+    }
+    // The last one retired was still receiving genA events after the first
+    // one ended — no gap while waiting its turn.
+    const lastRetired = subs.find((s) => s.endedAt === endedAt[2])!;
+    expect(
+      lastRetired.values.some((v) => v.at > endedAt[0]! && v.value === 'genA'),
+    ).toBe(true);
+    // Generation A is gone once its last subscription ended; B serves.
+    expect((await runOperation(gw, `{ ping }`)).data?.['ping']).toBe('genB');
+  });
+
+  it('rejects subscriptionRetirementSpread without pinSubscriptions', () => {
+    expect(() =>
+      createGatewayRuntime({
+        supergraph: () => `type Query { ping: String }`,
+        gracefulSchemaReload: {
+          drainTimeout: 1_000,
+          subscriptionRetirementSpread: 500,
+        },
+        logging: false,
+      }),
+    ).toThrow(/requires gracefulSchemaReload.pinSubscriptions/);
   });
 });
