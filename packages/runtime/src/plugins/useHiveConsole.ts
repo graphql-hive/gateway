@@ -1,7 +1,12 @@
-import type { HivePluginOptions } from '@graphql-hive/core';
+import type {
+  CollectUsageOptions,
+  GraphVersionInfo,
+  HivePluginOptions,
+} from '@graphql-hive/core';
 import type { Logger } from '@graphql-hive/logger';
-import { useHive } from '@graphql-hive/yoga';
+import { createHive, useHive } from '@graphql-hive/yoga';
 import { MeshFetch } from '@graphql-mesh/types';
+import type { GraphQLSchema } from 'graphql';
 import { GatewayContext, GatewayPlugin } from '../types';
 
 export interface HiveConsolePluginOptions extends Omit<
@@ -75,11 +80,16 @@ export default function useHiveConsole<
 >({
   enabled,
   token,
+  getGraphVersion,
   ...options
-}: HiveConsolePluginOptions & { log: Logger; fetch: MeshFetch }): GatewayPlugin<
-  TPluginContext,
-  TContext
-> {
+}: HiveConsolePluginOptions & {
+  log: Logger;
+  fetch: MeshFetch;
+  /**
+   * The graph version of the executed schema, reported along with the usage.
+   */
+  getGraphVersion?: (schema: GraphQLSchema) => GraphVersionInfo | undefined;
+}): GatewayPlugin<TPluginContext, TContext> {
   const agent = {
     name: 'hive-gateway',
     version: globalThis.__VERSION__,
@@ -113,8 +123,7 @@ export default function useHiveConsole<
     throw new Error('Hive plugin is enabled but the token is not provided');
   }
 
-  // @ts-expect-error TODO: useHive plugin should inhert the TContext
-  return useHive({
+  const hive = createHive({
     logger: options.log,
     printTokenInfo: false,
     ...options,
@@ -123,4 +132,28 @@ export default function useHiveConsole<
     agent,
     usage,
   });
+  if (getGraphVersion) {
+    // the gateway knows which graph version it serves, the yoga plugin does not
+    const { collectUsage, collectSubscriptionUsage } = hive;
+    hive.collectUsage = () => {
+      // the executed schema is known only once the operation finishes
+      const options: CollectUsageOptions = {};
+      const collector = collectUsage(options);
+      return {
+        ...collector,
+        finish(args, ...rest) {
+          options.graph = getGraphVersion(args.schema);
+          return collector.finish(args, ...rest);
+        },
+      };
+    };
+    hive.collectSubscriptionUsage = (args) =>
+      collectSubscriptionUsage({
+        ...args,
+        graph: getGraphVersion(args.args.schema),
+      });
+  }
+
+  // @ts-expect-error TODO: useHive plugin should inhert the TContext
+  return useHive(hive);
 }
