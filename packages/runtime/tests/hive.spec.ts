@@ -252,6 +252,106 @@ describe('Hive CDN', () => {
     await setTimeout(10); // allow hive client to flush before disposing
     // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
+  it.each(['supergraph', 'proxy'] as const)(
+    'reports the graph version from cdn with the usage in %s mode',
+    async (mode) => {
+      const token = 'secret';
+      const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+      const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+      const upstreamSchema = createUpstreamSchema();
+      const { promise: waitForUsageReq, resolve: usageReq } =
+        createDeferredPromise<Request>();
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          const graphHeaders = {
+            'x-hive-graph-id': graphId,
+            'x-hive-graph-version-id': graphVersionId,
+          };
+          if (req.url.endsWith('/supergraph')) {
+            return new Response(
+              getUnifiedGraphGracefully([
+                {
+                  name: 'upstream',
+                  schema: upstreamSchema,
+                  url: 'http://upstream/graphql',
+                },
+              ]),
+              { headers: graphHeaders },
+            );
+          }
+          if (req.url.endsWith('/sdl')) {
+            return new Response(printSchemaWithDirectives(upstreamSchema), {
+              headers: graphHeaders,
+            });
+          }
+          return handleMaybePromise(
+            () => cloneRequest(req),
+            (req) => {
+              usageReq(req);
+              return new Response();
+            },
+          );
+        }),
+      );
+      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      const cdn = {
+        type: 'hive',
+        endpoint: cdnServer.url,
+        key: 'key',
+      } as const;
+      await using gateway = createGatewayRuntime({
+        ...(mode === 'supergraph'
+          ? { supergraph: cdn }
+          : { proxy: { endpoint: 'http://upstream/graphql' }, schema: cdn }),
+        reporting: {
+          type: 'hive',
+          token,
+          printTokenInfo: false,
+          selfHosting: {
+            graphqlEndpoint: cdnServer.url + '/graphql',
+            applicationUrl: cdnServer.url,
+            usageEndpoint: cdnServer.url + '/usage',
+          },
+          agent: {
+            sendInterval: 0,
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, opts): MaybePromise<Response> => {
+            if (url === 'http://upstream/graphql') {
+              // @ts-expect-error - Fetch signature is not compatible
+              return upstreamServer.fetch(url, opts);
+            }
+            return fetch(url, opts);
+          }),
+        ],
+        logging: isDebug(),
+      });
+
+      await expect(
+        executeFetch(gateway, {
+          query: /* GraphQL */ `
+            {
+              foo
+            }
+          `,
+        }),
+      ).resolves.toEqual({ data: { foo: 'bar' } });
+
+      const req = await waitForUsageReq;
+      const body = await req.json();
+      expect(body.operations).toEqual([
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            graph: { graphId, graphVersionId },
+          }),
+        }),
+      ]);
+
+      await setTimeout(10); // allow hive client to flush before disposing
+    },
+  );
+
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(
