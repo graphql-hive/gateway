@@ -50,7 +50,7 @@ describe('Auth Directives', () => {
     },
   ];
   describe('@requiresScopes', () => {
-    it('works', async () => {
+    it('returns HTTP 200 with partial data when a field scope is missing', async () => {
       const subgraphATypeDefs = /* GraphQL */ `
         extend schema
           @link(
@@ -177,6 +177,8 @@ describe('Auth Directives', () => {
           },
         ],
       });
+      // field-level denial must keep partial data usable by http clients
+      expect(response.status).toBe(200);
     });
   });
   describe('@authenticated', () => {
