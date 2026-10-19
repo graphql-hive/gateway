@@ -504,12 +504,20 @@ export function createDelegationPlanBuilder(
         delegationStage.unproxiableFieldNodes.length &&
         delegationStage.nonProxiableSubschemas.length
       ) {
-        leftOverByDelegationPlan.set(delegationMaps, {
-          unproxiableFieldNodes: delegationStage.unproxiableFieldNodes,
-          nonProxiableSubschemas: delegationStage.nonProxiableSubschemas,
-          missingFieldsParentMap: new Map(),
-          missingFieldsParentDeferredMap: new Map(),
-        });
+        const resolvable = resolvableUnproxiableFields(
+          mergedTypeInfo,
+          sourceSubschemas,
+          delegationStage.nonProxiableSubschemas,
+          delegationStage.unproxiableFieldNodes,
+        );
+        if (resolvable.length) {
+          leftOverByDelegationPlan.set(delegationMaps, {
+            unproxiableFieldNodes: resolvable,
+            nonProxiableSubschemas: delegationStage.nonProxiableSubschemas,
+            missingFieldsParentMap: new Map(),
+            missingFieldsParentDeferredMap: new Map(),
+          });
+        }
       }
       return delegationMaps;
     };
@@ -576,6 +584,60 @@ const combineSubschemas = memoize2(function combineSubschemas(
 ): Array<Subschema> {
   return sourceSubschemas.concat(additionalSubschemas);
 });
+
+/**
+ * Of the fields a merged type could not proxy, return only those that some
+ * non-proxiable subschema can actually resolve: the subschema must declare the
+ * field, its merge-key selectionSet must be satisfiable from the accumulated
+ * source subschemas, and the field's own computed-field dependency (if any)
+ * must be satisfiable too. Fields that no such subschema can resolve are
+ * dropped, so they fall through to `defaultMergedResolver`'s `undefined` branch
+ * and resolve to `null` quickly instead of being recorded as a leftover whose
+ * deferred never settles (a hang until the request timeout).
+ */
+function resolvableUnproxiableFields(
+  mergedTypeInfo: MergedTypeInfo,
+  sourceSubschemas: Array<Subschema>,
+  nonProxiableSubschemas: Array<Subschema>,
+  unproxiableFieldNodes: Array<FieldNode>,
+): Array<FieldNode> {
+  const { selectionSets, fieldSelectionSets } = mergedTypeInfo;
+  const usable = nonProxiableSubschemas.filter((s) => {
+    if (s.transformedSchema.getType(mergedTypeInfo.typeName) == null) {
+      return false;
+    }
+    const sel = selectionSets.get(s);
+    return (
+      sel != null &&
+      subschemaTypesContainSelectionSet(mergedTypeInfo, sourceSubschemas, sel)
+    );
+  });
+  if (!usable.length) {
+    return [];
+  }
+  return unproxiableFieldNodes.filter((fieldNode) => {
+    if (fieldNode.name.value === '__typename') {
+      return true;
+    }
+    return usable.some((s) => {
+      const type = s.transformedSchema.getType(
+        mergedTypeInfo.typeName,
+      ) as GraphQLObjectType;
+      if (!type.getFields()[fieldNode.name.value]) {
+        return false;
+      }
+      const fieldDependency = fieldSelectionSets.get(s)?.[fieldNode.name.value];
+      return (
+        fieldDependency == null ||
+        subschemaTypesContainSelectionSet(
+          mergedTypeInfo,
+          sourceSubschemas,
+          fieldDependency,
+        )
+      );
+    });
+  });
+}
 
 const subschemaTypesContainSelectionSet = memoize3(
   function subschemaTypesContainSelectionSet(
