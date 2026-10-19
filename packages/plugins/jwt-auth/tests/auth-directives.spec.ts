@@ -50,7 +50,7 @@ describe('Auth Directives', () => {
     },
   ];
   describe('@requiresScopes', () => {
-    it('returns HTTP 200 with partial data when a field scope is missing', async () => {
+    it.each([false, true])('rejectUnauthenticated=%s', async (reject) => {
       const subgraphATypeDefs = /* GraphQL */ `
         extend schema
           @link(
@@ -113,7 +113,7 @@ describe('Auth Directives', () => {
           resolveUserFn(context) {
             return context?.jwt?.payload;
           },
-          rejectUnauthenticated: false,
+          rejectUnauthenticated: reject,
         },
         plugins: () => [
           useCustomFetch(
@@ -154,13 +154,15 @@ describe('Auth Directives', () => {
       );
       const resJson: ExecutionResult = await response.json();
       expect(resJson).toEqual({
-        data: {
-          user: {
-            username: 'john.doe',
-            profileImage: 'https://example.com/john.jpg',
-            email: null,
-          },
-        },
+        data: reject
+          ? null
+          : {
+              user: {
+                username: 'john.doe',
+                profileImage: 'https://example.com/john.jpg',
+                email: null,
+              },
+            },
         errors: [
           {
             message: 'Unauthorized field or type',
@@ -178,7 +180,8 @@ describe('Auth Directives', () => {
         ],
       });
       // field-level denial must keep partial data usable by http clients
-      expect(response.status).toBe(200);
+      // whole-operation rejection should still return an http failure.
+      expect(response.status).toBe(reject ? 401 : 200);
     });
   });
   describe('@authenticated', () => {
