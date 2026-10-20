@@ -39,7 +39,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0"
+    "graphql": "^16.9.0 || ^17.0.0"
   },
   "dependencies": {
     "@aws-sdk/client-sts": "^3.995.0",

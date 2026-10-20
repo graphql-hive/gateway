@@ -4771,7 +4771,7 @@ __metadata:
     tslib: "npm:^2.8.1"
     tsx: "npm:4.22.4"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -4788,7 +4788,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
   peerDependencies:
     "@graphql-hive/gateway-runtime": "workspace:^"
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -4875,7 +4875,7 @@ __metadata:
     tsx: "npm:4.22.4"
     ws: "npm:^8.21.0"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   bin:
     hive-gateway: ./dist/bin.js
   languageName: unknown
@@ -4972,7 +4972,7 @@ __metadata:
   peerDependencies:
     "@nestjs/common": ^10 || ^11
     "@nestjs/graphql": ^12 || ^13
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -4992,7 +4992,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5009,7 +5009,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
   peerDependencies:
-    graphql: ^16.12.0
+    graphql: ^16.12.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5033,7 +5033,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     "@langfuse/client": ^5.0.2
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
     graphql-yoga: 6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57
   peerDependenciesMeta:
     "@langfuse/client":
@@ -5078,7 +5078,7 @@ __metadata:
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.6"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5145,7 +5145,7 @@ __metadata:
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.27.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5385,7 +5385,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5406,7 +5406,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5479,7 +5479,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5519,7 +5519,7 @@ __metadata:
     prom-client: "npm:15.1.3"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
     prom-client: ^13 || ^14.0.0 || ^15.0.0
   languageName: unknown
   linkType: soft
@@ -5609,7 +5609,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5632,7 +5632,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5652,7 +5652,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5740,7 +5740,7 @@ __metadata:
     tslib: "npm:^2.8.1"
     ws: "npm:^8.21.0"
   peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5843,7 +5843,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5859,7 +5859,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5908,7 +5908,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5933,7 +5933,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5952,7 +5952,7 @@ __metadata:
     tslib: "npm:^2.8.1"
     ws: "npm:^8.21.0"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -5976,7 +5976,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -6105,7 +6105,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -6432,7 +6432,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -6447,7 +6447,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
@@ -6608,7 +6608,7 @@ __metadata:
     pkgroll: "npm:2.27.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    graphql: ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 

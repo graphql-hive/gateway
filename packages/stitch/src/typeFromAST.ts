@@ -2,7 +2,6 @@ import {
   createNamedStub,
   createStub,
   DirectiveLocationEnum,
-  getDescription,
   Maybe,
 } from '@graphql-tools/utils';
 import {
@@ -34,8 +33,6 @@ import {
   UnionTypeDefinitionNode,
   valueFromASTUntyped,
 } from 'graphql';
-
-const backcompatOptions = { commentDescriptions: true };
 
 export default typeFromAST;
 
@@ -75,7 +72,7 @@ function typeFromAST(
 function makeObjectType(node: ObjectTypeDefinitionNode): GraphQLObjectType {
   const config = {
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     interfaces: () =>
       node.interfaces?.map((iface) =>
         createNamedStub(iface.name.value, 'interface'),
@@ -91,7 +88,7 @@ function makeInterfaceType(
 ): GraphQLInterfaceType {
   const config = {
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     interfaces: () =>
       (node as unknown as ObjectTypeDefinitionNode).interfaces?.map((iface) =>
         createNamedStub(iface.name.value, 'interface'),
@@ -108,7 +105,7 @@ function makeEnumType(node: EnumTypeDefinitionNode): GraphQLEnumType {
       (prev, value) => ({
         ...prev,
         [value.name.value]: {
-          description: getDescription(value, backcompatOptions),
+          description: value.description?.value,
           deprecationReason: getDeprecationReason(value),
           astNode: value,
         },
@@ -118,7 +115,7 @@ function makeEnumType(node: EnumTypeDefinitionNode): GraphQLEnumType {
 
   return new GraphQLEnumType({
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     values,
     astNode: node,
   });
@@ -127,7 +124,7 @@ function makeEnumType(node: EnumTypeDefinitionNode): GraphQLEnumType {
 function makeUnionType(node: UnionTypeDefinitionNode): GraphQLUnionType {
   return new GraphQLUnionType({
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     types: () =>
       node.types?.map((type) => createNamedStub(type.name.value, 'object')) ??
       [],
@@ -138,11 +135,8 @@ function makeUnionType(node: UnionTypeDefinitionNode): GraphQLUnionType {
 function makeScalarType(node: ScalarTypeDefinitionNode): GraphQLScalarType {
   return new GraphQLScalarType({
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     astNode: node,
-    // TODO: serialize default property setting can be dropped once
-    // upstream graphql-js TypeScript typings are updated, likely in v16
-    serialize: (value) => value,
   });
 }
 
@@ -151,7 +145,7 @@ function makeInputObjectType(
 ): GraphQLInputObjectType {
   return new GraphQLInputObjectType({
     name: node.name.value,
-    description: getDescription(node, backcompatOptions),
+    description: node.description?.value,
     fields: () => (node.fields ? makeValues(node.fields) : {}),
     astNode: node,
   });
@@ -165,7 +159,7 @@ function makeFields(
       ...prev,
       [node.name.value]: {
         type: createStub(node.type, 'output'),
-        description: getDescription(node, backcompatOptions),
+        description: node.description?.value,
         args: makeValues(node.arguments ?? []),
         deprecationReason: getDeprecationReason(node),
         astNode: node,
@@ -187,7 +181,7 @@ function makeValues(
           node.defaultValue !== undefined
             ? valueFromASTUntyped(node.defaultValue)
             : undefined,
-        description: getDescription(node, backcompatOptions),
+        description: node.description?.value,
         astNode: node,
       },
     }),
