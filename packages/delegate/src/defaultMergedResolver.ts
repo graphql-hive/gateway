@@ -7,6 +7,8 @@ import {
   defaultFieldResolver,
   FieldNode,
   GraphQLResolveInfo,
+  GraphQLSchema,
+  isObjectType,
   Kind,
   responsePathAsArray,
   SelectionSetNode,
@@ -16,6 +18,7 @@ import {
   DelegationPlanLeftOver,
   getPlanLeftOverFromParent,
 } from './leftOver.js';
+import { getReceiver } from './IncrementalReceiver.js';
 import {
   EMPTY_OBJECT,
   getActualFieldNodes,
@@ -32,7 +35,13 @@ import {
   OBJECT_SUBSCHEMA_SYMBOL,
   UNPATHED_ERRORS_SYMBOL,
 } from './symbols.js';
-import { ExternalObject, MergedTypeResolver, StitchingInfo } from './types.js';
+import {
+  ExternalObject,
+  MergedTypeInfo,
+  MergedTypeResolver,
+  StitchingInfo,
+  SubschemaConfig,
+} from './types.js';
 
 /**
  * Resolver that knows how to:
@@ -62,6 +71,21 @@ export function defaultMergedResolver(
 
   // If the parent is satisfied for the left over after a nested delegation, try to resolve it
   if (!Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+    // Patches from a defer-capable subgraph arrive via IncrementalReceiver
+    const receiver = getReceiver(parent);
+    if (receiver) {
+      return handleMaybePromise(
+        () => receiver.request(info),
+        (value) =>
+          resolveExternalValue(
+            value,
+            getUnpathedErrors(parent),
+            getSubschema(parent, responseKey),
+            context,
+            info,
+          ),
+      );
+    }
     const leftOver = getPlanLeftOverFromParent(parent);
     // Add this field to the deferred fields
     if (leftOver) {
@@ -139,15 +163,159 @@ export function defaultMergedResolver(
           mergeFields(mergedTypeInfo, parent, sourceSubschema, context, info, [
             fieldNode,
           ]),
-        () =>
-          Object.prototype.hasOwnProperty.call(parent, responseKey)
-            ? handleResult(parent, responseKey, context, info)
-            : undefined,
+        () => {
+          if (Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+            return handleResult(parent, responseKey, context, info);
+          }
+          // Deferred selections are omitted from the initial subgraph request.
+          // mergeFields only plans fields that live on *other* subschemas, so a
+          // field that belongs on the source subschema but was skipped under
+          // @defer must be re-fetched from that source (or resolved locally).
+          return resolveMissingFieldFromSourceSubschema(
+            parent,
+            args,
+            context,
+            info,
+            sourceSubschema,
+            mergedTypeInfo,
+          );
+        },
+      );
+    }
+    if (sourceSubschema) {
+      return resolveMissingFieldFromSourceSubschema(
+        parent,
+        args,
+        context,
+        info,
+        sourceSubschema,
       );
     }
     return undefined;
   }
   return handleResult(parent, responseKey, context, info);
+}
+
+/**
+ * Resolve a field that was skipped in the initial delegation (typically because
+ * it lived under `@defer`).
+ *
+ * Prefer the merged-type resolver for the source subschema when one exists so
+ * HTTP / remote subschemas can be re-queried by key. Otherwise fall back to a
+ * local field resolver on an executable source schema.
+ */
+function resolveMissingFieldFromSourceSubschema(
+  parent: ExternalObject,
+  args: Record<string, any>,
+  context: Record<string, any>,
+  info: GraphQLResolveInfo,
+  subschema: GraphQLSchema | SubschemaConfig | Subschema,
+  mergedTypeInfo?: MergedTypeInfo,
+) {
+  const responseKey = info.fieldNodes[0]!.alias?.value ?? info.fieldName;
+  const typedSubschema = subschema as Subschema;
+  const parentTypeName = parent.__typename || info.parentType.name;
+
+  // Prefer transformedSchema for merge planning (field presence), but always
+  // resolve local fields from the original executable schema - transformed
+  // schemas may already point at defaultMergedResolver and would recurse.
+  const originalSchema: GraphQLSchema | undefined =
+    (subschema as SubschemaConfig).schema ??
+    (subschema instanceof GraphQLSchema ? subschema : undefined);
+  const planningSchema =
+    typedSubschema.transformedSchema ?? originalSchema ?? undefined;
+  const typeInSubschema = planningSchema?.getType(parentTypeName);
+  const fieldInSubschema =
+    isObjectType(typeInSubschema) &&
+    typeInSubschema.getFields()[info.fieldName] != null;
+
+  // Only re-query the source subschema when the missing field actually exists
+  // there (deferred exclusion). Fields that live on other subschemas are owned
+  // by mergeFields above - do not invent a source refetch for them.
+  const mergedTypeResolver =
+    fieldInSubschema && mergedTypeInfo?.resolvers?.get(typedSubschema);
+
+  if (mergedTypeResolver && isObjectType(typeInSubschema)) {
+    const selectionSet: SelectionSetNode = {
+      kind: Kind.SELECTION_SET,
+      selections: info.fieldNodes,
+    };
+
+    return handleMaybePromise(
+      () =>
+        mergedTypeResolver(
+          parent,
+          context,
+          info,
+          typedSubschema,
+          selectionSet,
+          undefined,
+          typeInSubschema,
+        ),
+      (resolverResult) => {
+        handleResolverResult(
+          resolverResult,
+          typedSubschema,
+          selectionSet,
+          parent,
+          parent[FIELD_SUBSCHEMA_MAP_SYMBOL] ?? Object.create(null),
+          info,
+          responsePathAsArray(info.path).slice(0, -1),
+          parent[UNPATHED_ERRORS_SYMBOL] ?? [],
+        );
+        if (Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+          return handleResult(parent, responseKey, context, info);
+        }
+        return undefined;
+      },
+    );
+  }
+
+  if (originalSchema == null) {
+    return undefined;
+  }
+
+  // After transforms like RenameTypes, parent.__typename / info.parentType may
+  // use the gateway name while the executable source schema still uses the
+  // original name. Fall back to a unique field-owner match when needed.
+  let originalType = originalSchema.getType(parentTypeName);
+  if (!isObjectType(originalType)) {
+    const candidates = Object.values(originalSchema.getTypeMap()).filter(
+      (t) =>
+        isObjectType(t) &&
+        !t.name.startsWith('__') &&
+        t.getFields()[info.fieldName] != null,
+    );
+    originalType = candidates.length === 1 ? candidates[0] : undefined;
+  }
+  if (!isObjectType(originalType)) {
+    return undefined;
+  }
+
+  const field = originalType.getFields()[info.fieldName];
+  const resolve = field?.resolve;
+  if (resolve == null || resolve === defaultFieldResolver) {
+    // Skip the schema-default field resolver: it only reads parent[fieldName],
+    // which is exactly what we already know is missing.
+    return undefined;
+  }
+
+  return handleMaybePromise(
+    () => resolve(parent, args, context, info),
+    (value) => {
+      parent[responseKey] = value;
+      if (parent[FIELD_SUBSCHEMA_MAP_SYMBOL]) {
+        parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] = subschema as any;
+      }
+      return resolveExternalValue(
+        value,
+        getUnpathedErrors(parent),
+        subschema as any,
+        context,
+        info,
+      );
+    },
+  );
 }
 
 function handleResult<TContext extends Record<string, any>>(

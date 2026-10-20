@@ -89,6 +89,12 @@ export interface UnifiedGraphHandlerOpts {
    */
   batchDelegateOptions?: BatchDelegateOptions;
 
+  /**
+   * Forward `@defer` to subgraphs that support incremental delivery.
+   * `true` enables all subgraphs; a record enables named subgraphs (`"*"` = default).
+   */
+  subgraphDefer?: boolean | Record<string, boolean>;
+
   log?: Logger;
   /** Shared cache instance (e.g. Redis), used by handlers that support cross-process caching. */
   cache?: KeyValueCache;
@@ -131,6 +137,12 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: BatchDelegateOptions;
+
+  /**
+   * Forward `@defer` to subgraphs that support incremental delivery.
+   * `true` enables all subgraphs; a record enables named subgraphs (`"*"` = default).
+   */
+  subgraphDefer?: boolean | Record<string, boolean>;
 
   instrumentation?: () => Instrumentation | undefined;
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
@@ -461,6 +473,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
             onDelegateHooks: this.opts.onDelegateHooks,
             batchDelegateOptions: this.opts.batchDelegateOptions,
+            subgraphDefer: this.opts.subgraphDefer,
             log: this.opts.transportContext?.log,
             cache: this.opts.transportContext?.cache,
             handleProgressiveOverride: this.opts.handleProgressiveOverride

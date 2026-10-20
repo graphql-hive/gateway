@@ -714,6 +714,10 @@ export function createGatewayRuntime<
       instrumentation: () => instrumentation,
       batch: config.__experimental__batchExecution,
       batchDelegateOptions: config.__experimental__batchDelegateOptions,
+      subgraphDefer:
+        typeof config.deferStream === 'object'
+          ? config.deferStream.subgraph
+          : undefined,
       handleProgressiveOverride: config.progressiveOverride,
       // Public `gracefulSchemaReload` maps onto the manager's
       // schemaReloadDrainTimeout / maxConcurrentSchemaGenerations opts.
@@ -1053,6 +1057,7 @@ export function createGatewayRuntime<
   }
 
   if (config.deferStream) {
+    // boolean true or `{ subgraph?: ... }` both enable client-facing defer/stream
     extraPlugins.push(useDeferStream());
   }
 

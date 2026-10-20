@@ -34,6 +34,7 @@ export class Subschema<
   public executor?: Executor<TContext>;
   public batch?: boolean;
   public batchingOptions?: BatchingOptions<K, V, C>;
+  public defer?: boolean;
 
   public createProxyingResolver?: CreateProxyingResolverFn<TContext>;
   public transforms: Array<Transform<any, TContext>>;
@@ -48,6 +49,7 @@ export class Subschema<
     this.executor = config.executor;
     this.batch = config.batch;
     this.batchingOptions = config.batchingOptions;
+    this.defer = config.defer;
 
     this.createProxyingResolver = config.createProxyingResolver;
     this.transforms = config.transforms ?? [];

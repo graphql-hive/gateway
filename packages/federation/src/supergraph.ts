@@ -170,6 +170,12 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    */
   batchingOptions?: BatchingOptions;
   /**
+   * Forward `@defer` to every subschema (requires a defer-capable executor).
+   *
+   * @default false
+   */
+  defer?: boolean;
+  /**
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
@@ -1948,6 +1954,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       transforms,
       batch: opts.batch,
       batchingOptions: opts.batchingOptions,
+      defer: opts.defer,
     };
     subschemas.push(subschemaConfig);
 
@@ -1997,6 +2004,7 @@ export function getStitchingOptionsFromSupergraphSdl(
         transforms,
         batch: opts.batch,
         batchingOptions: opts.batchingOptions,
+        defer: opts.defer,
       } as FederationSubschemaConfig);
     }
   }

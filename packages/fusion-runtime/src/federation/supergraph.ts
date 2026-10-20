@@ -116,6 +116,29 @@ export function getStitchingDirectivesTransformerForSubschema() {
   return stitchingDirectivesTransformer;
 }
 
+/**
+ * Resolve whether a named subgraph should forward `@defer`.
+ * `true` enables all; a record enables by name (`"*"` is the default fallback).
+ */
+export function isSubgraphDeferEnabled(
+  subgraphDefer: boolean | Record<string, boolean> | undefined,
+  subgraphName: string | undefined,
+): boolean {
+  if (subgraphDefer == null) {
+    return false;
+  }
+  if (typeof subgraphDefer === 'boolean') {
+    return subgraphDefer;
+  }
+  if (subgraphName && Object.hasOwn(subgraphDefer, subgraphName)) {
+    return subgraphDefer[subgraphName] === true;
+  }
+  if (Object.hasOwn(subgraphDefer, '*')) {
+    return subgraphDefer['*'] === true;
+  }
+  return false;
+}
+
 interface EnumDirectives {
   [key: string]: any;
   join__graph?: {
@@ -203,6 +226,7 @@ export const handleFederationSupergraph = function ({
   onDelegationStageExecuteHooks,
   onDelegateHooks,
   batchDelegateOptions,
+  subgraphDefer,
   handleProgressiveOverride,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
@@ -267,7 +291,7 @@ export const handleFederationSupergraph = function ({
      * - Type Merging Configuration for the subgraph (subschemaConfig.merge)
      * - Set the executor for the subschema (subschemaConfig.executor)
      */
-    onSubschemaConfig: (subschemaConfig) =>
+    onSubschemaConfig: (subschemaConfig) => {
       handleFederationSubschema({
         subschemaConfig,
         unifiedGraphDirectives,
@@ -275,7 +299,11 @@ export const handleFederationSupergraph = function ({
         additionalTypeDefs,
         stitchingDirectivesTransformer,
         onSubgraphExecute,
-      }),
+      });
+      if (isSubgraphDeferEnabled(subgraphDefer, subschemaConfig.name)) {
+        subschemaConfig.defer = true;
+      }
+    },
     onStitchingOptions(opts) {
       subschemas = opts.subschemas;
       opts.typeDefs = handleResolveToDirectives(

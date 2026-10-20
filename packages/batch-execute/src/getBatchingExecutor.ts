@@ -12,6 +12,12 @@ export const getBatchingExecutor = memoize2of4(function getBatchingExecutor(
         mergedExtensions: Record<string, any>,
         request: ExecutionRequest,
       ) => Record<string, any>),
+  defer?: boolean,
 ): Executor {
-  return createBatchingExecutor(executor, dataLoaderOptions, extensionsReducer);
+  return createBatchingExecutor(
+    executor,
+    dataLoaderOptions,
+    extensionsReducer,
+    defer,
+  );
 });

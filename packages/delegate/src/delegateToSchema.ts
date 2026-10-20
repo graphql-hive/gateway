@@ -31,6 +31,7 @@ import {
 } from 'graphql';
 import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
+import { IncrementalReceiver } from './IncrementalReceiver.js';
 import { isSubschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
 import { Transformer } from './Transformer.js';
@@ -213,6 +214,18 @@ export function delegateRequest<
             }
           });
         }
+        // Forwarded @defer from a defer-capable subschema: consume the initial
+        // payload now and merge subsequent patches via IncrementalReceiver.
+        if (
+          delegationContext.operation === 'query' &&
+          delegationContext.subschemaConfig?.defer
+        ) {
+          return consumeDeferredIterable(
+            executorResult,
+            transformer,
+            delegationContext,
+          );
+        }
         return mapAsyncIterator(executorResult, (result) =>
           transformer.transformResult(result),
         );
@@ -343,6 +356,7 @@ function getExecutor<TContext extends Record<string, any>>(
       executor,
       batchingOptions?.dataLoaderOptions,
       batchingOptions?.extensionsReducer,
+      batchingOptions?.defer ?? subschemaConfig.defer,
     );
   }
 
@@ -350,6 +364,51 @@ function getExecutor<TContext extends Record<string, any>>(
 }
 
 export { executorFromSchema as createDefaultExecutor };
+
+async function consumeDeferredIterable<
+  TContext extends Record<string, any>,
+>(
+  executorResult: AsyncIterable<ExecutionResult<any>>,
+  transformer: Transformer<TContext>,
+  delegationContext: DelegationContext<TContext>,
+): Promise<any> {
+  const iterator = executorResult[Symbol.asyncIterator]();
+  const receiver = new IncrementalReceiver(delegationContext);
+
+  // Pull until the initial payload for our field arrives (skip pending-only
+  // chunks). Remaining patches are consumed in the background via for-await so
+  // the initial value can flush before slow deferred fields resolve.
+  let initialResult: ExecutionResult<any> | undefined;
+  for (;;) {
+    const step = await iterator.next();
+    if (step.done) {
+      receiver.finish();
+      return null;
+    }
+    const data = step.value?.data?.[delegationContext.fieldName];
+    if (data !== undefined || step.value?.hasNext === false) {
+      initialResult = step.value;
+      break;
+    }
+  }
+
+  const initialValue = await transformer.transformResult(initialResult!);
+
+  if (initialValue != null && typeof initialValue === 'object') {
+    receiver.attachTo(initialValue);
+    if (initialResult?.hasNext !== false) {
+      receiver.start({
+        [Symbol.asyncIterator]: () => iterator,
+      });
+    } else {
+      receiver.finish();
+    }
+  } else {
+    receiver.finish();
+  }
+
+  return initialValue;
+}
 
 function setObjectKeyPath(
   obj: Record<string, any>,

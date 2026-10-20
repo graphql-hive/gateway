@@ -58,6 +58,7 @@ export function mergeRequests(
     mergedExtensions: Record<string, any>,
     request: ExecutionRequest,
   ) => Record<string, any>,
+  defer = false,
 ): ExecutionRequest {
   const firstRequest = requests[0]!;
   if (!firstRequest) {
@@ -93,7 +94,13 @@ export function mergeRequests(
 
       for (const def of prefixedRequests.document.definitions) {
         if (isOperationDefinition(def)) {
-          mergedSelections.push(...def.selectionSet.selections);
+          const selections = defer
+            ? wrapRootSelectionsInDefer(
+                def.selectionSet.selections,
+                `batch_${index}`,
+              )
+            : def.selectionSet.selections;
+          mergedSelections.push(...selections);
           operationType ??= def.operation;
           operationName ??= def.name?.value;
           if (def.variableDefinitions) {
@@ -375,4 +382,32 @@ function isFragmentDefinition(
   def: DefinitionNode,
 ): def is FragmentDefinitionNode {
   return def.kind === Kind.FRAGMENT_DEFINITION;
+}
+
+function wrapRootSelectionsInDefer(
+  selections: ReadonlyArray<SelectionNode>,
+  label: string,
+): SelectionNode[] {
+  return [
+    {
+      kind: Kind.INLINE_FRAGMENT,
+      directives: [
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: 'defer' },
+          arguments: [
+            {
+              kind: Kind.ARGUMENT,
+              name: { kind: Kind.NAME, value: 'label' },
+              value: { kind: Kind.STRING, value: label },
+            },
+          ],
+        },
+      ],
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections: [...selections],
+      },
+    },
+  ];
 }
