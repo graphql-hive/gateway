@@ -98,9 +98,7 @@ export function stitchSchemas<
 
   if (extensions.length > 0) {
     const mergedExtensions = concatAST(extensions);
-    schema = extendSchema(schema, mergedExtensions, {
-      commentDescriptions: true,
-    } as any);
+    schema = extendSchema(schema, mergedExtensions);
   }
 
   // addLocalFieldResolvers writes the wrappers it builds back into this map, so

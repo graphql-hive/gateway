@@ -8,7 +8,7 @@ type VersionedVariableValues =
 /**
  * Returns the runtime variable values, regardless of the graphql-js version.
  *
- * - graphql <=16: `info.variableValues` is a flat `{ [name]: value }` map.
+ * - graphql 16: `info.variableValues` is a flat `{ [name]: value }` map.
  * - graphql >=17: `info.variableValues` is `{ sources, coerced }`; the runtime
  *   values live under `.coerced`.
  */
