@@ -779,7 +779,8 @@ export function createGatewayRuntime<
         attrs && 'requestId' in attrs ? attrs['requestId'] : undefined;
       if (config.requestId !== false && 'request' in context && requestId) {
         const headerName =
-          (typeof config.requestId === 'object' && config.requestId.headerName) ||
+          (typeof config.requestId === 'object' &&
+            config.requestId.headerName) ||
           'x-request-id';
         setOptions({
           ...options,

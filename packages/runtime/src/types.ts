@@ -37,8 +37,8 @@ import type {
 } from 'graphql';
 import type {
   BatchingOptions,
-  RequestIdOptions,
   FetchAPI,
+  RequestIdOptions,
   YogaInitialContext,
   Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
