@@ -177,6 +177,46 @@ describe('type merging directives', () => {
     ).not.toThrow();
   });
 
+  test('does not throw an error if merge used without arguments on a zero args endpoint', () => {
+    const typeDefs = /* GraphQL */ `
+      ${allStitchingDirectivesTypeDefs}
+
+      type Query {
+        _stats: Stats @merge
+      }
+
+      type Stats {
+        firstStat: Int
+        secondStat: Int
+      }
+    `;
+
+    expect(() => makeExecutableSchema({ typeDefs })).not.toThrow();
+    expect(() =>
+      stitchingDirectivesValidator(makeExecutableSchema({ typeDefs })),
+    ).not.toThrow();
+  });
+
+  test('throws an error if merge used without arguments on a multiple args endpoint', () => {
+    const typeDefs = /* GraphQL */ `
+      ${allStitchingDirectivesTypeDefs}
+
+      type Query {
+        _user(id: ID, name: String): User @merge
+      }
+
+      type User @key(selectionSet: "{ id name }") {
+        id: ID
+        name: String
+      }
+    `;
+
+    expect(() => makeExecutableSchema({ typeDefs })).not.toThrow();
+    expect(() =>
+      stitchingDirectivesValidator(makeExecutableSchema({ typeDefs })),
+    ).toThrow();
+  });
+
   test('supports multiple fields as keyField', () => {
     const typeDefs = /* GraphQL */ `
       ${allStitchingDirectivesTypeDefs}

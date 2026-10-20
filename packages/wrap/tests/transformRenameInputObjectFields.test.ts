@@ -66,6 +66,136 @@ describe('RenameInputObjectFields', () => {
     expect(testData.field2).toBe('field2');
   });
 
+  // Ported from ardatan/graphql-tools#5093 — documents interfering RenameInputObjectFields transforms
+  test('renaming with multiple transforms and variables works', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        input InputObject {
+          field1: String
+          field2: String
+        }
+
+        type OutputObject {
+          field1: String
+          field2: String
+        }
+
+        type Query {
+          test(argument: InputObject): OutputObject
+        }
+      `,
+      resolvers: {
+        Query: {
+          test: (_root, args) => {
+            return args.argument;
+          },
+        },
+      },
+    });
+
+    const transformedSchema = wrapSchema({
+      schema,
+      transforms: [
+        new RenameInputObjectFields((typeName, fieldName) => {
+          if (typeName === 'InputObject' && fieldName === 'field2') {
+            return 'field3';
+          }
+          return undefined;
+        }),
+        new RenameInputObjectFields((typeName, fieldName) => {
+          if (typeName === 'InputObject' && fieldName === 'field1') {
+            return 'field0';
+          }
+          return undefined;
+        }),
+      ],
+    });
+
+    const query = /* GraphQL */ `
+      query ($argument: InputObject) {
+        test(argument: $argument) {
+          field1
+          field2
+        }
+      }
+    `;
+
+    const result = await execute({
+      schema: transformedSchema,
+      document: parse(query),
+      variableValues: { argument: { field0: 'field1', field3: 'field2' } },
+    });
+    if (isIncrementalResult(result)) throw Error('result is incremental');
+    assertSome(result.data);
+    const testData: any = result.data['test'];
+    expect(testData.field1).toBe('field1');
+    expect(testData.field2).toBe('field2');
+  });
+
+  test('renaming with multiple transforms and static arguments works', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        input InputObject {
+          field1: String
+          field2: String
+        }
+
+        type OutputObject {
+          field1: String
+          field2: String
+        }
+
+        type Query {
+          test(argument: InputObject): OutputObject
+        }
+      `,
+      resolvers: {
+        Query: {
+          test: (_root, args) => {
+            return args.argument;
+          },
+        },
+      },
+    });
+
+    const transformedSchema = wrapSchema({
+      schema,
+      transforms: [
+        new RenameInputObjectFields((typeName, fieldName) => {
+          if (typeName === 'InputObject' && fieldName === 'field2') {
+            return 'field3';
+          }
+          return undefined;
+        }),
+        new RenameInputObjectFields((typeName, fieldName) => {
+          if (typeName === 'InputObject' && fieldName === 'field1') {
+            return 'field0';
+          }
+          return undefined;
+        }),
+      ],
+    });
+
+    const query = /* GraphQL */ `
+      {
+        test(argument: { field0: "field1", field3: "field2" }) {
+          field1
+          field2
+        }
+      }
+    `;
+
+    const result = await execute({
+      schema: transformedSchema,
+      document: parse(query),
+    });
+    if (isIncrementalResult(result)) throw Error('result is incremental');
+    assertSome(result.data);
+    const testData: any = result.data['test'];
+    expect(testData.field1).toBe('field1');
+    expect(testData.field2).toBe('field2');
+  });
+
   test('renaming with non-null arguments works', async () => {
     const schema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
