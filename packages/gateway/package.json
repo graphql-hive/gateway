@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.15.0"
   },
   "bin": {
     "hive-gateway": "./dist/bin.js"
@@ -154,7 +154,6 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@rollup/plugin-sucrase": "^5.0.2",
-    "@tsconfig/node18": "^18.2.5",
     "@types/adm-zip": "^0.5.5",
     "@types/bun": "1.3.14",
     "@types/ws": "^8.5.12",

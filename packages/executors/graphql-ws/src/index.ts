@@ -8,7 +8,7 @@ import {
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { getNodeVer, isBrowser } from '~internal/env';
+import { isBrowser } from '~internal/env';
 import type { DocumentNode } from 'graphql';
 import {
   createClient,
@@ -104,13 +104,6 @@ export function buildGraphQLWSExecutor(
             if (isBrowser()) {
               // browser
               super(url, protocol);
-            } else if (getNodeVer().major < 22) {
-              super(
-                url,
-                protocol,
-                // @ts-expect-error will require('ws') and headers are passed like this
-                { headers },
-              );
             } else {
               super(url, {
                 // we pass both protocols and protocol to satisfy different implementations

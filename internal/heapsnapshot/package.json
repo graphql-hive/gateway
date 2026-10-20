@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.15.0"
   },
   "exports": {
     ".": {
@@ -19,7 +19,6 @@
     "start": "yarn build --watch"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.5",
     "@tsconfig/recommended": "^1.0.13",
     "@types/node": "^25.0.0",
     "pkgroll": "2.27.1",
