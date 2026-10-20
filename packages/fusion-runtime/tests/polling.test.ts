@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
@@ -203,7 +203,6 @@ describe('Polling', () => {
       getUnifiedGraph: () => schemas[schemaIndex]!,
       transportContext: {
         log,
-        logger: LegacyLogger.from(log),
         cache: {
           get: () => undefined,
           set: () => cacheWrites[schemaIndex]!.promise,
@@ -504,7 +503,7 @@ describe('Polling', () => {
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,
-      transportContext: { log, logger: LegacyLogger.from(log) },
+      transportContext: { log },
       transports() {
         log.debug('transports');
         return {

@@ -2,7 +2,6 @@ import type { Logger } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
   KeyValueCache,
-  Logger as LegacyLogger,
   MeshFetch,
 } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
@@ -26,8 +25,6 @@ export interface TransportEntry<
 
 export interface TransportContext {
   log: Logger;
-  /** @deprecated Please migrate to using the {@link log}. */
-  logger: LegacyLogger;
   /** The fetch API to use. */
   fetch?: MeshFetch;
   /** Will be empty when run on serverless. */

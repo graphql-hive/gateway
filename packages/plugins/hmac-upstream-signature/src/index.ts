@@ -6,7 +6,7 @@ import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type { FetchAPI, GraphQLParams, YogaLogger } from 'graphql-yoga';
+import type { FetchAPI, GraphQLParams, Logger } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
 
 export type HMACUpstreamSignatureOptions = {
@@ -166,10 +166,10 @@ export function useHmacSignatureValidation(
   let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
-  let logger: YogaLogger;
+  let log: Logger;
   return {
     onYogaInit({ yoga }) {
-      logger = yoga.logger;
+      log = yoga.log;
     },
     onParams({ params, fetchAPI }) {
       textEncoder ||= new fetchAPI.TextEncoder();
@@ -195,9 +195,9 @@ export function useHmacSignatureValidation(
             c.charCodeAt(0),
           );
           const serializedParams = paramsSerializer(params);
-          logger.debug(
-            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
+          log.debug(
             { serializedParams },
+            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
           );
 
           return handleMaybePromise(
@@ -210,7 +210,7 @@ export function useHmacSignatureValidation(
               ),
             (result) => {
               if (!result) {
-                logger.error(
+                log.error(
                   '[useHmacSignatureValidation] HMAC signature does not match the body content. short circuit request.',
                 );
                 throw new Error(
