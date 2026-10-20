@@ -42,7 +42,7 @@
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
-    "@envelop/core": "^5.4.0",
+    "@envelop/core": "6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",

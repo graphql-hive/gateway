@@ -100,7 +100,7 @@
     "@types/opossum": "^8.1.9",
     "@whatwg-node/server": "^0.11.0",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.21.1",
+    "graphql-yoga": "6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",
     "pkgroll": "2.27.1",
     "rimraf": "^6.1.0",
