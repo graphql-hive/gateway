@@ -49,7 +49,9 @@ it.each([
     expect(await response.json()).toEqual({ data: { hello: 'world' } });
     expect(response.headers.get('x-request-id')).toBe(expected);
     expect(upstreamIds).toContain(expected);
-    expect(writer.logs.filter(({ msg }) => msg === 'Request processed')).toEqual([
+    expect(
+      writer.logs.filter(({ msg }) => msg === 'Request processed'),
+    ).toEqual([
       expect.objectContaining({
         attrs: expect.objectContaining({ requestId: expected }),
       }),

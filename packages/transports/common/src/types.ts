@@ -1,9 +1,6 @@
 import type { Logger } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
-import type {
-  KeyValueCache,
-  MeshFetch,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, MeshFetch } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
 import type { GraphQLError, GraphQLSchema } from 'graphql';
 
