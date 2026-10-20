@@ -704,17 +704,7 @@ export function useOpenTelemetry(
       },
 
       onYogaInit({ yoga }) {
-        //TODO remove this when Yoga will also use the new Logger API
-        pluginLogger ??= new Logger({
-          writers: [
-            {
-              write(level, attrs, msg) {
-                level = level === 'trace' ? 'debug' : level;
-                yoga.logger[level](msg, attrs);
-              },
-            },
-          ],
-        }).child('[OpenTelemetry] ');
+        pluginLogger ??= yoga.log.child('[OpenTelemetry] ');
 
         pluginLogger.debug(
           `Context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
