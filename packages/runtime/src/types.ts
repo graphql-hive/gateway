@@ -882,6 +882,13 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   multipart?: boolean;
 
   /**
+   * Maximum request body size in bytes. Set to `false` to disable the limit.
+   *
+   * @default 25000000
+   */
+  maxRequestBodySize?: number | false;
+
+  /**
    * Enable execution cancellation
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/execution-cancellation)

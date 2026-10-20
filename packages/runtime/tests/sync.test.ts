@@ -32,6 +32,7 @@ it.skipIf(globalThis.Bun)(
     });
     await using upstreamYoga = createYoga({
       schema: upstreamSchema,
+      maxRequestBodySize: false, // needs to be disabled to get sync response
     });
     const supergraph = await composeLocalSchemasWithApollo([
       {
@@ -42,6 +43,7 @@ it.skipIf(globalThis.Bun)(
     ]);
     await using gw = createGatewayRuntime({
       supergraph,
+      maxRequestBodySize: false, // needs to be disabled to get sync response
       transports(kind) {
         if (kind !== 'http') {
           throw new Error(`Unsupported transport ${kind}`);

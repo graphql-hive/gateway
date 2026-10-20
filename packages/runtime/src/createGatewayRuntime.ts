@@ -1218,6 +1218,7 @@ export function createGatewayRuntime<
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
+    maxRequestBodySize: config.maxRequestBodySize,
   });
 
   Object.defineProperties(yoga, {
