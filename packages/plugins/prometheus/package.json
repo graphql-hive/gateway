@@ -49,13 +49,13 @@
     "@graphql-mesh/types": "^0.107.1",
     "@graphql-mesh/utils": "^0.107.1",
     "@graphql-tools/utils": "^12.0.1",
-    "@graphql-yoga/plugin-prometheus": "^6.11.3",
+    "@graphql-yoga/plugin-prometheus": "7.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "prom-client": "^15.0.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.21.1",
+    "graphql-yoga": "6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "pkgroll": "2.27.1",
     "prom-client": "15.1.3"
   },

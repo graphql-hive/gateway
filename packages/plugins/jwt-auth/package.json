@@ -44,14 +44,14 @@
   "dependencies": {
     "@graphql-mesh/types": "^0.107.1",
     "@graphql-mesh/utils": "^0.107.1",
-    "@graphql-yoga/plugin-jwt": "^3.10.2",
+    "@graphql-yoga/plugin-jwt": "4.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "tslib": "^2.4.0"
   },
   "devDependencies": {
-    "@envelop/core": "^5.4.0",
-    "@envelop/generic-auth": "^12.0.0",
+    "@envelop/core": "6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
+    "@envelop/generic-auth": "12.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.21.1",
+    "graphql-yoga": "6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57",
     "jsonwebtoken": "9.0.3",
     "pkgroll": "2.27.1"
   },
