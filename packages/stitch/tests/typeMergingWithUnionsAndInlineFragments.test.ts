@@ -104,8 +104,7 @@ describe('Unions and Inline Fragments', () => {
     });
   });
 
-  // Ported from ardatan/graphql-tools#4965 — union merge + inline fragments still returns empty major
-  it.fails('handles success', async () => {
+  it('handles success', async () => {
     const query = /* GraphQL */ `
       query {
         student(id: "12314241") {
@@ -142,7 +141,7 @@ describe('Unions and Inline Fragments', () => {
     });
   });
 
-  it.fails('handles error', async () => {
+  it('handles error', async () => {
     const query = /* GraphQL */ `
       query {
         student(id: "12314241") {

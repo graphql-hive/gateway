@@ -11,10 +11,12 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLCompositeType,
   GraphQLField,
   GraphQLObjectType,
   GraphQLSchema,
   isAbstractType,
+  isInterfaceType,
   isObjectType,
   Kind,
   SelectionNode,
@@ -26,8 +28,8 @@ import { GraphQLResolveInfo } from 'graphql/type';
 export function getFieldsNotInSubschema(
   schema: GraphQLSchema,
   stitchingInfo: StitchingInfo,
-  gatewayType: GraphQLObjectType,
-  subschemaType: GraphQLObjectType,
+  gatewayType: GraphQLCompositeType,
+  subschemaType: GraphQLCompositeType,
   fieldNodes: FieldNode[],
   fragments: Record<string, FragmentDefinitionNode>,
   variableValues: Record<string, any>,
@@ -88,7 +90,13 @@ export function getFieldsNotInSubschema(
   // TODO: Verify whether it is safe that extensions always exists.
   const fieldNodesByField = stitchingInfo?.fieldNodesByField;
 
-  const fields = subschemaType.getFields();
+  // Unions have no fields of their own; treat every selected field as absent
+  // so the abstract-type path in the delegation planner can re-fetch via
+  // inline fragments on the owning subschema (graphql-tools#4966).
+  const fields =
+    isObjectType(subschemaType) || isInterfaceType(subschemaType)
+      ? subschemaType.getFields()
+      : Object.create(null);
 
   const fieldNodesByFieldForType = fieldNodesByField?.[gatewayType.name];
 
@@ -124,7 +132,9 @@ export function getFieldsNotInSubschema(
         // up still delegating the field to the owner subgraph.
         const flattenedProvided = flattenSelectionsForType(
           providedSelectionNode,
-          gatewayType,
+          // @provides flattening is only meaningful for object parents;
+          // unions never carry provided selections themselves.
+          gatewayType as GraphQLObjectType,
           schema,
         );
         const subtracted = subtractSelectionSets(

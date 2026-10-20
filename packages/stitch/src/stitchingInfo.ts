@@ -97,7 +97,8 @@ function createMergedTypes<
     const typeCandidate = typeCandidatesOfTypeName[0];
     if (
       isObjectType(typeCandidate?.type) ||
-      isInterfaceType(typeCandidate?.type)
+      isInterfaceType(typeCandidate?.type) ||
+      isUnionType(typeCandidate?.type)
     ) {
       const typeCandidatesWithMergedTypeConfig =
         typeCandidatesOfTypeName.filter(
@@ -237,7 +238,7 @@ function createMergedTypes<
             fieldSelectionSets.set(subschema, parsedFieldSelectionSets);
           }
 
-          // We already know that the type is an object or interface type
+          // Object, interface, or union (unions have no fields of their own)
           const type = subschema.transformedSchema.getType(typeName) as
             | GraphQLObjectType
             | GraphQLInterfaceType;
@@ -284,22 +285,26 @@ function createMergedTypes<
 
           targetSubschemas.push(subschema);
 
-          const fieldMap = type.getFields();
-          const selectionSet = selectionSets.get(subschema);
-          for (const fieldName in fieldMap) {
-            const field = fieldMap[fieldName];
-            const fieldType = getNamedType(field?.type);
-            if (
-              selectionSet &&
-              isLeafType(fieldType) &&
-              selectionSetContainsTopLevelField(selectionSet, fieldName)
-            ) {
-              continue;
+          // Unions have no fields; field ownership is resolved later via
+          // inline fragments on concrete members during delegation planning.
+          if (isObjectType(type) || isInterfaceType(type)) {
+            const fieldMap = type.getFields();
+            const selectionSet = selectionSets.get(subschema);
+            for (const fieldName in fieldMap) {
+              const field = fieldMap[fieldName];
+              const fieldType = getNamedType(field?.type);
+              if (
+                selectionSet &&
+                isLeafType(fieldType) &&
+                selectionSetContainsTopLevelField(selectionSet, fieldName)
+              ) {
+                continue;
+              }
+              if (!supportedBySubschemas[fieldName]) {
+                supportedBySubschemas[fieldName] = [];
+              }
+              supportedBySubschemas[fieldName]?.push(subschema);
             }
-            if (!supportedBySubschemas[fieldName]) {
-              supportedBySubschemas[fieldName] = [];
-            }
-            supportedBySubschemas[fieldName]?.push(subschema);
           }
         }
 
@@ -444,25 +449,30 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
       selectionSet,
     ] of mergedTypeInfo.selectionSets) {
       const schema = subschemaConfig.transformedSchema;
-      const type = schema.getType(typeName) as GraphQLObjectType;
-      const fields = type.getFields();
-      for (const fieldName in fields) {
-        const field = fields[fieldName];
-        const fieldType = getNamedType(field?.type);
-        if (
-          selectionSet &&
-          isLeafType(fieldType) &&
-          selectionSetContainsTopLevelField(selectionSet, fieldName)
-        ) {
-          continue;
+      const type = schema.getType(typeName);
+      if (type == null) {
+        continue;
+      }
+      if (isObjectType(type) || isInterfaceType(type)) {
+        const fields = type.getFields();
+        for (const fieldName in fields) {
+          const field = fields[fieldName];
+          const fieldType = getNamedType(field?.type);
+          if (
+            selectionSet &&
+            isLeafType(fieldType) &&
+            selectionSetContainsTopLevelField(selectionSet, fieldName)
+          ) {
+            continue;
+          }
+          updateSelectionSetMap(
+            selectionSetsByField,
+            typeName,
+            fieldName,
+            selectionSet,
+            true,
+          );
         }
-        updateSelectionSetMap(
-          selectionSetsByField,
-          typeName,
-          fieldName,
-          selectionSet,
-          true,
-        );
       }
       if (isAbstractType(type)) {
         updateSelectionSetMap(
