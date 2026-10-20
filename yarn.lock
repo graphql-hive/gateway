@@ -3679,18 +3679,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:^6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
-  version: 6.0.0
-  resolution: "@envelop/core@npm:6.0.0"
-  dependencies:
-    "@envelop/instrumentation": "npm:^2.0.0"
-    "@envelop/types": "npm:^6.0.0"
-    "@whatwg-node/promise-helpers": "npm:^2.0.0"
-    tslib: "npm:^2.5.0"
-  checksum: 10c0/591d407aab75e7e8d3a2ae06a93fe3f64978892bc6ac41ccb0698f9c11687aebb99578947c4097bfcba01a91ab021063f777c86b7162b094d93fe94fc8243a1d
-  languageName: node
-  linkType: hard
-
 "@envelop/disable-introspection@npm:10.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
   version: 10.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57
   resolution: "@envelop/disable-introspection@npm:10.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57"
@@ -3749,16 +3737,6 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     tslib: "npm:^2.5.0"
   checksum: 10c0/134df1ac481fb392aafc4522a22bcdc6ef0701f2d15d51b16207f3c9a4c7d3760adfa5f5bcc84f0c0ec7b011d84bcd40fff671eb471bed54bd928c165994b4e3
-  languageName: node
-  linkType: hard
-
-"@envelop/instrumentation@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@envelop/instrumentation@npm:2.0.0"
-  dependencies:
-    "@whatwg-node/promise-helpers": "npm:^2.0.0"
-    tslib: "npm:^2.5.0"
-  checksum: 10c0/fd01678bcec4906b517e1a2ea88a904523b54e175eff3ff742e3cf011f170a139f1993904e38cc310f391cd55a3cc0920474403e325bc5ac8a070735f0396085
   languageName: node
   linkType: hard
 
@@ -3900,16 +3878,6 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.5.0"
   checksum: 10c0/2cdbb29d98350d957e18aff38ddf95670c249df894afab7fc888e2a02b43ca029fde96ca2829e5350bf83b982bc0267a5c8f7ee3ed9d353d4f145ebc0dc0b1e0
-  languageName: node
-  linkType: hard
-
-"@envelop/types@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@envelop/types@npm:6.0.0"
-  dependencies:
-    "@whatwg-node/promise-helpers": "npm:^2.0.0"
-    tslib: "npm:^2.5.0"
-  checksum: 10c0/a827cda0e1bce11dfaf59d84bc481df565a1fec96f4ae15bfeec77364c05e11a0cf6711ba7d8e3ceb87a4549b78d8d1f437e1b6d1ca8e47f1998e329729c3fcb
   languageName: node
   linkType: hard
 
