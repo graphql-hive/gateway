@@ -39,7 +39,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0",
+    "graphql": "^16.9.0 || ^17.0.0",
     "prom-client": "^13 || ^14.0.0 || ^15.0.0"
   },
   "dependencies": {
