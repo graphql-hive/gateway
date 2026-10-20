@@ -48,12 +48,10 @@ export const defaultParamsSerializer = (params: GraphQLParams) =>
 
 function createCryptoKey({
   textEncoder,
-  crypto,
   secret,
   usages,
 }: {
   textEncoder: TextEncoder;
-  crypto: Crypto;
   secret: string;
   usages: KeyUsage[];
 }): Promise<CryptoKey> {
@@ -105,7 +103,6 @@ export function useHmacUpstreamSignature(
           () =>
             (key$ ||= createCryptoKey({
               textEncoder,
-              crypto: fetchAPI.crypto,
               secret: options.secret,
               usages: ['sign'],
             })),
@@ -117,7 +114,7 @@ export function useHmacUpstreamSignature(
               serializedExecutionRequest,
             );
             return handleMaybePromise(
-              () => fetchAPI.crypto.subtle.sign('HMAC', key, encodedContent),
+              () => crypto.subtle.sign('HMAC', key, encodedContent),
               (signature) => {
                 const extensionValue = fetchAPI.btoa(
                   String.fromCharCode(...new Uint8Array(signature)),
@@ -185,7 +182,6 @@ export function useHmacSignatureValidation(
         () =>
           (key$ ||= createCryptoKey({
             textEncoder,
-            crypto: fetchAPI.crypto,
             secret: options.secret,
             usages: ['verify'],
           })),
@@ -202,7 +198,7 @@ export function useHmacSignatureValidation(
 
           return handleMaybePromise(
             () =>
-              fetchAPI.crypto.subtle.verify(
+              crypto.subtle.verify(
                 'HMAC',
                 key,
                 sigBuf,
