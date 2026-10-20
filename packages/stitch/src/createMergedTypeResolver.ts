@@ -44,7 +44,12 @@ export function createMergedTypeResolver<
     ) {
       return batchDelegateToSchema({
         schema: subschema,
-        operation: info.operation.operation as OperationTypeNode,
+        // Preserve mutation for type merges that only exist under Mutation
+        // (graphql-tools#4549). Subscriptions must still merge via query —
+        // you cannot re-subscribe for entity fields.
+        operation: (info.operation.operation === 'mutation'
+          ? 'mutation'
+          : 'query') as OperationTypeNode,
         fieldName,
         returnType: new GraphQLList(type),
         key,
@@ -72,7 +77,9 @@ export function createMergedTypeResolver<
     ) {
       return delegateToSchema({
         schema: subschema,
-        operation: info.operation.operation as OperationTypeNode,
+        operation: (info.operation.operation === 'mutation'
+          ? 'mutation'
+          : 'query') as OperationTypeNode,
         fieldName,
         returnType: type,
         args: args(originalResult),
