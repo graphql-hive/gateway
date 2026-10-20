@@ -400,6 +400,32 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     }
   }
 
+  // Keyless (zero-arg) merges have no selectionSet that would keep a delegated
+  // selection non-empty when all requested fields live on other subschemas.
+  // Inject __typename so finalizeGatewayRequest keeps a stub object that type
+  // merging can fill — same idea as nested root types (#2347 / graphql-tools#4337).
+  const typenameFieldNode = parseSelectionSet('{ __typename }', {
+    noLocation: true,
+  }).selections[0] as FieldNode;
+  for (const typeName in mergedTypes) {
+    const mergedTypeInfo = mergedTypes[typeName];
+    if (
+      mergedTypeInfo == null ||
+      mergedTypeInfo.resolvers.size === 0 ||
+      mergedTypeInfo.selectionSets.size > 0
+    ) {
+      continue;
+    }
+    const existing = fieldNodesByType[typeName];
+    if (existing == null) {
+      fieldNodesByType[typeName] = [typenameFieldNode];
+    } else if (
+      !existing.some((fieldNode) => fieldNode.name.value === '__typename')
+    ) {
+      existing.push(typenameFieldNode);
+    }
+  }
+
   const selectionSetsByField: Record<
     string,
     Record<string, Array<SelectionSetNode>>
