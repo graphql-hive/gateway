@@ -29,12 +29,6 @@ const subscriptionsClientFactories = [
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
   describe(`with ${protocol}`, () => {
-    if (protocol === 'WS' && process.version.startsWith('v18')) {
-      it.skip(
-        'WebSocket tests are skipped on Node.js v18 due to a bug in the WebSocket implementation',
-      );
-      return;
-    }
     if (gatewayRunner === 'bun-docker') {
       it.skip('WebSocket tests are skipped on bun-docker runner');
       return;
