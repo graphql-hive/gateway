@@ -3716,13 +3716,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/instrumentation@npm:^2.0.0, @envelop/instrumentation@npm:^2.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+"@envelop/instrumentation@npm:^2.0.0":
   version: 2.0.0
   resolution: "@envelop/instrumentation@npm:2.0.0"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.5.0"
   checksum: 10c0/fd01678bcec4906b517e1a2ea88a904523b54e175eff3ff742e3cf011f170a139f1993904e38cc310f391cd55a3cc0920474403e325bc5ac8a070735f0396085
+  languageName: node
+  linkType: hard
+
+"@envelop/instrumentation@npm:^2.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+  version: 2.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120
+  resolution: "@envelop/instrumentation@npm:2.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^2.0.0"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/f7bf99c2dcc748720b43724a9f17c7bf1c582c0784c4414f8188b4c381c3174fec4b3d6474020eac1777d8818a708729b794ab94246e53b4201dc73720ec902e
   languageName: node
   linkType: hard
 
@@ -3742,7 +3752,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/on-resolve@npm:^8.0.0, @envelop/on-resolve@npm:^8.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+"@envelop/on-resolve@npm:^8.0.0":
   version: 8.0.0
   resolution: "@envelop/on-resolve@npm:8.0.0"
   dependencies:
@@ -3751,6 +3761,18 @@ __metadata:
     "@envelop/core": ^6.0.0
     graphql: ^16.0.0 || ^17.0.0
   checksum: 10c0/8cd72fef22ee6b6b5ffe9ef418903ab2112402f1af60803e15f251f2637173402dbc4aa378128a25ba1a3a7925e95c63a6aa78bc7f201973efdfa3ad428c88df
+  languageName: node
+  linkType: hard
+
+"@envelop/on-resolve@npm:^8.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+  version: 8.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120
+  resolution: "@envelop/on-resolve@npm:8.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^2.0.0"
+  peerDependencies:
+    "@envelop/core": ^6.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10c0/0b37f687f41d20740f89e933af95d8ddea348687d7624938bd1d0cad4aae2e9e73499eaa3a2bda5488cb44a262b1fc2c871c183fdaf4f003de5482ec1f350ed9
   languageName: node
   linkType: hard
 
@@ -3845,13 +3867,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:^6.0.0, @envelop/types@npm:^6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+"@envelop/types@npm:^6.0.0":
   version: 6.0.0
   resolution: "@envelop/types@npm:6.0.0"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.5.0"
   checksum: 10c0/a827cda0e1bce11dfaf59d84bc481df565a1fec96f4ae15bfeec77364c05e11a0cf6711ba7d8e3ceb87a4549b78d8d1f437e1b6d1ca8e47f1998e329729c3fcb
+  languageName: node
+  linkType: hard
+
+"@envelop/types@npm:^6.0.0-alpha-20261019165905-4e993e96c2903cbe3084f9b49dfbf05042e3fe57":
+  version: 6.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120
+  resolution: "@envelop/types@npm:6.0.0-alpha-20261019231601-b21e6cedc1a444383d9ce69fe6180f5b4ff67120"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^2.0.0"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/5cefb52a0d0f0e79771084e9a7e111f5d1e589341c9fb1eac5fe13c7d12b2fadedbeb28e577cf6157b0b339761a9d7aa0129d0fc958e2889ebd675d36675f1f4
   languageName: node
   linkType: hard
 
