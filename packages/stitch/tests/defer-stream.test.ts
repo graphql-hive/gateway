@@ -612,7 +612,7 @@ describe('Defer/Stream within stitching', () => {
     });
   });
 
-  describe('cancellation / timeouts', () => {
+  describe('cancellation', () => {
 
     it('stops waiting for deferred fields when the operation is aborted', async () => {
       let slowStarted = false;

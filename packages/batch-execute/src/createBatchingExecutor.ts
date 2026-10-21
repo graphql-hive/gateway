@@ -78,8 +78,8 @@ function createLoadFn(
 
 /**
  * Flatten an incremental-delivery AsyncIterable into a single ExecutionResult
- * by merging top-level `data` and `incremental[].data` payloads (used when
- * batched sub-requests are wrapped in `@defer`).
+ * by merging top-level `data`, `incremental[].data`, and `@stream` `items`
+ * payloads (used when batched sub-requests are wrapped in `@defer`).
  */
 async function collectExecutionResult(
   result: MaybeAsyncIterable<ExecutionResult> | ExecutionResult,
@@ -100,6 +100,16 @@ async function collectExecutionResult(
         if (patch.errors?.length) {
           merged.errors = [...(merged.errors ?? []), ...patch.errors];
         }
+        if (patch.items != null) {
+          if (Array.isArray(patch.path) && patch.path.length > 0) {
+            setItemsAtPath(
+              merged.data as Record<string, any>,
+              patch.path,
+              patch.items,
+            );
+          }
+          continue;
+        }
         if (patch.data == null) {
           continue;
         }
@@ -114,6 +124,12 @@ async function collectExecutionResult(
   return merged;
 }
 
+function isUnsafeKey(key: string | number): boolean {
+  return (
+    key === '__proto__' || key === 'constructor' || key === 'prototype'
+  );
+}
+
 function setAtPath(
   root: Record<string, any>,
   path: ReadonlyArray<string | number>,
@@ -122,6 +138,9 @@ function setAtPath(
   let current: any = root;
   for (let i = 0; i < path.length; i++) {
     const key = path[i]!;
+    if (isUnsafeKey(key)) {
+      return;
+    }
     if (i === path.length - 1) {
       if (current[key] != null && typeof current[key] === 'object') {
         Object.assign(current[key], value);
@@ -134,6 +153,39 @@ function setAtPath(
       current[key] = typeof path[i + 1] === 'number' ? [] : {};
     }
     current = current[key];
+  }
+}
+
+/** Merge `@stream` items into `root` at a path whose last segment is the index. */
+function setItemsAtPath(
+  root: Record<string, any>,
+  path: ReadonlyArray<string | number>,
+  items: ReadonlyArray<any>,
+): void {
+  const index = path[path.length - 1];
+  if (typeof index !== 'number') {
+    return;
+  }
+  const listPath = path.slice(0, -1);
+  let parent: any = root;
+  for (let i = 0; i < listPath.length; i++) {
+    const key = listPath[i]!;
+    if (isUnsafeKey(key)) {
+      return;
+    }
+    if (parent[key] == null || typeof parent[key] !== 'object') {
+      parent[key] =
+        i === listPath.length - 1 || typeof listPath[i + 1] === 'number'
+          ? []
+          : {};
+    }
+    parent = parent[key];
+  }
+  if (!Array.isArray(parent)) {
+    return;
+  }
+  for (let i = 0; i < items.length; i++) {
+    parent[index + i] = items[i];
   }
 }
 

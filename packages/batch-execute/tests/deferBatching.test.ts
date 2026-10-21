@@ -105,6 +105,55 @@ describe('batch-execute with defer', () => {
     expect(slowResult).toEqual({ data: { slow: 'slow' } });
   });
 
+  it('merges @stream items when draining multi-request incremental batches', async () => {
+    async function* streamedBatch() {
+      yield {
+        data: {
+          _v0_letters: ['a'],
+          _v1_ok: 'yes',
+        },
+        hasNext: true,
+      };
+      yield {
+        incremental: [{ path: ['_v0_letters', 1], items: ['b'] }],
+        hasNext: true,
+      };
+      yield {
+        incremental: [{ path: ['_v0_letters', 2], items: ['c'] }],
+        hasNext: false,
+      };
+    }
+
+    const executor = createBatchingExecutor(
+      () => streamedBatch(),
+      undefined,
+      undefined,
+      true,
+    );
+
+    const [lettersResult, okResult] = await Promise.all([
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            letters
+          }
+        `),
+        variables: {},
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            ok
+          }
+        `),
+        variables: {},
+      }),
+    ]);
+
+    expect(lettersResult).toEqual({ data: { letters: ['a', 'b', 'c'] } });
+    expect(okResult).toEqual({ data: { ok: 'yes' } });
+  });
+
   it('getBatchingExecutor caches defer:true separately from defer:false', async () => {
     let seenDeferWrap = false;
     const schema = makeExecutableSchema({

@@ -462,7 +462,7 @@ async function* transformDeferredChunks<
           // pass items through. Per-item result transforms are uncommon for
           // scalar streams; object-list items keep subgraph field shapes.
           const rewrittenPath =
-            patch.path?.length != null
+            Array.isArray(patch.path) && patch.path.length > 0
               ? applyErrorPathTransformers(
                   patch.path as Array<string | number>,
                   delegationContext,
@@ -565,7 +565,7 @@ async function* transformDeferredChunks<
 
         // Error-only or empty data patches
         const rewrittenErrorPath =
-          patch.path?.length != null
+          Array.isArray(patch.path) && patch.path.length > 0
             ? applyErrorPathTransformers(
                 patch.path as Array<string | number>,
                 delegationContext,

@@ -332,7 +332,7 @@ function resolveMissingFieldFromSourceSubschema(
       resolveOriginalTypeName(originalSchema, parentTypeName, hoist.typeName),
       hoist,
     );
-      if (target && isObjectType(sourceType)) {
+    if (target && isObjectType(sourceType)) {
       // Value may already be present from a forwarded nested patch.
       if (!isMissingFieldValue(target.parent, target.fieldName)) {
         const value = applyLeafOutputTransforms(

@@ -301,7 +301,8 @@ export class IncrementalReceiver {
       return;
     }
 
-    // Error-only patch (no data): reject waiters under this path with the error.
+    // Error-only patch (no data): resolve waiters under this path with the
+    // first error as a field value (GraphQL-tools Error-as-value pattern).
     if (patch.errors?.length) {
       const error = patch.errors[0] as GraphQLError;
       const key = pathKey(relPath);

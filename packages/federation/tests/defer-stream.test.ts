@@ -559,10 +559,9 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
   });
 
   it('entity-level @defer stays gateway-owned even when the owning subgraph has defer: true', async () => {
-    // Apollo Router defers entity fields via follow-up `_entities` queries, not
-    // by forwarding `@defer` into those entity selections. Type-merge plans
-    // collect FieldNodes only, so kitchen still sees a plain `_entities` query.
-    // `defer: true` must not break that Apollo-compatible flush path.
+    // Type-merge plans collect FieldNodes only, so the owning subgraph still
+    // sees a plain `_entities` follow-up (no `@defer` on that selection).
+    // `SubschemaConfig.defer` must not change that flush path.
     const kitchenQueries: string[] = [];
     const forwardedSchema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl: await composeLocalSchemasWithApollo([
@@ -630,7 +629,7 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
       kitchenQueries.some((body) => body.includes('prepSequence')),
       `expected kitchen _entities to request prepSequence, got:\n${kitchenQueries.join('\n')}`,
     ).toBe(true);
-    // Cross-subgraph entity defer is not subgraph-forwarded (Apollo-aligned).
+    // Entity follow-ups are not subgraph-forwarded.
     expect(kitchenQueries.some((body) => body.includes('@defer'))).toBe(false);
     expect(mergeIncrementalResults(values)).toEqual({
       data: {
