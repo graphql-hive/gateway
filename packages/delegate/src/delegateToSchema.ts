@@ -450,14 +450,20 @@ async function* transformDeferredChunks<
             { ...patch.data },
           );
           // Structural unwrap transforms (HoistField / MapFields) key off
-          // __typename on the delegated field object.
-          if (
-            tree[fieldName] != null &&
-            typeof tree[fieldName] === 'object' &&
-            tree[fieldName]['__typename'] == null &&
-            initialValue['__typename'] != null
-          ) {
-            tree[fieldName]['__typename'] = initialValue['__typename'];
+          // __typename. Prefer the source type name HoistField was built with;
+          // the gateway-facing initialValue may already carry a renamed type
+          // (e.g. Shop_Product) that would skip unwrap.
+          if (tree[fieldName] != null && typeof tree[fieldName] === 'object') {
+            const typename = resolvePatchTypename(
+              delegationContext,
+              initialValue,
+            );
+            if (
+              typename != null &&
+              tree[fieldName]['__typename'] == null
+            ) {
+              tree[fieldName]['__typename'] = typename;
+            }
           }
 
           try {
@@ -528,6 +534,36 @@ async function* transformDeferredChunks<
       yield { hasNext: false };
     }
   }
+}
+
+/**
+ * Pick a __typename that HoistField / MapFields unwrap transformers recognize.
+ * Fall back to the already-transformed initial value's typename.
+ */
+function resolvePatchTypename<TContext extends Record<string, any>>(
+  delegationContext: DelegationContext<TContext>,
+  initialValue: Record<string, any>,
+): string | undefined {
+  const transforms =
+    delegationContext.transforms ??
+    delegationContext.subschemaConfig?.transforms ??
+    [];
+  for (const transform of transforms) {
+    const hoist = transform as {
+      typeName?: string;
+      newFieldName?: string;
+      pathToField?: unknown;
+    };
+    if (
+      typeof hoist.typeName === 'string' &&
+      typeof hoist.newFieldName === 'string' &&
+      Array.isArray(hoist.pathToField)
+    ) {
+      return hoist.typeName;
+    }
+  }
+  const fromInitial = initialValue['__typename'];
+  return typeof fromInitial === 'string' ? fromInitial : undefined;
 }
 
 function setObjectKeyPath(

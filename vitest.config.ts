@@ -70,6 +70,7 @@ export default defineConfig({
                   '!**/e2e/extra-fields', // has additional typedefs
                   '!**/e2e/federation-mixed', // has transforms
                   '!**/e2e/hoist-and-prefix-transform', // has transforms
+                  '!**/e2e/defer-transforms', // has transforms + subgraph defer forward
                   '!**/e2e/interface-additional-resolvers', // has additional resolvers
                   '!**/e2e/naming-convention-additional-typedefs', // has additional typedefs and transforms
                   '!**/e2e/openapi-additional-resolvers', // has additional resolvers
