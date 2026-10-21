@@ -80,6 +80,82 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
     ).toBe(true);
   });
 
+  it('streams nested list fields from a defer-capable subgraph', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Object {
+          test: [String]
+        }
+        type Query {
+          object: Object
+        }
+      `,
+      resolvers: {
+        Query: { object: () => ({}) },
+        Object: {
+          test: async function* () {
+            yield 'test1';
+            await setTimeout(40);
+            yield 'test2';
+            await setTimeout(40);
+            yield 'test3';
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: executorFromSchema(schema),
+        },
+      ],
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        query {
+          object {
+            test @stream(initialCount: 1)
+          }
+        }
+      `),
+    });
+
+    expect(isAsyncIterable(result)).toBe(true);
+    const values: unknown[] = [];
+    for await (const v of result as AsyncIterable<unknown>) {
+      values.push(v);
+    }
+
+    expect(values[0]).toMatchObject({
+      data: { object: { test: ['test1'] } },
+      hasNext: true,
+    });
+
+    const merged: string[] = [];
+    for (const value of values) {
+      const v = value as {
+        data?: { object?: { test?: string[] } };
+        incremental?: Array<{ items?: string[]; path?: Array<string | number> }>;
+      };
+      if (v.data?.object?.test) {
+        for (const item of v.data.object.test) {
+          if (!merged.includes(item)) merged.push(item);
+        }
+      }
+      if (v.incremental) {
+        for (const patch of v.incremental) {
+          if (patch.items) merged.push(...patch.items);
+        }
+      }
+    }
+    expect(merged).toEqual(['test1', 'test2', 'test3']);
+  });
+
   it('falls back to gateway-owned defer when defer is not set', async () => {
     const schema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `

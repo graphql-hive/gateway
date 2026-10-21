@@ -65,6 +65,21 @@ function isMissingFieldValue(
   );
 }
 
+function fieldHasStreamDirective(info: GraphQLResolveInfo): boolean {
+  for (const fieldNode of info.fieldNodes) {
+    const directives = fieldNode.directives;
+    if (directives == null) {
+      continue;
+    }
+    for (let i = 0; i < directives.length; i++) {
+      if (directives[i]!.name.value === 'stream') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * Resolver that knows how to:
  * a) handle aliases for proxied schemas
@@ -89,6 +104,14 @@ export function defaultMergedResolver(
   // See https://github.com/ardatan/graphql-tools/issues/967
   if (!isExternalObject(parent)) {
     return defaultFieldResolver(parent, args, context, info);
+  }
+
+  // Nested @stream under a defer-capable subgraph: yield items as
+  // IncrementalReceiver fills list indices (initial payload may only have
+  // initialCount entries while hasNext is still true).
+  const streamReceiver = getReceiver(parent);
+  if (streamReceiver && fieldHasStreamDirective(info)) {
+    return streamReceiver.streamList(info);
   }
 
   // If the parent is satisfied for the left over after a nested delegation, try to resolve it

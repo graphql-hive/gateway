@@ -209,10 +209,47 @@ describe('Defer/Stream within stitching', () => {
       });
     });
 
-    // Original graphql-tools#1941 also covered nested proxied @stream. Root
-    // @stream works above; nested proxied @stream still needs a stream
-    // Receiver path (list patches under a non-list delegated field) and is
-    // tracked separately from the @defer work in this PR.
+    it('streams nested proxied list fields (graphql-tools#1941)', async () => {
+      // Gateway-owned: nested @stream is stripped from the subgraph request so
+      // the full list resolves in one shot and graphql-js streams locally.
+      const nestedSchema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Object {
+            test: [String]
+          }
+          type Query {
+            object: Object
+          }
+        `,
+        resolvers: {
+          Object: {
+            test: () => ['test1', 'test2'],
+          },
+          Query: {
+            object: () => ({}),
+          },
+        },
+      });
+      const nestedGateway = stitchSchemas({ subschemas: [nestedSchema] });
+      const result = await normalizedExecutor({
+        schema: nestedGateway,
+        document: parse(/* GraphQL */ `
+          query {
+            object {
+              test @stream(initialCount: 1)
+            }
+          }
+        `),
+      });
+      const { values } = await collectIncremental(result);
+      expect(values[0]).toMatchObject({
+        data: { object: { test: ['test1'] } },
+        hasNext: true,
+      });
+      expect(mergeIncrementalResults(values)).toEqual({
+        data: { object: { test: ['test1', 'test2'] } },
+      });
+    });
   });
 
   describe('merged deferred patches from multiple subschemas', () => {

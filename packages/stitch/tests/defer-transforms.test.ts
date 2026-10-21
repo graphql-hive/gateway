@@ -1289,9 +1289,81 @@ describe('TransformQuery + batch-delegate with @defer', () => {
     });
   });
 
+  it('forwarded: TransformQuery with identity result still streams deferred fields', async () => {
+    // TransformQuery that only adjusts the selection (adds __typename) and keeps
+    // the result shape. Patch paths stay aligned — unlike resultTransformer that
+    // unwraps nesting (still unsupported; same open item as graphql-tools#1941).
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Something {
+          fastField: String!
+          slowField: String
+        }
+        type Query {
+          something: Something
+        }
+      `,
+      resolvers: {
+        Query: { something: () => ({}) },
+        Something: {
+          fastField: () => 'fast',
+          slowField: async () => {
+            await setTimeout(80);
+            return 'slow';
+          },
+        },
+      },
+    });
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: executorFromSchema(schema),
+          transforms: [
+            new TransformQuery({
+              path: ['something'],
+              queryTransformer: (selectionSet) => ({
+                kind: Kind.SELECTION_SET,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: '__typename' },
+                  },
+                  ...selectionSet.selections,
+                ],
+              }),
+            }),
+          ],
+        },
+      ],
+    });
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        query {
+          something {
+            fastField
+            ... @defer {
+              slowField
+            }
+          }
+        }
+      `),
+    });
+    const { values, timings } = await collectAll(result);
+    expect(values[0]).toMatchObject({
+      data: { something: { fastField: 'fast' } },
+      hasNext: true,
+    });
+    expect(timings[0]!).toBeLessThan(60);
+    expect(mergeIncrementalResults(values).data).toMatchObject({
+      something: { fastField: 'fast', slowField: 'slow' },
+    });
+  });
+
   // TransformQuery + subgraph-forwarded @defer still needs patch-path rewriting
   // when resultTransformer unwraps nesting (same open item as graphql-tools#1941).
-  // Gateway-owned coverage above is the supported path for TransformQuery+defer.
 });
 
 describe('transforms with @defer (subgraph-forwarded) - root renames', () => {

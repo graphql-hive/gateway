@@ -125,6 +125,55 @@ export class IncrementalReceiver {
   request(info: GraphQLResolveInfo): Promise<any> {
     const fullPath = responsePathAsArray(info.path);
     const relPath = fullPath.slice(this.initialPathLength);
+    return this.waitForPath(relPath);
+  }
+
+  /**
+   * Yield list items as they arrive from subgraph `@stream` patches.
+   * Used when a nested list is streamed under a non-list delegated field
+   * (return type is an object, so delegateToSchema cannot use the root-list
+   * AsyncIterable path).
+   */
+  async *streamList(info: GraphQLResolveInfo): AsyncGenerator<any> {
+    const fullPath = responsePathAsArray(info.path);
+    const relPath = fullPath.slice(this.initialPathLength);
+    let index = 0;
+
+    while (true) {
+      const itemPath = appendPath(relPath, index);
+      if (hasDefinedValue(this.rootObject, itemPath)) {
+        yield getAtPath(this.rootObject, itemPath);
+        index++;
+        continue;
+      }
+
+      if (this.finished) {
+        // Drain any remaining defined slots that arrived with the last chunk.
+        const list = getAtPath(this.rootObject, relPath);
+        if (Array.isArray(list)) {
+          while (index < list.length) {
+            if (list[index] !== undefined) {
+              yield list[index];
+            }
+            index++;
+          }
+        }
+        return;
+      }
+
+      const value = await this.waitForPath(itemPath);
+      if (value === undefined) {
+        if (this.finished) {
+          return;
+        }
+        continue;
+      }
+      yield value;
+      index++;
+    }
+  }
+
+  private waitForPath(relPath: ReadonlyArray<string | number>): Promise<any> {
     const key = pathKey(relPath);
 
     // Own-properties set to `undefined` (visitResult placeholders) are still
@@ -157,12 +206,31 @@ export class IncrementalReceiver {
     if (patch.items != null) {
       const listPath = relPath.slice(0, -1);
       const index = relPath[relPath.length - 1];
-      const parent = getAtPath(this.rootObject, listPath);
-      if (Array.isArray(parent) && typeof index === 'number') {
-        for (let i = 0; i < patch.items.length; i++) {
-          parent[index + i] = patch.items[i];
-          this.notify(pathKey(listPath, index + i), patch.items[i]);
+      if (typeof index !== 'number') {
+        return;
+      }
+      let parent = getAtPath(this.rootObject, listPath);
+      if (!Array.isArray(parent)) {
+        // Ensure the list exists so nested @stream patches can land before
+        // the initial payload materialised an array at this path.
+        parent = [];
+        if (listPath.length === 0) {
+          // Should not happen for nested streams under an object field.
+          return;
         }
+        let cursor: any = this.rootObject;
+        for (let i = 0; i < listPath.length - 1; i++) {
+          const segment = listPath[i]!;
+          if (cursor[segment] == null || typeof cursor[segment] !== 'object') {
+            cursor[segment] = typeof listPath[i + 1] === 'number' ? [] : {};
+          }
+          cursor = cursor[segment];
+        }
+        cursor[listPath[listPath.length - 1]!] = parent;
+      }
+      for (let i = 0; i < patch.items.length; i++) {
+        parent[index + i] = patch.items[i];
+        this.notify(pathKey(listPath, index + i), patch.items[i]);
       }
       return;
     }

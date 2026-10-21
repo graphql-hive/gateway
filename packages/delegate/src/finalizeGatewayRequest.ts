@@ -1102,6 +1102,24 @@ function filterSelectionSet(
               return null;
             }
           }
+
+          // Gateway-owned nested @stream: strip so the subgraph returns the
+          // full list and graphql-js streams locally. Root-field @stream is
+          // kept so delegateToSchema's list AsyncIterable path can flush
+          // early (same split as @defer omit vs forward).
+          // Original graphql-tools#1941 covered nested proxied @stream this way.
+          if (
+            !forwardDefer &&
+            hasStreamDirective(node.directives) &&
+            !isOperationRootType(typeInfo.getParentType(), schema)
+          ) {
+            return {
+              ...node,
+              directives: node.directives?.filter(
+                (directive) => directive.name.value !== 'stream',
+              ),
+            };
+          }
           return undefined;
         },
       },
@@ -1306,6 +1324,34 @@ function hasDeferDirective(
     }
   }
   return false;
+}
+
+function hasStreamDirective(
+  directives: ReadonlyArray<DirectiveNode> | undefined,
+): boolean {
+  if (directives == null) {
+    return false;
+  }
+  for (let i = 0; i < directives.length; i++) {
+    if (directives[i]!.name.value === 'stream') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isOperationRootType(
+  parentType: GraphQLNamedType | null | undefined,
+  schema: GraphQLSchema,
+): boolean {
+  if (parentType == null) {
+    return false;
+  }
+  return (
+    parentType === schema.getQueryType() ||
+    parentType === schema.getMutationType() ||
+    parentType === schema.getSubscriptionType()
+  );
 }
 
 function shouldForwardDefer(

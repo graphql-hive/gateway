@@ -69,3 +69,65 @@ it('streams a [String!]! scalar list via @stream over a federated subgraph', asy
     alphabet: ['a', 'b', 'c', 'd', 'e'],
   });
 });
+
+it('streams a nested list via @stream under a proxied object field', async () => {
+  const alphabetSvc = await service('alphabet');
+  const { port } = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [alphabetSvc],
+    },
+  });
+
+  const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      accept: 'multipart/mixed',
+    },
+    body: JSON.stringify({
+      query: /* GraphQL */ `
+        query {
+          boxedAlphabet {
+            letters @stream(initialCount: 1)
+          }
+        }
+      `,
+    }),
+  });
+
+  expect(res.ok).toBe(true);
+  expect(res.headers.get('content-type')).toContain('multipart/mixed');
+
+  const parts = await meros<ExecutionResult>(res);
+  if (!('next' in parts)) {
+    throw new Error('Expected an async iterable of multipart parts');
+  }
+
+  const letters: string[] = [];
+  for await (const part of parts) {
+    if (!part.json) continue;
+    const payload = part.body as ExecutionResult & {
+      incremental?: { items?: string[]; path?: (string | number)[] }[];
+    };
+
+    const initial = (
+      payload.data as { boxedAlphabet?: { letters?: string[] } } | null
+    )?.boxedAlphabet?.letters;
+    if (initial) {
+      letters.push(...initial);
+    }
+    if (payload.incremental) {
+      for (const chunk of payload.incremental) {
+        if (chunk.items) {
+          letters.push(...chunk.items);
+        }
+      }
+    }
+    if (payload.errors) {
+      throw new Error(JSON.stringify(payload.errors));
+    }
+  }
+
+  expect(letters).toEqual(['a', 'b', 'c']);
+});
