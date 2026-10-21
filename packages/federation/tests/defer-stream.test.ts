@@ -557,6 +557,90 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
       },
     });
   });
+
+  it('entity-level @defer stays gateway-owned even when the owning subgraph has defer: true', async () => {
+    // Apollo Router defers entity fields via follow-up `_entities` queries, not
+    // by forwarding `@defer` into those entity selections. Type-merge plans
+    // collect FieldNodes only, so kitchen still sees a plain `_entities` query.
+    // `defer: true` must not break that Apollo-compatible flush path.
+    const kitchenQueries: string[] = [];
+    const forwardedSchema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl: await composeLocalSchemasWithApollo([
+        { name: 'menus', schema: menusSubgraph },
+        { name: 'kitchen', schema: kitchenSubgraph },
+      ]),
+      onSubschemaConfig(subschemaConfig) {
+        const isKitchen =
+          subschemaConfig.name.toLowerCase() === 'kitchen';
+        const server = isKitchen ? kitchenServer : menusServer;
+        const fetchImpl = server.fetch.bind(server);
+        subschemaConfig.executor = buildHTTPExecutor({
+          endpoint: 'http://localhost:4003/graphql',
+          fetch: async (url, init) => {
+            if (isKitchen && typeof init?.body === 'string') {
+              kitchenQueries.push(init.body);
+            }
+            return fetchImpl(url as string, init);
+          },
+        });
+        if (isKitchen) {
+          subschemaConfig.defer = true;
+        }
+      },
+    });
+
+    const start = Date.now();
+    const result = await normalizedExecutor({
+      schema: forwardedSchema,
+      document: parse(/* GraphQL */ `
+        query {
+          menuItems {
+            id
+            name
+            ... on MenuItem @defer(label: "prep") {
+              prepSequence {
+                id
+              }
+            }
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(result);
+    const values: ExecutionResult[] = [];
+    let initialPayload: ExecutionResult | undefined;
+    for await (const value of result) {
+      if (!initialPayload) {
+        initialPayload = value;
+        expect(Date.now() - start).toBeLessThan(slowSubgraphDelayMs);
+      }
+      values.push(value);
+    }
+    expect(initialPayload).toMatchObject({
+      data: {
+        menuItems: [
+          { id: '1', name: 'Item 1' },
+          { id: '2', name: 'Item 2' },
+        ],
+      },
+      hasNext: true,
+    });
+    expect(kitchenQueries.length).toBeGreaterThan(0);
+    expect(
+      kitchenQueries.some((body) => body.includes('prepSequence')),
+      `expected kitchen _entities to request prepSequence, got:\n${kitchenQueries.join('\n')}`,
+    ).toBe(true);
+    // Cross-subgraph entity defer is not subgraph-forwarded (Apollo-aligned).
+    expect(kitchenQueries.some((body) => body.includes('@defer'))).toBe(false);
+    expect(mergeIncrementalResults(values)).toEqual({
+      data: {
+        menuItems: [
+          { id: '1', name: 'Item 1', prepSequence: { id: 'seq-p1' } },
+          { id: '2', name: 'Item 2', prepSequence: { id: 'seq-p2' } },
+        ],
+      },
+    });
+  });
 });
 
 describe('Defer/Stream - scalar streaming via HTTP', () => {

@@ -1,4 +1,7 @@
-import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  fakePromise,
+} from '@whatwg-node/promise-helpers';
 import { ExecutionResult } from '@graphql-tools/utils';
 import {
   GraphQLError,
@@ -64,9 +67,9 @@ export class IncrementalReceiver {
    * into the attached external object and resolving any waiters.
    */
   start(iterable: AsyncIterable<ExecutionResult>): void {
-    // Floating on purpose: patches resolve waiters; finish() runs in finally.
+    // Floating on purpose: patches resolve waiters; finish()/fail() end consume.
     void this.consume(iterable).catch(() => {
-      // consume already handles AbortError; this guards against races.
+      // consume already handles AbortError / fail; this guards against races.
     });
   }
 
@@ -117,15 +120,42 @@ export class IncrementalReceiver {
           break;
         }
       }
+      this.finish();
     } catch (err) {
       // Operation abort / upstream cancel is expected while patches are still
-      // streaming; do not surface as an unhandled rejection.
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        // Non-abort failures still release waiters in finally.
+      // streaming; release waiters without surfacing. Other failures reject
+      // pending field waiters so resolvers can report the error.
+      if ((err as { name?: string })?.name === 'AbortError') {
+        this.finish();
+        return;
       }
-    } finally {
-      this.finish();
+      this.fail(err);
     }
+  }
+
+  /**
+   * End the stream and resolve remaining waiters with `err` as a field value
+   * (GraphQL-tools Error-as-value pattern — not Promise rejection).
+   */
+  private fail(err: unknown): void {
+    if (this.finished) {
+      return;
+    }
+    this.finished = true;
+    const error =
+      err instanceof Error
+        ? err
+        : new GraphQLError(err == null ? 'Incremental stream failed' : String(err));
+    for (const waiters of this.waiters.values()) {
+      for (const waiter of waiters) {
+        waiter.resolve(error);
+      }
+    }
+    this.waiters.clear();
+    for (const { deferred } of this.fieldWaiters) {
+      deferred.resolve(error);
+    }
+    this.fieldWaiters.length = 0;
   }
 
   /**
@@ -151,7 +181,7 @@ export class IncrementalReceiver {
         parent[responseKey] !== undefined) ||
       this.finished
     ) {
-      return Promise.resolve(parent[responseKey]);
+      return fakePromise(parent[responseKey]);
     }
     const deferred = createDeferredPromise<any>();
     this.fieldWaiters.push({ parent, key: responseKey, deferred });
@@ -209,7 +239,7 @@ export class IncrementalReceiver {
     // Own-properties set to `undefined` (visitResult placeholders) are still
     // missing - wait for a real patch value.
     if (hasDefinedValue(this.rootObject, relPath) || this.finished) {
-      return Promise.resolve(getAtPath(this.rootObject, relPath));
+      return fakePromise(getAtPath(this.rootObject, relPath));
     }
 
     const deferred = createDeferredPromise<any>();

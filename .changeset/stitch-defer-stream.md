@@ -13,17 +13,15 @@ Support `@defer` / `@stream` incremental delivery within schema stitching.
 
 **Gateway-owned `@defer` (default):** deferred selections are omitted from subgraph requests (only `@requires` / key dependencies are kept), so nested `@defer` can flush before slow fields resolve. Missing fields are filled later via type-merging or source resolvers.
 
-**Subgraph-forwarded `@defer`:** set `defer: true` on a `SubschemaConfig` (or `defer: true` on `getStitchedSchemaFromSupergraphSdl`) to forward `@defer` to that subgraph and merge incremental patches via `IncrementalReceiver`. With `batch: true`, batched sub-requests are wrapped in `@defer` so a defer-capable executor can deliver fast siblings without waiting for the slowest (see `batchingOptions.defer`).
+**Subgraph-forwarded `@defer`:** set `defer: true` on a `SubschemaConfig` (or `defer: true` on `getStitchedSchemaFromSupergraphSdl`) to forward `@defer` to that subgraph and merge incremental patches via `IncrementalReceiver`. With `batch: true` and `batchingOptions.defer` (or `subschema.defer`), multi-request batches wrap each root selection in `@defer` for subgraph compatibility; results are still collected before DataLoader waiters resolve. Single-request batches pass the AsyncIterable through so the initial payload can flush before deferred patches arrive.
 
 **Hive Gateway config:** extend `deferStream` instead of a separate flag:
 
 ```ts
 deferStream: true // client-facing only (gateway-owned omit)
-deferStream: { subgraph: true } // also forward @defer to all subgraphs
+deferStream: { subgraph: true } // also forward @defer to every subgraph
 deferStream: { subgraph: { users: true, '*': false } } // per-subgraph
 ```
-
-Single-request batching no longer drains incremental AsyncIterables into one result, so forwarded `@defer` can flush the initial payload before deferred patches arrive.
 
 `@graphql-tools/executor-http` adds `mergeIncremental` (default `true`: legacy growing snapshots). Set `mergeIncremental: false` to yield raw multipart parts like the default schema executor. Hive Gateway's `@graphql-mesh/transport-http` always uses passthrough (`mergeIncremental: false`).
 

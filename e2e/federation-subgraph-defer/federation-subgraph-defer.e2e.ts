@@ -53,14 +53,22 @@ it('forwards @defer to a subgraph and flushes before the slow field', async () =
     throw new Error('Expected an async iterable of multipart parts');
   }
 
-  const payloads: Array<ExecutionResult & { hasNext?: boolean }> = [];
+  type IncrementalPayload = ExecutionResult & {
+    hasNext?: boolean;
+    incremental?: Array<{
+      path?: Array<string | number>;
+      label?: string;
+      data?: Record<string, unknown>;
+    }>;
+  };
+  const payloads: IncrementalPayload[] = [];
   let firstPartAt = 0;
   for await (const part of parts) {
     if (!part.json) continue;
     if (payloads.length === 0) {
       firstPartAt = Date.now() - t0;
     }
-    payloads.push(part.body as ExecutionResult & { hasNext?: boolean });
+    payloads.push(part.body as IncrementalPayload);
   }
 
   // Incremental client response
@@ -74,8 +82,25 @@ it('forwards @defer to a subgraph and flushes before the slow field', async () =
       ?.description,
   ).toBeUndefined();
 
-  const merged = JSON.stringify(payloads);
-  expect(merged).toContain('A carefully deferred product description');
+  const descriptionPatch = payloads
+    .flatMap((p) => p.incremental ?? [])
+    .find(
+      (inc) =>
+        inc.label === 'description' ||
+        inc.data?.description != null ||
+        (Array.isArray(inc.path) &&
+          inc.path.join('.') === 'product' &&
+          inc.data != null),
+    );
+  expect(descriptionPatch).toBeDefined();
+  expect(descriptionPatch?.path).toEqual(['product']);
+  expect(
+    descriptionPatch?.label === 'description' ||
+      descriptionPatch?.data?.description != null,
+  ).toBe(true);
+  expect(JSON.stringify(payloads)).toContain(
+    'A carefully deferred product description',
+  );
 
   // Proof of forward (not gateway-owned omit): upstream saw @defer
   const recorded = await fetch(

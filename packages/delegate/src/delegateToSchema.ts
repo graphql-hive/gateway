@@ -458,9 +458,20 @@ async function* transformDeferredChunks<
     if (result?.incremental?.length) {
       for (const patch of result.incremental) {
         if (patch.items != null) {
-          // @stream list items - pass through; item transforms are uncommon.
+          // @stream list items: rewrite paths (TransformQuery unwrap) then
+          // pass items through. Per-item result transforms are uncommon for
+          // scalar streams; object-list items keep subgraph field shapes.
+          const rewrittenPath =
+            patch.path?.length != null
+              ? applyErrorPathTransformers(
+                  patch.path as Array<string | number>,
+                  delegationContext,
+                )
+              : null;
           yield {
-            incremental: [patch],
+            incremental: [
+              rewrittenPath != null ? { ...patch, path: rewrittenPath } : patch,
+            ],
             hasNext: result.hasNext,
           };
           continue;
@@ -511,7 +522,7 @@ async function* transformDeferredChunks<
           }
 
           try {
-            const transformedValue = transformer.transformResult({
+            const transformedValue = await transformer.transformResult({
               data: tree,
               errors: patch.errors,
             });
@@ -553,14 +564,25 @@ async function* transformDeferredChunks<
         }
 
         // Error-only or empty data patches
+        const rewrittenErrorPath =
+          patch.path?.length != null
+            ? applyErrorPathTransformers(
+                patch.path as Array<string | number>,
+                delegationContext,
+              )
+            : null;
         yield {
-          incremental: [patch],
+          incremental: [
+            rewrittenErrorPath != null
+              ? { ...patch, path: rewrittenErrorPath }
+              : patch,
+          ],
           hasNext: result.hasNext,
         };
       }
     } else if (result?.data) {
       try {
-        const transformedValue = transformer.transformResult(result);
+        const transformedValue = await transformer.transformResult(result);
         if (
           transformedValue != null &&
           typeof transformedValue === 'object' &&

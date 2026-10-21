@@ -1479,6 +1479,13 @@ function collectDeferredDependencySelections(
         // before local resolution (gateway-owned incremental delivery).
       } else if (node.kind === Kind.INLINE_FRAGMENT && node.selectionSet) {
         walk(node.selectionSet.selections);
+      } else if (node.kind === Kind.FRAGMENT_SPREAD) {
+        // Nested named spreads inside a deferred selection must contribute
+        // the same @requires / key dependencies as inline fragments.
+        const fragDef = delegationContext.info?.fragments?.[node.name.value];
+        if (fragDef?.selectionSet?.selections) {
+          walk(fragDef.selectionSet.selections);
+        }
       }
     }
   }

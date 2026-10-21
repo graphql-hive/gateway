@@ -156,4 +156,89 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
     expect(merged).toEqual(['test1', 'test2', 'test3']);
   });
 
+  it('streams nested object list items from a defer-capable subgraph', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Item {
+          id: ID!
+          label: String!
+        }
+        type Box {
+          items: [Item!]!
+        }
+        type Query {
+          box: Box
+        }
+      `,
+      resolvers: {
+        Query: { box: () => ({}) },
+        Box: {
+          items: async function* () {
+            yield { id: '1', label: 'one' };
+            await setTimeout(30);
+            yield { id: '2', label: 'two' };
+            await setTimeout(30);
+            yield { id: '3', label: 'three' };
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: executorFromSchema(schema),
+        },
+      ],
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        query {
+          box {
+            items @stream(initialCount: 1) {
+              id
+              label
+            }
+          }
+        }
+      `),
+    });
+
+    expect(isAsyncIterable(result)).toBe(true);
+    const values: Array<{
+      data?: { box?: { items?: Array<{ id: string; label: string }> } };
+      incremental?: Array<{
+        items?: Array<{ id: string; label: string }>;
+        path?: Array<string | number>;
+      }>;
+    }> = [];
+    for await (const v of result as AsyncIterable<(typeof values)[number]>) {
+      values.push(v);
+    }
+
+    expect(values[0]).toMatchObject({
+      data: { box: { items: [{ id: '1', label: 'one' }] } },
+      hasNext: true,
+    });
+
+    const merged: Array<{ id: string; label: string }> = [
+      ...(values[0]?.data?.box?.items ?? []),
+    ];
+    for (const value of values.slice(1)) {
+      for (const patch of value.incremental ?? []) {
+        if (patch.items) merged.push(...patch.items);
+        expect(patch.path?.[0]).toBe('box');
+        expect(patch.path?.[1]).toBe('items');
+      }
+    }
+    expect(merged).toEqual([
+      { id: '1', label: 'one' },
+      { id: '2', label: 'two' },
+      { id: '3', label: 'three' },
+    ]);
+  });
 });
