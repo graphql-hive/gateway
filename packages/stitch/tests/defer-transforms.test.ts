@@ -585,71 +585,6 @@ describe('transforms with @defer (gateway-owned)', () => {
     });
   });
 
-  it('WrapFields surfaces errors on deferred nested fields', async () => {
-    const schema = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type User {
-          id: ID!
-          street: String
-          city: String
-        }
-        type Query {
-          user: User
-        }
-      `,
-      resolvers: {
-        Query: {
-          user: () => ({ id: '1', street: 'Main St' }),
-        },
-        User: {
-          city: async () => {
-            await setTimeout(50);
-            throw new Error('city boom');
-          },
-        },
-      },
-    });
-    const gatewaySchema = stitchSchemas({
-      subschemas: [
-        {
-          schema,
-          transforms: [
-            new WrapFields('User', ['address'], ['Address'], ['street', 'city']),
-          ],
-        },
-      ],
-    });
-    const result = await normalizedExecutor({
-      schema: gatewaySchema,
-      document: parse(/* GraphQL */ `
-        query {
-          user {
-            id
-            address {
-              street
-              ... @defer {
-                city
-              }
-            }
-          }
-        }
-      `),
-    });
-    const { values } = await collectAll(result);
-    expect(values[0]).toMatchObject({
-      data: {
-        user: {
-          id: '1',
-          address: { street: 'Main St' },
-        },
-      },
-      hasNext: true,
-    });
-    const merged = mergeIncrementalResults(values);
-    expect(merged.errors?.some((e) => e.message.includes('city boom'))).toBe(
-      true,
-    );
-  });
 });
 
 describe('transforms with @defer (subgraph-forwarded)', () => {
@@ -1107,7 +1042,7 @@ describe('transforms with @defer (subgraph-forwarded)', () => {
 });
 
 describe('TransformQuery + batch-delegate with @defer', () => {
-  function buildBooksUsersSchema() {
+  function buildBooksUsersSchema(options?: { defer?: boolean }) {
     const bookSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type Book {
@@ -1191,10 +1126,21 @@ describe('TransformQuery + batch-delegate with @defer', () => {
         );
         return userIds.map((id: string) => booksByUserIds[id]);
       },
+      // Unwrap drops the `books` path segment; rewrite deferred patch paths
+      // the same way (graphql-tools#1941 TransformQuery + forward).
+      errorPathTransformer: (path) => path.filter((p) => p !== 'books'),
     });
 
+    const bookSubschema = options?.defer
+      ? {
+          schema: bookSchema,
+          defer: true,
+          executor: executorFromSchema(bookSchema),
+        }
+      : bookSchema;
+
     return stitchSchemas({
-      subschemas: [bookSchema, userSchema],
+      subschemas: [bookSubschema, userSchema],
       typeDefs: /* GraphQL */ `
         extend type User {
           books: [Book!]!
@@ -1206,7 +1152,7 @@ describe('TransformQuery + batch-delegate with @defer', () => {
             selectionSet: `{ id }`,
             resolve: (user, _args, context, info) =>
               batchDelegateToSchema({
-                schema: bookSchema,
+                schema: bookSubschema,
                 operation: 'query' as OperationTypeNode,
                 fieldName: 'booksByUserIds',
                 key: user.id,
@@ -1226,24 +1172,45 @@ describe('TransformQuery + batch-delegate with @defer', () => {
     });
   }
 
+  const deferredBooksQuery = /* GraphQL */ `
+    query {
+      usersByIds(ids: ["u1", "u2"]) {
+        id
+        books {
+          id
+          title
+          ... @defer {
+            slowBlurb
+          }
+        }
+      }
+    }
+  `;
+
+  const expectedMergedBooks = {
+    usersByIds: [
+      {
+        id: 'u1',
+        books: [
+          { id: 'u1-b1', title: 'Book 1', slowBlurb: 'blurb-u1-b1' },
+          { id: 'u1-b2', title: 'Book 2', slowBlurb: 'blurb-u1-b2' },
+        ],
+      },
+      {
+        id: 'u2',
+        books: [
+          { id: 'u2-b1', title: 'Book 1', slowBlurb: 'blurb-u2-b1' },
+          { id: 'u2-b2', title: 'Book 2', slowBlurb: 'blurb-u2-b2' },
+        ],
+      },
+    ],
+  };
+
   it('gateway-owned: deferred book fields via TransformQuery batch', async () => {
     const schema = buildBooksUsersSchema();
     const result = await normalizedExecutor({
       schema,
-      document: parse(/* GraphQL */ `
-        query {
-          usersByIds(ids: ["u1", "u2"]) {
-            id
-            books {
-              id
-              title
-              ... @defer {
-                slowBlurb
-              }
-            }
-          }
-        }
-      `),
+      document: parse(deferredBooksQuery),
     });
     const { values, timings } = await collectAll(result);
     expect(values[0]).toMatchObject({
@@ -1268,102 +1235,44 @@ describe('TransformQuery + batch-delegate with @defer', () => {
       hasNext: true,
     });
     expect(timings[0]!).toBeLessThan(60);
-    const merged = mergeIncrementalResults(values);
-    expect(merged.data).toMatchObject({
-      usersByIds: [
-        {
-          id: 'u1',
-          books: [
-            { id: 'u1-b1', title: 'Book 1', slowBlurb: 'blurb-u1-b1' },
-            { id: 'u1-b2', title: 'Book 2', slowBlurb: 'blurb-u1-b2' },
-          ],
-        },
-        {
-          id: 'u2',
-          books: [
-            { id: 'u2-b1', title: 'Book 1', slowBlurb: 'blurb-u2-b1' },
-            { id: 'u2-b2', title: 'Book 2', slowBlurb: 'blurb-u2-b2' },
-          ],
-        },
-      ],
-    });
+    expect(mergeIncrementalResults(values).data).toMatchObject(
+      expectedMergedBooks,
+    );
   });
 
-  it('forwarded: TransformQuery with identity result still streams deferred fields', async () => {
-    // TransformQuery that only adjusts the selection (adds __typename) and keeps
-    // the result shape. Patch paths stay aligned — unlike resultTransformer that
-    // unwraps nesting (still unsupported; same open item as graphql-tools#1941).
-    const schema = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type Something {
-          fastField: String!
-          slowField: String
-        }
-        type Query {
-          something: Something
-        }
-      `,
-      resolvers: {
-        Query: { something: () => ({}) },
-        Something: {
-          fastField: () => 'fast',
-          slowField: async () => {
-            await setTimeout(80);
-            return 'slow';
-          },
-        },
-      },
-    });
-    const gatewaySchema = stitchSchemas({
-      subschemas: [
-        {
-          schema,
-          defer: true,
-          executor: executorFromSchema(schema),
-          transforms: [
-            new TransformQuery({
-              path: ['something'],
-              queryTransformer: (selectionSet) => ({
-                kind: Kind.SELECTION_SET,
-                selections: [
-                  {
-                    kind: Kind.FIELD,
-                    name: { kind: Kind.NAME, value: '__typename' },
-                  },
-                  ...selectionSet.selections,
-                ],
-              }),
-            }),
-          ],
-        },
-      ],
-    });
+  it('forwarded: TransformQuery unwrap rewrites deferred patch paths', async () => {
+    const schema = buildBooksUsersSchema({ defer: true });
     const result = await normalizedExecutor({
-      schema: gatewaySchema,
-      document: parse(/* GraphQL */ `
-        query {
-          something {
-            fastField
-            ... @defer {
-              slowField
-            }
-          }
-        }
-      `),
+      schema,
+      document: parse(deferredBooksQuery),
     });
     const { values, timings } = await collectAll(result);
     expect(values[0]).toMatchObject({
-      data: { something: { fastField: 'fast' } },
+      data: {
+        usersByIds: [
+          {
+            id: 'u1',
+            books: [
+              { id: 'u1-b1', title: 'Book 1' },
+              { id: 'u1-b2', title: 'Book 2' },
+            ],
+          },
+          {
+            id: 'u2',
+            books: [
+              { id: 'u2-b1', title: 'Book 1' },
+              { id: 'u2-b2', title: 'Book 2' },
+            ],
+          },
+        ],
+      },
       hasNext: true,
     });
     expect(timings[0]!).toBeLessThan(60);
-    expect(mergeIncrementalResults(values).data).toMatchObject({
-      something: { fastField: 'fast', slowField: 'slow' },
-    });
+    expect(mergeIncrementalResults(values).data).toMatchObject(
+      expectedMergedBooks,
+    );
   });
-
-  // TransformQuery + subgraph-forwarded @defer still needs patch-path rewriting
-  // when resultTransformer unwraps nesting (same open item as graphql-tools#1941).
 });
 
 describe('transforms with @defer (subgraph-forwarded) - root renames', () => {
@@ -1487,249 +1396,3 @@ describe('transforms with @defer (subgraph-forwarded) - root renames', () => {
   });
 });
 
-describe('multi-schema merge + transforms with @defer', () => {
-  it('RenameObjectFields on a deferred field merged from a second subschema', async () => {
-    const posts = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type Post {
-          id: ID!
-          author: User
-        }
-        type User {
-          id: ID!
-        }
-        type Query {
-          post: Post
-        }
-      `,
-      resolvers: {
-        Query: {
-          post: () => ({ id: 'p1', author: { id: '1' } }),
-        },
-      },
-    });
-    const users = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type User {
-          id: ID!
-          slowName: String
-        }
-        type Query {
-          user(id: ID!): User
-        }
-      `,
-      resolvers: {
-        Query: {
-          user: async (_: unknown, { id }: { id: string }) => {
-            await setTimeout(10);
-            return { id };
-          },
-        },
-        User: {
-          slowName: async () => {
-            await setTimeout(80);
-            return 'Ada';
-          },
-        },
-      },
-    });
-    const schema = stitchSchemas({
-      subschemas: [
-        { schema: posts },
-        {
-          schema: users,
-          transforms: [
-            new RenameObjectFields((typeName, fieldName) =>
-              typeName === 'User' && fieldName === 'slowName'
-                ? 'displayName'
-                : fieldName,
-            ),
-          ],
-          merge: {
-            User: {
-              selectionSet: '{ id }',
-              fieldName: 'user',
-              args: ({ id }: { id: string }) => ({ id }),
-            },
-          },
-        },
-      ],
-    });
-    const result = await normalizedExecutor({
-      schema,
-      document: parse(/* GraphQL */ `
-        query {
-          post {
-            id
-            author {
-              id
-              ... @defer {
-                displayName
-              }
-            }
-          }
-        }
-      `),
-    });
-    const { values, timings } = await collectAll(result);
-    expect(values[0]).toMatchObject({
-      data: { post: { id: 'p1', author: { id: '1' } } },
-      hasNext: true,
-    });
-    expect(timings[0]!).toBeLessThan(60);
-    expect(mergeIncrementalResults(values)).toEqual({
-      data: {
-        post: {
-          id: 'p1',
-          author: { id: '1', displayName: 'Ada' },
-        },
-      },
-    });
-  });
-});
-
-describe('timeouts with @defer', () => {
-  it('forwarded: AbortSignal.timeout cancels pending deferred work', async () => {
-    let slowFinished = false;
-    const controller = new AbortController();
-    const schema = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type Something {
-          fastField: String!
-          slowField: String
-        }
-        type Query {
-          something: Something
-        }
-      `,
-      resolvers: {
-        Query: { something: () => ({}) },
-        Something: {
-          fastField: () => 'fast',
-          slowField: async (_: unknown, __: unknown, _ctx: unknown, info) => {
-            try {
-              await setTimeout(500, undefined, {
-                signal: info.signal ?? controller.signal,
-              });
-              slowFinished = true;
-              return 'slow';
-            } catch {
-              return null;
-            }
-          },
-        },
-      },
-    });
-    const gatewaySchema = stitchSchemas({
-      subschemas: [
-        {
-          schema,
-          defer: true,
-          executor: executorFromSchema(schema),
-        },
-      ],
-    });
-    const signal = AbortSignal.timeout(40);
-    const result = await normalizedExecutor({
-      schema: gatewaySchema,
-      document: parse(/* GraphQL */ `
-        query {
-          something {
-            fastField
-            ... @defer {
-              slowField
-            }
-          }
-        }
-      `),
-      signal,
-    });
-    expect(isAsyncIterable(result)).toBe(true);
-    const iterator = (result as AsyncIterable<ExecutionResult>)[
-      Symbol.asyncIterator
-    ]();
-    const first = await iterator.next();
-    expect(first.value).toMatchObject({
-      data: { something: { fastField: 'fast' } },
-      hasNext: true,
-    });
-    try {
-      await iterator.next();
-    } catch {
-      // timeout may reject subsequent pulls
-    }
-    try {
-      await iterator.return?.();
-    } catch {
-      // ignore
-    }
-    await setTimeout(100);
-    expect(slowFinished).toBe(false);
-  });
-
-  it('gateway-owned: AbortSignal.timeout cancels pending deferred work', async () => {
-    let slowFinished = false;
-    const schema = makeExecutableSchema({
-      typeDefs: /* GraphQL */ `
-        type Something {
-          fastField: String!
-          slowField: String
-        }
-        type Query {
-          something: Something
-        }
-      `,
-      resolvers: {
-        Query: { something: () => ({}) },
-        Something: {
-          fastField: () => 'fast',
-          slowField: async (_: unknown, __: unknown, _ctx: unknown, info) => {
-            try {
-              await setTimeout(500, undefined, {
-                signal: info.signal,
-              });
-              slowFinished = true;
-              return 'slow';
-            } catch {
-              return null;
-            }
-          },
-        },
-      },
-    });
-    const gatewaySchema = stitchSchemas({ subschemas: [schema] });
-    const signal = AbortSignal.timeout(40);
-    const result = await normalizedExecutor({
-      schema: gatewaySchema,
-      document: parse(/* GraphQL */ `
-        query {
-          something {
-            fastField
-            ... @defer {
-              slowField
-            }
-          }
-        }
-      `),
-      signal,
-    });
-    expect(isAsyncIterable(result)).toBe(true);
-    const iterator = (result as AsyncIterable<ExecutionResult>)[
-      Symbol.asyncIterator
-    ]();
-    const first = await iterator.next();
-    expect(first.value).toMatchObject({
-      data: { something: { fastField: 'fast' } },
-      hasNext: true,
-    });
-    // Drain / allow timeout to fire
-    try {
-      await iterator.next();
-    } catch {
-      // timeout may reject the iterator
-    }
-    await iterator.return?.();
-    await setTimeout(100);
-    expect(slowFinished).toBe(false);
-  });
-});

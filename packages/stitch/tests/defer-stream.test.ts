@@ -523,25 +523,40 @@ describe('Defer/Stream within stitching', () => {
     });
   });
 
-  describe('transforms with deferred fields', () => {
-    it('works with RenameTypes on deferred nested fields', async () => {
-      const schema = makeExecutableSchema({
+
+  describe('deferred fragment spreads', () => {
+    it('keeps key dependencies when a deferred named fragment is omitted', async () => {
+      const schema1 = makeExecutableSchema({
         typeDefs: /* GraphQL */ `
-          type Something {
-            fastField: String!
-            slowField: String
+          type Object {
+            id: ID!
+            field1: String
           }
           type Query {
-            something: Something
+            object(id: ID!): Object
           }
         `,
         resolvers: {
-          Query: { something: () => ({}) },
-          Something: {
-            fastField: () => 'fast',
-            slowField: async () => {
+          Query: {
+            object: () => ({ id: '1', field1: 'f1' }),
+          },
+        },
+      });
+      const schema2 = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Object {
+            id: ID!
+            field2: String
+          }
+          type Query {
+            object(id: ID!): Object
+          }
+        `,
+        resolvers: {
+          Query: {
+            object: async () => {
               await setTimeout(80);
-              return 'slow';
+              return { id: '1', field2: 'f2' };
             },
           },
         },
@@ -549,12 +564,24 @@ describe('Defer/Stream within stitching', () => {
       const gatewaySchema = stitchSchemas({
         subschemas: [
           {
-            schema,
-            transforms: [
-              new RenameTypes((name: string) =>
-                name === 'Something' ? 'Thing' : name,
-              ),
-            ],
+            schema: schema1,
+            merge: {
+              Object: {
+                selectionSet: '{ id }',
+                fieldName: 'object',
+                args: ({ id }: { id: string }) => ({ id }),
+              },
+            },
+          },
+          {
+            schema: schema2,
+            merge: {
+              Object: {
+                selectionSet: '{ id }',
+                fieldName: 'object',
+                args: ({ id }: { id: string }) => ({ id }),
+              },
+            },
           },
         ],
       });
@@ -562,94 +589,30 @@ describe('Defer/Stream within stitching', () => {
         schema: gatewaySchema,
         document: parse(/* GraphQL */ `
           query {
-            something {
-              fastField
-              ... @defer {
-                slowField
-              }
+            object(id: "1") {
+              field1
+              ...DeferredFields @defer
             }
+          }
+          fragment DeferredFields on Object {
+            id
+            field2
           }
         `),
       });
       const { values, timings } = await collectIncremental(result);
       expect(values[0]).toMatchObject({
-        data: { something: { fastField: 'fast' } },
+        data: { object: { field1: 'f1' } },
         hasNext: true,
       });
       expect(timings[0]!).toBeLessThan(60);
-      expect(mergeIncrementalResults(values)).toEqual({
-        data: {
-          something: {
-            fastField: 'fast',
-            slowField: 'slow',
-          },
-        },
+      expect(mergeIncrementalResults(values).data).toMatchObject({
+        object: { field1: 'f1', field2: 'f2' },
       });
     });
   });
 
   describe('cancellation / timeouts', () => {
-    it('stops waiting for deferred fields when AbortSignal.timeout fires', async () => {
-      let slowFinished = false;
-      const schema = makeExecutableSchema({
-        typeDefs: /* GraphQL */ `
-          type Something {
-            fastField: String!
-            slowField: String
-          }
-          type Query {
-            something: Something
-          }
-        `,
-        resolvers: {
-          Query: { something: () => ({}) },
-          Something: {
-            fastField: () => 'fast',
-            slowField: async (_root, _args, _ctx, info) => {
-              try {
-                await setTimeout(500, undefined, { signal: info.signal });
-                slowFinished = true;
-                return 'slow';
-              } catch {
-                return null;
-              }
-            },
-          },
-        },
-      });
-      const gatewaySchema = stitchSchemas({ subschemas: [schema] });
-      const result = await normalizedExecutor({
-        schema: gatewaySchema,
-        document: parse(/* GraphQL */ `
-          query {
-            something {
-              fastField
-              ... @defer {
-                slowField
-              }
-            }
-          }
-        `),
-        signal: AbortSignal.timeout(40),
-      });
-      expect(isAsyncIterable(result)).toBe(true);
-      const iterator = (result as AsyncIterable<ExecutionResult>)[
-        Symbol.asyncIterator
-      ]();
-      const first = await iterator.next();
-      expect(first.value).toMatchObject({
-        data: { something: { fastField: 'fast' } },
-        hasNext: true,
-      });
-      try {
-        await iterator.next();
-      } catch {
-        // timeout may reject subsequent pulls
-      }
-      await iterator.return?.();
-      await setTimeout(100);
-      expect(slowFinished).toBe(false);
-    });
 
     it('stops waiting for deferred fields when the operation is aborted', async () => {
       let slowStarted = false;

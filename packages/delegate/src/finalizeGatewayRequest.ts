@@ -86,6 +86,7 @@ function finalizeGatewayDocument<TContext>(
       operation.selectionSet,
       onOverlappingAliases,
       delegationContext,
+      validFragments,
     );
 
     usedFragments = union(usedFragments, operationUsedFragments);
@@ -806,6 +807,7 @@ function collectFragmentVariables(
         fragment.selectionSet,
         onOverlappingAliases,
         delegationContext,
+        validFragments,
       );
       remainingFragments = union(remainingFragments, fragmentUsedFragments);
       usedVariables = union(usedVariables, fragmentUsedVariables);
@@ -866,6 +868,7 @@ function finalizeSelectionSet(
   selectionSet: SelectionSetNode,
   onOverlappingAliases: () => void,
   delegationContext: DelegationContext<any>,
+  fragmentDefinitions?: ReadonlyArray<FragmentDefinitionNode>,
 ) {
   const usedFragments: Array<string> = [];
   const usedVariables: Array<string> = [];
@@ -884,6 +887,7 @@ function finalizeSelectionSet(
     seenNonNullableMap,
     seenNullableMap,
     delegationContext,
+    fragmentDefinitions,
   );
 
   visit(
@@ -916,6 +920,7 @@ function filterSelectionSet(
   seenNonNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
   seenNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
   delegationContext: DelegationContext<any>,
+  fragmentDefinitions?: ReadonlyArray<FragmentDefinitionNode>,
 ) {
   // Deferred inline fragments are rewritten on leave. Their child fields that
   // are absent from this subschema are stripped during the field enter visit,
@@ -925,6 +930,13 @@ function filterSelectionSet(
   const deferredDependencyStack: Array<SelectionNode[] | null> = [];
   // Cached once - visited once per selection node otherwise.
   const forwardDefer = shouldForwardDefer(delegationContext);
+  const fragmentDefsByName: Record<string, FragmentDefinitionNode> =
+    Object.create(null);
+  if (fragmentDefinitions) {
+    for (const frag of fragmentDefinitions) {
+      fragmentDefsByName[frag.name.value] = frag;
+    }
+  }
 
   return visit(
     selectionSet,
@@ -1046,6 +1058,7 @@ function filterSelectionSet(
                   seenNonNullableMap,
                   seenNullableMap,
                   delegationContext,
+                  fragmentDefinitions,
                 );
 
                 if (!fieldFilteredSelectionSet.selections.length) {
@@ -1125,9 +1138,33 @@ function filterSelectionSet(
       },
       [Kind.FRAGMENT_SPREAD]: {
         enter: (node) => {
-          // Drop deferred spreads unless this subschema opted into forwarding.
+          // Gateway-owned @defer on a named spread: keep only @requires / key
+          // dependencies from the fragment body (same as deferred inline
+          // fragments), so merge still has the keys it needs.
           if (hasDeferDirective(node.directives) && !forwardDefer) {
-            return null;
+            const frag = fragmentDefsByName[node.name.value];
+            if (!frag?.selectionSet?.selections?.length) {
+              return null;
+            }
+            const dependencyParentType =
+              schema.getType(frag.typeCondition.name.value) ??
+              typeInfo.getParentType();
+            const dependencySelections = collectDeferredDependencySelections(
+              frag.selectionSet.selections,
+              dependencyParentType,
+              delegationContext,
+            );
+            if (dependencySelections.length === 0) {
+              return null;
+            }
+            return {
+              kind: Kind.INLINE_FRAGMENT,
+              typeCondition: frag.typeCondition,
+              selectionSet: {
+                kind: Kind.SELECTION_SET,
+                selections: dependencySelections,
+              },
+            };
           }
           if (!(node.name.value in validFragments)) {
             return null;

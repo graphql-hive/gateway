@@ -116,11 +116,13 @@ export function defaultMergedResolver(
 
   // If the parent is satisfied for the left over after a nested delegation, try to resolve it
   if (isMissingFieldValue(parent, responseKey)) {
-    // Patches from a defer-capable subgraph arrive via IncrementalReceiver
+    // Patches from a defer-capable subgraph arrive via IncrementalReceiver.
+    // Use requestField (object identity) so batch-delegate splits of nested
+    // lists still resolve deferred keys on the correct parent object.
     const receiver = getReceiver(parent);
     if (receiver) {
       return handleMaybePromise(
-        () => receiver.request(info),
+        () => receiver.requestField(parent, responseKey),
         (value) =>
           resolveExternalValue(
             value,

@@ -34,6 +34,12 @@ export class IncrementalReceiver {
     string,
     Array<ReturnType<typeof createDeferredPromise<any>>>
   >();
+  /** Field waiters keyed by parent object identity (batch-safe). */
+  private readonly fieldWaiters: Array<{
+    parent: Record<string, any>;
+    key: string;
+    deferred: ReturnType<typeof createDeferredPromise<any>>;
+  }> = [];
   private rootObject: Record<string, any> | null = null;
   private finished = false;
 
@@ -95,6 +101,10 @@ export class IncrementalReceiver {
       }
     }
     this.waiters.clear();
+    for (const { deferred } of this.fieldWaiters) {
+      deferred.resolve(undefined);
+    }
+    this.fieldWaiters.length = 0;
   }
 
   private async consume(
@@ -121,11 +131,31 @@ export class IncrementalReceiver {
   /**
    * Wait until `info`'s field is present on the external object (filled by a
    * deferred patch) or the stream ends.
+   *
+   * Prefer {@link requestField} from `defaultMergedResolver` — path-relative
+   * waits break when batch-delegate splits a list-of-lists result.
    */
   request(info: GraphQLResolveInfo): Promise<any> {
     const fullPath = responsePathAsArray(info.path);
     const relPath = fullPath.slice(this.initialPathLength);
     return this.waitForPath(relPath);
+  }
+
+  /**
+   * Wait until `parent[responseKey]` is set by a patch (or the stream ends).
+   * Uses object identity so it works after batch-delegate splits nested lists.
+   */
+  requestField(parent: Record<string, any>, responseKey: string): Promise<any> {
+    if (
+      (Object.prototype.hasOwnProperty.call(parent, responseKey) &&
+        parent[responseKey] !== undefined) ||
+      this.finished
+    ) {
+      return Promise.resolve(parent[responseKey]);
+    }
+    const deferred = createDeferredPromise<any>();
+    this.fieldWaiters.push({ parent, key: responseKey, deferred });
+    return deferred.promise;
   }
 
   /**
@@ -285,6 +315,7 @@ export class IncrementalReceiver {
             attachReceiver(value, this, this.delegationContext);
           }
           this.notify(pathKey(relPath, key), value);
+          this.notifyField(target, key, value);
           continue;
         }
         // Accumulated HTTP snapshots re-send fields we already have - only
@@ -308,6 +339,7 @@ export class IncrementalReceiver {
         attachReceiver(value, this, this.delegationContext);
       }
       this.notify(pathKey(relPath, key), value);
+      this.notifyField(target, key, value);
     }
   }
 
@@ -320,6 +352,20 @@ export class IncrementalReceiver {
       waiter.resolve(value);
     }
     this.waiters.delete(key);
+  }
+
+  private notifyField(
+    parent: Record<string, any>,
+    key: string,
+    value: any,
+  ): void {
+    for (let i = this.fieldWaiters.length - 1; i >= 0; i--) {
+      const waiter = this.fieldWaiters[i]!;
+      if (waiter.parent === parent && waiter.key === key) {
+        waiter.deferred.resolve(value);
+        this.fieldWaiters.splice(i, 1);
+      }
+    }
   }
 }
 
