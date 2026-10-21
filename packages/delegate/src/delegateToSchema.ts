@@ -11,7 +11,6 @@ import {
   memoize1,
   mergeDeep,
 } from '@graphql-tools/utils';
-import { Repeater } from '@repeaterjs/repeater';
 import {
   handleMaybePromise,
   mapAsyncIterator,
@@ -156,10 +155,10 @@ export function delegateRequest<
         const isListReturn = isListType(
           getNullableType(delegationContext.returnType),
         );
-        // Root @stream on the delegated field: push list items via Repeater.
+        // Root @stream on the delegated field: yield list items one-by-one.
         // List return types with nested @defer (e.g. TransformQuery unwrap to
         // [[Book]]) must use IncrementalReceiver instead — otherwise the
-        // Repeater/AsyncIterable leaks to batch-delegate as `{}`.
+        // AsyncIterable leaks to batch-delegate as `{}`.
         const isRootStream =
           isListReturn && fieldHasStreamDirective(delegationContext);
 
@@ -376,67 +375,49 @@ async function consumeDeferredIterable<
 }
 
 /**
- * Push list items from an incremental @stream AsyncIterable one-by-one so
+ * Yield list items from an incremental @stream AsyncIterable one-by-one so
  * graphql-js can flush `initialCount` before later items arrive.
  */
-function streamListIterable<TContext extends Record<string, any>>(
+async function* streamListIterable<TContext extends Record<string, any>>(
   executorResult: AsyncIterable<ExecutionResult<any>>,
   transformer: Transformer<TContext>,
-): AsyncIterable<any> {
-  return new Repeater<ExecutionResult<any>>(async (push, stop) => {
-    // Track how many items have been pushed to avoid re-pushing items that
-    // have already been delivered. Some executors (e.g. the HTTP executor)
-    // accumulate incremental results and return growing snapshots of the list
-    // rather than individual incremental parts. Using an index counter instead
-    // of a WeakSet supports both object and primitive (e.g. string) list items.
-    let pushedCount = 0;
-    let stopped = false;
-    stop.finally(() => {
-      stopped = true;
-    });
-    try {
-      for await (const result of executorResult) {
-        if (stopped) {
-          break;
-        }
-        if (result.incremental) {
-          const data = {};
-          for (const incrementalRes of result.incremental) {
-            if (incrementalRes.items?.length) {
-              for (const item of incrementalRes.items) {
-                setObjectKeyPath(
-                  data,
-                  (incrementalRes.path || []).slice(0, -1),
-                  item,
-                );
-              }
-              await push(await transformer.transformResult({ data }));
-            }
+): AsyncGenerator<any> {
+  // Track how many items have been yielded to avoid re-yielding items that
+  // have already been delivered. Some executors (e.g. the HTTP executor)
+  // accumulate incremental results and return growing snapshots of the list
+  // rather than individual incremental parts. Using an index counter instead
+  // of a WeakSet supports both object and primitive (e.g. string) list items.
+  let pushedCount = 0;
+  for await (const result of executorResult) {
+    if (result.incremental) {
+      const data = {};
+      for (const incrementalRes of result.incremental) {
+        if (incrementalRes.items?.length) {
+          for (const item of incrementalRes.items) {
+            setObjectKeyPath(
+              data,
+              (incrementalRes.path || []).slice(0, -1),
+              item,
+            );
           }
-          if (result.hasNext === false) {
-            break;
-          } else {
-            continue;
-          }
-        }
-        const transformedResult = await transformer.transformResult(result);
-        if (Array.isArray(transformedResult)) {
-          for (let i = pushedCount; i < transformedResult.length; i++) {
-            if (stopped) {
-              break;
-            }
-            await push(await transformedResult[i]);
-            pushedCount = i + 1;
-          }
-        } else {
-          await push(await transformedResult);
+          yield await transformer.transformResult({ data });
         }
       }
-      stop();
-    } catch (error) {
-      stop(error);
+      if (result.hasNext === false) {
+        return;
+      }
+      continue;
     }
-  });
+    const transformedResult = await transformer.transformResult(result);
+    if (Array.isArray(transformedResult)) {
+      for (let i = pushedCount; i < transformedResult.length; i++) {
+        yield await transformedResult[i];
+        pushedCount = i + 1;
+      }
+    } else {
+      yield await transformedResult;
+    }
+  }
 }
 
 function fieldHasStreamDirective(

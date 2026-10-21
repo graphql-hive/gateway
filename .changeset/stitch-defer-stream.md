@@ -29,4 +29,4 @@ Single-request batching no longer drains incremental AsyncIterables into one res
 
 `IncrementalReceiver` prefers raw patches and cheaply tolerates accumulated snapshots (only fills missing keys). The HTTP executor preserves `hasNext` in accumulate mode.
 
-`@stream` continues to be forwarded on field directives as before.
+`@stream` continues to be forwarded on field directives as before. List streaming in `@graphql-tools/delegate` uses a plain async generator (no `@repeaterjs/repeater` dependency).
