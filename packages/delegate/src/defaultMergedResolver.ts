@@ -6,6 +6,7 @@ import {
 import {
   defaultFieldResolver,
   FieldNode,
+  getNamedType,
   GraphQLResolveInfo,
   GraphQLSchema,
   isObjectType,
@@ -29,6 +30,12 @@ import {
   mergeFields,
 } from './mergeFields.js';
 import { resolveExternalValue } from './resolveExternalValue.js';
+import {
+  getHoistedFieldTarget,
+  getHoistedSourceType,
+  getHoistFieldMeta,
+  resolveSourceFieldName,
+} from './resolveSourceFieldName.js';
 import { Subschema } from './Subschema.js';
 import {
   FIELD_SUBSCHEMA_MAP_SYMBOL,
@@ -42,6 +49,21 @@ import {
   StitchingInfo,
   SubschemaConfig,
 } from './types.js';
+
+/**
+ * True when the parent does not yet have a usable value for `responseKey`.
+ * `undefined` own-properties (e.g. from visitResult materializing deferred
+ * selections before they arrive) are treated as missing.
+ */
+function isMissingFieldValue(
+  parent: Record<string, any>,
+  responseKey: string,
+): boolean {
+  return (
+    !Object.prototype.hasOwnProperty.call(parent, responseKey) ||
+    parent[responseKey] === undefined
+  );
+}
 
 /**
  * Resolver that knows how to:
@@ -70,7 +92,7 @@ export function defaultMergedResolver(
   }
 
   // If the parent is satisfied for the left over after a nested delegation, try to resolve it
-  if (!Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+  if (isMissingFieldValue(parent, responseKey)) {
     // Patches from a defer-capable subgraph arrive via IncrementalReceiver
     const receiver = getReceiver(parent);
     if (receiver) {
@@ -120,8 +142,8 @@ export function defaultMergedResolver(
         stitchingInfo?.fieldNodesByField?.[parentTypeName]?.[info.fieldName];
       if (
         fieldNodesByType?.every((fieldNode) => {
-          const responseKey = fieldNode.alias?.value ?? fieldNode.name.value;
-          return Object.prototype.hasOwnProperty.call(parent, responseKey);
+          const key = fieldNode.alias?.value ?? fieldNode.name.value;
+          return !isMissingFieldValue(parent, key);
         })
       ) {
         handleResult(parent, responseKey, context, info);
@@ -135,7 +157,7 @@ export function defaultMergedResolver(
     // plain resolver data merged into an external object is keyed by the
     // literal field name; when the request aliases the field, resolve it the
     // way graphql-js default resolution would on a plain object
-    if (Object.prototype.hasOwnProperty.call(parent, info.fieldName)) {
+    if (!isMissingFieldValue(parent, info.fieldName)) {
       return defaultFieldResolver(parent, args, context, info);
     }
     const stitchingInfo = info.schema?.extensions?.[
@@ -164,7 +186,7 @@ export function defaultMergedResolver(
             fieldNode,
           ]),
         () => {
-          if (Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+          if (!isMissingFieldValue(parent, responseKey)) {
             return handleResult(parent, responseKey, context, info);
           }
           // Deferred selections are omitted from the initial subgraph request.
@@ -263,7 +285,7 @@ function resolveMissingFieldFromSourceSubschema(
           responsePathAsArray(info.path).slice(0, -1),
           parent[UNPATHED_ERRORS_SYMBOL] ?? [],
         );
-        if (Object.prototype.hasOwnProperty.call(parent, responseKey)) {
+        if (!isMissingFieldValue(parent, responseKey)) {
           return handleResult(parent, responseKey, context, info);
         }
         return undefined;
@@ -275,6 +297,63 @@ function resolveMissingFieldFromSourceSubschema(
     return undefined;
   }
 
+  // HoistField: resolve the nested source field on the path the transform wraps.
+  const hoist = getHoistFieldMeta(subschema, parentTypeName, info.fieldName);
+  if (hoist) {
+    const target = getHoistedFieldTarget(parent, hoist);
+    const sourceType = getHoistedSourceType(
+      originalSchema,
+      // Prefer the original type name when RenameTypes is also present.
+      resolveOriginalTypeName(originalSchema, parentTypeName, hoist.typeName),
+      hoist,
+    );
+      if (target && isObjectType(sourceType)) {
+      // Value may already be present from a forwarded nested patch.
+      if (!isMissingFieldValue(target.parent, target.fieldName)) {
+        const value = applyLeafOutputTransforms(
+          subschema,
+          info,
+          target.parent[target.fieldName],
+        );
+        parent[responseKey] = value;
+        return resolveExternalValue(
+          value,
+          getUnpathedErrors(parent),
+          subschema as any,
+          context,
+          info,
+        );
+      }
+      const nestedField = sourceType.getFields()[target.fieldName];
+      const nestedResolve = nestedField?.resolve;
+      if (nestedResolve != null && nestedResolve !== defaultFieldResolver) {
+        return handleMaybePromise(
+          () => nestedResolve(target.parent, args, context, info),
+          (value) => {
+            const mapped = applyLeafOutputTransforms(subschema, info, value);
+            parent[responseKey] = mapped;
+            if (parent[FIELD_SUBSCHEMA_MAP_SYMBOL]) {
+              parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] = subschema as any;
+            }
+            return resolveExternalValue(
+              mapped,
+              getUnpathedErrors(parent),
+              subschema as any,
+              context,
+              info,
+            );
+          },
+        );
+      }
+    }
+  }
+
+  const sourceFieldName = resolveSourceFieldName(
+    subschema,
+    parentTypeName,
+    info.fieldName,
+  );
+
   // After transforms like RenameTypes, parent.__typename / info.parentType may
   // use the gateway name while the executable source schema still uses the
   // original name. Fall back to a unique field-owner match when needed.
@@ -284,7 +363,7 @@ function resolveMissingFieldFromSourceSubschema(
       (t) =>
         isObjectType(t) &&
         !t.name.startsWith('__') &&
-        t.getFields()[info.fieldName] != null,
+        t.getFields()[sourceFieldName] != null,
     );
     originalType = candidates.length === 1 ? candidates[0] : undefined;
   }
@@ -292,7 +371,7 @@ function resolveMissingFieldFromSourceSubschema(
     return undefined;
   }
 
-  const field = originalType.getFields()[info.fieldName];
+  const field = originalType.getFields()[sourceFieldName];
   const resolve = field?.resolve;
   if (resolve == null || resolve === defaultFieldResolver) {
     // Skip the schema-default field resolver: it only reads parent[fieldName],
@@ -303,12 +382,15 @@ function resolveMissingFieldFromSourceSubschema(
   return handleMaybePromise(
     () => resolve(parent, args, context, info),
     (value) => {
-      parent[responseKey] = value;
+      // Local resolve bypasses transformResult; still apply leaf output maps
+      // (MapLeafValues) so deferred scalars match non-deferred behaviour.
+      const mapped = applyLeafOutputTransforms(subschema, info, value);
+      parent[responseKey] = mapped;
       if (parent[FIELD_SUBSCHEMA_MAP_SYMBOL]) {
         parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] = subschema as any;
       }
       return resolveExternalValue(
-        value,
+        mapped,
         getUnpathedErrors(parent),
         subschema as any,
         context,
@@ -316,6 +398,52 @@ function resolveMissingFieldFromSourceSubschema(
       );
     },
   );
+}
+
+/**
+ * Apply MapLeafValues-style output visitors when a deferred field is resolved
+ * via the original local resolver (which skips the transformResult pipeline).
+ */
+function applyLeafOutputTransforms(
+  subschema: GraphQLSchema | SubschemaConfig | Subschema,
+  info: GraphQLResolveInfo,
+  value: any,
+): any {
+  if (value == null) {
+    return value;
+  }
+  const transforms =
+    (subschema as Subschema).transforms ??
+    (subschema as SubschemaConfig).transforms;
+  if (!transforms?.length) {
+    return value;
+  }
+  const typeName = getNamedType(info.returnType)?.name;
+  if (!typeName) {
+    return value;
+  }
+  let mapped = value;
+  for (const transform of transforms) {
+    const visitor = (transform as any).resultVisitorMap?.[typeName];
+    if (typeof visitor === 'function') {
+      mapped = visitor(mapped);
+    }
+  }
+  return mapped;
+}
+
+function resolveOriginalTypeName(
+  originalSchema: GraphQLSchema,
+  gatewayTypeName: string,
+  fallbackTypeName: string,
+): string {
+  if (isObjectType(originalSchema.getType(gatewayTypeName))) {
+    return gatewayTypeName;
+  }
+  if (isObjectType(originalSchema.getType(fallbackTypeName))) {
+    return fallbackTypeName;
+  }
+  return gatewayTypeName;
 }
 
 function handleResult<TContext extends Record<string, any>>(

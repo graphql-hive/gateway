@@ -547,6 +547,68 @@ describe('Defer/Stream within stitching', () => {
   });
 
   describe('cancellation / timeouts', () => {
+    it('stops waiting for deferred fields when AbortSignal.timeout fires', async () => {
+      let slowFinished = false;
+      const schema = makeExecutableSchema({
+        typeDefs: /* GraphQL */ `
+          type Something {
+            fastField: String!
+            slowField: String
+          }
+          type Query {
+            something: Something
+          }
+        `,
+        resolvers: {
+          Query: { something: () => ({}) },
+          Something: {
+            fastField: () => 'fast',
+            slowField: async (_root, _args, _ctx, info) => {
+              try {
+                await setTimeout(500, undefined, { signal: info.signal });
+                slowFinished = true;
+                return 'slow';
+              } catch {
+                return null;
+              }
+            },
+          },
+        },
+      });
+      const gatewaySchema = stitchSchemas({ subschemas: [schema] });
+      const result = await normalizedExecutor({
+        schema: gatewaySchema,
+        document: parse(/* GraphQL */ `
+          query {
+            something {
+              fastField
+              ... @defer {
+                slowField
+              }
+            }
+          }
+        `),
+        signal: AbortSignal.timeout(40),
+      });
+      expect(isAsyncIterable(result)).toBe(true);
+      const iterator = (result as AsyncIterable<ExecutionResult>)[
+        Symbol.asyncIterator
+      ]();
+      const first = await iterator.next();
+      expect(first.value).toMatchObject({
+        data: { something: { fastField: 'fast' } },
+        hasNext: true,
+      });
+      try {
+        await iterator.next();
+      } catch {
+        // timeout may reject subsequent pulls
+      }
+      await iterator.return?.();
+      await setTimeout(100);
+      expect(slowFinished).toBe(false);
+    });
+
     it('stops waiting for deferred fields when the operation is aborted', async () => {
       let slowStarted = false;
       let slowFinished = false;

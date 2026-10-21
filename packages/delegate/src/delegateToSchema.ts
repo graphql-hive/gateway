@@ -397,9 +397,16 @@ async function consumeDeferredIterable<
   if (initialValue != null && typeof initialValue === 'object') {
     receiver.attachTo(initialValue);
     if (initialResult?.hasNext !== false) {
-      receiver.start({
-        [Symbol.asyncIterator]: () => iterator,
-      });
+      // Run remaining chunks through transforms so structural transforms
+      // (HoistField, WrapFields, …) rewrite patch shapes before merge.
+      receiver.start(
+        transformDeferredChunks(
+          { [Symbol.asyncIterator]: () => iterator },
+          transformer,
+          delegationContext,
+          initialValue as Record<string, any>,
+        ),
+      );
     } else {
       receiver.finish();
     }
@@ -408,6 +415,119 @@ async function consumeDeferredIterable<
   }
 
   return initialValue;
+}
+
+/**
+ * Map subgraph incremental chunks through the same transform pipeline used for
+ * the initial payload, so deferred patches land in gateway field shapes.
+ */
+async function* transformDeferredChunks<
+  TContext extends Record<string, any>,
+>(
+  iterable: AsyncIterable<ExecutionResult<any>>,
+  transformer: Transformer<TContext>,
+  delegationContext: DelegationContext<TContext>,
+  initialValue: Record<string, any>,
+): AsyncIterable<ExecutionResult<any>> {
+  const fieldName = delegationContext.fieldName;
+  for await (const result of iterable) {
+    if (result?.incremental?.length) {
+      for (const patch of result.incremental) {
+        if (patch.items != null) {
+          // @stream list items - pass through; item transforms are uncommon.
+          yield {
+            incremental: [patch],
+            hasNext: result.hasNext,
+          };
+          continue;
+        }
+
+        if (patch.data != null && patch.path?.length) {
+          const tree: Record<string, any> = {};
+          setObjectKeyPath(
+            tree,
+            patch.path as Array<string | number>,
+            { ...patch.data },
+          );
+          // Structural unwrap transforms (HoistField / MapFields) key off
+          // __typename on the delegated field object.
+          if (
+            tree[fieldName] != null &&
+            typeof tree[fieldName] === 'object' &&
+            tree[fieldName]['__typename'] == null &&
+            initialValue['__typename'] != null
+          ) {
+            tree[fieldName]['__typename'] = initialValue['__typename'];
+          }
+
+          try {
+            const transformedValue = transformer.transformResult({
+              data: tree,
+              errors: patch.errors,
+            });
+            if (transformedValue instanceof Error) {
+              yield {
+                incremental: [
+                  {
+                    path: [fieldName],
+                    data: null,
+                    errors: [transformedValue as any],
+                  },
+                ],
+                hasNext: result.hasNext,
+              };
+            } else if (
+              transformedValue != null &&
+              typeof transformedValue === 'object'
+            ) {
+              // Merge as a full-field data update (not a raw patch) so
+              // IncrementalReceiver fills only newly arrived gateway keys.
+              yield {
+                data: { [fieldName]: transformedValue },
+                hasNext: result.hasNext,
+              };
+            } else {
+              yield {
+                incremental: [patch],
+                hasNext: result.hasNext,
+              };
+            }
+          } catch {
+            // If transforms cannot reshape this patch, fall back to raw form.
+            yield {
+              incremental: [patch],
+              hasNext: result.hasNext,
+            };
+          }
+          continue;
+        }
+
+        // Error-only or empty data patches
+        yield {
+          incremental: [patch],
+          hasNext: result.hasNext,
+        };
+      }
+    } else if (result?.data) {
+      try {
+        const transformedValue = transformer.transformResult(result);
+        if (
+          transformedValue != null &&
+          typeof transformedValue === 'object' &&
+          !(transformedValue instanceof Error)
+        ) {
+          yield {
+            data: { [fieldName]: transformedValue },
+            hasNext: result.hasNext,
+          };
+        }
+      } catch {
+        // ignore untransformable accumulated snapshots
+      }
+    } else if (result?.hasNext === false) {
+      yield { hasNext: false };
+    }
+  }
 }
 
 function setObjectKeyPath(

@@ -1,6 +1,10 @@
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { ExecutionResult } from '@graphql-tools/utils';
-import { GraphQLResolveInfo, responsePathAsArray } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLResolveInfo,
+  responsePathAsArray,
+} from 'graphql';
 import {
   annotateExternalObject,
   isExternalObject,
@@ -55,7 +59,9 @@ export class IncrementalReceiver {
    */
   start(iterable: AsyncIterable<ExecutionResult>): void {
     // Floating on purpose: patches resolve waiters; finish() runs in finally.
-    void this.consume(iterable);
+    void this.consume(iterable).catch(() => {
+      // consume already handles AbortError; this guards against races.
+    });
   }
 
   /**
@@ -101,6 +107,12 @@ export class IncrementalReceiver {
           break;
         }
       }
+    } catch (err) {
+      // Operation abort / upstream cancel is expected while patches are still
+      // streaming; do not surface as an unhandled rejection.
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        // Non-abort failures still release waiters in finally.
+      }
     } finally {
       this.finish();
     }
@@ -115,9 +127,10 @@ export class IncrementalReceiver {
     const relPath = fullPath.slice(this.initialPathLength);
     const key = pathKey(relPath);
 
-    const existing = getAtPath(this.rootObject, relPath);
-    if (existing !== undefined || this.finished) {
-      return Promise.resolve(existing);
+    // Own-properties set to `undefined` (visitResult placeholders) are still
+    // missing - wait for a real patch value.
+    if (hasDefinedValue(this.rootObject, relPath) || this.finished) {
+      return Promise.resolve(getAtPath(this.rootObject, relPath));
     }
 
     const deferred = createDeferredPromise<any>();
@@ -155,7 +168,26 @@ export class IncrementalReceiver {
     }
 
     if (patch.data != null && typeof patch.data === 'object') {
-      this.mergeInto(this.rootObject, relPath, patch.data);
+      const data = mapPatchDataWithErrors(patch.data, patch.errors, relPath);
+      this.mergeInto(this.rootObject, relPath, data);
+      return;
+    }
+
+    // Error-only patch (no data): reject waiters under this path with the error.
+    if (patch.errors?.length) {
+      const error = patch.errors[0] as GraphQLError;
+      const key = pathKey(relPath);
+      if (key) {
+        this.notify(key, error);
+      }
+      for (const [waiterKey, waiters] of this.waiters) {
+        if (waiterKey.startsWith(key ? `${key}.` : '')) {
+          for (const waiter of waiters) {
+            waiter.resolve(error);
+          }
+          this.waiters.delete(waiterKey);
+        }
+      }
     }
   }
 
@@ -177,6 +209,16 @@ export class IncrementalReceiver {
       const value = data[key];
       if (Object.prototype.hasOwnProperty.call(target, key)) {
         const existing = target[key];
+        // Placeholder `undefined` from visitResult must be overwriteable once
+        // the real deferred value arrives.
+        if (existing === undefined) {
+          target[key] = value;
+          if (value != null && typeof value === 'object') {
+            attachReceiver(value, this, this.delegationContext);
+          }
+          this.notify(pathKey(relPath, key), value);
+          continue;
+        }
         // Accumulated HTTP snapshots re-send fields we already have - only
         // descend into plain objects to pick up newly arrived nested keys.
         if (
@@ -185,7 +227,8 @@ export class IncrementalReceiver {
           typeof existing === 'object' &&
           typeof value === 'object' &&
           !Array.isArray(existing) &&
-          !Array.isArray(value)
+          !Array.isArray(value) &&
+          !(value instanceof Error)
         ) {
           this.mergeInto(root, appendPath(relPath, key), value);
         }
@@ -193,7 +236,7 @@ export class IncrementalReceiver {
       }
 
       target[key] = value;
-      if (value != null && typeof value === 'object') {
+      if (value != null && typeof value === 'object' && !(value instanceof Error)) {
         attachReceiver(value, this, this.delegationContext);
       }
       this.notify(pathKey(relPath, key), value);
@@ -300,4 +343,56 @@ function getAtPath(
     current = current[segment];
   }
   return current;
+}
+
+/** True when every path segment exists and the final value is not `undefined`. */
+function hasDefinedValue(
+  root: Record<string, any> | null,
+  path: ReadonlyArray<string | number>,
+): boolean {
+  if (root == null) {
+    return false;
+  }
+  if (path.length === 0) {
+    return true;
+  }
+  let current: any = root;
+  for (let i = 0; i < path.length; i++) {
+    if (current == null || typeof current !== 'object') {
+      return false;
+    }
+    const segment = path[i]!;
+    if (!Object.prototype.hasOwnProperty.call(current, segment)) {
+      return false;
+    }
+    current = current[segment];
+  }
+  return current !== undefined;
+}
+
+/**
+ * When a deferred patch carries both `data: { field: null }` and field errors,
+ * surface the GraphQLError as the field value so `resolveExternalValue` can
+ * report it on the gateway incremental stream.
+ */
+function mapPatchDataWithErrors(
+  data: Record<string, any>,
+  errors: ExecutionResult['errors'] | undefined,
+  _relPath: ReadonlyArray<string | number>,
+): Record<string, any> {
+  if (!errors?.length) {
+    return data;
+  }
+  const mapped: Record<string, any> = { ...data };
+  for (const error of errors) {
+    const key = error.path?.at(-1);
+    if (
+      key != null &&
+      Object.prototype.hasOwnProperty.call(mapped, key) &&
+      mapped[key] == null
+    ) {
+      mapped[String(key)] = error;
+    }
+  }
+  return mapped;
 }
