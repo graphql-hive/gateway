@@ -2,7 +2,7 @@ import { setTimeout } from 'timers/promises';
 import { executorFromSchema } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { isAsyncIterable } from '@graphql-tools/utils';
-import { parse } from 'graphql';
+import { parse, print } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { createBatchingExecutor } from '../src/createBatchingExecutor.js';
 import { getBatchingExecutor } from '../src/getBatchingExecutor.js';
@@ -105,7 +105,8 @@ describe('batch-execute with defer', () => {
     expect(slowResult).toEqual({ data: { slow: 'slow' } });
   });
 
-  it('getBatchingExecutor memoizes defer as a distinct cache key', async () => {
+  it('getBatchingExecutor caches defer:true separately from defer:false', async () => {
+    let seenDeferWrap = false;
     const schema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type Query {
@@ -124,11 +125,27 @@ describe('batch-execute with defer', () => {
       },
     });
     const base = executorFromSchema(schema);
+    const wrapped: typeof base = (req) => {
+      // mergeRequests with defer:true wraps root selections in @defer
+      if (print(req.document).includes('@defer')) {
+        seenDeferWrap = true;
+      }
+      return base(req);
+    };
     const ctx = {};
-    // Warm a non-defer batching executor first — memoize2of5 must not reuse it
-    // when defer:true is requested next.
-    getBatchingExecutor(ctx, base, undefined, undefined, false);
-    const deferred = getBatchingExecutor(ctx, base, undefined, undefined, true);
+    // Warm non-defer first — must not be reused when defer:true is requested.
+    const plain = getBatchingExecutor(ctx, wrapped, undefined, undefined, false);
+    const deferred = getBatchingExecutor(
+      ctx,
+      wrapped,
+      undefined,
+      undefined,
+      true,
+    );
+    expect(deferred).not.toBe(plain);
+    expect(
+      getBatchingExecutor(ctx, wrapped, undefined, undefined, true),
+    ).toBe(deferred);
 
     const [fastResult, slowResult] = await Promise.all([
       deferred({
@@ -141,6 +158,7 @@ describe('batch-execute with defer', () => {
       }),
     ]);
 
+    expect(seenDeferWrap).toBe(true);
     expect(fastResult).toEqual({ data: { fast: 'fast' } });
     expect(slowResult).toEqual({ data: { slow: 'slow' } });
   });
