@@ -208,6 +208,11 @@ describe('Defer/Stream within stitching', () => {
         data: { list: ['a', 'b', 'c'] },
       });
     });
+
+    // Original graphql-tools#1941 also covered nested proxied @stream. Root
+    // @stream works above; nested proxied @stream still needs a stream
+    // Receiver path (list patches under a non-list delegated field) and is
+    // tracked separately from the @defer work in this PR.
   });
 
   describe('merged deferred patches from multiple subschemas', () => {
