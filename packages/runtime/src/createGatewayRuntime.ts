@@ -156,7 +156,11 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  const fetchAPI: FetchAPI = {
+  // `@whatwg-node/fetch@0.12` no longer exports `crypto`; use the platform
+  // global. Keep it on the FetchAPI object so nested Yoga 5 peers that still
+  // type FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
+  // those packages publish Yoga 6 builds.
+  const fetchAPI = {
     fetch,
     Request,
     Response,
@@ -171,13 +175,14 @@ export function createGatewayRuntime<
     TextEncoderStream,
     Blob,
     File,
+    crypto: globalThis.crypto,
     btoa,
     TextEncoder,
     TextDecoder,
     URLPattern,
     URL,
     URLSearchParams,
-  };
+  } as FetchAPI;
   if (config?.fetchAPI) {
     for (const key in config.fetchAPI) {
       const fetchAPIKey = key as keyof FetchAPI;
