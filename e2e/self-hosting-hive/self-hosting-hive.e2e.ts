@@ -14,7 +14,8 @@ describe.skipIf(
   // tricky to get the docker host name right in CI, so skip this test there
   gatewayRunner.includes('docker'),
 )('Self Hosting Hive', () => {
-  const TEST_TOKEN = 'my-token';
+  // Organization access tokens (`hvo1/…`) are required when `--hive-target` is set.
+  const TEST_TOKEN = 'hvo1/my-token';
   const TEST_KEY = 'my-key';
 
   it('usage reporting of queries', async () => {
@@ -70,7 +71,7 @@ describe.skipIf(
     // Check if `/supergraph` endpoint receives the GET request
     expect(incomingData).toContain('GET /supergraph');
     expect(incomingData).toContain(`"x-hive-cdn-key":"${TEST_KEY}"`);
-    // Check if `/usage` endpoint receives the POST request
+    // Check if `/usage` (or `/usage/<target>`) receives the POST request
     expect(incomingData).toContain('POST /usage');
     expect(incomingData).toContain(`"authorization":"Bearer ${TEST_TOKEN}"`);
     // Check if appropriate logs
@@ -79,7 +80,7 @@ describe.skipIf(
       /\[hiveSupergraphFetcher\] GET .* succeeded with status 200/,
     );
     expect(gwLogs).toMatch(
-      /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
+      /\[useHiveConsole\] POST .*\/usage(?:\/\S+)? .* succeeded with status 200/,
     );
   });
 
@@ -221,7 +222,7 @@ describe.skipIf(
           // Check if appropriate logs
           const gwLogs = gw.getStd('out');
           expect(gwLogs).toMatch(
-            /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
+            /\[useHiveConsole\] POST .*\/usage(?:\/\S+)? .* succeeded with status 200/,
           );
         },
       );

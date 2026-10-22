@@ -20,7 +20,9 @@ beforeAll(async () => {
     containerPort: 6379,
     healthcheck: ['CMD-SHELL', 'redis-cli ping'],
     env: {
-      LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+      // Redis 8 exits when the image default locale is missing in minimal hosts.
+      LANG: 'C',
+      LC_ALL: 'C',
     },
   });
   redisEnv.REDIS_HOST = '0.0.0.0';
