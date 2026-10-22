@@ -156,7 +156,7 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  const fetchAPI: FetchAPI = {
+  const fetchAPI = {
     fetch,
     Request,
     Response,
@@ -177,7 +177,7 @@ export function createGatewayRuntime<
     URLPattern,
     URL,
     URLSearchParams,
-  };
+  } as FetchAPI;
   if (config?.fetchAPI) {
     for (const key in config.fetchAPI) {
       const fetchAPIKey = key as keyof FetchAPI;
