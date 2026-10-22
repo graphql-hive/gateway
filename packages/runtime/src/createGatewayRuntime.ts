@@ -742,11 +742,14 @@ export function createGatewayRuntime<
 
   const defaultGatewayPlugin: GatewayPlugin = {
     onRequest({ serverContext, request }) {
+      // Always normalize from the Fetch Request Headers. Do not reuse Node's
+      // `req.headers` object here: Yoga/whatwg-node already parse the request,
+      // and sharing the raw IncomingMessage headers map caused subtle bugs.
       Object.assign(serverContext, { headers: getHeadersObj(request.headers) });
     },
     onFetch({ context, options, setOptions }) {
       // Yoga owns request-id minting / response echo / `log.child({ requestId })`.
-      // Gateway only forwards the id upstream.
+      // Keep this onFetch forward so subgraphs see the same correlation id.
       if (config.requestId === false || !('request' in context)) {
         return;
       }
