@@ -1,11 +1,4 @@
-// https://github.com/unjs/std-env/blob/ab15595debec9e9115a9c1d31bc7597a8e71dbfd/src/runtimes.ts
-const isNode = !globalThis.Bun && globalThis.process?.release?.name === 'node';
-
-const anySignalRegistry = isNode
-  ? new FinalizationRegistry<() => void>((cb) => cb())
-  : null;
-
-const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
+import { controllerInSignalSy, isNode, signalRegistry } from './utils';
 
 /**
  * Memory safe ponyfill of `AbortSignal.any`. In Node environments, the native
@@ -60,7 +53,7 @@ export function abortSignalAny(
     }
     signal.addEventListener('abort', abort);
     eventListenerPairs.push([signalRef, abort]);
-    anySignalRegistry!.register(
+    signalRegistry!.register(
       signal,
       () =>
         // dispose when all of the signals have been GCed
@@ -74,11 +67,11 @@ export function abortSignalAny(
       const signal = signalRef.deref();
       if (signal) {
         signal.removeEventListener('abort', abort);
-        anySignalRegistry!.unregister(signal);
+        signalRegistry!.unregister(signal);
       }
       const ctrl = ctrlRef.deref();
       if (ctrl) {
-        anySignalRegistry!.unregister(ctrl.signal);
+        signalRegistry!.unregister(ctrl.signal);
         // @ts-expect-error
         delete ctrl.signal[controllerInSignalSy];
       }
@@ -87,8 +80,8 @@ export function abortSignalAny(
 
   // cleanup when aborted
   ctrl.signal.addEventListener('abort', dispose);
-  // cleanup when GCed
-  anySignalRegistry!.register(ctrl.signal, dispose, ctrl.signal);
+  // cleanup when GCed (Node always provides FinalizationRegistry)
+  signalRegistry!.register(ctrl.signal, dispose, ctrl.signal);
 
   // keeping a strong reference of the cotroller binding it to the lifecycle of its signal
   // @ts-expect-error
