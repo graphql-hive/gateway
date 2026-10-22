@@ -6,7 +6,6 @@ import {
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
-import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -678,10 +677,7 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: {
-        ...configContext,
-        logger: LegacyLogger.from(configContext.log),
-      },
+      transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,

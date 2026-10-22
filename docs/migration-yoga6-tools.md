@@ -35,10 +35,10 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 ## Logger (Yoga 6)
 
 - `@graphql-yoga/logger` is removed; Yoga re-exports `Logger`, `MemoryLogWriter`, `LogLevel` from `@graphql-hive/logger`.
-- `createYoga({ logging })` accepts `boolean | Logger | LogLevel` only — not the deprecated `LegacyLogger` adapter.
+- `createYoga({ logging })` accepts `boolean | Logger | LogLevel` only - not the deprecated `LegacyLogger` adapter.
 - Prefer request-scoped `context.log` / `serverContext.log` (correlated via `requestId`).
-- **Request ids**: Gateway passes `requestId` through to Yoga. Minting, response `x-request-id`, and `log.child({ requestId })` are Yoga’s job. Gateway only forwards the id on upstream `fetch` (`useRequestIdUpstreamForward`).
-- Do not dual-write a deprecated `logger` on the request just for Yoga — use `log`.
+- **Request ids**: Gateway passes `requestId` through to Yoga. Minting, response `x-request-id`, and `log.child({ requestId })` are Yoga’s job. Gateway only forwards the id on upstream `fetch` (`useRequestId`).
+- Do not dual-write a deprecated `logger` on the request just for Yoga - use `log`.
 
 ## whatwg-node 0.12 / 0.13
 
@@ -71,5 +71,5 @@ A later incremental spec is a utils table row plus an executor publisher; bump `
 
 ## Known follow-ups
 
-- `@graphql-hive/yoga` and `@graphql-hive/render-laboratory` may still declare a `graphql-yoga@^5` peer until those packages publish Yoga 6–compatible releases; install may warn until then.
+- `@graphql-hive/yoga` and `@graphql-hive/render-laboratory` may still declare a `graphql-yoga@^5` peer until those packages publish Yoga 6-compatible releases; install may warn until then.
 - Hive Router runtime still does not plan incremental delivery; subgraph-forward `@defer` e2e stays stitching-only (`vitest.config.ts` exclude list).

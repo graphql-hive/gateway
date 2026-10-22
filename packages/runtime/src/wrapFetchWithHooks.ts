@@ -1,5 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
-import { LegacyLogger, type Logger } from '@graphql-hive/logger';
+import type { Logger } from '@graphql-hive/logger';
 import type { MeshFetch } from '@graphql-mesh/types';
 import type { ExecutionRequest } from '@graphql-tools/utils';
 import type { MaybePromise } from '@whatwg-node/promise-helpers';
@@ -58,7 +58,6 @@ export function wrapFetchWithHooks<TContext>(
                 options = newOptions;
               },
               context,
-              logger: LegacyLogger.from(log),
               // @ts-expect-error TODO: why?
               info,
               get executionRequest() {
