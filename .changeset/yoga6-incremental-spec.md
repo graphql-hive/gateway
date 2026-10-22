@@ -33,14 +33,19 @@ Align Hive Gateway with GraphQL Yoga 6, GraphQL Tools majors, and whatwg-node 0.
 
 ### Incremental delivery (`@defer` / `@stream`)
 
-`@graphql-tools/executor-http` negotiates upstream `Accept` through `INCREMENTAL_DELIVERY_SPECS` from `@graphql-tools/utils`:
+Client Accept (gateway responses) and upstream Accept (subgraph calls) are separate:
+
+| Direction | Default | Force |
+| --- | --- | --- |
+| Client → Gateway (Yoga) | Negotiate from `Accept`; echo spec on `Content-Type` | n/a (client-driven) |
+| Gateway → Subgraph (`executor-http`) | Bare `multipart/mixed` (no spec param) | `incrementalSpec: 'v0.1' \| 'v0.2'` on executor or `ExecutionRequest` |
 
 | Spec | Accept / Content-Type parameter | Payload |
 | --- | --- | --- |
-| `'v0.1'` (default) | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
+| `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
 | `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
 
-Set `incrementalSpec` on `buildHTTPExecutor({ incrementalSpec })` or on `ExecutionRequest.incrementalSpec`. Yoga 6 maps client `Accept` the same way for gateway responses. `mergeIncrementalResult` merges both formats. Stitching `IncrementalReceiver` still expects v0.1; HTTP executor defaults to `'v0.1'` for subgraph forward.
+`mergeIncrementalResult` merges both formats. Force `'v0.1'` when stitching `IncrementalReceiver` needs path/label patches.
 
 ### Migration
 

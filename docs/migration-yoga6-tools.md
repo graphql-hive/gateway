@@ -55,16 +55,16 @@ Yoga and `@graphql-tools/executor-http` share `INCREMENTAL_DELIVERY_SPECS` from 
 
 | Spec | Accept / Content-Type parameter | Payload |
 | --- | --- | --- |
-| `'v0.1'` (default) | `multipart/mixed;deferSpec=20220824` (or bare `multipart/mixed`) | `{ incremental: [{ path, label, data \| items }], hasNext }` |
+| (none / bare) | `multipart/mixed` | Subgraph chooses; Yoga treats bare multipart as v0.1 for *responses* |
+| `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
 | `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
 
-Behavior:
+Behavior (client vs subgraph are intentionally different):
 
-- **Yoga (gateway responses)**: maps client `Accept` → executor `incrementalSpec`, echoes the negotiated spec on `Content-Type`. Unsupported registered parameter values → HTTP **406**.
-- **`buildHTTPExecutor`**: set `incrementalSpec` on `buildHTTPExecutor({ incrementalSpec })` or on `ExecutionRequest.incrementalSpec`. Accept is built with `getMultipartContentType(..., { echoSpec: true })`.
+- **Yoga (gateway ← client)**: maps client `Accept` → executor `incrementalSpec`, echoes the negotiated spec on response `Content-Type`. Unsupported registered parameter values → HTTP **406**. Bare `multipart/mixed` or `deferSpec=20220824` → v0.1; `incrementalSpec=v0.2` → v0.2.
+- **`buildHTTPExecutor` (gateway → subgraph)**: by default sends **bare** `multipart/mixed` (no spec parameter) so the subgraph can return a format it supports. Set `buildHTTPExecutor({ incrementalSpec: 'v0.1' | 'v0.2' })` or `ExecutionRequest.incrementalSpec` only when a specific format must be forced (e.g. stitching `IncrementalReceiver` still expects v0.1 path/label patches).
 - **`mergeIncrementalResult`** (utils 13): merges both v0.1 path patches and v0.2 `pending`/`id`/`subPath`/`completed`.
-- **Gateway HTTP transport**: keeps `mergeIncremental: false` (raw multipart parts for passthrough).
-- **Stitching subgraph forward**: default remains `'v0.1'` so `IncrementalReceiver` (path/label) stays compatible until that path is upgraded for v0.2.
+- **Gateway HTTP transport**: keeps `mergeIncremental: false` (raw multipart parts for passthrough) and does not force `incrementalSpec`.
 
 A later incremental spec is a utils table row plus an executor publisher; bump `@graphql-tools/utils` / `@graphql-tools/executor` to pick it up.
 

@@ -179,16 +179,18 @@ export interface HTTPExecutorOptions {
   mergeIncremental?: boolean;
 
   /**
-   * Incremental delivery payload format to request from the upstream.
+   * Force a specific incremental delivery Accept parameter on upstream requests.
    *
-   * Mapped through `INCREMENTAL_DELIVERY_SPECS` from `@graphql-tools/utils` onto
-   * the `Accept` header (`deferSpec=20220824` for `'v0.1'`, `incrementalSpec=v0.2`
-   * for `'v0.2'`). Also honored from `ExecutionRequest.incrementalSpec`.
+   * Mapped through `INCREMENTAL_DELIVERY_SPECS` from `@graphql-tools/utils`:
+   * - `'v0.1'` → `multipart/mixed;deferSpec=20220824`
+   * - `'v0.2'` → `multipart/mixed;incrementalSpec=v0.2`
    *
-   * Defaults to `'v0.1'` (shared with Yoga / graphql-tools executor) so stitching
-   * `IncrementalReceiver` keeps receiving path/label patches.
+   * When omitted (default), send **bare** `multipart/mixed` (no spec parameter)
+   * so the subgraph can return whichever format it supports. Also honored from
+   * `ExecutionRequest.incrementalSpec` per request.
    *
-   * @default 'v0.1'
+   * Gateway client responses are negotiated separately by Yoga from the
+   * incoming client `Accept` header; this option only affects upstream calls.
    */
   incrementalSpec?: IncrementalSpec;
 }
@@ -263,15 +265,19 @@ export function buildHTTPExecutor(
       method = 'GET';
     }
 
-    const incrementalSpec: IncrementalSpec =
-      request.incrementalSpec ??
-      options?.incrementalSpec ??
-      getDefaultIncrementalDeliverySpec(INCREMENTAL_DELIVERY_SPECS).id;
-    const multipartAccept = getMultipartContentType(
-      INCREMENTAL_DELIVERY_SPECS.find((s) => s.id === incrementalSpec) ??
-        getDefaultIncrementalDeliverySpec(INCREMENTAL_DELIVERY_SPECS),
-      { echoSpec: true },
-    );
+    // Client Accept ↔ gateway response Content-Type is Yoga's job. Upstream
+    // defaults to bare multipart/mixed so the subgraph can pick a supported
+    // format; set `incrementalSpec` only when a specific format must be forced.
+    const incrementalSpec: IncrementalSpec | undefined =
+      request.incrementalSpec ?? options?.incrementalSpec;
+    const multipartAccept =
+      incrementalSpec != null
+        ? getMultipartContentType(
+            INCREMENTAL_DELIVERY_SPECS.find((s) => s.id === incrementalSpec) ??
+              getDefaultIncrementalDeliverySpec(INCREMENTAL_DELIVERY_SPECS),
+            { echoSpec: true },
+          )
+        : getMultipartContentType();
     let accept = `application/graphql-response+json, application/json, ${multipartAccept}`;
     let subscriptionCtrl: AbortController | undefined;
     if (

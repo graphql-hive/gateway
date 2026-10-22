@@ -48,16 +48,15 @@ export const defaultParamsSerializer = (params: GraphQLParams) =>
 
 function createCryptoKey({
   textEncoder,
-  crypto,
   secret,
   usages,
 }: {
   textEncoder: TextEncoder;
-  crypto: Crypto;
   secret: string;
   usages: KeyUsage[];
 }): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
+  // `@whatwg-node/fetch` no longer exports `crypto`; use the platform global.
+  return globalThis.crypto.subtle.importKey(
     'raw',
     textEncoder.encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
@@ -105,7 +104,6 @@ export function useHmacUpstreamSignature(
           () =>
             (key$ ||= createCryptoKey({
               textEncoder,
-              crypto: globalThis.crypto,
               secret: options.secret,
               usages: ['sign'],
             })),
@@ -185,7 +183,6 @@ export function useHmacSignatureValidation(
         () =>
           (key$ ||= createCryptoKey({
             textEncoder,
-            crypto: globalThis.crypto,
             secret: options.secret,
             usages: ['verify'],
           })),
