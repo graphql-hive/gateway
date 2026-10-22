@@ -4157,6 +4157,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/busboy@npm:^3.2.3":
+  version: 3.2.3
+  resolution: "@fastify/busboy@npm:3.2.3"
+  checksum: 10c0/51480e94a3467cb47fe0293dee5e31c6c1c431fdc126c5b53796462fb490a56c69a308959a482874d8687dd3ab6dc99e0bbf87ce90a3bc83c992a37321d76e74
+  languageName: node
+  linkType: hard
+
 "@fastify/error@npm:^4.0.0":
   version: 4.2.0
   resolution: "@fastify/error@npm:4.2.0"
@@ -13489,14 +13496,14 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/node-fetch@npm:^0.9.1":
-  version: 0.9.1
-  resolution: "@whatwg-node/node-fetch@npm:0.9.1"
+  version: 0.9.2
+  resolution: "@whatwg-node/node-fetch@npm:0.9.2"
   dependencies:
-    "@fastify/busboy": "npm:^3.1.1"
+    "@fastify/busboy": "npm:^3.2.3"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/a670513c0446d998f45d7249280f7b376e15f17d889fbbfc417d68a5774eb8c02fc88dcef5c97149255617e11968f8a95f0b6ad4aa278d26e00cf74da84413db
+  checksum: 10c0/76b3034cfd1b81184fb3d359a365a3f89f51f4b3fc805ab292564eecb9b46e8c070a46a5b40f9525a9f47d77ba31275defa89e71d3f1cacc48bbe8b4c5588f7c
   languageName: node
   linkType: hard
 
@@ -13544,15 +13551,15 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.13.0":
-  version: 0.13.0
-  resolution: "@whatwg-node/server@npm:0.13.0"
+  version: 0.13.1
+  resolution: "@whatwg-node/server@npm:0.13.1"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     "@whatwg-node/fetch": "npm:^0.12.0"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/d3631b0021e441bd3d944ad20233118ac94f9b1d3779664a93dfdf4e043b67426451cbd214c064b4da81b8a7dfd8ef675b9a078597159327f9b91c7bbe43b85e
+  checksum: 10c0/924d5d6d3413bcd89c71d2fccdd38d379d7f0075701e8fc20f950676952abba87c6ac488df3a826e936feaf79e4378f3b63116d16bce4d78f7421eba27f86e52
   languageName: node
   linkType: hard
 

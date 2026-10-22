@@ -176,10 +176,14 @@ describe('handleEventStreamResponse', () => {
     // we skip bun because we cant cancel the stream while reading it (it's locked)
     // however, the same test from nodejs applies in bun
     globalThis.Bun,
-  )('should gracefully report stream errors', async () => {
+  )('should complete cleanly when the stream is canceled', async () => {
+    let cancelledWith: unknown;
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
         // dont enqueue anything, to hang on iterator.next()
+      },
+      cancel(reason) {
+        cancelledWith = reason;
       },
     });
 
@@ -187,23 +191,12 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    // @whatwg-node/fetch 0.12 surfaces cancel as ERR_STREAM_PREMATURE_CLOSE
-    // rather than propagating the cancel reason to reader.read().
+    // @whatwg-node/node-fetch@0.9.2+ matches WHATWG/native: cancel fulfills the
+    // pending reader.read() as { done: true } (reason goes to cancel hook only).
+    const reason = new Error('Oops!');
     queueMicrotask(() => {
-      readableStream.cancel(new Error('Oops!')); // this will throw in reader.read()
+      readableStream.cancel(reason);
     });
-
-    const { value, done } = await iterator.next();
-    expect(done).toBeFalsy();
-    expect(value).toMatchInlineSnapshot(`
-      {
-        "errors": [
-          [GraphQLError: Premature close],
-        ],
-      }
-    `);
-    expect(value.errors[0].originalError).toBeInstanceOf(Error);
-    expect(value.errors[0].originalError.message).toBe('Premature close');
 
     await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
       {
@@ -211,6 +204,7 @@ describe('handleEventStreamResponse', () => {
         "value": undefined,
       }
     `);
+    expect(cancelledWith).toBe(reason);
 
     await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
       {

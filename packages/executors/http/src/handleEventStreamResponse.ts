@@ -71,6 +71,13 @@ export function handleEventStreamResponse(
         });
         return stop();
       }
+      // @whatwg-node/node-fetch@0.9.2+ (and native streams) fulfill pending read()
+      // as { done: true } on cancel instead of rejecting. If the client aborted
+      // and then canceled the body, surface the abort rather than a silent end.
+      if (signal?.aborted) {
+        await push(createResultForAbort(signal.reason));
+        return stop();
+      }
       if (done) {
         return stop();
       }
