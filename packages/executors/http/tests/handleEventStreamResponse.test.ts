@@ -121,8 +121,11 @@ describe('handleEventStreamResponse', () => {
   });
 
   it.skipIf(
-    // we skip bun because we cant cancel the stream while reading it (it's locked)
-    // however, the same test from nodejs applies in bun
+    // Bun (and native Node) follow WHATWG: stream.cancel() throws while a reader
+    // holds the lock. This test cancels the stream from outside after
+    // handleEventStreamResponse already called getReader(), which only works on
+    // the @whatwg-node ponyfill used under Vitest/Node. reader.cancel() would be
+    // valid, but that reader lives inside the handler.
     globalThis.Bun,
   )('should gracefully report stream cancel with aborted signal', async () => {
     const ctrl = new AbortController();
@@ -181,8 +184,8 @@ describe('handleEventStreamResponse', () => {
   // re-create. Client-visible cancellation stays on AbortSignal (test above);
   // real read()/network failures still become GraphQLError in the catch path.
   it.skipIf(
-    // we skip bun because we cant cancel the stream while reading it (it's locked)
-    // however, the same test from nodejs applies in bun
+    // Same lock rule as the abort test above: Bun/native reject stream.cancel()
+    // while locked; Vitest/Node ponyfill allows it. Not a Bun streams bug.
     globalThis.Bun,
   )('should complete cleanly when the stream is canceled', async () => {
     let cancelledWith: unknown;
