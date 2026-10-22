@@ -70,6 +70,7 @@
     "@apollo/composition": "2.14.0",
     "@apollo/server": "5.5.1",
     "@apollo/subgraph": "2.14.0",
+    "@graphql-mesh/transport-rest": "patch:@graphql-mesh/transport-rest@npm%3A0.12.1#~/.yarn/patches/@graphql-mesh-transport-rest-npm-0.12.1-e33622e3a5.patch",
     "@graphql-mesh/types": "^0.105.0",
     "@graphql-tools/delegate": "workspace:*",
     "@isaacs/brace-expansion": "5.0.1",

@@ -187,9 +187,10 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    const originalError = new Error('Oops!');
+    // @whatwg-node/fetch 0.12 surfaces cancel as ERR_STREAM_PREMATURE_CLOSE
+    // rather than propagating the cancel reason to reader.read().
     queueMicrotask(() => {
-      readableStream.cancel(originalError); // this will throw in reader.read()
+      readableStream.cancel(new Error('Oops!')); // this will throw in reader.read()
     });
 
     const { value, done } = await iterator.next();
@@ -197,11 +198,12 @@ describe('handleEventStreamResponse', () => {
     expect(value).toMatchInlineSnapshot(`
       {
         "errors": [
-          [GraphQLError: Oops!],
+          [GraphQLError: Premature close],
         ],
       }
     `);
-    expect(value.errors[0].originalError).toBe(originalError);
+    expect(value.errors[0].originalError).toBeInstanceOf(Error);
+    expect(value.errors[0].originalError.message).toBe('Premature close');
 
     await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
       {
