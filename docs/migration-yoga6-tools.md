@@ -48,6 +48,12 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 - Do not dual-write a deprecated `logger` on the request just for Yoga - use `log`.
 - `createLoggerFromLogging` / `useConfigInServerContext` come from `graphql-yoga` (re-exported from `@graphql-hive/gateway-runtime` where needed).
 
+## Request headers
+
+- `serverContext.headers` is always built with `getHeadersObj(request.headers)` from the Fetch `Request` on HTTP.
+- Do not reuse Node `req.headers` / share the IncomingMessage headers map as a performance shortcut: Yoga and whatwg-node already parse the request, and dual representations led to subtle mutation bugs.
+- WebSocket (and other non-Fetch) entrypoints may still read the upgrade `req` when no Fetch `Request` exists; prefer `request.headers` when both are present.
+
 ## Request body size
 
 - `maxRequestBodySize?: number | false` on gateway config is passed through to Yoga (`@default` 25_000_000). Set `false` to disable the limit (e.g. sync fetch tests that need an unbounded body).

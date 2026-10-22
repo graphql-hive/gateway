@@ -764,8 +764,9 @@ export function createGatewayRuntime<
   const defaultGatewayPlugin: GatewayPlugin = {
     onRequest({ serverContext, request }) {
       // Always normalize from the Fetch Request Headers. Do not reuse Node's
-      // `req.headers` object here: Yoga/whatwg-node already parse the request,
-      // and sharing the raw IncomingMessage headers map caused subtle bugs.
+      // `req.headers` (older "avoid a copy" shortcut): Yoga/whatwg-node already
+      // parse the request, and sharing the raw IncomingMessage headers map
+      // caused subtle bugs with mutations and dual representations.
       Object.assign(serverContext, { headers: getHeadersObj(request.headers) });
     },
     onFetch({ context, options, setOptions }) {
@@ -1198,11 +1199,14 @@ export function createGatewayRuntime<
       // Yoga context typing is a generic intersection; mutate via a wide view.
       const mutable = ctx as any;
       if (!mutable.headers) {
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
-        mutable.headers = getHeadersObj(
-          mutable.req?.headers || mutable.request?.headers,
-        );
+        // HTTP: onRequest already set headers from the Fetch Request. This path
+        // is mainly WebSockets (upgrade `req` only) or other non-Fetch entries.
+        // Prefer Fetch `request.headers` when present; never share/mutate the
+        // raw Node IncomingMessage headers object for a perf shortcut.
+        const headerSource = mutable.request?.headers ?? mutable.req?.headers;
+        mutable.headers = headerSource
+          ? getHeadersObj(headerSource)
+          : undefined;
       }
       if (mutable.connectionParams) {
         mutable.headers = {
