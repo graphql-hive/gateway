@@ -314,7 +314,7 @@ describe('Subscriptions', () => {
       pollingInterval: 500,
       executionCancellation: true,
       // Long drain: if the aborted (rejected) operation leaked its pin, the
-      // superseded generation - and the subscription still running on it  - 
+      // superseded generation - and the subscription still running on it  -
       // would be held alive this long.
       gracefulSchemaReload: { drainTimeout: 30_000 },
       subgraphs: () => {

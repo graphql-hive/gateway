@@ -568,7 +568,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   /**
    * Pin the generation serving `schema` for the lifetime of one operation, so it
    * is not disposed while the operation is still running across all of its
-   * subgraph hops. Returns a lease exposing the pinned generation's executor  - 
+   * subgraph hops. Returns a lease exposing the pinned generation's executor  -
    * the operation must execute through it (not through the current generation's,
    * which may already be a newer one) - and an idempotent release callback.
    * Returns undefined if `schema` is not a known live generation; the operation
@@ -839,7 +839,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
       },
     );
-    // Dispose every live generation - the current one and any still draining  - 
+    // Dispose every live generation - the current one and any still draining  -
     // so no transports or in-flight executors are leaked on shutdown.
     const generations: SchemaGeneration[] = [];
     if (this.currentGeneration) {
