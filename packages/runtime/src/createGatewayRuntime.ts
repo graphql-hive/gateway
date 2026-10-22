@@ -4,10 +4,7 @@ import {
   OnSubscribeEventPayload,
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
-import {
-  defaultProtectSingleValidateFn,
-  useGenericAuth,
-} from '@envelop/generic-auth';
+import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
@@ -1091,23 +1088,7 @@ export function createGatewayRuntime<
   }
 
   if (config.genericAuth) {
-    // TODO: drop all this when new generic auth version is released
-    const genericAuth = { ...config.genericAuth };
-    if (
-      genericAuth.mode === 'protect-granular' &&
-      genericAuth.rejectUnauthenticated === false &&
-      !genericAuth.validateUser
-    ) {
-      // default field denials shouldn't turn a partial response into an http failure
-      genericAuth.validateUser = (params) => {
-        const error = defaultProtectSingleValidateFn(params);
-        if (error) {
-          error.extensions['http'] = { status: 200 };
-        }
-        return error;
-      };
-    }
-    extraPlugins.push(useGenericAuth(genericAuth));
+    extraPlugins.push(useGenericAuth(config.genericAuth));
   }
 
   if (config.hmacSignature) {
