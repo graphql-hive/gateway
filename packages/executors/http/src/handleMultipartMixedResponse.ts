@@ -21,7 +21,20 @@ function isIncomingMessage(body: any): body is IncomingMessage {
   return body != null && typeof body === 'object' && 'pipe' in body;
 }
 
-export async function handleMultipartMixedResponse(response: Response) {
+export type HandleMultipartMixedResponseOptions = {
+  /**
+   * When `true` (default), each multipart part is merged into a growing
+   * snapshot (legacy). When `false`, each part is yielded as received - the
+   * same shape the default schema executor produces.
+   */
+  mergeIncremental?: boolean;
+};
+
+export async function handleMultipartMixedResponse(
+  response: Response,
+  options?: HandleMultipartMixedResponseOptions,
+) {
+  const mergeIncremental = options?.mergeIncremental !== false;
   const body = response.body;
   const contentType = response.headers.get('content-type') || '';
   let asyncIterator: AsyncIterator<Part> | undefined;
@@ -43,22 +56,34 @@ export async function handleMultipartMixedResponse(response: Response) {
     }
   }
 
-  const executionResult: ExecutionResult = {};
-
   if (asyncIterator == null) {
-    return executionResult;
+    return {} as ExecutionResult;
   }
 
-  const resultStream = mapAsyncIterator(asyncIterator, (part: Part) => {
+  if (!mergeIncremental) {
+    return mapAsyncIterator(asyncIterator, (part: Part) => {
+      if (part.json) {
+        return part.body;
+      }
+      return {} as ExecutionResult;
+    });
+  }
+
+  const executionResult: ExecutionResult = {};
+
+  return mapAsyncIterator(asyncIterator, (part: Part) => {
     if (part.json) {
       const incrementalResult = part.body;
       mergeIncrementalResult({
         incrementalResult,
         executionResult,
       });
+      // mergeIncrementalResult only folds data/errors - keep hasNext so
+      // consumers (IncrementalReceiver, @stream) can stop without draining.
+      if (incrementalResult.hasNext != null) {
+        executionResult.hasNext = incrementalResult.hasNext;
+      }
     }
     return executionResult;
   });
-
-  return resultStream;
 }

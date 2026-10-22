@@ -170,6 +170,13 @@ export interface BatchingOptions<K = any, V = any, C = K> {
     request: ExecutionRequest,
   ) => Record<string, any>;
   dataLoaderOptions?: DataLoader.Options<K, V, C>;
+  /**
+   * When true, each batched sub-request's root selections are wrapped in
+   * `@defer` so a defer-capable executor can deliver fast results without
+   * waiting for the slowest sibling in the batch. Requires an executor that
+   * returns incremental results (e.g. `@graphql-tools/executor`).
+   */
+  defer?: boolean;
 }
 
 export interface SubschemaConfig<
@@ -187,6 +194,13 @@ export interface SubschemaConfig<
   executor?: Executor<TContext>;
   batch?: boolean;
   batchingOptions?: BatchingOptions<K, V, C>;
+  /**
+   * When true, `@defer` is forwarded to this subschema and incremental patches
+   * from its executor are merged into the gateway result. When false/omitted,
+   * `@defer` is owned by the gateway (deferred selections are omitted from the
+   * subgraph request and resolved later via type-merging / local resolvers).
+   */
+  defer?: boolean;
 }
 
 export interface MergedTypeConfig<

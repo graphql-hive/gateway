@@ -78,6 +78,10 @@ export default {
             })
         : undefined,
       ...payload.transportEntry.options,
+      // Always pass through multipart patches (like the default schema
+      // executor). Must stay after options spread so gateway consumers cannot
+      // accidentally re-enable legacy accumulate via transportEntries.
+      mergeIncremental: false,
       getDisposeReason: payload.getDisposeReason,
       // @ts-expect-error - TODO: Fix this in executor-http
       fetch: payload.fetch,

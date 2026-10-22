@@ -162,6 +162,18 @@ export interface HTTPExecutorOptions {
    * @default false
    */
   exposeHTTPDetailsInExtensions?: boolean;
+
+  /**
+   * How to deliver `multipart/mixed` incremental (`@defer` / `@stream`) results.
+   *
+   * - `true` (default): merge each part into a growing snapshot (legacy consumers)
+   * - `false`: yield each part as received, matching the default schema executor
+   *
+   * Hive Gateway's HTTP transport always sets this to `false`.
+   *
+   * @default true
+   */
+  mergeIncremental?: boolean;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -458,7 +470,9 @@ export function buildHTTPExecutor(
                     signal,
                   );
                 } else if (contentType?.includes('multipart/mixed')) {
-                  return handleMultipartMixedResponse(fetchResult);
+                  return handleMultipartMixedResponse(fetchResult, {
+                    mergeIncremental: options?.mergeIncremental,
+                  });
                 }
 
                 return fetchResult.text();

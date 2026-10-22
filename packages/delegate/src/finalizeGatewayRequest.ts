@@ -10,6 +10,7 @@ import {
 } from '@graphql-tools/utils';
 import {
   ASTNode,
+  DirectiveNode,
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
@@ -85,6 +86,7 @@ function finalizeGatewayDocument<TContext>(
       operation.selectionSet,
       onOverlappingAliases,
       delegationContext,
+      validFragments,
     );
 
     usedFragments = union(usedFragments, operationUsedFragments);
@@ -805,6 +807,7 @@ function collectFragmentVariables(
         fragment.selectionSet,
         onOverlappingAliases,
         delegationContext,
+        validFragments,
       );
       remainingFragments = union(remainingFragments, fragmentUsedFragments);
       usedVariables = union(usedVariables, fragmentUsedVariables);
@@ -865,6 +868,7 @@ function finalizeSelectionSet(
   selectionSet: SelectionSetNode,
   onOverlappingAliases: () => void,
   delegationContext: DelegationContext<any>,
+  fragmentDefinitions?: ReadonlyArray<FragmentDefinitionNode>,
 ) {
   const usedFragments: Array<string> = [];
   const usedVariables: Array<string> = [];
@@ -883,6 +887,7 @@ function finalizeSelectionSet(
     seenNonNullableMap,
     seenNullableMap,
     delegationContext,
+    fragmentDefinitions,
   );
 
   visit(
@@ -915,7 +920,24 @@ function filterSelectionSet(
   seenNonNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
   seenNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
   delegationContext: DelegationContext<any>,
+  fragmentDefinitions?: ReadonlyArray<FragmentDefinitionNode>,
 ) {
+  // Deferred inline fragments are rewritten on leave. Their child fields that
+  // are absent from this subschema are stripped during the field enter visit,
+  // so we snapshot @requires / key dependencies on enter (from the original
+  // selection set) before those children disappear. Use a stack because leave
+  // may receive a replaced node object after child edits.
+  const deferredDependencyStack: Array<SelectionNode[] | null> = [];
+  // Cached once - visited once per selection node otherwise.
+  const forwardDefer = shouldForwardDefer(delegationContext);
+  const fragmentDefsByName: Record<string, FragmentDefinitionNode> =
+    Object.create(null);
+  if (fragmentDefinitions) {
+    for (const frag of fragmentDefinitions) {
+      fragmentDefsByName[frag.name.value] = frag;
+    }
+  }
+
   return visit(
     selectionSet,
     visitWithTypeInfo(typeInfo, {
@@ -1036,6 +1058,7 @@ function filterSelectionSet(
                   seenNonNullableMap,
                   seenNullableMap,
                   delegationContext,
+                  fragmentDefinitions,
                 );
 
                 if (!fieldFilteredSelectionSet.selections.length) {
@@ -1092,11 +1115,57 @@ function filterSelectionSet(
               return null;
             }
           }
+
+          // Gateway-owned nested @stream: strip so the subgraph returns the
+          // full list and graphql-js streams locally. Root-field @stream is
+          // kept so delegateToSchema's list AsyncIterable path can flush
+          // early (same split as @defer omit vs forward).
+          // Original graphql-tools#1941 covered nested proxied @stream this way.
+          if (
+            !forwardDefer &&
+            hasStreamDirective(node.directives) &&
+            !isOperationRootType(typeInfo.getParentType(), schema)
+          ) {
+            return {
+              ...node,
+              directives: node.directives?.filter(
+                (directive) => directive.name.value !== 'stream',
+              ),
+            };
+          }
           return undefined;
         },
       },
       [Kind.FRAGMENT_SPREAD]: {
         enter: (node) => {
+          // Gateway-owned @defer on a named spread: keep only @requires / key
+          // dependencies from the fragment body (same as deferred inline
+          // fragments), so merge still has the keys it needs.
+          if (hasDeferDirective(node.directives) && !forwardDefer) {
+            const frag = fragmentDefsByName[node.name.value];
+            if (!frag?.selectionSet?.selections?.length) {
+              return null;
+            }
+            const dependencyParentType =
+              schema.getType(frag.typeCondition.name.value) ??
+              typeInfo.getParentType();
+            const dependencySelections = collectDeferredDependencySelections(
+              frag.selectionSet.selections,
+              dependencyParentType,
+              delegationContext,
+            );
+            if (dependencySelections.length === 0) {
+              return null;
+            }
+            return {
+              kind: Kind.INLINE_FRAGMENT,
+              typeCondition: frag.typeCondition,
+              selectionSet: {
+                kind: Kind.SELECTION_SET,
+                selections: dependencySelections,
+              },
+            };
+          }
           if (!(node.name.value in validFragments)) {
             return null;
           }
@@ -1143,15 +1212,55 @@ function filterSelectionSet(
               isUnionType(parentType) &&
               parentType.getTypes().some((t) => t.name === innerType?.name)
             ) {
-              return node;
-            }
-            if (!implementsAbstractType(schema, parentType, innerType)) {
+              // fall through to defer snapshot below
+            } else if (!implementsAbstractType(schema, parentType, innerType)) {
               return null;
             }
+          }
+          if (
+            !forwardDefer &&
+            hasDeferDirective(node.directives) &&
+            node.selectionSet?.selections
+          ) {
+            // Snapshot before child fields absent from this schema are stripped
+            const dependencyParentType =
+              (node.typeCondition != null
+                ? schema.getType(node.typeCondition.name.value)
+                : typeInfo.getParentType()) ?? typeInfo.getParentType();
+            deferredDependencyStack.push(
+              collectDeferredDependencySelections(
+                node.selectionSet.selections,
+                dependencyParentType,
+                delegationContext,
+              ),
+            );
+          } else {
+            deferredDependencyStack.push(null);
           }
           return undefined;
         },
         leave: (selection, _key, parent) => {
+          const snappedDependencies = deferredDependencyStack.pop() ?? null;
+          // When the subschema opts into `defer: true`, keep `@defer` and let
+          // the subgraph stream patches. Otherwise `@defer` is gateway-owned:
+          // omit deferred selections (keeping only @requires/key deps) so the
+          // initial payload can flush before slow deferred fields resolve.
+          if (hasDeferDirective(selection.directives) && !forwardDefer) {
+            const dependencySelections = snappedDependencies ?? [];
+            if (dependencySelections.length === 0) {
+              return null;
+            }
+            return {
+              ...selection,
+              directives: selection.directives?.filter?.(
+                (directive) => directive.name.value !== 'defer',
+              ),
+              selectionSet: {
+                kind: Kind.SELECTION_SET,
+                selections: dependencySelections,
+              },
+            };
+          }
           if (!selection.selectionSet?.selections?.length) {
             return null;
           }
@@ -1229,10 +1338,6 @@ function filterSelectionSet(
               ...selection.selectionSet,
               selections,
             },
-            // @defer is not available for the communication between the gw and subgraph
-            directives: selection.directives?.filter?.(
-              (directive) => directive.name.value !== 'defer',
-            ),
           };
         },
       },
@@ -1242,6 +1347,151 @@ function filterSelectionSet(
     // will hopefully be fixed in future version of graphql-js to be optional
     filteredSelectionSetVisitorKeys as any,
   );
+}
+
+function hasDeferDirective(
+  directives: ReadonlyArray<DirectiveNode> | undefined,
+): boolean {
+  if (directives == null) {
+    return false;
+  }
+  for (let i = 0; i < directives.length; i++) {
+    if (directives[i]!.name.value === 'defer') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasStreamDirective(
+  directives: ReadonlyArray<DirectiveNode> | undefined,
+): boolean {
+  if (directives == null) {
+    return false;
+  }
+  for (let i = 0; i < directives.length; i++) {
+    if (directives[i]!.name.value === 'stream') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isOperationRootType(
+  parentType: GraphQLNamedType | null | undefined,
+  schema: GraphQLSchema,
+): boolean {
+  if (parentType == null) {
+    return false;
+  }
+  return (
+    parentType === schema.getQueryType() ||
+    parentType === schema.getMutationType() ||
+    parentType === schema.getSubscriptionType()
+  );
+}
+
+function shouldForwardDefer(
+  delegationContext: DelegationContext<any>,
+): boolean {
+  const config = delegationContext.subschemaConfig as
+    | { defer?: boolean }
+    | undefined;
+  return config?.defer === true;
+}
+
+/**
+ * From a deferred selection set, keep only the fields this subschema must
+ * resolve immediately as dependencies of deferred fields that will be merged
+ * later (typically `@requires` / key fields from `fieldSelectionSets`).
+ * Deferred fields that this subschema itself owns are dropped so they can
+ * resolve incrementally on the gateway.
+ */
+function collectDeferredDependencySelections(
+  selections: readonly SelectionNode[],
+  parentType: GraphQLNamedType | null | undefined,
+  delegationContext: DelegationContext<any>,
+): SelectionNode[] {
+  if (!parentType || !('getFields' in parentType)) {
+    return [];
+  }
+  const stitchingInfo = delegationContext.info?.schema.extensions?.[
+    'stitchingInfo'
+  ] as StitchingInfo | undefined;
+  const typeConfig = stitchingInfo?.mergedTypes?.[parentType.name];
+  const parentFields = (parentType as GraphQLObjectType).getFields();
+
+  const dependencies: SelectionNode[] = [];
+  const seen = new Set<string>();
+
+  function addDependencyField(fieldName: string) {
+    if (seen.has(fieldName) || parentFields[fieldName] == null) {
+      return;
+    }
+    seen.add(fieldName);
+    dependencies.push({
+      kind: Kind.FIELD,
+      name: { kind: Kind.NAME, value: fieldName },
+    });
+  }
+
+  function addDependenciesForMergedField(fieldName: string) {
+    // fieldSelectionSets: for each subschema that owns `fieldName`, the
+    // selection set of sibling fields that must already be on the parent
+    // (e.g. @requires). Those siblings often live on *this* subschema.
+    if (typeConfig?.fieldSelectionSets) {
+      for (const fieldMap of typeConfig.fieldSelectionSets.values()) {
+        const requiredSelectionSet = fieldMap?.[fieldName];
+        if (!requiredSelectionSet?.selections) {
+          continue;
+        }
+        for (const requiredSelection of requiredSelectionSet.selections) {
+          if (requiredSelection.kind === Kind.FIELD) {
+            addDependencyField(requiredSelection.name.value);
+          }
+        }
+      }
+    }
+    // Also honour @provides-style dependency maps when present.
+    const provided = typeConfig?.providedSelectionsByField?.get(
+      delegationContext.subschema as Subschema,
+    )?.[fieldName];
+    if (provided?.selections) {
+      for (const providedSelection of provided.selections) {
+        if (providedSelection.kind === Kind.FIELD) {
+          addDependencyField(providedSelection.name.value);
+        }
+      }
+    }
+  }
+
+  function walk(nodes: readonly SelectionNode[]) {
+    for (const node of nodes) {
+      if (node.kind === Kind.FIELD) {
+        const fieldName = node.name.value;
+        const fieldOnSubschema = parentFields[fieldName] != null;
+        if (!fieldOnSubschema) {
+          // Deferred field lives on another subschema - pull in the
+          // @requires / key fields this subschema must supply first.
+          addDependenciesForMergedField(fieldName);
+        }
+        // If the field is on this subschema, drop it so @defer can flush
+        // before local resolution (gateway-owned incremental delivery).
+      } else if (node.kind === Kind.INLINE_FRAGMENT && node.selectionSet) {
+        walk(node.selectionSet.selections);
+      } else if (node.kind === Kind.FRAGMENT_SPREAD) {
+        // Nested named spreads inside a deferred selection must contribute
+        // the same @requires / key dependencies as inline fragments.
+        const fragDef = delegationContext.info?.fragments?.[node.name.value];
+        if (fragDef?.selectionSet?.selections) {
+          walk(fragDef.selectionSet.selections);
+        }
+      }
+    }
+  }
+
+  walk(selections);
+  return dependencies;
 }
 
 function union(...arrays: Array<Array<string>>): Array<string> {

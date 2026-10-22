@@ -848,13 +848,32 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   contentEncoding?: boolean | UseContentEncodingOpts;
 
   /**
-   * Enable `@defer` and `@stream` support
+   * Enable `@defer` and `@stream` support.
+   *
+   * - `true` - client-facing incremental delivery; deferred selections are
+   *   handled at the gateway (omitted from subgraph requests by default).
+   * - `{ subgraph: true }` - also forward `@defer` to every subgraph that
+   *   supports incremental delivery.
+   * - `{ subgraph: { users: true, '*': false } }` - per-subgraph forward;
+   *   `"*"` is the default fallback.
+   *
+   * Subgraph forward requires subgraphs to accept `@defer` and return
+   * multipart incremental payloads. Without `subgraph`, behavior stays
+   * gateway-owned (safe for subgraphs that do not support `@defer`).
    *
    * @experimental This feature is experimental and may change in the future.
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/defer-stream)
    */
-  deferStream?: boolean;
+  deferStream?:
+    | boolean
+    | {
+        /**
+         * Forward `@defer` to subgraphs (`true` = all, or a per-name map).
+         * @default undefined (gateway-owned omit; do not forward)
+         */
+        subgraph?: boolean | Record<string, boolean>;
+      };
 
   /**
    * GraphQL Multipart Request support.

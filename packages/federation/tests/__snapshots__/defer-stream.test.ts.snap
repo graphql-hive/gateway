@@ -122,33 +122,6 @@ exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
     "incremental": [
       {
         "data": {
-          "title": "Hello, World!",
-        },
-        "path": [
-          "users",
-          0,
-          "posts",
-          0,
-        ],
-      },
-      {
-        "data": {
-          "title": "My Story",
-        },
-        "path": [
-          "users",
-          1,
-          "posts",
-          0,
-        ],
-      },
-    ],
-  },
-  {
-    "hasNext": false,
-    "incremental": [
-      {
-        "data": {
           "name": "Ada Lovelace",
         },
         "path": [
@@ -169,6 +142,33 @@ exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
           "posts",
           0,
           "author",
+        ],
+      },
+    ],
+  },
+  {
+    "hasNext": false,
+    "incremental": [
+      {
+        "data": {
+          "title": "Hello, World!",
+        },
+        "path": [
+          "users",
+          0,
+          "posts",
+          0,
+        ],
+      },
+      {
+        "data": {
+          "title": "My Story",
+        },
+        "path": [
+          "users",
+          1,
+          "posts",
+          0,
         ],
       },
     ],

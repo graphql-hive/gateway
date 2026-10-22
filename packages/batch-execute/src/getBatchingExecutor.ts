@@ -1,9 +1,21 @@
-import { ExecutionRequest, Executor, memoize2of4 } from '@graphql-tools/utils';
+import { ExecutionRequest, Executor } from '@graphql-tools/utils';
 import DataLoader from 'dataloader';
 import { createBatchingExecutor } from './createBatchingExecutor.js';
 
-export const getBatchingExecutor = memoize2of4(function getBatchingExecutor(
-  _context: Record<string, any>,
+/**
+ * Cache: context → executor → deferFlag → batching executor.
+ *
+ * `memoize2of5` only WeakMap-keys the first two args and ignores the rest, so a
+ * boolean `defer` cannot participate in that helper. Use an explicit Map for
+ * the defer flag (and keep object identity for context/executor).
+ */
+const cache = new WeakMap<
+  Record<string, any>,
+  WeakMap<Executor, Map<string, Executor>>
+>();
+
+export function getBatchingExecutor(
+  context: Record<string, any>,
   executor: Executor,
   dataLoaderOptions?: DataLoader.Options<any, any, any> | undefined,
   extensionsReducer?:
@@ -12,6 +24,31 @@ export const getBatchingExecutor = memoize2of4(function getBatchingExecutor(
         mergedExtensions: Record<string, any>,
         request: ExecutionRequest,
       ) => Record<string, any>),
+  defer?: boolean,
 ): Executor {
-  return createBatchingExecutor(executor, dataLoaderOptions, extensionsReducer);
-});
+  let byExecutor = cache.get(context);
+  if (!byExecutor) {
+    byExecutor = new WeakMap();
+    cache.set(context, byExecutor);
+  }
+
+  let byDefer = byExecutor.get(executor);
+  if (!byDefer) {
+    byDefer = new Map();
+    byExecutor.set(executor, byDefer);
+  }
+
+  // Primitive-safe key — WeakMap cannot hold `true`/`false`.
+  const deferKey = defer ? '1' : '0';
+  let batchingExecutor = byDefer.get(deferKey);
+  if (!batchingExecutor) {
+    batchingExecutor = createBatchingExecutor(
+      executor,
+      dataLoaderOptions,
+      extensionsReducer,
+      defer,
+    );
+    byDefer.set(deferKey, batchingExecutor);
+  }
+  return batchingExecutor;
+}

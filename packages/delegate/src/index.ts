@@ -16,3 +16,4 @@ export * from './getCoercedVariableValues.js';
 export * from './getGraphQLResolveInfo.js';
 export * from './isPrototypePollutingKey.js';
 export * from './handleOverrideByDelegation.js';
+export * from './IncrementalReceiver.js';
