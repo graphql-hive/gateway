@@ -52,7 +52,7 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 Aligned with Yoga 6 dependency bumps:
 
 - **`engines.node`**: `>=22.15.0` upstream; Gateway packages declare `>=22.18.0`.
-- **`@whatwg-node/fetch`**: no longer exports `crypto` / `createFetch().crypto`. Use `globalThis.crypto` for `randomUUID`, HMAC, digests, etc. Keep `TextEncoder` / streams on `fetchAPI` where hashing goes through the FetchAPI object.
+- **`@whatwg-node/fetch`**: no longer exports `crypto` / `createFetch().crypto`. Use `globalThis.crypto` directly (do not put `crypto` back on `fetchAPI`).
 - **`@whatwg-node/promise-helpers` v2**: `mapMaybePromise` removed; use `handleMaybePromise(() => value, ...)`.
 - **`@whatwg-node/events`**: removed; use platform `Event` / `EventTarget` / `CustomEvent`.
 - Optional `node-libcurl` transport dropped (node HTTP stack only in 0.12).
