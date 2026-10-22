@@ -772,8 +772,11 @@ export function createGatewayRuntime<
       // IncomingMessage header maps as-is (no Proxy). Fetch `Headers` need the
       // Proxy path. Keep that order for the hot path; other header tricks
       // (WS upgrade without Request, connectionParams merge) stay unchanged.
-      const reqHeaders = (serverContext as { req?: { headers?: unknown } }).req
-        ?.headers;
+      const reqHeaders = (
+        serverContext as {
+          req?: { headers?: Headers | Record<string, string | string[]> };
+        }
+      ).req?.headers;
       Object.assign(serverContext, {
         headers: getHeadersObj(reqHeaders || request.headers),
       });
