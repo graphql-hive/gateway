@@ -27,7 +27,7 @@ Align Hive Gateway with GraphQL Yoga 6, GraphQL Tools majors, and whatwg-node 0.
 - **Node**: `engines.node` is now `>=22.18.0` (Node 20 removed from CI). Upstream whatwg-node requires `>=22.15.0`.
 - **GraphQL**: peer range is `^16.0.0 || ^17.0.0` (GraphQL 14/15 dropped).
 - **Dependencies**: `graphql-yoga@^6`, `@graphql-yoga/plugin-defer-stream@^4`, `@graphql-tools/utils@^13`, `@graphql-tools/executor@^4`, `@graphql-tools/schema@^11`, `@whatwg-node/fetch@^0.12`, `@whatwg-node/server@^0.13`, `@whatwg-node/promise-helpers@^2`, and Envelop packages that peer on `@envelop/core@^6`.
-- **Logger**: Yoga’s `logging` option accepts `@graphql-hive/logger` `Logger` (not `LegacyLogger`). `yoga.logger` → `yoga.log`; `YogaLogger` / `createLogger` removed.
+- **Logger**: Yoga’s `logging` option accepts `@graphql-hive/logger` `Logger` (not `LegacyLogger`). `yoga.logger` → `yoga.log`; `YogaLogger` / `createLogger` removed. `TransportContext.logger` removed; use `log` only. Request ids are owned by Yoga’s `requestId` option; Gateway only forwards the id upstream.
 - **crypto**: `@whatwg-node/fetch` no longer exports `crypto`; use `globalThis.crypto`. Do not put `crypto` on `fetchAPI`.
 - **Removed helpers** (same table as [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) / Yoga 6): use `new GraphQLError(...)`, `Promise.withResolvers()`, `@whatwg-node/promise-helpers` (`handleMaybePromise`, `mapAsyncIterator`, `MaybePromise`, …), and `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from utils.
 
