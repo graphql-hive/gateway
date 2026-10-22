@@ -19,7 +19,7 @@ const schema = buildSubgraphSchema({
   `),
   resolvers: {
     Query: {
-      // Yields letters one at a time – mirrors the issue reproduction.
+      // Yields letters one at a time - mirrors the issue reproduction.
       async *alphabet() {
         for (const letter of ['a', 'b', 'c', 'd', 'e']) {
           yield letter;

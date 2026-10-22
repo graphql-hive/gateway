@@ -22,7 +22,7 @@ function terminateProcessTree(pid: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       childProcess.exec(`taskkill /F /T /PID ${pid}`, (err) => {
         if (err) {
-          // Exit code 128 means the process was not found – treat as success.
+          // Exit code 128 means the process was not found - treat as success.
           if ((err as NodeJS.ErrnoException & { code?: number }).code === 128) {
             resolve();
           } else {

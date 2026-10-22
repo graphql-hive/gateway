@@ -570,15 +570,15 @@ export interface GatewayHivePersistedDocumentsOptions {
  * and only NEW requests are routed to the new generation. In-flight operations
  * on the previous generation are allowed to finish ("drain") under the schema
  * they were admitted on, and the previous generation is disposed once it is idle
- * — or force-disposed once {@link drainTimeout} elapses, whichever comes first.
+ * - or force-disposed once {@link drainTimeout} elapses, whichever comes first.
  * Incremental-delivery operations (`@defer` / `@stream`) are kept alive until
  * their stream ends.
  *
  * Subscriptions are NOT pinned: they are long-lived, so a subscription on a
  * superseded generation ends with `SCHEMA_RELOAD` when that generation is
- * disposed — immediately on reload when it has no in-flight operations,
+ * disposed - immediately on reload when it has no in-flight operations,
  * otherwise once it finishes draining (at the latest after
- * {@link drainTimeout}) — and the client reconnects against the new schema.
+ * {@link drainTimeout}) - and the client reconnects against the new schema.
  *
  * Schema-replacing plugins must preserve the schema object supplied by the
  * gateway. If a plugin replaces or rebuilds it, the gateway cannot associate
@@ -940,7 +940,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
 
   /**
    * Sets a hard end-to-end time limit in milliseconds for the
-   * entire request lifecycle — from connection to response completion.
+   * entire request lifecycle - from connection to response completion.
    *
    * Unlike Node's `requestTimeout`, this timer is NOT cancelled when the body
    * is received; it runs until the response is finished or the socket

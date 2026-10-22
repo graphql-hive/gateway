@@ -66,7 +66,7 @@ describe('RenameInputObjectFields', () => {
     expect(testData.field2).toBe('field2');
   });
 
-  // Ported from ardatan/graphql-tools#5093 — documents interfering RenameInputObjectFields transforms
+  // Ported from ardatan/graphql-tools#5093 - documents interfering RenameInputObjectFields transforms
   test('renaming with multiple transforms and variables works', async () => {
     const schema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `

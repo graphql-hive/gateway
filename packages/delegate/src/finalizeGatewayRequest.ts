@@ -1097,10 +1097,10 @@ function filterSelectionSet(
                 return undefined;
               }
               // graphql-js `visit` replaces a list element with the returned
-              // value as-is — it does NOT splice arrays. Returning one node is
+              // value as-is - it does NOT splice arrays. Returning one node is
               // fine; multiple spreads are returned as an array and flattened
               // in SELECTION_SET.leave below (needed for union key fields like
-              // `id` under StubMajor — graphql-tools#4965).
+              // `id` under StubMajor - graphql-tools#4965).
               if (nonEmptySpreads.length === 1) {
                 return nonEmptySpreads[0];
               }

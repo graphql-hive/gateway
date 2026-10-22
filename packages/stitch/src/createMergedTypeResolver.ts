@@ -21,7 +21,7 @@ function getMergeOperation(
   // Preserve mutation only when the merge entry point lives on Mutation
   // (graphql-tools#4549). Federation `_entities` and other Query-only merge
   // fields must stay on query even when the gateway operation is a mutation.
-  // Subscriptions always merge via query — you cannot re-subscribe for entity fields.
+  // Subscriptions always merge via query - you cannot re-subscribe for entity fields.
   if (info.operation.operation !== 'mutation' || fieldName == null) {
     return 'query' as OperationTypeNode;
   }

@@ -242,7 +242,7 @@ export function createGatewayRuntime<
   // Pins the schema generation an operation executes against for the operation's
   // whole lifetime. Only set when a unified graph manager is in use AND
   // gracefulSchemaReload is enabled; left undefined otherwise (proxy path, or
-  // feature off — superseded generations are then disposed immediately anyway).
+  // feature off - superseded generations are then disposed immediately anyway).
   let retainGenerationFor:
     | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
     | undefined;
@@ -844,7 +844,7 @@ export function createGatewayRuntime<
       // pinned. The lease's release callback is idempotent.
       const lease = retainGenerationFor?.(args.schema);
       return handleMaybePromise(
-        // The operation must execute on the generation it pinned — a reload may
+        // The operation must execute on the generation it pinned - a reload may
         // already have made a newer generation current. Only unpinned operations
         // (schema untracked or generation already disposed) fall back to the
         // current generation's executor.
@@ -898,9 +898,9 @@ export function createGatewayRuntime<
     }: OnSubscribeEventPayload<GatewayContext>) =>
       // Subscriptions are intentionally NOT pinned to a generation (no
       // retainGenerationFor here): they are long-lived, so rather than keeping
-      // the old generation alive indefinitely they end — when that generation
+      // the old generation alive indefinitely they end - when that generation
       // is disposed (immediately on reload when idle, otherwise once it
-      // finishes draining) — and the client reconnects against the new schema.
+      // finishes draining) - and the client reconnects against the new schema.
       handleMaybePromise(
         () => getExecutor?.(),
         (executor) => {

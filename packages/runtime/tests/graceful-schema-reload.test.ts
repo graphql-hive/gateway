@@ -19,7 +19,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 /**
  * Behavioral (black-box) tests for graceful supergraph reload ("generation
  * overlap"). Everything is driven through the public gateway runtime against
- * REAL upstream HTTP servers — no mocks, no inspection of internals. The only
+ * REAL upstream HTTP servers - no mocks, no inspection of internals. The only
  * thing observed is the HTTP response a client would get.
  *
  * The scenario: a request is made to block inside an upstream resolver (so it is
@@ -284,7 +284,7 @@ describe('Graceful schema reload (generation overlap)', () => {
     expect(result.data?.['slow']).toBe('fromB');
   });
 
-  it('caps concurrent generations — cap of 1 disables overlap', async () => {
+  it('caps concurrent generations - cap of 1 disables overlap', async () => {
     const slowEntered = Promise.withResolvers<void>();
     const releaseSlow = Promise.withResolvers<string>();
 
@@ -466,7 +466,7 @@ describe('Graceful schema reload (generation overlap)', () => {
     await waitForGeneration(gw, 'genB');
 
     // The victim was admitted (and validated) under generation A, so it must
-    // pin AND execute generation A — not run on B's executor while pinning A.
+    // pin AND execute generation A - not run on B's executor while pinning A.
     releaseVictim.resolve();
     const result = await victim;
     expect(result.errors).toBeUndefined();
@@ -601,8 +601,8 @@ describe('Graceful schema reload (generation overlap)', () => {
     useSecond = true;
     await waitForGeneration(gw, 'genB');
 
-    // Shutting down must dispose ALL live generations — including the draining
-    // one — so the blocked mutation is aborted and disposal completes.
+    // Shutting down must dispose ALL live generations - including the draining
+    // one - so the blocked mutation is aborted and disposal completes.
     const disposed = gw[DisposableSymbols.asyncDispose]();
     const result = await inFlight;
     await disposed;
@@ -666,7 +666,7 @@ describe('Graceful schema reload (generation overlap)', () => {
         },
       },
     });
-    // The reload target — a different, unrelated supergraph.
+    // The reload target - a different, unrelated supergraph.
     const otherSchema = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
         type Query {
@@ -737,7 +737,7 @@ describe('Graceful schema reload (generation overlap)', () => {
     releaseHop1.resolve();
     const result = await inFlight;
 
-    // Both hops must complete on the original generation — the generation must
+    // Both hops must complete on the original generation - the generation must
     // not be disposed in the gap between hop 1 finishing and hop 2 starting.
     expect(result.errors).toBeUndefined();
     expect(result.data?.['makeProduct']).toEqual({
@@ -809,7 +809,7 @@ describe('Graceful schema reload (generation overlap)', () => {
     const result = await inFlight;
 
     // Without graceful reload the in-flight mutation is aborted on reload and,
-    // unlike a query, is NOT retried — so it surfaces a SCHEMA_RELOAD error.
+    // unlike a query, is NOT retried - so it surfaces a SCHEMA_RELOAD error.
     expect(result.data?.['slowMutation']).not.toBe('fromA');
     expect(JSON.stringify(result.errors)).toContain('SCHEMA_RELOAD');
   });
@@ -909,7 +909,7 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 });
 
-describe('Graceful schema reload — untracked (plugin-replaced) schemas', () => {
+describe('Graceful schema reload - untracked (plugin-replaced) schemas', () => {
   // Emulates plugins that replace the served schema with a rebuilt copy (e.g.
   // the NestJS integration's sortSchema), which is then not a tracked
   // generation.
@@ -989,7 +989,7 @@ describe('Graceful schema reload — untracked (plugin-replaced) schemas', () =>
   });
 });
 
-describe('Graceful schema reload — config validation', () => {
+describe('Graceful schema reload - config validation', () => {
   let supergraph: string;
   beforeAll(async () => {
     const schema = buildSubgraphSchema({

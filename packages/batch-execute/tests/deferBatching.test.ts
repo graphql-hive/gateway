@@ -182,7 +182,7 @@ describe('batch-execute with defer', () => {
       return base(req);
     };
     const ctx = {};
-    // Warm non-defer first — must not be reused when defer:true is requested.
+    // Warm non-defer first - must not be reused when defer:true is requested.
     const plain = getBatchingExecutor(
       ctx,
       wrapped,
