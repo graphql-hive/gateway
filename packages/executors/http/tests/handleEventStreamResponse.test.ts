@@ -172,6 +172,14 @@ describe('handleEventStreamResponse', () => {
     `);
   });
 
+  // Cancel is consumer -> source teardown ("I'm done reading"), not a stream
+  // failure. WHATWG/native settle pending reader.read() as { done: true }; the
+  // reason is only passed to underlyingSource.cancel, never rejected on read().
+  // Older @whatwg-node/node-fetch used readable.destroy(reason), so read()
+  // rejected with Oops! / later Premature close and this used to expect a
+  // GraphQLError - that was a ponyfill leak, not something the executor should
+  // re-create. Client-visible cancellation stays on AbortSignal (test above);
+  // real read()/network failures still become GraphQLError in the catch path.
   it.skipIf(
     // we skip bun because we cant cancel the stream while reading it (it's locked)
     // however, the same test from nodejs applies in bun
@@ -191,8 +199,6 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    // @whatwg-node/node-fetch@0.9.2+ matches WHATWG/native: cancel fulfills the
-    // pending reader.read() as { done: true } (reason goes to cancel hook only).
     const reason = new Error('Oops!');
     queueMicrotask(() => {
       readableStream.cancel(reason);
