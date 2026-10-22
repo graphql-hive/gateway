@@ -884,22 +884,7 @@ class Multimap {
 }
 
 function withResolvers() {
-  if (Promise.withResolvers) return Promise.withResolvers();
-  let resolveFn;
-  let rejectFn;
-  const promise = new Promise(function deferredPromiseExecutor(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  });
-  return {
-    promise,
-    get resolve() {
-      return resolveFn;
-    },
-    get reject() {
-      return rejectFn;
-    }
-  };
+  return Promise.withResolvers();
 }
 
 class HeapSnapshotEdge {

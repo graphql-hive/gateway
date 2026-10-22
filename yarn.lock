@@ -7372,7 +7372,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/heapsnapshot@workspace:internal/heapsnapshot"
   dependencies:
-    "@tsconfig/node18": "npm:^18.2.5"
+    "@tsconfig/node22": "npm:^22.0.6"
     "@tsconfig/recommended": "npm:^1.0.13"
     "@types/node": "npm:^25.0.0"
     pkgroll: "npm:2.27.1"
@@ -12249,6 +12249,13 @@ __metadata:
   version: 18.2.6
   resolution: "@tsconfig/node18@npm:18.2.6"
   checksum: 10c0/52fc3fadd9d60225c30983f1236f9d16a83f942d27accf3a71d71aee7c76e705307aefb89baa5b3df631c93fe41b47a25ede4f14c6816019000233f1e4df3302
+  languageName: node
+  linkType: hard
+
+"@tsconfig/node22@npm:^22.0.6":
+  version: 22.0.6
+  resolution: "@tsconfig/node22@npm:22.0.6"
+  checksum: 10c0/595f70f90820a16b34db5e192ac47f66567b694c14a2249e24009df27214fab665f6634c6346ad1b6aa2d222aee7377edfeba7821f0076cba075bc79a0be728c
   languageName: node
   linkType: hard
 
