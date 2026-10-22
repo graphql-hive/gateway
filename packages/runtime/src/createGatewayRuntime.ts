@@ -156,6 +156,10 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
+  // `@whatwg-node/fetch@0.12` no longer exports `crypto`; use the platform
+  // global. Keep it on the FetchAPI object so nested Yoga 5 peers that still
+  // type FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
+  // those packages publish Yoga 6 builds.
   const fetchAPI = {
     fetch,
     Request,
@@ -171,6 +175,7 @@ export function createGatewayRuntime<
     TextEncoderStream,
     Blob,
     File,
+    crypto,
     btoa,
     TextEncoder,
     TextDecoder,
@@ -763,11 +768,15 @@ export function createGatewayRuntime<
 
   const defaultGatewayPlugin: GatewayPlugin = {
     onRequest({ serverContext, request }) {
-      // Always normalize from the Fetch Request Headers. Do not reuse Node's
-      // `req.headers` (older "avoid a copy" shortcut): Yoga/whatwg-node already
-      // parse the request, and sharing the raw IncomingMessage headers map
-      // caused subtle bugs with mutations and dual representations.
-      Object.assign(serverContext, { headers: getHeadersObj(request.headers) });
+      // Prefer Node `req.headers` when present: `getHeadersObj` returns plain
+      // IncomingMessage header maps as-is (no Proxy). Fetch `Headers` need the
+      // Proxy path. Keep that order for the hot path; other header tricks
+      // (WS upgrade without Request, connectionParams merge) stay unchanged.
+      const reqHeaders = (serverContext as { req?: { headers?: unknown } }).req
+        ?.headers;
+      Object.assign(serverContext, {
+        headers: getHeadersObj(reqHeaders || request.headers),
+      });
     },
     onFetch({ context, options, setOptions }) {
       // Yoga owns request-id minting / response echo / `log.child({ requestId })`.
@@ -1199,14 +1208,12 @@ export function createGatewayRuntime<
       // Yoga context typing is a generic intersection; mutate via a wide view.
       const mutable = ctx as any;
       if (!mutable.headers) {
-        // HTTP: onRequest already set headers from the Fetch Request. This path
-        // is mainly WebSockets (upgrade `req` only) or other non-Fetch entries.
-        // Prefer Fetch `request.headers` when present; never share/mutate the
-        // raw Node IncomingMessage headers object for a perf shortcut.
-        const headerSource = mutable.request?.headers ?? mutable.req?.headers;
-        mutable.headers = headerSource
-          ? getHeadersObj(headerSource)
-          : undefined;
+        // Prefer Node `req.headers` when present (`getHeadersObj` passthrough);
+        // fall back to Fetch `request.headers` (e.g. non-Node adapters).
+        // WebSockets often have only the upgrade `req`.
+        mutable.headers = getHeadersObj(
+          mutable.req?.headers || mutable.request?.headers,
+        );
       }
       if (mutable.connectionParams) {
         mutable.headers = {

@@ -35,7 +35,7 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 | `createYoga({ logging: LegacyLogger.from(...) })`                            | pass a real `Logger` instance (`logging: log`)                                               |
 | Gateway `persistedDocuments.allowArbitraryOperations`                        | `persistedDocuments.allowArbitraryDocuments`                                                 |
 | `buildHTTPExecutor({ disposable })`                                          | remove (always disposable)                                                                   |
-| `crypto` from `@whatwg-node/fetch` / `fetchAPI.crypto`                       | `globalThis.crypto` (available on Node ≥22.15)                                               |
+| `crypto` from `@whatwg-node/fetch`                                           | platform `crypto` (Node ≥22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers     |
 | GraphQL 16/17 `getArgumentValues` / `getVariableValues` shape drift          | `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from `@graphql-tools/utils` |
 | `#` comment descriptions / `commentDescriptions` in stitch                   | string descriptions (`"""..."""`); GraphQL 16+ only                                          |
 
@@ -50,9 +50,9 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 
 ## Request headers
 
-- `serverContext.headers` is always built with `getHeadersObj(request.headers)` from the Fetch `Request` on HTTP.
-- Do not reuse Node `req.headers` / share the IncomingMessage headers map as a performance shortcut: Yoga and whatwg-node already parse the request, and dual representations led to subtle mutation bugs.
-- WebSocket (and other non-Fetch) entrypoints may still read the upgrade `req` when no Fetch `Request` exists; prefer `request.headers` when both are present.
+- `serverContext.headers` is built with `getHeadersObj(req?.headers || request.headers)`.
+- Prefer Node `req.headers` when present: `getHeadersObj` returns plain IncomingMessage header maps as-is (no Proxy). That is the intentional hot-path shortcut.
+- Fetch `Headers` still go through the Proxy path. WebSocket upgrades often only have `req`.
 
 ## Request body size
 
@@ -63,7 +63,7 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 Aligned with Yoga 6 dependency bumps:
 
 - **`engines.node`**: `>=22.15.0` upstream; Gateway packages declare `>=22.18.0`.
-- **`@whatwg-node/fetch`**: no longer exports `crypto` / `createFetch().crypto`. Use `globalThis.crypto` directly (do not put `crypto` back on `fetchAPI`).
+- **`@whatwg-node/fetch`**: no longer exports `crypto` / `createFetch().crypto`. Use platform `crypto` for `randomUUID`, HMAC, digests, etc. Keep `TextEncoder` / streams on `fetchAPI` where hashing goes through the FetchAPI object. Gateway also keeps `crypto` on its local `fetchAPI` object so nested Yoga 5 peers that still type `FetchAPI` with `crypto` keep working until those packages publish Yoga 6 builds.
 - **`@whatwg-node/promise-helpers` v2**: `mapMaybePromise` removed; use `handleMaybePromise(() => value, ...)`.
 - **`@whatwg-node/events`**: removed; use platform `Event` / `EventTarget` / `CustomEvent`.
 - Optional `node-libcurl` transport dropped (node HTTP stack only in 0.12).

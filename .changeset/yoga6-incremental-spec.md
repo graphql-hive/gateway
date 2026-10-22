@@ -31,7 +31,7 @@ Align Hive Gateway with GraphQL Yoga 6, GraphQL Tools majors, and whatwg-node 0.
 - **Request body**: `maxRequestBodySize?: number | false` (default 25MB) is forwarded to Yoga; set `false` to disable.
 - **Persisted documents**: deprecated `allowArbitraryOperations` gateway option removed; use `allowArbitraryDocuments`.
 - **executor-http**: deprecated unused `disposable` option removed (executors are always disposable).
-- **crypto**: `@whatwg-node/fetch` no longer exports `crypto`; use `globalThis.crypto`. Do not put `crypto` on `fetchAPI`.
+- **crypto**: `@whatwg-node/fetch` no longer exports `crypto`; use platform `crypto` (same as `globalThis.crypto` on Node ≥22.15). Gateway still puts that platform `crypto` on its `fetchAPI` object for nested Yoga 5 peer typings.
 - **Hive Console `usage.clientInfo`**: object form removed; pass a `(context) => ClientInfo | null` function.
 - **Stitching directives**: `stitchingDirectivesTypeDefs` alias removed; use `allStitchingDirectivesTypeDefs`.
 - **CLI**: `--hive-registry-token` and `--hive-usage-target` removed; use `--hive-access-token` with `--hive-target` (or usage/trace-specific tokens).
