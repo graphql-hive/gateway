@@ -9,10 +9,11 @@ import {
   assertAsyncIterable,
   composeLocalSchemasWithApollo,
 } from '@internal/testing';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { GraphQLSchema, parse, print } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import _ from 'lodash';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
 function mergeIncrementalResults(values: ExecutionResult[]) {
@@ -167,6 +168,7 @@ describe('Defer/Stream', () => {
     schema: postsSubgraph,
     plugins: [useDeferStream()],
   });
+  const disposableStack = new AsyncDisposableStack();
   let schema: GraphQLSchema;
   let finalResult: ExecutionResult;
   beforeAll(async () => {
@@ -179,10 +181,12 @@ describe('Defer/Stream', () => {
       onSubschemaConfig(subschemaConfig) {
         const subgraphName = subschemaConfig.name.toLowerCase();
         if (subgraphName === 'users') {
-          const origExecutor = buildHTTPExecutor({
-            endpoint: 'http://localhost:4001/graphql',
-            fetch: usersServer.fetch,
-          });
+          const origExecutor = disposableStack.use(
+            buildHTTPExecutor({
+              endpoint: 'http://localhost:4001/graphql',
+              fetch: usersServer.fetch,
+            }),
+          );
           subschemaConfig.executor = async function usersExecutor(execReq) {
             const result = await origExecutor(execReq);
             if (process.env['DEBUG']) {
@@ -195,10 +199,12 @@ describe('Defer/Stream', () => {
             return result;
           };
         } else if (subgraphName === 'posts') {
-          const origExecutor = buildHTTPExecutor({
-            endpoint: 'http://localhost:4002/graphql',
-            fetch: postsServer.fetch,
-          });
+          const origExecutor = disposableStack.use(
+            buildHTTPExecutor({
+              endpoint: 'http://localhost:4002/graphql',
+              fetch: postsServer.fetch,
+            }),
+          );
           subschemaConfig.executor = async function postsExecutor(execReq) {
             const result = await origExecutor(execReq);
             if (process.env['DEBUG']) {
@@ -429,6 +435,8 @@ describe('Defer/Stream', () => {
       },
     });
   });
+
+  afterAll(() => disposableStack.disposeAsync());
 });
 
 describe('Defer/Stream - entity-level defer on merged types', () => {
@@ -486,9 +494,11 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
     schema: kitchenSubgraph,
     plugins: [useDeferStream()],
   });
+  const disposableStack = new AsyncDisposableStack();
   let schema: GraphQLSchema;
+  let supergraphSdl: string;
   beforeAll(async () => {
-    const supergraphSdl = await composeLocalSchemasWithApollo([
+    supergraphSdl = await composeLocalSchemasWithApollo([
       { name: 'menus', schema: menusSubgraph },
       { name: 'kitchen', schema: kitchenSubgraph },
     ]);
@@ -499,14 +509,16 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
           subschemaConfig.name.toLowerCase() === 'kitchen'
             ? kitchenServer
             : menusServer;
-        const origExecutor = buildHTTPExecutor({
-          endpoint: 'http://localhost:4003/graphql',
-          fetch: server.fetch,
-        });
-        subschemaConfig.executor = origExecutor;
+        subschemaConfig.executor = disposableStack.use(
+          buildHTTPExecutor({
+            endpoint: 'http://localhost:4003/graphql',
+            fetch: server.fetch,
+          }),
+        );
       },
     });
   });
+  afterAll(() => disposableStack.disposeAsync());
   it('flushes the initial payload before deferred merged fields resolve', async () => {
     const start = Date.now();
     const result = await normalizedExecutor({
@@ -563,24 +575,26 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
     // sees a plain `_entities` follow-up (no `@defer` on that selection).
     // `SubschemaConfig.defer` must not change that flush path.
     const kitchenQueries: string[] = [];
+    const menusFetch = menusServer.fetch.bind(menusServer);
+    const kitchenFetch = kitchenServer.fetch.bind(kitchenServer);
+    await using menusExecutor = buildHTTPExecutor({
+      endpoint: 'http://localhost:4003/graphql',
+      fetch: menusFetch,
+    });
+    await using kitchenExecutor = buildHTTPExecutor({
+      endpoint: 'http://localhost:4003/graphql',
+      fetch: async (url, init) => {
+        if (typeof init?.body === 'string') {
+          kitchenQueries.push(init.body);
+        }
+        return kitchenFetch(url as any, init as any);
+      },
+    });
     const forwardedSchema = getStitchedSchemaFromSupergraphSdl({
-      supergraphSdl: await composeLocalSchemasWithApollo([
-        { name: 'menus', schema: menusSubgraph },
-        { name: 'kitchen', schema: kitchenSubgraph },
-      ]),
+      supergraphSdl,
       onSubschemaConfig(subschemaConfig) {
         const isKitchen = subschemaConfig.name.toLowerCase() === 'kitchen';
-        const server = isKitchen ? kitchenServer : menusServer;
-        const fetchImpl = server.fetch.bind(server);
-        subschemaConfig.executor = buildHTTPExecutor({
-          endpoint: 'http://localhost:4003/graphql',
-          fetch: async (url, init) => {
-            if (isKitchen && typeof init?.body === 'string') {
-              kitchenQueries.push(init.body);
-            }
-            return fetchImpl(url as any, init as any);
-          },
-        });
+        subschemaConfig.executor = isKitchen ? kitchenExecutor : menusExecutor;
         if (isKitchen) {
           subschemaConfig.defer = true;
         }
@@ -624,10 +638,11 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
       hasNext: true,
     });
     expect(kitchenQueries.length).toBeGreaterThan(0);
-    expect(
-      kitchenQueries.some((body) => body.includes('prepSequence')),
-      `expected kitchen _entities to request prepSequence, got:\n${kitchenQueries.join('\n')}`,
-    ).toBe(true);
+    if (!kitchenQueries.some((body) => body.includes('prepSequence'))) {
+      throw new Error(
+        `expected kitchen _entities to request prepSequence, got:\n${kitchenQueries.join('\n')}`,
+      );
+    }
     // Entity follow-ups are not subgraph-forwarded.
     expect(kitchenQueries.some((body) => body.includes('@defer'))).toBe(false);
     expect(mergeIncrementalResults(values)).toEqual({
@@ -668,6 +683,7 @@ describe('Defer/Stream - scalar streaming via HTTP', () => {
     plugins: [useDeferStream()],
   });
 
+  const disposableStack = new AsyncDisposableStack();
   let schema: GraphQLSchema;
 
   beforeAll(async () => {
@@ -677,10 +693,12 @@ describe('Defer/Stream - scalar streaming via HTTP', () => {
     schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {
-        const origExecutor = buildHTTPExecutor({
-          endpoint: 'http://localhost:4010/graphql',
-          fetch: alphabetServer.fetch,
-        });
+        const origExecutor = disposableStack.use(
+          buildHTTPExecutor({
+            endpoint: 'http://localhost:4010/graphql',
+            fetch: alphabetServer.fetch,
+          }),
+        );
         subschemaConfig.executor = async function alphabetExecutor(execReq) {
           const result = await origExecutor(execReq);
           if (process.env['DEBUG']) {
@@ -694,6 +712,8 @@ describe('Defer/Stream - scalar streaming via HTTP', () => {
       },
     });
   });
+
+  afterAll(() => disposableStack.disposeAsync());
 
   it('streams [String!]! scalar list via @stream over HTTP', async () => {
     const result = await normalizedExecutor({

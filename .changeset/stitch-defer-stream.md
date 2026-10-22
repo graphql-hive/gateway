@@ -28,3 +28,5 @@ deferStream: { subgraph: { users: true, '*': false } } // per-subgraph
 `IncrementalReceiver` prefers raw patches and cheaply tolerates accumulated snapshots (only fills missing keys). The HTTP executor preserves `hasNext` in accumulate mode.
 
 `@stream` continues to be forwarded on field directives as before. List streaming in `@graphql-tools/delegate` uses a plain async generator (no `@repeaterjs/repeater` dependency).
+
+Hive Router runtime does not plan incremental delivery yet; `deferStream.subgraph` applies to the stitching federation path.
