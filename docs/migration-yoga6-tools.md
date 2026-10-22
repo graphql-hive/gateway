@@ -37,7 +37,8 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 - `@graphql-yoga/logger` is removed; Yoga re-exports `Logger`, `MemoryLogWriter`, `LogLevel` from `@graphql-hive/logger`.
 - `createYoga({ logging })` accepts `boolean | Logger | LogLevel` only — not the deprecated `LegacyLogger` adapter.
 - Prefer request-scoped `context.log` / `serverContext.log` (correlated via `requestId`).
-- Configure request ids with Yoga’s `requestId` option (`trustHeader`, `headerName`, `generateRequestId`, or `false`).
+- **Request ids**: Gateway passes `requestId` through to Yoga. Minting, response `x-request-id`, and `log.child({ requestId })` are Yoga’s job. Gateway only forwards the id on upstream `fetch` (`useRequestIdUpstreamForward`).
+- Do not dual-write a deprecated `logger` on the request just for Yoga — use `log`.
 
 ## whatwg-node 0.12 / 0.13
 

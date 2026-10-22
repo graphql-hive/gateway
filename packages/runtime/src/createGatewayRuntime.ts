@@ -988,11 +988,16 @@ export function createGatewayRuntime<
     );
   }
 
+  // Yoga 6 owns request-id minting / response echo / `log.child({ requestId })`
+  // via `createYoga({ requestId })`. Gateway only forwards the id upstream.
   if (config.requestId !== false) {
-    const reqIdPlugin = useRequestId(
-      typeof config.requestId === 'object' ? config.requestId : undefined,
+    basePlugins.push(
+      useRequestId(
+        typeof config.requestId === 'object'
+          ? { headerName: config.requestId.headerName }
+          : undefined,
+      ),
     );
-    basePlugins.push(reqIdPlugin);
   }
 
   if (isDisposable(wrappedCache)) {
@@ -1157,6 +1162,8 @@ export function createGatewayRuntime<
     fetchAPI: config.fetchAPI,
     // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
     logging: log,
+    // Delegate request-id correlation to Yoga (same option shape as createYoga).
+    requestId: config.requestId,
     plugins: [
       ...basePlugins,
       ...extraPlugins,
@@ -1164,16 +1171,20 @@ export function createGatewayRuntime<
       ...appendPlugins,
     ],
     context(ctx) {
-      // @ts-expect-error - ctx.headers might be present
-      if (!ctx.headers) {
+      // Yoga context typing is a generic intersection; mutate via a wide view.
+      const mutable = ctx as any;
+      if (!mutable.headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        ctx['headers'] = getHeadersObj(
-          ctx['req']?.headers || ctx?.request?.headers,
+        mutable.headers = getHeadersObj(
+          mutable.req?.headers || mutable.request?.headers,
         );
       }
-      if (ctx['connectionParams']) {
-        ctx['headers'] = { ...ctx['headers'], ...ctx['connectionParams'] };
+      if (mutable.connectionParams) {
+        mutable.headers = {
+          ...mutable.headers,
+          ...mutable.connectionParams,
+        };
       }
       return contextBuilder?.(ctx) ?? ctx;
     },

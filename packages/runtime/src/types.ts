@@ -48,7 +48,7 @@ import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { InboundInflightRequestDeduplicationYogaPluginOptions } from './plugins/useInboundInflightReqDedupe';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
-import { RequestIdOptions } from './plugins/useRequestId';
+import type { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
