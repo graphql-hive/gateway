@@ -59,12 +59,13 @@ export function handleReportingConfig(
     process.exit(1);
   }
 
-  if (
-    (opts.hiveAccessToken ||
-      opts.hiveUsageAccessToken ||
-      opts.hiveTraceAccessToken) &&
-    !opts.hiveTarget
-  ) {
+  // CLI-provided tokens require an explicit target. Config-only tokens (common
+  // for self-hosting) may omit target.
+  const cliProvidedAccessToken =
+    cliOpts.hiveAccessToken ||
+    cliOpts.hiveUsageAccessToken ||
+    cliOpts.hiveTraceAccessToken;
+  if (cliProvidedAccessToken && !opts.hiveTarget) {
     ctx.log.error(
       'Hive access token needs a target. Please provide it through the "--hive-target <target>" option or the config.',
     );

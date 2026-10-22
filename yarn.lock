@@ -6605,19 +6605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-persisted-operations@npm:^3.9.0":
-  version: 3.21.1
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.1"
-  dependencies:
-    "@whatwg-node/promise-helpers": "npm:^1.3.2"
-  peerDependencies:
-    graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.1
-  checksum: 10c0/b8c7388c5056670a902c2c47e608666b8ede024e64c775fcc89f7ec98b2ae9b0f39f319bb7d3f8664fdb8dc6273949431891a3f1826c15052be902bdb0bce449
-  languageName: node
-  linkType: hard
-
-"@graphql-yoga/plugin-persisted-operations@npm:^4.0.0":
+"@graphql-yoga/plugin-persisted-operations@npm:4.0.0":
   version: 4.0.0
   resolution: "@graphql-yoga/plugin-persisted-operations@npm:4.0.0"
   dependencies:
