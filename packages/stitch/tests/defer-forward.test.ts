@@ -1,5 +1,8 @@
 import { setTimeout } from 'timers/promises';
-import { executorFromSchema, normalizedExecutor } from '@graphql-tools/executor';
+import {
+  executorFromSchema,
+  normalizedExecutor,
+} from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { parse } from 'graphql';
@@ -140,7 +143,10 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
     for (const value of values) {
       const v = value as {
         data?: { object?: { test?: string[] } };
-        incremental?: Array<{ items?: string[]; path?: Array<string | number> }>;
+        incremental?: Array<{
+          items?: string[];
+          path?: Array<string | number>;
+        }>;
       };
       if (v.data?.object?.test) {
         for (const item of v.data.object.test) {

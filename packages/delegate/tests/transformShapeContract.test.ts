@@ -78,7 +78,11 @@ describe('transform shapes used by deferred patch rewriting', () => {
       transforms: [transform],
     } as any);
     expect(
-      resolveSourceFieldName({ transforms: [transform] } as any, 'Product', 'name'),
+      resolveSourceFieldName(
+        { transforms: [transform] } as any,
+        'Product',
+        'name',
+      ),
     ).toBe('title');
   });
 });

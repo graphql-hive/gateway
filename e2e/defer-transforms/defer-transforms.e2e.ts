@@ -108,9 +108,7 @@ it('forwards @defer through hoist/rename transforms and flushes before the slow 
       ?.productBlurb,
   ).toBeUndefined();
 
-  const recorded = await fetch(
-    `http://0.0.0.0:${catalog.port}/_queries`,
-  ).then(
+  const recorded = await fetch(`http://0.0.0.0:${catalog.port}/_queries`).then(
     (r) =>
       r.json() as Promise<{ queries: string[]; blurbResolverCalls: number }>,
   );
@@ -133,12 +131,12 @@ it('forwards @defer through hoist/rename transforms and flushes before the slow 
         inc.label === 'blurb' ||
         (Array.isArray(inc.path) &&
           inc.path.join('.') === 'product' &&
-          inc.data?.productBlurb != null),
+          inc.data?.['productBlurb'] != null),
     );
   expect(blurbPatch).toBeDefined();
   expect(blurbPatch?.path).toEqual(['product']);
   expect(
-    blurbPatch?.label === 'blurb' || blurbPatch?.data?.productBlurb != null,
+    blurbPatch?.label === 'blurb' || blurbPatch?.data?.['productBlurb'] != null,
   ).toBe(true);
 
   const merged = JSON.stringify(payloads);

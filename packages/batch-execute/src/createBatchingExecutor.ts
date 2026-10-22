@@ -69,9 +69,7 @@ function createLoadFn(
         // Batched @defer merges patches into one result per original request
         collectExecutionResult(resultBatches),
       )
-      .then((result) =>
-        splitResult(result as ExecutionResult, requests.length),
-      )
+      .then((result) => splitResult(result as ExecutionResult, requests.length))
       .catch((err) => requests.map(() => err));
   };
 }
@@ -125,9 +123,7 @@ async function collectExecutionResult(
 }
 
 function isUnsafeKey(key: string | number): boolean {
-  return (
-    key === '__proto__' || key === 'constructor' || key === 'prototype'
-  );
+  return key === '__proto__' || key === 'constructor' || key === 'prototype';
 }
 
 function setAtPath(

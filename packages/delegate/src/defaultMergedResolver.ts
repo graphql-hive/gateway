@@ -15,11 +15,11 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { getCoercedVariableValues } from './getCoercedVariableValues.js';
+import { getReceiver } from './IncrementalReceiver.js';
 import {
   DelegationPlanLeftOver,
   getPlanLeftOverFromParent,
 } from './leftOver.js';
-import { getReceiver } from './IncrementalReceiver.js';
 import {
   EMPTY_OBJECT,
   getActualFieldNodes,
@@ -358,7 +358,8 @@ function resolveMissingFieldFromSourceSubschema(
             const mapped = applyLeafOutputTransforms(subschema, info, value);
             parent[responseKey] = mapped;
             if (parent[FIELD_SUBSCHEMA_MAP_SYMBOL]) {
-              parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] = subschema as any;
+              parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] =
+                subschema as any;
             }
             return resolveExternalValue(
               mapped,

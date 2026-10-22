@@ -1,6 +1,9 @@
 import { setTimeout } from 'timers/promises';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
-import { executorFromSchema, normalizedExecutor } from '@graphql-tools/executor';
+import {
+  executorFromSchema,
+  normalizedExecutor,
+} from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
   asArray,
@@ -367,7 +370,12 @@ describe('transforms with @defer (gateway-owned)', () => {
         {
           schema,
           transforms: [
-            new WrapFields('User', ['address'], ['Address'], ['street', 'city']),
+            new WrapFields(
+              'User',
+              ['address'],
+              ['Address'],
+              ['street', 'city'],
+            ),
           ],
         },
       ],
@@ -584,7 +592,6 @@ describe('transforms with @defer (gateway-owned)', () => {
       },
     });
   });
-
 });
 
 describe('transforms with @defer (subgraph-forwarded)', () => {
@@ -703,7 +710,12 @@ describe('transforms with @defer (subgraph-forwarded)', () => {
           defer: true,
           executor: executorFromSchema(schema),
           transforms: [
-            new WrapFields('User', ['address'], ['Address'], ['street', 'city']),
+            new WrapFields(
+              'User',
+              ['address'],
+              ['Address'],
+              ['street', 'city'],
+            ),
           ],
         },
       ],
@@ -957,9 +969,9 @@ describe('transforms with @defer (subgraph-forwarded)', () => {
       hasNext: true,
     });
     const merged = mergeIncrementalResults(values);
-    expect(merged.errors?.some((e) => e.message.includes('deferred boom'))).toBe(
-      true,
-    );
+    expect(
+      merged.errors?.some((e) => e.message.includes('deferred boom')),
+    ).toBe(true);
   });
 
   it('stops waiting when the operation is aborted', async () => {
@@ -1395,4 +1407,3 @@ describe('transforms with @defer (subgraph-forwarded) - root renames', () => {
     });
   });
 });
-

@@ -16,9 +16,7 @@ async function* chunks(
   }
 }
 
-async function* throwing(
-  err: Error,
-): AsyncGenerator<any> {
+async function* throwing(err: Error): AsyncGenerator<any> {
   yield { data: { product: { id: '1' } }, hasNext: true };
   throw err;
 }
@@ -56,9 +54,10 @@ describe('IncrementalReceiver error handling', () => {
     const parent: Record<string, any> = { id: '1', description: 'ready' };
     receiver.attachTo(parent);
 
-    await expect(receiver.requestField(parent, 'description')).resolves.toBe(
-      'ready',
-    );
+    // Wrap FakePromise so Bun's .resolves matcher accepts it.
+    await expect(
+      Promise.resolve(receiver.requestField(parent, 'description')),
+    ).resolves.toBe('ready');
   });
 
   it('merges a deferred patch after the initial payload', async () => {
@@ -83,6 +82,6 @@ describe('IncrementalReceiver error handling', () => {
     );
 
     await expect(pending).resolves.toBe('later');
-    expect(parent.description).toBe('later');
+    expect(parent['description']).toBe('later');
   });
 });

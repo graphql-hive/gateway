@@ -87,7 +87,7 @@ it('forwards @defer to a subgraph and flushes before the slow field', async () =
     .find(
       (inc) =>
         inc.label === 'description' ||
-        inc.data?.description != null ||
+        inc.data?.['description'] != null ||
         (Array.isArray(inc.path) &&
           inc.path.join('.') === 'product' &&
           inc.data != null),
@@ -96,16 +96,16 @@ it('forwards @defer to a subgraph and flushes before the slow field', async () =
   expect(descriptionPatch?.path).toEqual(['product']);
   expect(
     descriptionPatch?.label === 'description' ||
-      descriptionPatch?.data?.description != null,
+      descriptionPatch?.data?.['description'] != null,
   ).toBe(true);
   expect(JSON.stringify(payloads)).toContain(
     'A carefully deferred product description',
   );
 
   // Proof of forward (not gateway-owned omit): upstream saw @defer
-  const recorded = await fetch(
-    `http://0.0.0.0:${catalog.port}/_queries`,
-  ).then((r) => r.json() as Promise<string[]>);
+  const recorded = await fetch(`http://0.0.0.0:${catalog.port}/_queries`).then(
+    (r) => r.json() as Promise<string[]>,
+  );
   expect(
     recorded.some((q) => q.includes('@defer')),
     `expected forwarded @defer in catalog queries, got:\n${recorded.join('\n---\n')}`,

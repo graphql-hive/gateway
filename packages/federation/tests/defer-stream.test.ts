@@ -569,8 +569,7 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
         { name: 'kitchen', schema: kitchenSubgraph },
       ]),
       onSubschemaConfig(subschemaConfig) {
-        const isKitchen =
-          subschemaConfig.name.toLowerCase() === 'kitchen';
+        const isKitchen = subschemaConfig.name.toLowerCase() === 'kitchen';
         const server = isKitchen ? kitchenServer : menusServer;
         const fetchImpl = server.fetch.bind(server);
         subschemaConfig.executor = buildHTTPExecutor({
@@ -579,7 +578,7 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
             if (isKitchen && typeof init?.body === 'string') {
               kitchenQueries.push(init.body);
             }
-            return fetchImpl(url as string, init);
+            return fetchImpl(url as any, init as any);
           },
         });
         if (isKitchen) {

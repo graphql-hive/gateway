@@ -1,17 +1,10 @@
+import { ExecutionResult } from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   fakePromise,
 } from '@whatwg-node/promise-helpers';
-import { ExecutionResult } from '@graphql-tools/utils';
-import {
-  GraphQLError,
-  GraphQLResolveInfo,
-  responsePathAsArray,
-} from 'graphql';
-import {
-  annotateExternalObject,
-  isExternalObject,
-} from './mergeFields.js';
+import { GraphQLError, GraphQLResolveInfo, responsePathAsArray } from 'graphql';
+import { annotateExternalObject, isExternalObject } from './mergeFields.js';
 import { RECEIVER_SYMBOL } from './symbols.js';
 import { DelegationContext } from './types.js';
 
@@ -145,7 +138,9 @@ export class IncrementalReceiver {
     const error =
       err instanceof Error
         ? err
-        : new GraphQLError(err == null ? 'Incremental stream failed' : String(err));
+        : new GraphQLError(
+            err == null ? 'Incremental stream failed' : String(err),
+          );
     for (const waiters of this.waiters.values()) {
       for (const waiter of waiters) {
         waiter.resolve(error);
@@ -366,7 +361,11 @@ export class IncrementalReceiver {
       }
 
       target[key] = value;
-      if (value != null && typeof value === 'object' && !(value instanceof Error)) {
+      if (
+        value != null &&
+        typeof value === 'object' &&
+        !(value instanceof Error)
+      ) {
         attachReceiver(value, this, this.delegationContext);
       }
       this.notify(pathKey(relPath, key), value);

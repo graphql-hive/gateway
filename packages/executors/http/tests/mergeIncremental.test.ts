@@ -66,7 +66,9 @@ describe('buildHTTPExecutor mergeIncremental', () => {
       hasNext: false,
     });
     // Accumulated path does not keep raw incremental on later yields
-    expect((chunks[1] as { incremental?: unknown }).incremental).toBeUndefined();
+    expect(
+      (chunks[1] as { incremental?: unknown }).incremental,
+    ).toBeUndefined();
   });
 
   it('yields raw parts when mergeIncremental is false', async () => {

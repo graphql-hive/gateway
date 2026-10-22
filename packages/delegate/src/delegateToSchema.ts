@@ -163,10 +163,7 @@ export function delegateRequest<
           isListReturn && fieldHasStreamDirective(delegationContext);
 
         if (isQuery && isRootStream) {
-          return streamListIterable(
-            executorResult,
-            transformer,
-          );
+          return streamListIterable(executorResult, transformer);
         }
         // Forwarded @defer from a defer-capable subschema: consume the initial
         // payload now and merge subsequent patches via IncrementalReceiver.
@@ -322,9 +319,7 @@ function getExecutor<TContext extends Record<string, any>>(
 
 export { executorFromSchema as createDefaultExecutor };
 
-async function consumeDeferredIterable<
-  TContext extends Record<string, any>,
->(
+async function consumeDeferredIterable<TContext extends Record<string, any>>(
   executorResult: AsyncIterable<ExecutionResult<any>>,
   transformer: Transformer<TContext>,
   delegationContext: DelegationContext<TContext>,
@@ -445,9 +440,7 @@ function fieldHasStreamDirective(
  * Map subgraph incremental chunks through the same transform pipeline used for
  * the initial payload, so deferred patches land in gateway field shapes.
  */
-async function* transformDeferredChunks<
-  TContext extends Record<string, any>,
->(
+async function* transformDeferredChunks<TContext extends Record<string, any>>(
   iterable: AsyncIterable<ExecutionResult<any>>,
   transformer: Transformer<TContext>,
   delegationContext: DelegationContext<TContext>,
@@ -499,11 +492,9 @@ async function* transformDeferredChunks<
           }
 
           const tree: Record<string, any> = {};
-          setObjectKeyPath(
-            tree,
-            patch.path as Array<string | number>,
-            { ...patch.data },
-          );
+          setObjectKeyPath(tree, patch.path as Array<string | number>, {
+            ...patch.data,
+          });
           // Structural unwrap transforms (HoistField / MapFields) key off
           // __typename. Prefer the source type name HoistField was built with;
           // the gateway-facing initialValue may already carry a renamed type
@@ -513,10 +504,7 @@ async function* transformDeferredChunks<
               delegationContext,
               initialValue,
             );
-            if (
-              typename != null &&
-              tree[fieldName]['__typename'] == null
-            ) {
+            if (typename != null && tree[fieldName]['__typename'] == null) {
               tree[fieldName]['__typename'] = typename;
             }
           }
@@ -644,9 +632,10 @@ function applyErrorPathTransformers(
       continue;
     }
     matched = true;
-    next = prefix.concat(
-      transform.errorPathTransformer(next.slice(prefix.length)),
-    );
+    next = [
+      ...prefix,
+      ...transform.errorPathTransformer(next.slice(prefix.length)),
+    ];
   }
   return matched ? next : null;
 }

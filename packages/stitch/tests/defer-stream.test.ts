@@ -2,8 +2,12 @@ import { setTimeout } from 'timers/promises';
 import { inspect } from 'util';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { asArray, ExecutionResult, isAsyncIterable, mergeDeep } from '@graphql-tools/utils';
-import { RenameTypes } from '@graphql-tools/wrap';
+import {
+  asArray,
+  ExecutionResult,
+  isAsyncIterable,
+  mergeDeep,
+} from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import _ from 'lodash';
 import { describe, expect, it } from 'vitest';
@@ -517,12 +521,11 @@ describe('Defer/Stream within stitching', () => {
         hasNext: true,
       });
       const merged = mergeIncrementalResults(values);
-      expect(merged.errors?.some((e) => e.message.includes('deferred boom'))).toBe(
-        true,
-      );
+      expect(
+        merged.errors?.some((e) => e.message.includes('deferred boom')),
+      ).toBe(true);
     });
   });
-
 
   describe('deferred fragment spreads', () => {
     it('keeps key dependencies when a deferred named fragment is omitted', async () => {
@@ -613,7 +616,6 @@ describe('Defer/Stream within stitching', () => {
   });
 
   describe('cancellation', () => {
-
     it('stops waiting for deferred fields when the operation is aborted', async () => {
       let slowStarted = false;
       let slowFinished = false;

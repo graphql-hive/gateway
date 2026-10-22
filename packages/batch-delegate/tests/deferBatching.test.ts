@@ -1,5 +1,8 @@
 import { setTimeout } from 'timers/promises';
-import { executorFromSchema, normalizedExecutor } from '@graphql-tools/executor';
+import {
+  executorFromSchema,
+  normalizedExecutor,
+} from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { isAsyncIterable } from '@graphql-tools/utils';

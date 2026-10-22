@@ -1,7 +1,7 @@
 import { setTimeout } from 'timers/promises';
 import { executorFromSchema } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { isAsyncIterable } from '@graphql-tools/utils';
+import { ExecutionResult, isAsyncIterable } from '@graphql-tools/utils';
 import { parse, print } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { createBatchingExecutor } from '../src/createBatchingExecutor.js';
@@ -125,7 +125,7 @@ describe('batch-execute with defer', () => {
     }
 
     const executor = createBatchingExecutor(
-      () => streamedBatch(),
+      () => streamedBatch() as AsyncIterable<ExecutionResult>,
       undefined,
       undefined,
       true,
@@ -183,7 +183,13 @@ describe('batch-execute with defer', () => {
     };
     const ctx = {};
     // Warm non-defer first — must not be reused when defer:true is requested.
-    const plain = getBatchingExecutor(ctx, wrapped, undefined, undefined, false);
+    const plain = getBatchingExecutor(
+      ctx,
+      wrapped,
+      undefined,
+      undefined,
+      false,
+    );
     const deferred = getBatchingExecutor(
       ctx,
       wrapped,
@@ -192,9 +198,9 @@ describe('batch-execute with defer', () => {
       true,
     );
     expect(deferred).not.toBe(plain);
-    expect(
-      getBatchingExecutor(ctx, wrapped, undefined, undefined, true),
-    ).toBe(deferred);
+    expect(getBatchingExecutor(ctx, wrapped, undefined, undefined, true)).toBe(
+      deferred,
+    );
 
     const [fastResult, slowResult] = await Promise.all([
       deferred({
