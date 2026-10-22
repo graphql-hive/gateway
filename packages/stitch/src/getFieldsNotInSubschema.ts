@@ -40,11 +40,13 @@ export function getFieldsNotInSubschema(
 ): Array<FieldNode> {
   const sourceSchema = subschema.transformedSchema;
   const normalizedVariableValues = getVariableValues(variableValues);
+  // collectSubFields is typed for object parents; for unions/interfaces the
+  // abstract branch below expands possible object types.
   let { fields: subFieldNodesByResponseKey } = collectSubFields(
     schema,
     fragments,
     normalizedVariableValues,
-    gatewayType,
+    gatewayType as GraphQLObjectType,
     fieldNodes,
   );
 
@@ -165,7 +167,7 @@ export function getFieldsNotInSubschema(
       const providedTypeFieldPairs = providedSelectionNode
         ? collectProvidedTypeFieldPairs(
             providedSelectionNode,
-            gatewayType,
+            gatewayType as GraphQLObjectType,
             schema,
           )
         : null;

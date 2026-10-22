@@ -1065,8 +1065,8 @@ function filterSelectionSet(
                 };
               });
               const nonEmptySpreads = spreads.filter(
-                (spread): spread is InlineFragmentNode => spread != null,
-              );
+                (spread) => spread != null,
+              ) as Array<InlineFragmentNode>;
               if (!nonEmptySpreads.length) {
                 // no spreads remain after filtering, skip the field altogether.
                 // this is important to avoid invalid ast nodes causing empty lines
@@ -1149,9 +1149,7 @@ function filterSelectionSet(
           // field on a union is expanded into per-member inline fragments.
           // Without this, `visit` nests the array as a single selection and
           // the fragment is ignored at execution time.
-          if (
-            node.selections.some((selection) => Array.isArray(selection))
-          ) {
+          if (node.selections.some((selection) => Array.isArray(selection))) {
             return {
               ...node,
               selections: node.selections.flat().filter(Boolean),

@@ -14,6 +14,7 @@ import {
   FragmentDefinitionNode,
   getNamedType,
   GraphQLCompositeType,
+  GraphQLFieldMap,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
@@ -601,14 +602,14 @@ const subschemaTypesContainSelectionSet = memoize3(
 
 function getFieldsFromCompositeType(
   type: GraphQLCompositeType,
-): Record<string, { type: any }> {
+): GraphQLFieldMap<any, any> {
   if (isObjectType(type) || isInterfaceType(type)) {
     return type.getFields();
   }
   if (isUnionType(type)) {
     // Merge member field maps so merge-key checks like `{ id }` succeed when
     // a stub member (e.g. StubMajor) carries the key field.
-    const fields: Record<string, { type: any }> = Object.create(null);
+    const fields: GraphQLFieldMap<any, any> = Object.create(null);
     for (const member of type.getTypes()) {
       Object.assign(fields, member.getFields());
     }
@@ -634,9 +635,9 @@ function typesContainSelectionSet(
 
       if (selection.selectionSet != null) {
         return typesContainSelectionSet(
-          fields.map((field) =>
-            getNamedType(field.type),
-          ) as Array<GraphQLCompositeType>,
+          fields.map(
+            (field) => getNamedType(field.type) as GraphQLCompositeType,
+          ),
           selection.selectionSet,
         );
       }
