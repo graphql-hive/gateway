@@ -18,6 +18,11 @@ RUN apt-get update && \
     wget curl \
     dumb-init
 
+# fix curl vulnerabilities by updating curl and libcurl4t64
+# fixed in 8.14.1-2+deb13u7
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y curl libcurl4t64
+
 # cleanup
 RUN apt-get autoremove -y && \
   apt-get clean && \
