@@ -18,12 +18,9 @@ import {
   parse,
   type GraphQLSchema,
 } from 'graphql';
-import {
-  createYoga,
-  DisposableSymbols,
-  YogaServerOptions,
-  type YogaServerInstance,
-} from 'graphql-yoga';
+import { createYoga, YogaServerOptions, type YogaServerInstance } from 'graphql-yoga';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
+
 
 /** Thanks @apollo/subgraph for not re-exporting this! */
 export interface GraphQLResolverMap<TContext = {}> {

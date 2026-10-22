@@ -1,6 +1,6 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
-import { MaybePromise } from '@graphql-tools/utils';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   DocumentNode,
@@ -85,8 +85,10 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
     );
   }
   return {
-    execute: handleRegularArgs,
-    subscribe: handleRegularArgs,
+    // Yoga 6 `getResultForParams` is typed as possibly `undefined`; graphql-ws
+    // expects an OperationResult. Runtime always returns a result for WS params.
+    execute: handleRegularArgs as ServerOptions['execute'],
+    subscribe: handleRegularArgs as ServerOptions['subscribe'],
     onSubscribe,
   };
 }

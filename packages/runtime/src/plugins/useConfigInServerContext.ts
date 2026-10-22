@@ -21,12 +21,14 @@ export function useConfigInServerContext({
   };
   return {
     onPluginInit({ plugins }) {
-      if (!plugins.includes(configInServerContextPlugin)) {
+      // ServerAdapterPlugin context is wider than YogaConfigContext; runtime injects log.
+      const plugin = configInServerContextPlugin as any;
+      if (!plugins.includes(plugin)) {
         // we unshift because we want this plugin to run first before all other
         // this is because some routes, like graphiql, readiness and healtcheck
         // use onRequest's endResponse to short-circuit the request and therefore
         // not running this plugin at all
-        plugins.unshift(configInServerContextPlugin);
+        plugins.unshift(plugin);
       }
     },
   };

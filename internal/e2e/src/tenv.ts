@@ -10,7 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { createDeferred, fakePromise } from '@graphql-tools/utils';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   createOpt,
@@ -1141,7 +1141,7 @@ export function createTenv(cwd: string): Tenv {
 }
 
 export function getAvailablePort(): Promise<number> {
-  const deferred = createDeferred<number>();
+  const deferred = Promise.withResolvers<number>();
   const server = createServer();
   server.once('error', (err) => deferred.reject(err));
   server.listen(0, () => {

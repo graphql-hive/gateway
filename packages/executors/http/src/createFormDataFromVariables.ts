@@ -1,9 +1,6 @@
 import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
 import { isAsyncIterable } from '@graphql-tools/utils';
-import {
-  File as DefaultFile,
-  FormData as DefaultFormData,
-} from '@whatwg-node/fetch';
+import { File as DefaultFile, FormData as DefaultFormData } from '@whatwg-node/fetch';
 import {
   handleMaybePromise,
   isPromise,

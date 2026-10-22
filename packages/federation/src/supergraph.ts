@@ -27,21 +27,10 @@ import {
   TypeMergingOptions,
   ValidationLevel,
 } from '@graphql-tools/stitch';
-import {
-  ASTVisitorKeyMap,
-  createGraphQLError,
-  MapperKind,
-  mapSchema,
-  memoize1,
-  mergeDeep,
-  parseSelectionSet,
-  SchemaExtensions,
-  type Executor,
-} from '@graphql-tools/utils';
+import { ASTVisitorKeyMap, MapperKind, mapSchema, memoize1, mergeDeep, parseSelectionSet, SchemaExtensions, type Executor } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
-import {
-  buildASTSchema,
+import { buildASTSchema,
   ConstArgumentNode,
   ConstDirectiveNode,
   DefinitionNode,
@@ -76,8 +65,7 @@ import {
   TypeDefinitionNode,
   UnionTypeDefinitionNode,
   visit,
-  visitWithTypeInfo,
-} from 'graphql';
+  visitWithTypeInfo, GraphQLError } from 'graphql';
 import {
   extractPercentageFromLabel,
   filterDirectivesByGraph,
@@ -1741,7 +1729,7 @@ export function getStitchingOptionsFromSupergraphSdl(
         fieldName: string,
         fieldNode: FieldNode,
       ) {
-        return createGraphQLError(
+        return new GraphQLError(
           `Was not able to find any options for ${fieldName}: This shouldn't have happened.`,
           {
             extensions: {

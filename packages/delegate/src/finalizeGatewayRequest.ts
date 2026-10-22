@@ -1,15 +1,6 @@
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
-import {
-  ASTVisitorKeyMap,
-  createGraphQLError,
-  ExecutionRequest,
-  getDefinedRootType,
-  implementsAbstractType,
-  memoize1,
-  memoize2,
-} from '@graphql-tools/utils';
-import {
-  ASTNode,
+import { ASTVisitorKeyMap, ExecutionRequest, getDefinedRootType, implementsAbstractType, memoize1, memoize2 } from '@graphql-tools/utils';
+import { ASTNode,
   DirectiveNode,
   DocumentNode,
   FragmentDefinitionNode,
@@ -33,8 +24,7 @@ import {
   TypeInfo,
   VariableDefinitionNode,
   visit,
-  visitWithTypeInfo,
-} from 'graphql';
+  visitWithTypeInfo, GraphQLError } from 'graphql';
 import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
@@ -156,7 +146,7 @@ function finalizeGatewayDocument<TContext>(
   }
 
   if (!newOperations.length || selectionCnt === 0) {
-    throw createGraphQLError(
+    throw new GraphQLError(
       'Failed to create a gateway request. The request must contain at least one operation.',
       {
         extensions: {

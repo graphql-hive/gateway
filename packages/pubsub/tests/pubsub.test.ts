@@ -2,7 +2,7 @@ import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
 import { jetstream, jetstreamManager } from '@nats-io/jetstream';
 import { connect as natsConnect } from '@nats-io/transport-node';
-import { crypto } from '@whatwg-node/fetch';
+const crypto = globalThis.crypto;
 import {
   createDeferredPromise,
   fakePromise,

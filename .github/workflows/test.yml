@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
@@ -71,7 +70,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
@@ -104,11 +102,6 @@ jobs:
       matrix:
         setup:
           # Node
-          - workflow-name: Node 20 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            hive-router-runtime: 0
-            node-version: 20
           - workflow-name: Node 22 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node

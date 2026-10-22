@@ -1,15 +1,13 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createGraphQLError } from '@graphql-tools/utils';
-import {
-  buildSchema,
+
+import { buildSchema,
   DocumentNode,
   graphql,
   Kind,
   OperationTypeNode,
   parse,
   print,
-  validate,
-} from 'graphql';
+  validate, GraphQLError } from 'graphql';
 import { describe, expect, test } from 'vitest';
 import { createRequest } from '../src/createRequest.js';
 import { delegateRequest } from '../src/delegateToSchema.js';
@@ -277,7 +275,7 @@ describe('bare requests', () => {
         delegate: null,
       },
       errors: [
-        createGraphQLError('test', {
+        new GraphQLError('test', {
           path: ['delegate'],
         }),
       ],

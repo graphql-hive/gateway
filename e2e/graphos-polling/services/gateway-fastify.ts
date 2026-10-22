@@ -43,7 +43,7 @@ const app = fastify({
   requestIdLogLabel: 'requestId',
   // Check the header first, then generate a new one if not found
   genReqId: (req): string =>
-    req.headers[requestIdHeader]?.toString() || gw.fetchAPI.crypto.randomUUID(),
+    req.headers[requestIdHeader]?.toString() || globalThis.crypto.randomUUID(),
 });
 
 export interface FastifyContext {

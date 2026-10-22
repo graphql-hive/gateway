@@ -38,7 +38,8 @@ import {
   isSchema,
   parse,
 } from 'graphql';
-import { mergeSchemas } from 'graphql-yoga';
+import { mergeSchemas } from '@graphql-tools/schema';
+
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphConfig,

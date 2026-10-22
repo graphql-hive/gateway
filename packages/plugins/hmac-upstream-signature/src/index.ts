@@ -6,7 +6,7 @@ import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type { FetchAPI, GraphQLParams, YogaLogger } from 'graphql-yoga';
+import type { FetchAPI, GraphQLParams, Logger } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
 
 export type HMACUpstreamSignatureOptions = {
@@ -105,7 +105,7 @@ export function useHmacUpstreamSignature(
           () =>
             (key$ ||= createCryptoKey({
               textEncoder,
-              crypto: fetchAPI.crypto,
+              crypto: globalThis.crypto,
               secret: options.secret,
               usages: ['sign'],
             })),
@@ -117,7 +117,7 @@ export function useHmacUpstreamSignature(
               serializedExecutionRequest,
             );
             return handleMaybePromise(
-              () => fetchAPI.crypto.subtle.sign('HMAC', key, encodedContent),
+              () => globalThis.crypto.subtle.sign('HMAC', key, encodedContent),
               (signature) => {
                 const extensionValue = fetchAPI.btoa(
                   String.fromCharCode(...new Uint8Array(signature)),
@@ -166,10 +166,10 @@ export function useHmacSignatureValidation(
   let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
-  let logger: YogaLogger;
+  let logger: Logger;
   return {
     onYogaInit({ yoga }) {
-      logger = yoga.logger;
+      logger = yoga.log;
     },
     onParams({ params, fetchAPI }) {
       textEncoder ||= new fetchAPI.TextEncoder();
@@ -185,7 +185,7 @@ export function useHmacSignatureValidation(
         () =>
           (key$ ||= createCryptoKey({
             textEncoder,
-            crypto: fetchAPI.crypto,
+            crypto: globalThis.crypto,
             secret: options.secret,
             usages: ['verify'],
           })),
@@ -202,7 +202,7 @@ export function useHmacSignatureValidation(
 
           return handleMaybePromise(
             () =>
-              fetchAPI.crypto.subtle.verify(
+              globalThis.crypto.subtle.verify(
                 'HMAC',
                 key,
                 sigBuf,

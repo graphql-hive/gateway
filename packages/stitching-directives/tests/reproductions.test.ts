@@ -1,11 +1,8 @@
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import {
-  createGraphQLError,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
-import { buildSchema, GraphQLObjectType, parse } from 'graphql';
+import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { buildSchema, GraphQLObjectType, parse, GraphQLError } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { stitchingDirectives } from '../src';
 
@@ -381,7 +378,7 @@ describe('Reproductions for issues', () => {
           me: () => users[0],
           user: (_root, { id }) =>
             users.find((user) => user.id === id) ||
-            createGraphQLError('Record not found', {
+            new GraphQLError('Record not found', {
               extensions: {
                 code: 'NOT_FOUND',
               },
@@ -420,12 +417,12 @@ describe('Reproductions for issues', () => {
         User: {
           reviews: (user) =>
             reviews.filter((review) => review.authorId === user.id),
-          totalReviews: () => createGraphQLError('RANDOM ERROR'),
+          totalReviews: () => new GraphQLError('RANDOM ERROR'),
         },
         Query: {
           review: (_root, { id }) =>
             reviews.find((review) => review.id === id) ||
-            createGraphQLError('Record not found', {
+            new GraphQLError('Record not found', {
               extensions: {
                 code: 'NOT_FOUND',
               },

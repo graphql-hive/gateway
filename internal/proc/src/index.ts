@@ -2,7 +2,7 @@ import childProcess from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
-import { createDeferred, fakePromise } from '@graphql-tools/utils';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { hostnames, isDebug, trimError } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
@@ -113,7 +113,7 @@ export function spawn(
     signal,
   });
 
-  const exitDeferred = createDeferred<void>();
+  const exitDeferred = Promise.withResolvers<void>();
   const waitForExit = exitDeferred.promise;
   let exited = false;
   let stdout = '';

@@ -1,13 +1,8 @@
 import { createBatchingExecutor } from '@graphql-tools/batch-execute';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import {
-  createGraphQLError,
-  ExecutionResult,
-  Executor,
-  MaybeAsyncIterable,
-} from '@graphql-tools/utils';
-import { OperationDefinitionNode, parse, print, validate } from 'graphql';
+import { ExecutionResult, Executor, MaybeAsyncIterable } from '@graphql-tools/utils';
+import { OperationDefinitionNode, parse, print, validate, GraphQLError } from 'graphql';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 describe('batch execution', () => {
@@ -43,8 +38,8 @@ describe('batch execution', () => {
         boom: (_root, { message }) => new Error(message),
         boomNonNullable: (_root, { message }) => new Error(message),
         boomWithPath: (_root, { message, path }) =>
-          createGraphQLError(message, { path }),
-        extension: () => createGraphQLError('boom', { extensions }),
+          new GraphQLError(message, { path }),
+        extension: () => new GraphQLError('boom', { extensions }),
         widget: () => ({ name: 'wingnut' }),
       },
     },
@@ -285,7 +280,7 @@ describe('batch execution', () => {
 
   it('non pathed errors contain extensions', async () => {
     const errorExec: Executor = (): MaybeAsyncIterable<ExecutionResult> => {
-      return { errors: [createGraphQLError('boom', { extensions })] };
+      return { errors: [new GraphQLError('boom', { extensions })] };
     };
     const batchExec = createBatchingExecutor(errorExec);
 

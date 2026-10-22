@@ -4,20 +4,14 @@ import {
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import {
-  createGraphQLError,
-  IResolvers,
-  SyncExecutor,
-} from '@graphql-tools/utils';
+import { IResolvers, SyncExecutor } from '@graphql-tools/utils';
 import { schemaFromExecutor } from '@graphql-tools/wrap';
-import {
-  GraphQLInterfaceType,
+import { GraphQLInterfaceType,
   GraphQLResolveInfo,
   GraphQLScalarType,
   GraphQLSchema,
   Kind,
-  ValueNode,
-} from 'graphql';
+  ValueNode, GraphQLError } from 'graphql';
 
 export type Location = {
   name: string;
@@ -403,7 +397,7 @@ const propertyResolvers: IResolvers = {
 
   Property: {
     error() {
-      throw createGraphQLError('Property.error error', {
+      throw new GraphQLError('Property.error error', {
         extensions: {
           code: 'SOME_CUSTOM_CODE',
         },

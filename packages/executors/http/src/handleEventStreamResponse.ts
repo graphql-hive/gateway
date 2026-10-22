@@ -1,8 +1,5 @@
-import {
-  createGraphQLError,
-  ExecutionResult,
-  inspect,
-} from '@graphql-tools/utils';
+import { GraphQLError } from 'graphql';
+import { ExecutionResult, inspect } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { TextDecoder } from '@whatwg-node/fetch';
 import { createResultForAbort } from './utils';
@@ -71,7 +68,7 @@ export function handleEventStreamResponse(
         const errErr = err instanceof Error ? err : new Error(String(err));
         await push({
           errors: [
-            createGraphQLError(errErr.message, { originalError: errErr }),
+            new GraphQLError(errErr.message, { originalError: errErr }),
           ],
         });
         return stop();

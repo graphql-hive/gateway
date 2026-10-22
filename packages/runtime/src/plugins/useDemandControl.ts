@@ -1,17 +1,12 @@
 import { EMPTY_OBJECT } from '@graphql-tools/delegate';
-import {
-  createGraphQLError,
-  isAsyncIterable,
-  mapAsyncIterator,
-} from '@graphql-tools/utils';
+import { isAsyncIterable } from '@graphql-tools/utils';
+import { mapAsyncIterator } from '@whatwg-node/promise-helpers';
 import { getNodeEnv } from '~internal/env';
-import {
-  FieldNode,
+import { FieldNode,
   GraphQLNamedOutputType,
   isCompositeType,
   OperationTypeNode,
-  TypeInfo,
-} from 'graphql';
+  TypeInfo, GraphQLError } from 'graphql';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 
@@ -93,7 +88,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
         '[useDemandControl]',
       );
       if (maxCost != null && costByContext > maxCost) {
-        throw createGraphQLError(
+        throw new GraphQLError(
           `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,
           {
             extensions: {

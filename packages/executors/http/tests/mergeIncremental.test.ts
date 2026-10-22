@@ -86,4 +86,42 @@ describe('buildHTTPExecutor mergeIncremental', () => {
 
     expect(chunks).toEqual(multipartParts);
   });
+
+  it('merges incrementalSpec v0.2 pending/id/subPath patches', async () => {
+    const v02Parts = [
+      {
+        data: { product: { name: 'Widget' } },
+        pending: [{ id: '0', path: ['product'] }],
+        hasNext: true,
+      },
+      {
+        incremental: [
+          {
+            id: '0',
+            subPath: [],
+            data: { description: 'slow' },
+          },
+        ],
+        completed: [{ id: '0' }],
+        hasNext: false,
+      },
+    ];
+    await using executor = buildHTTPExecutor({
+      incrementalSpec: 'v0.2',
+      fetch: () => multipartResponse(v02Parts),
+    });
+    const result = await executor({ document: deferQuery });
+    assertAsyncIterable(result);
+
+    const chunks: unknown[] = [];
+    for await (const chunk of result) {
+      chunks.push(structuredClone(chunk));
+    }
+
+    expect(chunks).toHaveLength(2);
+    expect(chunks[1]).toMatchObject({
+      data: { product: { name: 'Widget', description: 'slow' } },
+      hasNext: false,
+    });
+  });
 });

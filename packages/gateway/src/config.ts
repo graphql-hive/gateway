@@ -147,7 +147,8 @@ export async function getBuiltinPluginsFromConfig(
 
   if (config.jit) {
     const { useJIT } = await import('@graphql-mesh/plugin-jit');
-    plugins.push(useJIT());
+    // Envelop 6 nests @envelop/types; JIT plugin types resolve to a parallel copy.
+    plugins.push(useJIT() as (typeof plugins)[number]);
   }
 
   if (config.awsSigv4) {

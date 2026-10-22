@@ -7,7 +7,8 @@ import type {
 } from '@apollo/server-gateway-interface';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import type { FetchFn } from '@graphql-tools/executor-http';
-import { ExecutionResult, fakePromise } from '@graphql-tools/utils';
+import { ExecutionResult } from '@graphql-tools/utils';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import type { TypedEventTarget } from '@graphql-yoga/typed-event-target';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { CustomEvent } from '@whatwg-node/events';

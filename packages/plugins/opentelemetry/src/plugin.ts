@@ -6,7 +6,8 @@ import {
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   context,
@@ -710,7 +711,7 @@ export function useOpenTelemetry(
             {
               write(level, attrs, msg) {
                 level = level === 'trace' ? 'debug' : level;
-                yoga.logger[level](msg, attrs);
+                yoga.log[level](msg ?? '', attrs);
               },
             },
           ],

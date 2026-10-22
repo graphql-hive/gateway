@@ -1,4 +1,4 @@
-import { MaybePromise } from '@graphql-tools/utils';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import useHiveConsole, {

@@ -1,6 +1,6 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { createDeferred } from '@graphql-tools/utils';
+
 import {
   createDisposableServer,
   usingHiveRouterRuntime,
@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('Upstream Timeout', () => {
   it('times out based on factory function', async () => {
-    const greetingsDeferred = createDeferred<string>();
+    const greetingsDeferred = Promise.withResolvers();
     await using gateway = createGatewayTester({
       subgraphs: [
         {

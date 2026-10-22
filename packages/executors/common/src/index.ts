@@ -62,6 +62,8 @@ export function serializeExecutionRequest({
 }
 
 export interface UpstreamErrorExtensions {
+  // GraphQLErrorOptions.extensions requires a string index signature.
+  [attributeName: string]: unknown;
   code?: string;
   serviceName?: string;
   request: {

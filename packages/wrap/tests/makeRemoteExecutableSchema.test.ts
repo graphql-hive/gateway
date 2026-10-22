@@ -1,5 +1,6 @@
 import { subscribe } from '@graphql-tools/executor';
-import { ExecutionResult, fakePromise } from '@graphql-tools/utils';
+import { ExecutionResult } from '@graphql-tools/utils';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import {
   makeSchemaRemote,
   propertySchema,

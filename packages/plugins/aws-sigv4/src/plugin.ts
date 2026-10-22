@@ -1,10 +1,10 @@
+import { GraphQLError } from 'graphql';
 import { BinaryLike, createHash, createHmac, KeyObject } from 'node:crypto';
 import { STS } from '@aws-sdk/client-sts';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getEnvStr } from '~internal/env';
 import aws4, { type Request as AWS4Request } from 'aws4';
-import { createGraphQLError } from 'graphql-yoga';
 import {
   AWSSignV4Headers,
   AWSSignv4PluginIncomingOptions,
@@ -30,7 +30,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
         }
       : undefined,
   onExpired() {
-    throw createGraphQLError('Request is expired', {
+    throw new GraphQLError('Request is expired', {
       extensions: {
         http: {
           status: 401,
@@ -40,7 +40,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
     });
   },
   onMissingHeaders() {
-    throw createGraphQLError('Required headers are missing', {
+    throw new GraphQLError('Required headers are missing', {
       extensions: {
         http: {
           status: 401,
@@ -50,7 +50,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
     });
   },
   onSignatureMismatch() {
-    throw createGraphQLError('The signature does not match', {
+    throw new GraphQLError('The signature does not match', {
       extensions: {
         http: {
           status: 401,

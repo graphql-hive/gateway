@@ -1,13 +1,6 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
-import {
-  createGraphQLError,
-  getDirective,
-  getDirectiveExtensions,
-  memoize1,
-  memoize3,
-} from '@graphql-tools/utils';
-import {
-  DocumentNode,
+import { getDirective, getDirectiveExtensions, memoize1, memoize3 } from '@graphql-tools/utils';
+import { DocumentNode,
   FieldNode,
   getArgumentValues,
   getNamedType,
@@ -19,8 +12,7 @@ import {
   OperationTypeNode,
   TypeInfo,
   visit,
-  visitWithTypeInfo,
-} from 'graphql';
+  visitWithTypeInfo, GraphQLError } from 'graphql';
 import { getDirectiveNameForFederationDirective } from '../../utils';
 
 type ListSizeAnnotation =
@@ -165,7 +157,7 @@ export function createCalculateCost({
                             listSizeAnnotation.requireOneSlicingArgument !==
                               false
                           ) {
-                            throw createGraphQLError(
+                            throw new GraphQLError(
                               `Only one slicing argument is allowed on field "${field.name}"; found multiple slicing arguments "${slicingArguments.join(', ')}"`,
                               {
                                 extensions: {

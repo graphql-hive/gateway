@@ -39,29 +39,7 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import {
-  Blob,
-  btoa,
-  CompressionStream,
-  crypto,
-  DecompressionStream,
-  fetch,
-  File,
-  FormData,
-  Headers,
-  ReadableStream,
-  Request,
-  Response,
-  TextDecoder,
-  TextDecoderStream,
-  TextEncoder,
-  TextEncoderStream,
-  TransformStream,
-  URL,
-  URLPattern,
-  URLSearchParams,
-  WritableStream,
-} from '@whatwg-node/fetch';
+import { Blob, btoa, CompressionStream, DecompressionStream, fetch, File, FormData, Headers, ReadableStream, Request, Response, TextDecoder, TextDecoderStream, TextEncoder, TextEncoderStream, TransformStream, URL, URLPattern, URLSearchParams, WritableStream } from '@whatwg-node/fetch';
 import {
   fakePromise,
   fakeRejectPromise,
@@ -174,7 +152,6 @@ export function createGatewayRuntime<
     TextEncoderStream,
     Blob,
     File,
-    crypto,
     btoa,
     TextEncoder,
     TextDecoder,
@@ -1178,7 +1155,8 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: LegacyLogger.from(log),
+    // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
+    logging: log,
     plugins: [
       ...basePlugins,
       ...extraPlugins,

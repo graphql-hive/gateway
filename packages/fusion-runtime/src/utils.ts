@@ -15,18 +15,8 @@ import {
   MergedTypeResolver,
   Subschema,
 } from '@graphql-tools/delegate';
-import {
-  getDirectiveExtensions,
-  isAsyncIterable,
-  isDocumentNode,
-  mergeDeep,
-  printSchemaWithDirectives,
-  type ExecutionRequest,
-  type Executor,
-  type GraphQLResolveInfoHelpers,
-  type Maybe,
-  type MaybePromise,
-} from '@graphql-tools/utils';
+import { getDirectiveExtensions, isAsyncIterable, isDocumentNode, mergeDeep, printSchemaWithDirectives, type ExecutionRequest, type Executor, type GraphQLResolveInfoHelpers, type Maybe } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   handleMaybePromise,
   mapAsyncIterator,

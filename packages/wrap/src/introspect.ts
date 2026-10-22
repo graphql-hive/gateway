@@ -1,22 +1,12 @@
-import {
-  AsyncExecutor,
-  createGraphQLError,
-  ExecutionResult,
-  Executor,
-  inspect,
-  isAsyncIterable,
-  SyncExecutor,
-} from '@graphql-tools/utils';
+import { AsyncExecutor, ExecutionResult, Executor, inspect, isAsyncIterable, SyncExecutor } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import {
-  buildClientSchema,
+import { buildClientSchema,
   getIntrospectionQuery,
   GraphQLSchema,
   IntrospectionOptions,
   IntrospectionQuery,
   parse,
-  ParseOptions,
-} from 'graphql';
+  ParseOptions, GraphQLError } from 'graphql';
 
 function getSchemaFromIntrospection(
   introspectionResult: ExecutionResult<IntrospectionQuery>,
@@ -27,7 +17,7 @@ function getSchemaFromIntrospection(
   }
   if (introspectionResult?.errors) {
     const graphqlErrors = introspectionResult.errors.map((error) =>
-      createGraphQLError(error.message, error),
+      new GraphQLError(error.message, error),
     );
     if (introspectionResult.errors.length === 1) {
       throw graphqlErrors[0];
@@ -38,7 +28,7 @@ function getSchemaFromIntrospection(
       );
     }
   }
-  throw createGraphQLError(
+  throw new GraphQLError(
     `Could not obtain introspection result, received the following as response; \n ${inspect(
       introspectionResult,
     )}`,

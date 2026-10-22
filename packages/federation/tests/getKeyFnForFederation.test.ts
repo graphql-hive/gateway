@@ -1,4 +1,5 @@
-import { createGraphQLError } from '@graphql-tools/utils';
+import { GraphQLError } from 'graphql';
+
 import { describe, expect, it } from 'vitest';
 import { getKeyFnForFederation } from '../src/utils';
 
@@ -70,7 +71,7 @@ describe('getKeyFnForFederation', () => {
     const data = {
       __typename: 'Test',
       name: 'Test',
-      address: createGraphQLError('Failed to fetch address'),
+      address: new GraphQLError('Failed to fetch address'),
       price: 100,
       extra: 'Extra',
     };

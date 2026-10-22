@@ -1,5 +1,6 @@
-import { createGraphQLError } from '@graphql-tools/utils';
-import { crypto, TextEncoder } from '@whatwg-node/fetch';
+
+import { TextEncoder } from '@whatwg-node/fetch';
+const crypto = globalThis.crypto;
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GraphQLError } from 'graphql';
 
@@ -15,7 +16,7 @@ export function createGraphQLErrorForAbort(
     return reason;
   }
   if (reason?.name === 'TimeoutError') {
-    return createGraphQLError(reason.message, {
+    return new GraphQLError(reason.message, {
       extensions: {
         http: {
           status: 504,
@@ -27,7 +28,7 @@ export function createGraphQLErrorForAbort(
       originalError: reason,
     });
   }
-  return createGraphQLError(reason.message, {
+  return new GraphQLError(reason.message, {
     extensions,
     originalError: reason,
   });

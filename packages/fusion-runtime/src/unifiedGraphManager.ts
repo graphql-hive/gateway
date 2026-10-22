@@ -14,11 +14,7 @@ import type {
   IResolvers,
   TypeSource,
 } from '@graphql-tools/utils';
-import {
-  createGraphQLError,
-  isDocumentNode,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
+import { isDocumentNode, printSchemaWithDirectives } from '@graphql-tools/utils';
 import {
   AsyncDisposableStack,
   DisposableSymbols,
@@ -29,8 +25,8 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { usingHiveRouterRuntime } from '~internal/env';
-import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
-import { buildASTSchema, buildSchema, isSchema } from 'graphql';
+import type { DocumentNode, GraphQLSchema } from 'graphql';
+import { buildASTSchema, buildSchema, GraphQLError, isSchema } from 'graphql';
 import { handleFederationSupergraph as stitchingUnifiedGraphHandler } from './federation/supergraph';
 import {
   compareSchemas,
@@ -197,7 +193,7 @@ const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 const DEFAULT_MAX_CONCURRENT_GENERATIONS = 10;
 
 function createSchemaReloadError(): GraphQLError {
-  return createGraphQLError(
+  return new GraphQLError(
     'operation has been aborted due to a schema reload',
     {
       extensions: {
@@ -834,7 +830,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   [DisposableSymbols.asyncDispose]() {
-    this.disposeReason = createGraphQLError(
+    this.disposeReason = new GraphQLError(
       'operation has been aborted because the server is shutting down',
       {
         extensions: {

@@ -6,14 +6,17 @@ import {
   UpstreamErrorExtensions,
 } from '@graphql-tools/executor-common';
 import {
-  createGraphQLError,
   DisposableAsyncExecutor,
   DisposableExecutor,
   DisposableSyncExecutor,
   ExecutionRequest,
   ExecutionResult,
   Executor,
+  getDefaultIncrementalDeliverySpec,
+  getMultipartContentType,
   getOperationASTFromRequest,
+  INCREMENTAL_DELIVERY_SPECS,
+  type IncrementalSpec,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -23,7 +26,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { DocumentNode, GraphQLResolveInfo } from 'graphql';
+import { DocumentNode, GraphQLError, GraphQLResolveInfo } from 'graphql';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
 import { handleEventStreamResponse } from './handleEventStreamResponse.js';
 import { handleMultipartMixedResponse } from './handleMultipartMixedResponse.js';
@@ -174,6 +177,20 @@ export interface HTTPExecutorOptions {
    * @default true
    */
   mergeIncremental?: boolean;
+
+  /**
+   * Incremental delivery payload format to request from the upstream.
+   *
+   * Mapped through `INCREMENTAL_DELIVERY_SPECS` from `@graphql-tools/utils` onto
+   * the `Accept` header (`deferSpec=20220824` for `'v0.1'`, `incrementalSpec=v0.2`
+   * for `'v0.2'`). Also honored from `ExecutionRequest.incrementalSpec`.
+   *
+   * Defaults to `'v0.1'` (shared with Yoga / graphql-tools executor) so stitching
+   * `IncrementalReceiver` keeps receiving path/label patches.
+   *
+   * @default 'v0.1'
+   */
+  incrementalSpec?: IncrementalSpec;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -246,8 +263,16 @@ export function buildHTTPExecutor(
       method = 'GET';
     }
 
-    let accept =
-      'application/graphql-response+json, application/json, multipart/mixed';
+    const incrementalSpec: IncrementalSpec =
+      request.incrementalSpec ??
+      options?.incrementalSpec ??
+      getDefaultIncrementalDeliverySpec(INCREMENTAL_DELIVERY_SPECS).id;
+    const multipartAccept = getMultipartContentType(
+      INCREMENTAL_DELIVERY_SPECS.find((s) => s.id === incrementalSpec) ??
+        getDefaultIncrementalDeliverySpec(INCREMENTAL_DELIVERY_SPECS),
+      { echoSpec: true },
+    );
+    let accept = `application/graphql-response+json, application/json, ${multipartAccept}`;
     let subscriptionCtrl: AbortController | undefined;
     if (
       operationType === 'subscription' ||
@@ -495,7 +520,7 @@ export function buildHTTPExecutor(
                           'RESPONSE_VALIDATION_FAILED';
                         return {
                           errors: [
-                            createGraphQLError(message, {
+                            new GraphQLError(message, {
                               originalError: new Error(message),
                               extensions: upstreamErrorExtensions,
                             }),
@@ -512,7 +537,7 @@ export function buildHTTPExecutor(
                             }: {
                               message: string;
                               extensions: Record<string, unknown>;
-                            }) => createGraphQLError(message, options),
+                            }) => new GraphQLError(message, options),
                           ),
                         };
                       }
@@ -522,7 +547,7 @@ export function buildHTTPExecutor(
                         'RESPONSE_VALIDATION_FAILED';
                       return {
                         errors: [
-                          createGraphQLError(
+                          new GraphQLError(
                             `Unexpected response: ${JSON.stringify(result)}`,
                             {
                               extensions: upstreamErrorExtensions,
@@ -537,7 +562,7 @@ export function buildHTTPExecutor(
                     upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
                     return {
                       errors: [
-                        createGraphQLError(message, {
+                        new GraphQLError(message, {
                           extensions: upstreamErrorExtensions,
                           originalError: new Error(message),
                         }),
@@ -716,7 +741,7 @@ export function buildHTTPExecutor(
             return result;
           }
           return {
-            errors: [createGraphQLError('No response returned from fetch')],
+            errors: [new GraphQLError('No response returned from fetch')],
           };
         }
         return handleMaybePromise(
@@ -769,13 +794,13 @@ function coerceFetchError(
   },
 ) {
   if (typeof e === 'string') {
-    return createGraphQLError(e, {
+    return new GraphQLError(e, {
       extensions: upstreamErrorExtensions,
     });
   } else if (e.name === 'GraphQLError') {
     return e;
   } else if (e.name === 'TypeError' && e.message === 'fetch failed') {
-    return createGraphQLError(`fetch failed to ${endpoint}`, {
+    return new GraphQLError(`fetch failed to ${endpoint}`, {
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
@@ -785,12 +810,12 @@ function coerceFetchError(
       upstreamErrorExtensions,
     );
   } else if (e.message) {
-    return createGraphQLError(e.message, {
+    return new GraphQLError(e.message, {
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
   } else {
-    return createGraphQLError('Unknown error', {
+    return new GraphQLError('Unknown error', {
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
