@@ -1,9 +1,9 @@
-import { GraphQLError } from 'graphql';
 import { abortSignalAny } from '@graphql-hive/signal';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, isAsyncIterable } from '@graphql-tools/utils';
 import { isPromise } from '@whatwg-node/promise-helpers';
+import { GraphQLError } from 'graphql';
 import { GatewayPlugin } from '../types';
 
 export interface TimeoutFactoryPayload {
@@ -49,9 +49,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             );
           }
           const timeoutDeferred =
-            Promise.withResolvers<
-              Awaited<ReturnType<typeof executor>>
-            >();
+            Promise.withResolvers<Awaited<ReturnType<typeof executor>>>();
           function rejectDeferred() {
             timeoutDeferred.reject(timeoutSignal?.reason);
           }

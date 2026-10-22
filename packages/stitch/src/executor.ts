@@ -5,9 +5,13 @@ import {
   StitchingInfo,
 } from '@graphql-tools/delegate';
 import { getFragmentsFromDocument } from '@graphql-tools/executor';
-import { collectFields, ExecutionRequest, getDefinedRootType, getOperationASTFromRequest } from '@graphql-tools/utils';
-
-import { GraphQLSchema, getArgumentValues } from 'graphql';
+import {
+  collectFields,
+  ExecutionRequest,
+  getDefinedRootType,
+  getOperationASTFromRequest,
+} from '@graphql-tools/utils';
+import { getArgumentValues, GraphQLSchema } from 'graphql';
 
 /**
  * Creates an executor that uses the schema created by stitching together multiple subschemas.

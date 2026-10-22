@@ -1,13 +1,15 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-
-import { buildSchema,
+import {
+  buildSchema,
   DocumentNode,
   graphql,
+  GraphQLError,
   Kind,
   OperationTypeNode,
   parse,
   print,
-  validate, GraphQLError } from 'graphql';
+  validate,
+} from 'graphql';
 import { describe, expect, test } from 'vitest';
 import { createRequest } from '../src/createRequest.js';
 import { delegateRequest } from '../src/delegateToSchema.js';

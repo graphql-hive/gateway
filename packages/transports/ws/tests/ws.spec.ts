@@ -5,7 +5,6 @@ import type {
 } from '@graphql-mesh/transport-common';
 import { dispose } from '@graphql-mesh/utils';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-
 import { createDisposableWebSocketServer } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';

@@ -1,10 +1,10 @@
-import { GraphQLError } from 'graphql';
 import { BinaryLike, createHash, createHmac, KeyObject } from 'node:crypto';
 import { STS } from '@aws-sdk/client-sts';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getEnvStr } from '~internal/env';
 import aws4, { type Request as AWS4Request } from 'aws4';
+import { GraphQLError } from 'graphql';
 import {
   AWSSignV4Headers,
   AWSSignv4PluginIncomingOptions,

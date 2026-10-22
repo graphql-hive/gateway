@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import {
   createGatewayRuntime,
   useCustomFetch,
@@ -6,6 +5,7 @@ import {
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
 import { Response } from '@whatwg-node/fetch';
+import { GraphQLError } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
@@ -37,9 +37,7 @@ describe('Upstream Retry', () => {
               endResponse(
                 Response.json(
                   {
-                    errors: [
-                      new GraphQLError(`Error in attempt ${attempts}`),
-                    ],
+                    errors: [new GraphQLError(`Error in attempt ${attempts}`)],
                   },
                   {
                     status: 500,

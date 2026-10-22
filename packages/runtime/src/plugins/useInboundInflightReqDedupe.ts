@@ -1,6 +1,11 @@
 import { Plugin as EnvelopPlugin } from '@envelop/core';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
-import { ExecutionResult, getOperationASTFromDocument, MaybeAsyncIterable, memoize1 } from '@graphql-tools/utils';
+import {
+  ExecutionResult,
+  getOperationASTFromDocument,
+  MaybeAsyncIterable,
+  memoize1,
+} from '@graphql-tools/utils';
 import { isPromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { Plugin as YogaPlugin } from 'graphql-yoga';

@@ -7,7 +7,6 @@ import {
 import { Logger, MemoryLogWriter } from '@graphql-hive/logger';
 import { handleFederationSupergraph } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
-
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,

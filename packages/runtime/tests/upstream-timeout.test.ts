@@ -1,6 +1,5 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-
 import {
   createDisposableServer,
   usingHiveRouterRuntime,

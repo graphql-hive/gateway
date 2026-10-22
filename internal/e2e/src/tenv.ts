@@ -10,7 +10,6 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { fakePromise } from '@whatwg-node/promise-helpers';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   createOpt,
@@ -23,6 +22,7 @@ import {
 import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { getEnvBool, isCI } from '~internal/env';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';

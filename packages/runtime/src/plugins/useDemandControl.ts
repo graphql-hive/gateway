@@ -2,11 +2,14 @@ import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { mapAsyncIterator } from '@whatwg-node/promise-helpers';
 import { getNodeEnv } from '~internal/env';
-import { FieldNode,
+import {
+  FieldNode,
+  GraphQLError,
   GraphQLNamedOutputType,
   isCompositeType,
   OperationTypeNode,
-  TypeInfo, GraphQLError } from 'graphql';
+  TypeInfo,
+} from 'graphql';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 

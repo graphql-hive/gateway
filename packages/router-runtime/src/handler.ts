@@ -12,7 +12,6 @@ import {
 } from '@graphql-tools/federation';
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
 import { TextEncoder } from '@whatwg-node/fetch';
-const crypto = globalThis.crypto;
 import {
   handleMaybePromise,
   isPromise,
@@ -35,6 +34,8 @@ import {
   onSubgraphExecuteWithTransforms,
   queryPlanForExecutionRequestContext,
 } from './utils';
+
+const crypto = globalThis.crypto;
 
 function sha256(str: string) {
   const textEncoder = new TextEncoder();

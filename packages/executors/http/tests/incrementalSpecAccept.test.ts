@@ -1,4 +1,7 @@
-import { getMultipartContentType, INCREMENTAL_DELIVERY_SPECS } from '@graphql-tools/utils';
+import {
+  getMultipartContentType,
+  INCREMENTAL_DELIVERY_SPECS,
+} from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';

@@ -7,8 +7,8 @@ import {
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ReadableStream, Request, Response } from '@whatwg-node/fetch';
-import { createServerAdapter } from '@whatwg-node/server';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { createServerAdapter } from '@whatwg-node/server';
 import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';

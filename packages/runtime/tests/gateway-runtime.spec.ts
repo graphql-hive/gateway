@@ -3,10 +3,10 @@ import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { fakePromise } from '@whatwg-node/promise-helpers';
 import { fakeRejectPromise, isDebug } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { createRouter, Response, Type } from 'fets';
 import {
   buildSchema,

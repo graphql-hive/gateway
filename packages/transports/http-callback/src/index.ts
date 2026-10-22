@@ -12,9 +12,10 @@ import { makeDisposable } from '@graphql-mesh/utils';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import { type ExecutionRequest } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
-const crypto = globalThis.crypto;
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import {  ExecutionResult, GraphQLError  } from 'graphql';
+import { ExecutionResult, GraphQLError } from 'graphql';
+
+const crypto = globalThis.crypto;
 
 export interface HTTPCallbackTransportOptions {
   /**
@@ -221,8 +222,8 @@ export default {
                 } else {
                   stopSubscription(
                     new AggregateError(
-                      resJson.errors.map((err) =>
-                        new GraphQLError(err.message, err),
+                      resJson.errors.map(
+                        (err) => new GraphQLError(err.message, err),
                       ),
                       resJson.errors.map((err) => err.message).join('\n'),
                     ),

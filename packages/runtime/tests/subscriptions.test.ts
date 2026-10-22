@@ -1,6 +1,6 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
-import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { createClient as createSSEClient } from 'graphql-sse';
 import { createSchema, Repeater } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';

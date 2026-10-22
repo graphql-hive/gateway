@@ -2,7 +2,6 @@ import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   createDeferredPromise,
   createDisposableServer,
@@ -12,6 +11,7 @@ import {
   isDebug,
 } from '@internal/testing';
 import { fetch, Response } from '@whatwg-node/fetch';
+import { fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { createServerAdapter } from '@whatwg-node/server';
 import {
   buildClientSchema,

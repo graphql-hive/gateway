@@ -20,10 +20,15 @@ import type {
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
-import type { ExecutionRequest, IResolvers, TypeSource, ValidationRule } from '@graphql-tools/utils';
-import type { MaybePromise } from '@whatwg-node/promise-helpers';
+import type {
+  ExecutionRequest,
+  IResolvers,
+  TypeSource,
+  ValidationRule,
+} from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import type {
   DocumentNode,
   GraphQLSchema,

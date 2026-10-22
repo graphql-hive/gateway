@@ -192,10 +192,7 @@ describe('Errors', () => {
     });
 
     test('should return multiple errors with original errors in ExecutionResult format', () => {
-      const errors = [
-        new GraphQLError('Error1'),
-        new GraphQLError('Error2'),
-      ];
+      const errors = [new GraphQLError('Error1'), new GraphQLError('Error2')];
       const result = checkResultAndHandleErrors(
         {
           errors,

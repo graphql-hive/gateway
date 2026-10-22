@@ -1,10 +1,19 @@
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
-import { ASTVisitorKeyMap, ExecutionRequest, getDefinedRootType, implementsAbstractType, memoize1, memoize2 } from '@graphql-tools/utils';
-import { ASTNode,
+import {
+  ASTVisitorKeyMap,
+  ExecutionRequest,
+  getDefinedRootType,
+  implementsAbstractType,
+  memoize1,
+  memoize2,
+} from '@graphql-tools/utils';
+import {
+  ASTNode,
   DirectiveNode,
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLError,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
@@ -24,7 +33,8 @@ import { ASTNode,
   TypeInfo,
   VariableDefinitionNode,
   visit,
-  visitWithTypeInfo, GraphQLError } from 'graphql';
+  visitWithTypeInfo,
+} from 'graphql';
 import { getCoercedVariableValues } from './getCoercedVariableValues.js';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';

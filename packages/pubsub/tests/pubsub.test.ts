@@ -2,7 +2,6 @@ import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
 import { jetstream, jetstreamManager } from '@nats-io/jetstream';
 import { connect as natsConnect } from '@nats-io/transport-node';
-const crypto = globalThis.crypto;
 import {
   createDeferredPromise,
   fakePromise,
@@ -16,6 +15,8 @@ import { NATSPubSub } from '../src/nats';
 import { NATSJetStreamPubSub } from '../src/nats-jetstream';
 import { PubSub as IPubSub, TopicDataMap } from '../src/pubsub';
 import { RedisPubSub } from '../src/redis';
+
+const crypto = globalThis.crypto;
 
 const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub, NATSJetStreamPubSub];
 

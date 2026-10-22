@@ -1,8 +1,8 @@
-
 import { TextEncoder } from '@whatwg-node/fetch';
-const crypto = globalThis.crypto;
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GraphQLError } from 'graphql';
+
+const crypto = globalThis.crypto;
 
 export function createAbortErrorReason() {
   return new Error('Executor was disposed.');

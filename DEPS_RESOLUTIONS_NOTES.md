@@ -27,3 +27,7 @@ Here we collect reasons and write explanations about why some resolutions or pat
 
 1. Used by OTEl packages (NodeSDK).
 2. Contains a legacy byte code syntax, forbidden in strict mode used by Hive Gateway.
+
+### @whatwg-node/fetch and @whatwg-node/server
+
+1. Force `^0.12.1` / `^0.13.0` so nested `@graphql-hive/yoga` (still on Yoga 5 peers) cannot pull `@whatwg-node/fetch@0.10` types that still declare `crypto` on `FetchAPI`.

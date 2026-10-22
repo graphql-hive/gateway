@@ -104,6 +104,8 @@
     "tmp": "0.2.4",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
     "undici": "7.28.0",
-    "vite": "8.0.16"
+    "vite": "8.0.16",
+    "@whatwg-node/fetch": "^0.12.1",
+    "@whatwg-node/server": "^0.13.0"
   }
 }

@@ -2,7 +2,7 @@ import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { buildSchema, GraphQLObjectType, parse, GraphQLError } from 'graphql';
+import { buildSchema, GraphQLError, GraphQLObjectType, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { stitchingDirectives } from '../src';
 

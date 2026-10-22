@@ -1,4 +1,3 @@
-
 import { FieldNode } from 'graphql';
 import { Subschema } from './Subschema.js';
 import { DelegationPlanBuilder, ExternalObject } from './types.js';

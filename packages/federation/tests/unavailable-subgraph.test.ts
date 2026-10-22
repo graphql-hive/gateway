@@ -1,7 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { dispose } from '@graphql-mesh/utils';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -9,7 +8,7 @@ import {
 } from '@internal/testing';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
-import { FormattedExecutionResult, parse, GraphQLError } from 'graphql';
+import { FormattedExecutionResult, GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 

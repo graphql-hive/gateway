@@ -3,8 +3,9 @@ import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { isCI, usingHiveRouterRuntime } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-const crypto = globalThis.crypto;
 import { beforeAll, describe, expect, it } from 'vitest';
+
+const crypto = globalThis.crypto;
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
 const exampleSetup = createExampleSetup(__dirname);

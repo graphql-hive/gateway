@@ -16,8 +16,8 @@ import {
   getMultipartContentType,
   getOperationASTFromRequest,
   INCREMENTAL_DELIVERY_SPECS,
-  type IncrementalSpec,
   MaybeAsyncIterable,
+  type IncrementalSpec,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';

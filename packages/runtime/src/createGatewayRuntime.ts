@@ -38,7 +38,28 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import { Blob, btoa, CompressionStream, DecompressionStream, fetch, File, FormData, Headers, ReadableStream, Request, Response, TextDecoder, TextDecoderStream, TextEncoder, TextEncoderStream, TransformStream, URL, URLPattern, URLSearchParams, WritableStream } from '@whatwg-node/fetch';
+import {
+  Blob,
+  btoa,
+  CompressionStream,
+  DecompressionStream,
+  fetch,
+  File,
+  FormData,
+  Headers,
+  ReadableStream,
+  Request,
+  Response,
+  TextDecoder,
+  TextDecoderStream,
+  TextEncoder,
+  TextEncoderStream,
+  TransformStream,
+  URL,
+  URLPattern,
+  URLSearchParams,
+  WritableStream,
+} from '@whatwg-node/fetch';
 import {
   fakePromise,
   fakeRejectPromise,

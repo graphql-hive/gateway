@@ -1,8 +1,18 @@
 import { createBatchingExecutor } from '@graphql-tools/batch-execute';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { ExecutionResult, Executor, MaybeAsyncIterable } from '@graphql-tools/utils';
-import { OperationDefinitionNode, parse, print, validate, GraphQLError } from 'graphql';
+import {
+  ExecutionResult,
+  Executor,
+  MaybeAsyncIterable,
+} from '@graphql-tools/utils';
+import {
+  GraphQLError,
+  OperationDefinitionNode,
+  parse,
+  print,
+  validate,
+} from 'graphql';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 describe('batch execution', () => {

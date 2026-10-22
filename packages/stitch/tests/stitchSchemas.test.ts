@@ -10,7 +10,13 @@ import {
   makeExecutableSchema,
 } from '@graphql-tools/schema';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
-import { assertSome, ExecutionResult, getResolversFromSchema, IResolvers, printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  assertSome,
+  ExecutionResult,
+  getResolversFromSchema,
+  IResolvers,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
 import {
   bookingSchema as localBookingSchema,
@@ -23,15 +29,18 @@ import {
   subscriptionPubSub,
   subscriptionPubSubTrigger,
 } from '@internal/testing/fixtures/schemas';
-import { buildASTSchema,
+import {
+  buildASTSchema,
   buildSchema,
   graphql,
+  GraphQLError,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLScalarType,
   OperationTypeNode,
   parse,
-  printSchema, GraphQLError } from 'graphql';
+  printSchema,
+} from 'graphql';
 import { describe, expect, it, test, vi } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 

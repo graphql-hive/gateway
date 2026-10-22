@@ -1,6 +1,5 @@
 import { createServer } from 'node:http';
 import type { AddressInfo, Socket } from 'node:net';
-
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter } from '@whatwg-node/server';
 import { WebSocket, WebSocketServer } from 'ws';

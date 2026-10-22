@@ -18,6 +18,7 @@ import {
   delegateToSchema,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
+import { mergeSchemas } from '@graphql-tools/schema';
 import {
   asArray,
   getDirectiveExtensions,
@@ -38,8 +39,6 @@ import {
   isSchema,
   parse,
 } from 'graphql';
-import { mergeSchemas } from '@graphql-tools/schema';
-
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphConfig,

@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-
 import { describe, expect, it } from 'vitest';
 import { getKeyFnForFederation } from '../src/utils';
 

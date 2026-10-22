@@ -7,8 +7,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest } from '@graphql-tools/utils';
-import { fakePromise } from '@whatwg-node/promise-helpers';
-import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise, unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   context,
   hive,

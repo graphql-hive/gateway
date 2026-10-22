@@ -1,9 +1,16 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
-import { getDirective, getDirectiveExtensions, memoize1, memoize3 } from '@graphql-tools/utils';
-import { DocumentNode,
+import {
+  getDirective,
+  getDirectiveExtensions,
+  memoize1,
+  memoize3,
+} from '@graphql-tools/utils';
+import {
+  DocumentNode,
   FieldNode,
   getArgumentValues,
   getNamedType,
+  GraphQLError,
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
@@ -12,7 +19,8 @@ import { DocumentNode,
   OperationTypeNode,
   TypeInfo,
   visit,
-  visitWithTypeInfo, GraphQLError } from 'graphql';
+  visitWithTypeInfo,
+} from 'graphql';
 import { getDirectiveNameForFederationDirective } from '../../utils';
 
 type ListSizeAnnotation =

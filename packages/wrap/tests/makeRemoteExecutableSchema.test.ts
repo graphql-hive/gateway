@@ -1,6 +1,5 @@
 import { subscribe } from '@graphql-tools/executor';
 import { ExecutionResult } from '@graphql-tools/utils';
-import { fakePromise } from '@whatwg-node/promise-helpers';
 import {
   makeSchemaRemote,
   propertySchema,
@@ -8,6 +7,7 @@ import {
   subscriptionPubSubTrigger,
   subscriptionSchema,
 } from '@internal/testing/fixtures/schemas';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { buildSchema, graphql, GraphQLSchema, parse, print } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest';
 import { wrapSchema } from '../src/index.js';

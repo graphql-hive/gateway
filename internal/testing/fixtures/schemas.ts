@@ -6,12 +6,15 @@ import {
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { IResolvers, SyncExecutor } from '@graphql-tools/utils';
 import { schemaFromExecutor } from '@graphql-tools/wrap';
-import { GraphQLInterfaceType,
+import {
+  GraphQLError,
+  GraphQLInterfaceType,
   GraphQLResolveInfo,
   GraphQLScalarType,
   GraphQLSchema,
   Kind,
-  ValueNode, GraphQLError } from 'graphql';
+  ValueNode,
+} from 'graphql';
 
 export type Location = {
   name: string;

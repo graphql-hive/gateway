@@ -8,7 +8,7 @@ import {
   createDisposableServer,
 } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
-import { parse, GraphQLError } from 'graphql';
+import { GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 

@@ -1,6 +1,5 @@
 import { SubschemaConfig, Transform } from '@graphql-tools/delegate';
-
-import { GraphQLFieldConfig, GraphQLSchema, getArgumentValues } from 'graphql';
+import { getArgumentValues, GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import TransformObjectFields from './TransformObjectFields.js';
 
 interface FilterObjectFieldDirectivesTransformationContext extends Record<

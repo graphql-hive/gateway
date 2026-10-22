@@ -17,22 +17,22 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 
 ## Import replacements
 
-| Removed | Replacement |
-| --- | --- |
-| `createGraphQLError` from utils / Yoga | `new GraphQLError(message, options)` from `graphql` |
-| `mapMaybePromise` | `handleMaybePromise` from `@whatwg-node/promise-helpers` |
-| `isPromise` / `fakePromise` / `mapAsyncIterator` / `MaybePromise` from utils | `@whatwg-node/promise-helpers` |
-| `createDeferred` / `createDeferredPromise` from utils | `Promise.withResolvers()` or `createDeferredPromise` from `@whatwg-node/promise-helpers` |
-| `DisposableSymbols` from utils | `@whatwg-node/server` or `@whatwg-node/disposablestack` |
-| `mergeSchemas` re-export from Yoga | `@graphql-tools/schema` |
-| `getSchemaCoordinate` re-export from Yoga | `@graphql-tools/utils` |
-| `yoga.logger` | `yoga.log` |
-| `YogaLogger` / `createLogger` from Yoga | `Logger` from `graphql-yoga` / `@graphql-hive/logger` (`new Logger({ level })`) |
-| `createYoga({ logging: LegacyLogger.from(...) })` | pass a real `Logger` instance (`logging: log`) |
-| Gateway `persistedDocuments.allowArbitraryOperations` | `persistedDocuments.allowArbitraryDocuments` |
-| `buildHTTPExecutor({ disposable })` | remove (always disposable) |
-| `crypto` from `@whatwg-node/fetch` / `fetchAPI.crypto` | `globalThis.crypto` (available on Node ≥22.15) |
-| GraphQL 16/17 `getArgumentValues` / `getVariableValues` shape drift | `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from `@graphql-tools/utils` |
+| Removed                                                                      | Replacement                                                                                  |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `createGraphQLError` from utils / Yoga                                       | `new GraphQLError(message, options)` from `graphql`                                          |
+| `mapMaybePromise`                                                            | `handleMaybePromise` from `@whatwg-node/promise-helpers`                                     |
+| `isPromise` / `fakePromise` / `mapAsyncIterator` / `MaybePromise` from utils | `@whatwg-node/promise-helpers`                                                               |
+| `createDeferred` / `createDeferredPromise` from utils                        | `Promise.withResolvers()` or `createDeferredPromise` from `@whatwg-node/promise-helpers`     |
+| `DisposableSymbols` from utils                                               | `@whatwg-node/server` or `@whatwg-node/disposablestack`                                      |
+| `mergeSchemas` re-export from Yoga                                           | `@graphql-tools/schema`                                                                      |
+| `getSchemaCoordinate` re-export from Yoga                                    | `@graphql-tools/utils`                                                                       |
+| `yoga.logger`                                                                | `yoga.log`                                                                                   |
+| `YogaLogger` / `createLogger` from Yoga                                      | `Logger` from `graphql-yoga` / `@graphql-hive/logger` (`new Logger({ level })`)              |
+| `createYoga({ logging: LegacyLogger.from(...) })`                            | pass a real `Logger` instance (`logging: log`)                                               |
+| Gateway `persistedDocuments.allowArbitraryOperations`                        | `persistedDocuments.allowArbitraryDocuments`                                                 |
+| `buildHTTPExecutor({ disposable })`                                          | remove (always disposable)                                                                   |
+| `crypto` from `@whatwg-node/fetch` / `fetchAPI.crypto`                       | `globalThis.crypto` (available on Node ≥22.15)                                               |
+| GraphQL 16/17 `getArgumentValues` / `getVariableValues` shape drift          | `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from `@graphql-tools/utils` |
 
 ## Logger (Yoga 6)
 
@@ -61,11 +61,11 @@ Aligned with Yoga 6 dependency bumps:
 
 Yoga and `@graphql-tools/executor-http` share `INCREMENTAL_DELIVERY_SPECS` from `@graphql-tools/utils`:
 
-| Spec | Accept / Content-Type parameter | Payload |
-| --- | --- | --- |
-| (none / bare) | `multipart/mixed` | Subgraph chooses; Yoga treats bare multipart as v0.1 for *responses* |
-| `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
-| `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
+| Spec          | Accept / Content-Type parameter        | Payload                                                              |
+| ------------- | -------------------------------------- | -------------------------------------------------------------------- |
+| (none / bare) | `multipart/mixed`                      | Subgraph chooses; Yoga treats bare multipart as v0.1 for _responses_ |
+| `'v0.1'`      | `multipart/mixed;deferSpec=20220824`   | `{ incremental: [{ path, label, data \| items }], hasNext }`         |
+| `'v0.2'`      | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed`                           |
 
 Behavior (client vs subgraph are intentionally different):
 

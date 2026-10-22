@@ -27,10 +27,20 @@ import {
   TypeMergingOptions,
   ValidationLevel,
 } from '@graphql-tools/stitch';
-import { ASTVisitorKeyMap, MapperKind, mapSchema, memoize1, mergeDeep, parseSelectionSet, SchemaExtensions, type Executor } from '@graphql-tools/utils';
+import {
+  ASTVisitorKeyMap,
+  MapperKind,
+  mapSchema,
+  memoize1,
+  mergeDeep,
+  parseSelectionSet,
+  SchemaExtensions,
+  type Executor,
+} from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
-import { buildASTSchema,
+import {
+  buildASTSchema,
   ConstArgumentNode,
   ConstDirectiveNode,
   DefinitionNode,
@@ -41,6 +51,7 @@ import { buildASTSchema,
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   FieldNode,
+  GraphQLError,
   GraphQLFieldResolver,
   GraphQLInterfaceType,
   GraphQLOutputType,
@@ -65,7 +76,8 @@ import { buildASTSchema,
   TypeDefinitionNode,
   UnionTypeDefinitionNode,
   visit,
-  visitWithTypeInfo, GraphQLError } from 'graphql';
+  visitWithTypeInfo,
+} from 'graphql';
 import {
   extractPercentageFromLabel,
   filterDirectivesByGraph,

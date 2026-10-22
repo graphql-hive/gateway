@@ -14,7 +14,10 @@ import type {
   IResolvers,
   TypeSource,
 } from '@graphql-tools/utils';
-import { isDocumentNode, printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  isDocumentNode,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import {
   AsyncDisposableStack,
   DisposableSymbols,
@@ -193,18 +196,15 @@ const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 const DEFAULT_MAX_CONCURRENT_GENERATIONS = 10;
 
 function createSchemaReloadError(): GraphQLError {
-  return new GraphQLError(
-    'operation has been aborted due to a schema reload',
-    {
-      extensions: {
-        code: 'SCHEMA_RELOAD',
-        http: {
-          status: 503,
-        },
-        [CRITICAL_ERROR]: true,
+  return new GraphQLError('operation has been aborted due to a schema reload', {
+    extensions: {
+      code: 'SCHEMA_RELOAD',
+      http: {
+        status: 503,
       },
+      [CRITICAL_ERROR]: true,
     },
-  );
+  });
 }
 
 /**

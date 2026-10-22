@@ -2,7 +2,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
-import { ExecutionResult, parse, GraphQLError } from 'graphql';
+import { ExecutionResult, GraphQLError, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 

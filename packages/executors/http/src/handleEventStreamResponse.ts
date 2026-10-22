@@ -1,7 +1,7 @@
-import { GraphQLError } from 'graphql';
 import { ExecutionResult, inspect } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { TextDecoder } from '@whatwg-node/fetch';
+import { GraphQLError } from 'graphql';
 import { createResultForAbort } from './utils';
 
 const DELIM = '\n\n';
@@ -67,9 +67,7 @@ export function handleEventStreamResponse(
         }
         const errErr = err instanceof Error ? err : new Error(String(err));
         await push({
-          errors: [
-            new GraphQLError(errErr.message, { originalError: errErr }),
-          ],
+          errors: [new GraphQLError(errErr.message, { originalError: errErr })],
         });
         return stop();
       }

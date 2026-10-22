@@ -5,7 +5,19 @@ import {
   type PubSubOperationOptions,
 } from '@graphql-mesh/utils';
 import { getTypeInfo } from '@graphql-tools/delegate';
-import { asArray, ExecutionRequest, getDirectiveExtensions, getDirectiveInExtensions, MaybeAsyncIterable, memoize2, mergeDeep, parseSelectionSet, ResultVisitorMap, ValueVisitor, visitResult } from '@graphql-tools/utils';
+import {
+  asArray,
+  ExecutionRequest,
+  getDirectiveExtensions,
+  getDirectiveInExtensions,
+  MaybeAsyncIterable,
+  memoize2,
+  mergeDeep,
+  parseSelectionSet,
+  ResultVisitorMap,
+  ValueVisitor,
+  visitResult,
+} from '@graphql-tools/utils';
 import { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   ArgumentNode,

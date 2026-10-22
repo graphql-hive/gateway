@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Opts } from '@internal/testing';
-import { parse, GraphQLError } from 'graphql';
+import { GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 
 const opts = Opts(process.argv);

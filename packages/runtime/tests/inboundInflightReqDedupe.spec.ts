@@ -7,7 +7,6 @@ import {
   createDeferredPromise,
   DeferredPromise,
 } from '@whatwg-node/promise-helpers';
-
 import { execute as graphqlExecute, parse } from 'graphql';
 import { ExecutionResult } from 'graphql-ws';
 import { createSchema, createYoga } from 'graphql-yoga';

@@ -9,7 +9,6 @@ import {
 import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { isAsyncIterable } from '@graphql-tools/utils';
-import { fakePromise } from '@whatwg-node/promise-helpers';
 import {
   assertSingleExecutionValue,
   usingHiveRouterRuntime,
@@ -17,6 +16,7 @@ import {
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
   DeferredPromise,
+  fakePromise,
   handleMaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
@@ -192,7 +192,10 @@ describe('Polling', () => {
       createSchema({ typeDefs: 'type Query { value: String }' }),
       createSchema({ typeDefs: 'type Query { value: String, next: String }' }),
     ];
-    const cacheWrites = [Promise.withResolvers<void>(), Promise.withResolvers<void>()];
+    const cacheWrites = [
+      Promise.withResolvers<void>(),
+      Promise.withResolvers<void>(),
+    ];
     let schemaIndex = 0;
 
     const log = new Logger({ level: false });

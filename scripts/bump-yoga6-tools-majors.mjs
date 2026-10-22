@@ -3,7 +3,7 @@
  * Bulk-bump package.json engines / peers / Yoga+Tools majors for the
  * graphql-yoga@6 / @graphql-tools/utils@13 / executor@4 migration.
  */
-import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
