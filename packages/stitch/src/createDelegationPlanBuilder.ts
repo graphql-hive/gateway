@@ -13,11 +13,16 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLCompositeType,
+  GraphQLFieldMap,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
   InlineFragmentNode,
   isAbstractType,
+  isInterfaceType,
+  isObjectType,
+  isUnionType,
   Kind,
   SelectionNode,
   SelectionSetNode,
@@ -356,7 +361,7 @@ export function createDelegationPlanBuilder(
       const typeName = mergedTypeInfo.typeName;
       const typeInSubschema = sourceSubschema.transformedSchema.getType(
         typeName,
-      ) as GraphQLObjectType;
+      ) as GraphQLCompositeType;
 
       let providedSelectionNode: SelectionSetNode | undefined;
 
@@ -373,10 +378,10 @@ export function createDelegationPlanBuilder(
       const fieldsNotInSubschema = getFieldsNotInSubschema(
         schema,
         stitchingInfo,
-        schema.getType(typeName) as GraphQLObjectType,
+        schema.getType(typeName) as GraphQLCompositeType,
         mergedTypeInfo.typeMaps.get(sourceSubschema)?.[
           typeName
-        ] as GraphQLObjectType,
+        ] as GraphQLCompositeType,
         fieldNodes,
         fragments,
         variableValues,
@@ -588,18 +593,36 @@ const subschemaTypesContainSelectionSet = memoize3(
         (sourceSubschema) =>
           sourceSubschema.transformedSchema.getType(
             mergedTypeInfo.typeName,
-          ) as GraphQLObjectType,
+          ) as GraphQLCompositeType,
       ),
       selectionSet,
     );
   },
 );
 
+function getFieldsFromCompositeType(
+  type: GraphQLCompositeType,
+): GraphQLFieldMap<any, any> {
+  if (isObjectType(type) || isInterfaceType(type)) {
+    return type.getFields();
+  }
+  if (isUnionType(type)) {
+    // Merge member field maps so merge-key checks like `{ id }` succeed when
+    // a stub member (e.g. StubMajor) carries the key field.
+    const fields: GraphQLFieldMap<any, any> = Object.create(null);
+    for (const member of type.getTypes()) {
+      Object.assign(fields, member.getFields());
+    }
+    return fields;
+  }
+  return Object.create(null);
+}
+
 function typesContainSelectionSet(
-  types: Array<GraphQLObjectType>,
+  types: Array<GraphQLCompositeType>,
   selectionSet: SelectionSetNode,
 ): boolean {
-  const fieldMaps = types.map((type) => type.getFields());
+  const fieldMaps = types.map((type) => getFieldsFromCompositeType(type));
 
   for (const selection of selectionSet.selections) {
     if (selection.kind === Kind.FIELD) {
@@ -612,9 +635,9 @@ function typesContainSelectionSet(
 
       if (selection.selectionSet != null) {
         return typesContainSelectionSet(
-          fields.map((field) =>
-            getNamedType(field.type),
-          ) as Array<GraphQLObjectType>,
+          fields.map(
+            (field) => getNamedType(field.type) as GraphQLCompositeType,
+          ),
           selection.selectionSet,
         );
       }

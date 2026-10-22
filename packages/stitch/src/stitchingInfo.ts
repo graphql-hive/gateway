@@ -97,7 +97,8 @@ function createMergedTypes<
     const typeCandidate = typeCandidatesOfTypeName[0];
     if (
       isObjectType(typeCandidate?.type) ||
-      isInterfaceType(typeCandidate?.type)
+      isInterfaceType(typeCandidate?.type) ||
+      isUnionType(typeCandidate?.type)
     ) {
       const typeCandidatesWithMergedTypeConfig =
         typeCandidatesOfTypeName.filter(
@@ -237,7 +238,7 @@ function createMergedTypes<
             fieldSelectionSets.set(subschema, parsedFieldSelectionSets);
           }
 
-          // We already know that the type is an object or interface type
+          // Object, interface, or union (unions have no fields of their own)
           const type = subschema.transformedSchema.getType(typeName) as
             | GraphQLObjectType
             | GraphQLInterfaceType;
@@ -284,22 +285,26 @@ function createMergedTypes<
 
           targetSubschemas.push(subschema);
 
-          const fieldMap = type.getFields();
-          const selectionSet = selectionSets.get(subschema);
-          for (const fieldName in fieldMap) {
-            const field = fieldMap[fieldName];
-            const fieldType = getNamedType(field?.type);
-            if (
-              selectionSet &&
-              isLeafType(fieldType) &&
-              selectionSetContainsTopLevelField(selectionSet, fieldName)
-            ) {
-              continue;
+          // Unions have no fields; field ownership is resolved later via
+          // inline fragments on concrete members during delegation planning.
+          if (isObjectType(type) || isInterfaceType(type)) {
+            const fieldMap = type.getFields();
+            const selectionSet = selectionSets.get(subschema);
+            for (const fieldName in fieldMap) {
+              const field = fieldMap[fieldName];
+              const fieldType = getNamedType(field?.type);
+              if (
+                selectionSet &&
+                isLeafType(fieldType) &&
+                selectionSetContainsTopLevelField(selectionSet, fieldName)
+              ) {
+                continue;
+              }
+              if (!supportedBySubschemas[fieldName]) {
+                supportedBySubschemas[fieldName] = [];
+              }
+              supportedBySubschemas[fieldName]?.push(subschema);
             }
-            if (!supportedBySubschemas[fieldName]) {
-              supportedBySubschemas[fieldName] = [];
-            }
-            supportedBySubschemas[fieldName]?.push(subschema);
           }
         }
 
@@ -400,6 +405,32 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     }
   }
 
+  // Keyless (zero-arg) merges have no selectionSet that would keep a delegated
+  // selection non-empty when all requested fields live on other subschemas.
+  // Inject __typename so finalizeGatewayRequest keeps a stub object that type
+  // merging can fill — same idea as nested root types (#2347 / graphql-tools#4337).
+  const typenameFieldNode = parseSelectionSet('{ __typename }', {
+    noLocation: true,
+  }).selections[0] as FieldNode;
+  for (const typeName in mergedTypes) {
+    const mergedTypeInfo = mergedTypes[typeName];
+    if (
+      mergedTypeInfo == null ||
+      mergedTypeInfo.resolvers.size === 0 ||
+      mergedTypeInfo.selectionSets.size > 0
+    ) {
+      continue;
+    }
+    const existing = fieldNodesByType[typeName];
+    if (existing == null) {
+      fieldNodesByType[typeName] = [typenameFieldNode];
+    } else if (
+      !existing.some((fieldNode) => fieldNode.name.value === '__typename')
+    ) {
+      existing.push(typenameFieldNode);
+    }
+  }
+
   const selectionSetsByField: Record<
     string,
     Record<string, Array<SelectionSetNode>>
@@ -418,25 +449,30 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
       selectionSet,
     ] of mergedTypeInfo.selectionSets) {
       const schema = subschemaConfig.transformedSchema;
-      const type = schema.getType(typeName) as GraphQLObjectType;
-      const fields = type.getFields();
-      for (const fieldName in fields) {
-        const field = fields[fieldName];
-        const fieldType = getNamedType(field?.type);
-        if (
-          selectionSet &&
-          isLeafType(fieldType) &&
-          selectionSetContainsTopLevelField(selectionSet, fieldName)
-        ) {
-          continue;
+      const type = schema.getType(typeName);
+      if (type == null) {
+        continue;
+      }
+      if (isObjectType(type) || isInterfaceType(type)) {
+        const fields = type.getFields();
+        for (const fieldName in fields) {
+          const field = fields[fieldName];
+          const fieldType = getNamedType(field?.type);
+          if (
+            selectionSet &&
+            isLeafType(fieldType) &&
+            selectionSetContainsTopLevelField(selectionSet, fieldName)
+          ) {
+            continue;
+          }
+          updateSelectionSetMap(
+            selectionSetsByField,
+            typeName,
+            fieldName,
+            selectionSet,
+            true,
+          );
         }
-        updateSelectionSetMap(
-          selectionSetsByField,
-          typeName,
-          fieldName,
-          selectionSet,
-          true,
-        );
       }
       if (isAbstractType(type)) {
         updateSelectionSetMap(

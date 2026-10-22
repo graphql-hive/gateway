@@ -18,6 +18,7 @@ import {
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLType,
+  InlineFragmentNode,
   isAbstractType,
   isCompositeType,
   isInterfaceType,
@@ -1086,12 +1087,22 @@ function filterSelectionSet(
                   },
                 };
               });
-              const nonEmptySpreads = spreads.filter(Boolean);
+              const nonEmptySpreads = spreads.filter(
+                (spread) => spread != null,
+              ) as Array<InlineFragmentNode>;
               if (!nonEmptySpreads.length) {
                 // no spreads remain after filtering, skip the field altogether.
                 // this is important to avoid invalid ast nodes causing empty lines
                 // in the resulting query
                 return undefined;
+              }
+              // graphql-js `visit` replaces a list element with the returned
+              // value as-is — it does NOT splice arrays. Returning one node is
+              // fine; multiple spreads are returned as an array and flattened
+              // in SELECTION_SET.leave below (needed for union key fields like
+              // `id` under StubMajor — graphql-tools#4965).
+              if (nonEmptySpreads.length === 1) {
+                return nonEmptySpreads[0];
               }
               return nonEmptySpreads;
             }
@@ -1201,6 +1212,19 @@ function filterSelectionSet(
             ...node,
             selections,
           };
+        },
+        leave: (node) => {
+          // Flatten spreads returned as arrays from FIELD.enter when a bare
+          // field on a union is expanded into per-member inline fragments.
+          // Without this, `visit` nests the array as a single selection and
+          // the fragment is ignored at execution time.
+          if (node.selections.some((selection) => Array.isArray(selection))) {
+            return {
+              ...node,
+              selections: node.selections.flat().filter(Boolean),
+            };
+          }
+          return undefined;
         },
       },
       [Kind.INLINE_FRAGMENT]: {

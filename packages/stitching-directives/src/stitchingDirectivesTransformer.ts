@@ -628,12 +628,21 @@ function forEachConcreteType(
   fn: (typeName: string) => void,
 ) {
   if (isInterfaceType(type)) {
+    // Also register the abstract type itself so stub members in other
+    // subschemas can trigger type merging via the shared interface name
+    // (graphql-tools#4966).
+    if (typeNames == null || typeNames.includes(type.name)) {
+      fn(type.name);
+    }
     for (const typeName of getImplementingTypes(type.name, schema)) {
       if (typeNames == null || typeNames.includes(typeName)) {
         fn(typeName);
       }
     }
   } else if (isUnionType(type)) {
+    if (typeNames == null || typeNames.includes(type.name)) {
+      fn(type.name);
+    }
     for (const { name: typeName } of type.getTypes()) {
       if (typeNames == null || typeNames.includes(typeName)) {
         fn(typeName);
@@ -767,12 +776,21 @@ function forEachConcreteTypeName(
   fn: (typeName: string) => void,
 ): void {
   if (isInterfaceType(returnType)) {
+    // Register the abstract type as well as its implementers so that a stub
+    // concrete type from another subschema can still merge through the
+    // shared interface/union name (graphql-tools#4966).
+    if (typeNames == null || typeNames.includes(returnType.name)) {
+      fn(returnType.name);
+    }
     for (const typeName of getImplementingTypes(returnType.name, schema)) {
       if (typeNames == null || typeNames.includes(typeName)) {
         fn(typeName);
       }
     }
   } else if (isUnionType(returnType)) {
+    if (typeNames == null || typeNames.includes(returnType.name)) {
+      fn(returnType.name);
+    }
     for (const type of returnType.getTypes()) {
       if (typeNames == null || typeNames.includes(type.name)) {
         fn(type.name);
