@@ -29,6 +29,8 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 | `yoga.logger` | `yoga.log` |
 | `YogaLogger` / `createLogger` from Yoga | `Logger` from `graphql-yoga` / `@graphql-hive/logger` (`new Logger({ level })`) |
 | `createYoga({ logging: LegacyLogger.from(...) })` | pass a real `Logger` instance (`logging: log`) |
+| Gateway `persistedDocuments.allowArbitraryOperations` | `persistedDocuments.allowArbitraryDocuments` |
+| `buildHTTPExecutor({ disposable })` | remove (always disposable) |
 | `crypto` from `@whatwg-node/fetch` / `fetchAPI.crypto` | `globalThis.crypto` (available on Node ≥22.15) |
 | GraphQL 16/17 `getArgumentValues` / `getVariableValues` shape drift | `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from `@graphql-tools/utils` |
 
@@ -37,8 +39,13 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 - `@graphql-yoga/logger` is removed; Yoga re-exports `Logger`, `MemoryLogWriter`, `LogLevel` from `@graphql-hive/logger`.
 - `createYoga({ logging })` accepts `boolean | Logger | LogLevel` only - not the deprecated `LegacyLogger` adapter.
 - Prefer request-scoped `context.log` / `serverContext.log` (correlated via `requestId`).
-- **Request ids**: Gateway passes `requestId` through to Yoga. Minting, response `x-request-id`, and `log.child({ requestId })` are Yoga’s job. Gateway only forwards the id on upstream `fetch` (`useRequestId`).
+- **Request ids**: Gateway passes `requestId` through to Yoga (`createYoga({ requestId })`). Minting, response `x-request-id`, and `log.child({ requestId })` are Yoga’s job. Gateway only forwards `context.log.attrs.requestId` on upstream `fetch`.
 - Do not dual-write a deprecated `logger` on the request just for Yoga - use `log`.
+- `createLoggerFromLogging` / `useConfigInServerContext` come from `graphql-yoga` (re-exported from `@graphql-hive/gateway-runtime` where needed).
+
+## Request body size
+
+- `maxRequestBodySize?: number | false` on gateway config is passed through to Yoga (`@default` 25_000_000). Set `false` to disable the limit (e.g. sync fetch tests that need an unbounded body).
 
 ## whatwg-node 0.12 / 0.13
 

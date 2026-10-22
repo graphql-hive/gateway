@@ -57,9 +57,11 @@ import {
 } from 'graphql';
 import {
   chain,
+  createLoggerFromLogging,
   createYoga,
   FetchAPI,
   isAsyncIterable,
+  useConfigInServerContext,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -67,7 +69,6 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createDevFetcher } from './fetchers/dev';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
@@ -83,7 +84,6 @@ import {
 } from './landing-page.generated';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -92,7 +92,6 @@ import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
-import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphErrorPlugin } from './plugins/useSubgraphErrorPlugin';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
@@ -229,16 +228,10 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  let allowArbitraryDocumentsForPersistedDocuments:
+  const allowArbitraryDocumentsForPersistedDocuments:
     | boolean
-    | ((request: Request) => MaybePromise<boolean>) = false;
-  if (config.persistedDocuments?.allowArbitraryDocuments != null) {
-    allowArbitraryDocumentsForPersistedDocuments =
-      config.persistedDocuments?.allowArbitraryDocuments;
-  } else if (config.persistedDocuments?.allowArbitraryOperations) {
-    allowArbitraryDocumentsForPersistedDocuments =
-      config.persistedDocuments?.allowArbitraryOperations;
-  }
+    | ((request: Request) => MaybePromise<boolean>) =
+    config.persistedDocuments?.allowArbitraryDocuments ?? false;
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
   // documents plugin
@@ -748,6 +741,29 @@ export function createGatewayRuntime<
   });
 
   const defaultGatewayPlugin: GatewayPlugin = {
+    onRequest({ serverContext, request }) {
+      Object.assign(serverContext, { headers: getHeadersObj(request.headers) });
+    },
+    onFetch({ context, options, setOptions }) {
+      // Yoga owns request-id minting / response echo / `log.child({ requestId })`.
+      // Gateway only forwards the id upstream.
+      if (config.requestId === false || !('request' in context)) {
+        return;
+      }
+      const attrs = context.log?.attrs;
+      const requestId =
+        attrs && !Array.isArray(attrs) ? attrs['requestId'] : undefined;
+      if (typeof requestId !== 'string' || !requestId) {
+        return;
+      }
+      const headerName =
+        (typeof config.requestId === 'object' && config.requestId.headerName) ||
+        'x-request-id';
+      setOptions({
+        ...options,
+        headers: { ...options.headers, [headerName]: requestId },
+      });
+    },
     onRequestParse() {
       return handleMaybePromise(getSchema, () => {});
     },
@@ -984,18 +1000,6 @@ export function createGatewayRuntime<
     );
   }
 
-  // Yoga 6 owns request-id minting / response echo / `log.child({ requestId })`
-  // via `createYoga({ requestId })`. Gateway only forwards the id upstream.
-  if (config.requestId !== false) {
-    basePlugins.push(
-      useRequestId(
-        typeof config.requestId === 'object'
-          ? { headerName: config.requestId.headerName }
-          : undefined,
-      ),
-    );
-  }
-
   if (isDisposable(wrappedCache)) {
     const cacheDisposePlugin = {
       onDispose() {
@@ -1194,6 +1198,7 @@ export function createGatewayRuntime<
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
+    maxRequestBodySize: config.maxRequestBodySize,
   });
 
   Object.defineProperties(yoga, {

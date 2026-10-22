@@ -140,12 +140,6 @@ export interface HTTPExecutorOptions {
    */
   apq?: boolean;
   /**
-   * Enable Explicit Resource Management
-   * @see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management
-   * @deprecated The executors are always disposable, and this option will be removed in the next major version, there is no need to have a flag for this.
-   */
-  disposable?: boolean;
-  /**
    * On dispose abort error
    */
   getDisposeReason?(): Error | undefined;
