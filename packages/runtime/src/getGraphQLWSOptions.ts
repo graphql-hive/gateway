@@ -75,19 +75,26 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
   function handleRegularArgs(args: ExecutionArgs) {
     // We know that contextValue is YogaInitialContext
     const context = args.contextValue as YogaInitialContext & TContext;
-    return yoga.getResultForParams(
-      {
-        params: context.params,
-        request: context.request,
+    return handleMaybePromise(
+      () =>
+        yoga.getResultForParams(
+          {
+            params: context.params,
+            request: context.request,
+          },
+          context,
+        ),
+      (result) => {
+        if (result == null) {
+          throw new Error('Yoga returned no GraphQL execution result');
+        }
+        return result;
       },
-      context,
     );
   }
   return {
-    // Yoga 6 `getResultForParams` is typed as possibly `undefined`; graphql-ws
-    // expects an OperationResult. Runtime always returns a result for WS params.
-    execute: handleRegularArgs as ServerOptions['execute'],
-    subscribe: handleRegularArgs as ServerOptions['subscribe'],
+    execute: handleRegularArgs,
+    subscribe: handleRegularArgs,
     onSubscribe,
   };
 }

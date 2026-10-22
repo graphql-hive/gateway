@@ -37,6 +37,7 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 | `buildHTTPExecutor({ disposable })`                                          | remove (always disposable)                                                                   |
 | `crypto` from `@whatwg-node/fetch` / `fetchAPI.crypto`                       | `globalThis.crypto` (available on Node ≥22.15)                                               |
 | GraphQL 16/17 `getArgumentValues` / `getVariableValues` shape drift          | `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from `@graphql-tools/utils` |
+| `#` comment descriptions / `commentDescriptions` in stitch                   | string descriptions (`"""..."""`); GraphQL 16+ only                                          |
 
 ## Logger (Yoga 6)
 
