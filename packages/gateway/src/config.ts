@@ -135,9 +135,8 @@ export async function getBuiltinPluginsFromConfig(
   if (config.rateLimiting) {
     plugins.push(
       useRateLimiting({
-        config: Array.isArray(config.rateLimiting)
-          ? config.rateLimiting
-          : typeof config.rateLimiting === 'object'
+        config:
+          typeof config.rateLimiting === 'object'
             ? config.rateLimiting.config
             : [],
         cache: ctx.cache,

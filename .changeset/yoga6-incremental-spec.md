@@ -32,6 +32,11 @@ Align Hive Gateway with GraphQL Yoga 6, GraphQL Tools majors, and whatwg-node 0.
 - **Persisted documents**: deprecated `allowArbitraryOperations` gateway option removed; use `allowArbitraryDocuments`.
 - **executor-http**: deprecated unused `disposable` option removed (executors are always disposable).
 - **crypto**: `@whatwg-node/fetch` no longer exports `crypto`; use `globalThis.crypto`. Do not put `crypto` on `fetchAPI`.
+- **Hive Console `usage.clientInfo`**: object form removed; pass a `(context) => ClientInfo | null` function.
+- **Stitching directives**: `stitchingDirectivesTypeDefs` alias removed; use `allStitchingDirectivesTypeDefs`.
+- **CLI**: `--hive-registry-token` and `--hive-usage-target` removed; use `--hive-access-token` with `--hive-target` (or usage/trace-specific tokens).
+- **Rate limiting config**: pass `rateLimiting: { config: [...] }` (bare array form removed).
+- **delegate `createDeferred`**: removed; use `Promise.withResolvers()`.
 - **Removed helpers** (same table as [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) / Yoga 6): use `new GraphQLError(...)`, `Promise.withResolvers()`, `@whatwg-node/promise-helpers` (`handleMaybePromise`, `mapAsyncIterator`, `MaybePromise`, …), and `asGetArgumentValuesVariables` / `coerceGetVariableValuesResult` from utils.
 
 ### Incremental delivery (`@defer` / `@stream`)

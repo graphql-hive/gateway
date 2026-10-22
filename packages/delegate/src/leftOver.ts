@@ -8,11 +8,6 @@ export type Deferred<T = unknown> = {
   reject: (reason?: any) => void;
 };
 
-/** @deprecated Use `Promise.withResolvers()` (Node 22+). */
-export function createDeferred<T = unknown>(): Deferred<T> {
-  return Promise.withResolvers<T>();
-}
-
 export interface DelegationPlanLeftOver {
   unproxiableFieldNodes: Array<FieldNode>;
   nonProxiableSubschemas: Array<Subschema>;

@@ -36,7 +36,8 @@ describe.skipIf(
     const gw = await gateway({
       supergraph: `${HIVE_URL}/supergraph`,
       args: [
-        `--hive-registry-token=${TEST_TOKEN}`,
+        `--hive-access-token=${TEST_TOKEN}`,
+        `--hive-target=self-hosted`,
         `--hive-cdn-key=${TEST_KEY}`,
       ],
       env: {
@@ -107,7 +108,8 @@ describe.skipIf(
           const gw = await gateway({
             supergraph: `${HIVE_URL}/supergraph`,
             args: [
-              `--hive-registry-token=${TEST_TOKEN}`,
+              `--hive-access-token=${TEST_TOKEN}`,
+              `--hive-target=self-hosted`,
               `--hive-cdn-key=${TEST_KEY}`,
             ],
             env: {
@@ -252,7 +254,8 @@ describe.skipIf(
       const gw = await gateway({
         supergraph: `${HIVE_URL}/supergraph`,
         args: [
-          `--hive-registry-token=${TEST_TOKEN}`,
+          `--hive-access-token=${TEST_TOKEN}`,
+          `--hive-target=self-hosted`,
           `--hive-cdn-key=${TEST_KEY}`,
         ],
         env: {

@@ -22,7 +22,11 @@ This guide covers upgrading Hive Gateway (and workspace `@graphql-tools/*` packa
 | `createGraphQLError` from utils / Yoga                                       | `new GraphQLError(message, options)` from `graphql`                                          |
 | `mapMaybePromise`                                                            | `handleMaybePromise` from `@whatwg-node/promise-helpers`                                     |
 | `isPromise` / `fakePromise` / `mapAsyncIterator` / `MaybePromise` from utils | `@whatwg-node/promise-helpers`                                                               |
-| `createDeferred` / `createDeferredPromise` from utils                        | `Promise.withResolvers()` or `createDeferredPromise` from `@whatwg-node/promise-helpers`     |
+| `createDeferred` / `createDeferredPromise` from utils / delegate             | `Promise.withResolvers()` (or `createDeferredPromise` from `@whatwg-node/promise-helpers`)   |
+| `stitchingDirectives().stitchingDirectivesTypeDefs`                          | `allStitchingDirectivesTypeDefs`                                                             |
+| `usage.clientInfo` as a plain object                                         | `usage.clientInfo` as `(context) => ClientInfo \| null`                                      |
+| CLI `--hive-registry-token` / `--hive-usage-target`                          | `--hive-access-token` + `--hive-target` (or usage/trace-specific tokens)                     |
+| Gateway `rateLimiting: RateLimitConfig[]`                                    | `rateLimiting: { config: RateLimitConfig[] }`                                                |
 | `DisposableSymbols` from utils                                               | `@whatwg-node/server` or `@whatwg-node/disposablestack`                                      |
 | `mergeSchemas` re-export from Yoga                                           | `@graphql-tools/schema`                                                                      |
 | `getSchemaCoordinate` re-export from Yoga                                    | `@graphql-tools/utils`                                                                       |

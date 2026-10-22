@@ -211,7 +211,7 @@ describe('Reproductions for issues', () => {
   });
 
   it('multiple endpoints', async () => {
-    const { stitchingDirectivesTransformer, stitchingDirectivesTypeDefs } =
+    const { stitchingDirectivesTransformer, allStitchingDirectivesTypeDefs } =
       stitchingDirectives();
     const users = [
       { id: '1', name: 'Arda Doe', age: 25 },
@@ -219,7 +219,7 @@ describe('Reproductions for issues', () => {
     ];
     const userSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             id: ID!
@@ -243,7 +243,7 @@ describe('Reproductions for issues', () => {
     });
     const firstNameSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             name: String!
@@ -268,7 +268,7 @@ describe('Reproductions for issues', () => {
     });
     const ageSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             id: ID!
@@ -357,11 +357,11 @@ describe('Reproductions for issues', () => {
       { id: '3', authorId: '2', body: 'Could be better.' },
       { id: '4', authorId: '2', body: 'Prefer something else.' },
     ];
-    const { stitchingDirectivesTypeDefs, stitchingDirectivesTransformer } =
+    const { allStitchingDirectivesTypeDefs, stitchingDirectivesTransformer } =
       stitchingDirectives();
     const accountsSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-        ${stitchingDirectivesTypeDefs}
+        ${allStitchingDirectivesTypeDefs}
         type User {
           id: ID!
           name: String!
@@ -388,7 +388,7 @@ describe('Reproductions for issues', () => {
     });
     const reviewsSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-        ${stitchingDirectivesTypeDefs}
+        ${allStitchingDirectivesTypeDefs}
         type Review {
           id: ID!
           body: String
