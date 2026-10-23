@@ -163,17 +163,52 @@ describe('handleEventStreamResponse', () => {
     `);
   });
 
-  // Cancel is consumer -> source teardown ("I'm done reading"), not a stream
-  // failure. WHATWG/native settle pending reader.read() as { done: true }; the
-  // reason is only passed to underlyingSource.cancel, never rejected on read().
-  // Older @whatwg-node/node-fetch used readable.destroy(reason), so read()
-  // rejected with Oops! / later Premature close and this used to expect a
-  // GraphQLError - that was a ponyfill leak, not something the executor should
-  // re-create. Client-visible cancellation stays on AbortSignal (test above);
-  // real read()/network failures still become GraphQLError in the catch path.
-  //
-  // Exercise cancel via iterator.return() -> reader.cancel() (valid while
-  // locked). stream.cancel() from outside would be invalid per WHATWG.
+  // Stream failures must surface as GraphQLError. Use controller.error() - that
+  // is what makes reader.read() reject. The old version of this test called
+  // stream.cancel(Oops!) instead; cancel is not an error (pending read settles
+  // as done), and cancel while locked is invalid per WHATWG anyway.
+  it('should gracefully report stream errors', async () => {
+    const originalError = new Error('Oops!');
+    const readableStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        queueMicrotask(() => {
+          controller.error(originalError);
+        });
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    const { value, done } = await iterator.next();
+    expect(done).toBe(false);
+    expect(value).toMatchInlineSnapshot(`
+      {
+        "errors": [
+          [GraphQLError: Oops!],
+        ],
+      }
+    `);
+    expect(value.errors[0].originalError).toBe(originalError);
+
+    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+
+    await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+  });
+
+  // Cancel (via the locked reader / iterator.return) is clean teardown, not a
+  // GraphQLError - contrast with controller.error above.
   it('should complete cleanly when the stream is canceled', async () => {
     let cancelled = false;
     const readableStream = new ReadableStream<Uint8Array>({
