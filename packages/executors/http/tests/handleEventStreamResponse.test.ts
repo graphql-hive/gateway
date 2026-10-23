@@ -120,14 +120,7 @@ describe('handleEventStreamResponse', () => {
     });
   });
 
-  it.skipIf(
-    // Bun (and native Node) follow WHATWG: stream.cancel() throws while a reader
-    // holds the lock. This test cancels the stream from outside after
-    // handleEventStreamResponse already called getReader(), which only works on
-    // the @whatwg-node ponyfill used under Vitest/Node. reader.cancel() would be
-    // valid, but that reader lives inside the handler.
-    globalThis.Bun,
-  )('should gracefully report stream cancel with aborted signal', async () => {
+  it('should gracefully report stream cancel with aborted signal', async () => {
     const ctrl = new AbortController();
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
@@ -143,22 +136,17 @@ describe('handleEventStreamResponse', () => {
     );
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
+    // Abort alone is enough: the handler cancels its reader (WHATWG-valid) so
+    // the pending read settles and the abort is reported as a GraphQLError.
+    // Do not call stream.cancel() here - the body is locked to that reader.
     queueMicrotask(() => {
-      ctrl.abort(); // we abort
-      readableStream.cancel(); // then cancel
-      // so that the error reported is the abort error
+      ctrl.abort();
     });
 
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-      {
-        "done": false,
-        "value": {
-          "errors": [
-            [GraphQLError: This operation was aborted],
-          ],
-        },
-      }
-    `);
+    const { value, done } = await iterator.next();
+    expect(done).toBe(false);
+    // Node: "This operation was aborted"; Bun: "The operation was aborted."
+    expect(value?.errors?.[0]?.message).toMatch(/operation was aborted/i);
 
     await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
       {
@@ -183,18 +171,17 @@ describe('handleEventStreamResponse', () => {
   // GraphQLError - that was a ponyfill leak, not something the executor should
   // re-create. Client-visible cancellation stays on AbortSignal (test above);
   // real read()/network failures still become GraphQLError in the catch path.
-  it.skipIf(
-    // Same lock rule as the abort test above: Bun/native reject stream.cancel()
-    // while locked; Vitest/Node ponyfill allows it. Not a Bun streams bug.
-    globalThis.Bun,
-  )('should complete cleanly when the stream is canceled', async () => {
-    let cancelledWith: unknown;
+  //
+  // Exercise cancel via iterator.return() -> reader.cancel() (valid while
+  // locked). stream.cancel() from outside would be invalid per WHATWG.
+  it('should complete cleanly when the stream is canceled', async () => {
+    let cancelled = false;
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
         // dont enqueue anything, to hang on iterator.next()
       },
-      cancel(reason) {
-        cancelledWith = reason;
+      cancel() {
+        cancelled = true;
       },
     });
 
@@ -202,25 +189,18 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    const reason = new Error('Oops!');
+    const nextPromise = iterator.next();
     queueMicrotask(() => {
-      readableStream.cancel(reason);
+      void iterator.return();
     });
 
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+    await expect(nextPromise).resolves.toMatchInlineSnapshot(`
       {
         "done": true,
         "value": undefined,
       }
     `);
-    expect(cancelledWith).toBe(reason);
-
-    await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
-      {
-        "done": true,
-        "value": undefined,
-      }
-    `);
+    expect(cancelled).toBe(true);
   });
 
   it('should handle multiple events in a single chunk', async () => {
