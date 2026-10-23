@@ -57,4 +57,3 @@ Client Accept (gateway responses) and upstream Accept (subgraph calls) are separ
 
 ### Migration
 
-See `docs/migration-yoga6-tools.md` for the import replacement table, whatwg-node notes, and Node/GraphQL upgrade order.
