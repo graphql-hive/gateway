@@ -25,12 +25,11 @@
     "format": "yarn check:format --write",
     "start": "yarn workspace @graphql-hive/gateway start",
     "sync-graphql-version-docker": "node ./scripts/sync-graphql-version-in-dockerfiles.mjs",
-    "test": "yarn build:logger && vitest --project unit",
-    "test:bun": "yarn build:logger && bun test --bail",
-    "test:e2e": "yarn build:logger && vitest --project e2e --slowTestThreshold 1000",
-    "test:leaks": "yarn build:logger && cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks",
-    "test:mem": "yarn build:logger && vitest --project memtest",
-    "build:logger": "yarn workspace @graphql-hive/logger run build"
+    "test": "vitest --project unit",
+    "test:bun": "bun test --bail",
+    "test:e2e": "vitest --project e2e --slowTestThreshold 1000",
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks",
+    "test:mem": "vitest --project memtest"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
