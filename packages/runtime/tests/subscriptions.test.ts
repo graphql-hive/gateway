@@ -130,24 +130,31 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
-    globalThis.setTimeout(async () => {
-      await expect(
-        serve.execute({
-          query: /* GraphQL */ `
-            query {
-              foo
-            }
-          `,
-        }),
-      ).resolves.toMatchObject({
-        data: {
-          foo: 'bar',
-        },
-      });
-    }, 1000);
+    // Await after the subscription ends so `await using` does not dispose the
+    // gateway before this query runs (Bun aborts the subscription on reload
+    // before a fire-and-forget 1s timer).
+    const queryAfterReload = new Promise((resolve, reject) => {
+      globalThis.setTimeout(() => {
+        serve
+          .execute({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          })
+          .then(resolve, reject);
+      }, 1000);
+    });
     for await (const msg of sub) {
       msgs.push(msg);
     }
+
+    await expect(queryAfterReload).resolves.toMatchObject({
+      data: {
+        foo: 'bar',
+      },
+    });
 
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
@@ -216,18 +223,29 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
-    globalThis.setTimeout(() => {
-      void serve.execute({
-        query: /* GraphQL */ `
-          query {
-            foo
-          }
-        `,
-      });
-    }, 1000);
+    // Same as above: keep the gateway alive until the post-reload query settles.
+    const queryAfterReload = new Promise((resolve, reject) => {
+      globalThis.setTimeout(() => {
+        serve
+          .execute({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          })
+          .then(resolve, reject);
+      }, 1000);
+    });
     for await (const msg of sub) {
       msgs.push(msg);
     }
+
+    await expect(queryAfterReload).resolves.toMatchObject({
+      data: {
+        foo: 'bar',
+      },
+    });
 
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
