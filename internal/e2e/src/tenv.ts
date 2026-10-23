@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import { createServer } from 'http';
 import type { AddressInfo } from 'net';
@@ -76,6 +77,18 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
+
+`);
+  }
+  if (
+    (runner === 'node' || runner === 'bun') &&
+    !isCI() &&
+    !existsSync(path.join(__project, 'packages', 'logger', 'dist', 'index.js'))
+  ) {
+    process.stderr.write(`
+⚠️ @graphql-hive/logger dist/ is missing. Yoga resolves it via package exports.
+Run: yarn build
+(or: yarn workspace @graphql-hive/logger run build)
 
 `);
   }
