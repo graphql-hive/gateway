@@ -66,6 +66,9 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
+      # Same as Test e2e: Yoga resolves @graphql-hive/logger to workspace dist/.
+      - name: Build
+        run: yarn build
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:

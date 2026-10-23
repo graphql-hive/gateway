@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import { createServer } from 'http';
 import type { AddressInfo } from 'net';
@@ -10,7 +11,6 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   createOpt,
@@ -23,6 +23,7 @@ import {
 import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { getEnvBool, isCI } from '~internal/env';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
@@ -76,6 +77,18 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
+
+`);
+  }
+  if (
+    (runner === 'node' || runner === 'bun') &&
+    !isCI() &&
+    !existsSync(path.join(__project, 'packages', 'logger', 'dist', 'index.js'))
+  ) {
+    process.stderr.write(`
+⚠️ @graphql-hive/logger dist/ is missing. Yoga resolves it via package exports.
+Run: yarn build
+(or: yarn workspace @graphql-hive/logger run build)
 
 `);
   }
@@ -1141,7 +1154,7 @@ export function createTenv(cwd: string): Tenv {
 }
 
 export function getAvailablePort(): Promise<number> {
-  const deferred = createDeferred<number>();
+  const deferred = Promise.withResolvers<number>();
   const server = createServer();
   server.once('error', (err) => deferred.reject(err));
   server.listen(0, () => {

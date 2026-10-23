@@ -25,8 +25,8 @@ import {
   type Executor,
   type GraphQLResolveInfoHelpers,
   type Maybe,
-  type MaybePromise,
 } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   handleMaybePromise,
   mapAsyncIterator,

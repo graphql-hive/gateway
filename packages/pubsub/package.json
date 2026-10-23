@@ -87,7 +87,7 @@
   "dependencies": {
     "@repeaterjs/repeater": "^3.0.6",
     "@whatwg-node/disposablestack": "^0.0.6",
-    "@whatwg-node/promise-helpers": "^1.3.2"
+    "@whatwg-node/promise-helpers": "^2.0.0"
   },
   "devDependencies": {
     "@nats-io/jetstream": "^3.4.0",

@@ -1,7 +1,8 @@
 import type { Logger } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type { KeyValueCache, MeshFetch } from '@graphql-mesh/types';
-import type { Executor, MaybePromise } from '@graphql-tools/utils';
+import type { Executor } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import type { GraphQLError, GraphQLSchema } from 'graphql';
 
 export interface Transport<

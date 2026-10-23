@@ -1,7 +1,6 @@
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import {
   ASTVisitorKeyMap,
-  createGraphQLError,
   ExecutionRequest,
   getDefinedRootType,
   implementsAbstractType,
@@ -14,6 +13,7 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLError,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
@@ -156,7 +156,7 @@ function finalizeGatewayDocument<TContext>(
   }
 
   if (!newOperations.length || selectionCnt === 0) {
-    throw createGraphQLError(
+    throw new GraphQLError(
       'Failed to create a gateway request. The request must contain at least one operation.',
       {
         extensions: {

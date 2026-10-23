@@ -29,7 +29,6 @@ import {
 } from '@graphql-tools/stitch';
 import {
   ASTVisitorKeyMap,
-  createGraphQLError,
   MapperKind,
   mapSchema,
   memoize1,
@@ -52,6 +51,7 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   FieldNode,
+  GraphQLError,
   GraphQLFieldResolver,
   GraphQLInterfaceType,
   GraphQLOutputType,
@@ -1741,7 +1741,7 @@ export function getStitchingOptionsFromSupergraphSdl(
         fieldName: string,
         fieldNode: FieldNode,
       ) {
-        return createGraphQLError(
+        return new GraphQLError(
           `Was not able to find any options for ${fieldName}: This shouldn't have happened.`,
           {
             extensions: {
