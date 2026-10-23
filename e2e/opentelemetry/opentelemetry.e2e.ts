@@ -5,8 +5,6 @@ import { isCI, usingHiveRouterRuntime } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const crypto = globalThis.crypto;
-
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
 const exampleSetup = createExampleSetup(__dirname);
 

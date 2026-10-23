@@ -35,8 +35,6 @@ import {
   queryPlanForExecutionRequestContext,
 } from './utils';
 
-const crypto = globalThis.crypto;
-
 function sha256(str: string) {
   const textEncoder = new TextEncoder();
   const utf8 = textEncoder.encode(str);

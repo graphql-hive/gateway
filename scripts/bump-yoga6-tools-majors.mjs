@@ -8,7 +8,7 @@ import { join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
 const NODE_ENGINE = '>=22.18.0';
-const GRAPHQL_PEER = '^16.0.0 || ^17.0.0';
+const GRAPHQL_PEER = '^16.9.0 || ^17.0.0';
 
 const DEP_BUMPS = {
   '@graphql-tools/utils': '^13.1.3',

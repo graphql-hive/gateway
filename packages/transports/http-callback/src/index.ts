@@ -15,8 +15,6 @@ import { Repeater, type Push } from '@repeaterjs/repeater';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLError } from 'graphql';
 
-const crypto = globalThis.crypto;
-
 export interface HTTPCallbackTransportOptions {
   /**
    * The gateway's public URL, which your subgraphs access, must include the path configured on the gateway.

@@ -42,7 +42,7 @@
     "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx"
   },
   "peerDependencies": {
-    "graphql": "^16.0.0 || ^17.0.0"
+    "graphql": "^16.9.0 || ^17.0.0"
   },
   "dependencies": {
     "@envelop/core": "^6.0.0",

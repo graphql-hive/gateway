@@ -3,6 +3,6 @@
   "private": true,
   "dependencies": {
     "@graphql-hive/gateway": "workspace:*",
-    "graphql": "^16.0.0 || ^17.0.0"
+    "graphql": "16.14.0"
   }
 }

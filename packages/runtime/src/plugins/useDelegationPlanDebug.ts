@@ -48,7 +48,7 @@ function useDelegationPlanDebug<
       context,
       info,
     }) {
-      const planId = globalThis.crypto.randomUUID();
+      const planId = crypto.randomUUID();
       const log = context.log.child(
         { planId, typeName },
         '[useDelegationPlanDebug] ',
@@ -115,7 +115,7 @@ function useDelegationPlanDebug<
       }
       contextLog.add(logStr);
       const logMeta: Record<string, string> = {
-        stageId: globalThis.crypto.randomUUID(),
+        stageId: crypto.randomUUID(),
         subgraph,
         typeName,
       };

@@ -16,8 +16,6 @@ import { NATSJetStreamPubSub } from '../src/nats-jetstream';
 import { PubSub as IPubSub, TopicDataMap } from '../src/pubsub';
 import { RedisPubSub } from '../src/redis';
 
-const crypto = globalThis.crypto;
-
 const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub, NATSJetStreamPubSub];
 
 for (const PubSub of PubSubCtors) {

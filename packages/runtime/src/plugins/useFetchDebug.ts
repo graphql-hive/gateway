@@ -10,7 +10,7 @@ export function useFetchDebug<
       if (!shouldLog) {
         return; // debug level is not enabled
       }
-      const fetchId = globalThis.crypto.randomUUID();
+      const fetchId = crypto.randomUUID();
       const log = context.log.child({ fetchId }, '[useFetchDebug] ');
       log.debug(
         {

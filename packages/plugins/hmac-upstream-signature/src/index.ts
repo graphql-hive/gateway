@@ -55,8 +55,7 @@ function createCryptoKey({
   secret: string;
   usages: KeyUsage[];
 }): Promise<CryptoKey> {
-  // `@whatwg-node/fetch` no longer exports `crypto`; use the platform global.
-  return globalThis.crypto.subtle.importKey(
+  return crypto.subtle.importKey(
     'raw',
     textEncoder.encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
@@ -115,7 +114,7 @@ export function useHmacUpstreamSignature(
               serializedExecutionRequest,
             );
             return handleMaybePromise(
-              () => globalThis.crypto.subtle.sign('HMAC', key, encodedContent),
+              () => crypto.subtle.sign('HMAC', key, encodedContent),
               (signature) => {
                 const extensionValue = fetchAPI.btoa(
                   String.fromCharCode(...new Uint8Array(signature)),
@@ -199,7 +198,7 @@ export function useHmacSignatureValidation(
 
           return handleMaybePromise(
             () =>
-              globalThis.crypto.subtle.verify(
+              crypto.subtle.verify(
                 'HMAC',
                 key,
                 sigBuf,
