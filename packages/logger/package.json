@@ -16,59 +16,14 @@
   "engines": {
     "node": ">=22.15.0"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      },
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    },
-    "./writers/json": {
-      "require": {
-        "types": "./dist/writers/json.d.cts",
-        "default": "./dist/writers/json.cjs"
-      },
-      "import": {
-        "types": "./dist/writers/json.d.ts",
-        "default": "./dist/writers/json.js"
-      }
-    },
-    "./writers/logtape": {
-      "require": {
-        "types": "./dist/writers/logtape.d.cts",
-        "default": "./dist/writers/logtape.cjs"
-      },
-      "import": {
-        "types": "./dist/writers/logtape.d.ts",
-        "default": "./dist/writers/logtape.js"
-      }
-    },
-    "./writers/pino": {
-      "require": {
-        "types": "./dist/writers/pino.d.cts",
-        "default": "./dist/writers/pino.cjs"
-      },
-      "import": {
-        "types": "./dist/writers/pino.d.ts",
-        "default": "./dist/writers/pino.js"
-      }
-    },
-    "./writers/winston": {
-      "require": {
-        "types": "./dist/writers/winston.d.cts",
-        "default": "./dist/writers/winston.cjs"
-      },
-      "import": {
-        "types": "./dist/writers/winston.d.ts",
-        "default": "./dist/writers/winston.js"
-      }
-    },
+    ".": "./src/index.ts",
+    "./writers/json": "./src/writers/json.ts",
+    "./writers/logtape": "./src/writers/logtape.ts",
+    "./writers/pino": "./src/writers/pino.ts",
+    "./writers/winston": "./src/writers/winston.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -105,6 +60,63 @@
     "pkgroll": "2.27.1",
     "quick-format-unescaped": "^4.0.4",
     "winston": "^3.18.3"
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        },
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        }
+      },
+      "./writers/json": {
+        "require": {
+          "types": "./dist/writers/json.d.cts",
+          "default": "./dist/writers/json.cjs"
+        },
+        "import": {
+          "types": "./dist/writers/json.d.ts",
+          "default": "./dist/writers/json.js"
+        }
+      },
+      "./writers/logtape": {
+        "require": {
+          "types": "./dist/writers/logtape.d.cts",
+          "default": "./dist/writers/logtape.cjs"
+        },
+        "import": {
+          "types": "./dist/writers/logtape.d.ts",
+          "default": "./dist/writers/logtape.js"
+        }
+      },
+      "./writers/pino": {
+        "require": {
+          "types": "./dist/writers/pino.d.cts",
+          "default": "./dist/writers/pino.cjs"
+        },
+        "import": {
+          "types": "./dist/writers/pino.d.ts",
+          "default": "./dist/writers/pino.js"
+        }
+      },
+      "./writers/winston": {
+        "require": {
+          "types": "./dist/writers/winston.d.cts",
+          "default": "./dist/writers/winston.cjs"
+        },
+        "import": {
+          "types": "./dist/writers/winston.d.ts",
+          "default": "./dist/writers/winston.js"
+        }
+      },
+      "./package.json": "./package.json"
+    }
   },
   "sideEffects": false,
   "dependencies.info": "all of the dependencies are in devDependencies which will bundle them into the package using pkgroll making pkgroll ultimately zero-dep with a smaller footprint because of tree-shaking"
