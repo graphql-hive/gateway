@@ -38,7 +38,7 @@ export function getBatchingExecutor(
     byExecutor.set(executor, byDefer);
   }
 
-  // Primitive-safe key - WeakMap cannot hold `true`/`false`.
+  // Primitive-safe key — WeakMap cannot hold `true`/`false`.
   const deferKey = defer ? '1' : '0';
   let batchingExecutor = byDefer.get(deferKey);
   if (!batchingExecutor) {

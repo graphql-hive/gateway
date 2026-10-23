@@ -573,7 +573,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                     if (existing) {
                       // Merge selections from multiple @provides declarations
                       // touching the same (parentType, field). Duplicates are
-                      // harmless - stitchingInfo.ts later visits the selection
+                      // harmless – stitchingInfo.ts later visits the selection
                       // set and ensures __typename and uniqueness via the
                       // subtraction logic.
                       fieldMap.set(fieldName, {
@@ -1210,7 +1210,7 @@ export function getStitchingOptionsFromSupergraphSdl(
             }
 
             if (!targetGroup) {
-              // No compatible group - create a new conflict group
+              // No compatible group — create a new conflict group
               const newExtraKeys = new Set<string>();
               const newFieldsConfig: Record<string, MergedFieldConfig> = {};
               targetGroup = {

@@ -167,7 +167,7 @@ describe('Subscriptions', () => {
     await using serve = createGatewayTester({
       pollingInterval: 500,
       // Graceful reload keeps in-flight queries/mutations alive across a reload,
-      // but long-lived subscriptions are never pinned - with nothing draining
+      // but long-lived subscriptions are never pinned — with nothing draining
       // here, the superseded generation is disposed at reload and the
       // subscription must end right away so the client reconnects against the
       // new schema.
@@ -314,7 +314,7 @@ describe('Subscriptions', () => {
       pollingInterval: 500,
       executionCancellation: true,
       // Long drain: if the aborted (rejected) operation leaked its pin, the
-      // superseded generation - and the subscription still running on it  -
+      // superseded generation — and the subscription still running on it —
       // would be held alive this long.
       gracefulSchemaReload: { drainTimeout: 30_000 },
       subgraphs: () => {
@@ -419,7 +419,7 @@ describe('Subscriptions', () => {
     await aborted;
 
     // Reload. Nothing is legitimately in flight on the previous generation
-    // anymore, so it must be disposed right away - ending the subscription
+    // anymore, so it must be disposed right away — ending the subscription
     // with SCHEMA_RELOAD well before the 30s drain timeout.
     changeSchema = true;
     globalThis.setTimeout(() => {
@@ -573,8 +573,8 @@ describe('Subscriptions', () => {
     // the subscription must NOT have been terminated at reload time...
     expect(subEnded).toBe(false);
 
-    // ...but disposing the drained generation - right after its last pinned
-    // operation completes - must end it with SCHEMA_RELOAD.
+    // ...but disposing the drained generation — right after its last pinned
+    // operation completes — must end it with SCHEMA_RELOAD.
     releaseBlocking.resolve('done');
     const pinnedResult = await pinned;
     if (!(Symbol.asyncIterator in pinnedResult)) {

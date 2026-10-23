@@ -128,7 +128,7 @@ export class IncrementalReceiver {
 
   /**
    * End the stream and resolve remaining waiters with `err` as a field value
-   * (GraphQL-tools Error-as-value pattern - not Promise rejection).
+   * (GraphQL-tools Error-as-value pattern — not Promise rejection).
    */
   private fail(err: unknown): void {
     if (this.finished) {
@@ -157,7 +157,7 @@ export class IncrementalReceiver {
    * Wait until `info`'s field is present on the external object (filled by a
    * deferred patch) or the stream ends.
    *
-   * Prefer {@link requestField} from `defaultMergedResolver` - path-relative
+   * Prefer {@link requestField} from `defaultMergedResolver` — path-relative
    * waits break when batch-delegate splits a list-of-lists result.
    */
   request(info: GraphQLResolveInfo): Promise<any> {

@@ -616,7 +616,7 @@ describe('Errors', () => {
         },
       });
 
-      // Gateway schema - delegates to the plain GraphQLSchema above (non-SubschemaConfig path).
+      // Gateway schema — delegates to the plain GraphQLSchema above (non-SubschemaConfig path).
       // onLocatedError strips the numeric list index so the error path goes from
       // ['books', 0, 'title'] → ['books', 'title'].
       const gatewaySchema = makeExecutableSchema({

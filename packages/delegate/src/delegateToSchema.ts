@@ -157,7 +157,7 @@ export function delegateRequest<
         );
         // Root @stream on the delegated field: yield list items one-by-one.
         // List return types with nested @defer (e.g. TransformQuery unwrap to
-        // [[Book]]) must use IncrementalReceiver instead - otherwise the
+        // [[Book]]) must use IncrementalReceiver instead — otherwise the
         // AsyncIterable leaks to batch-delegate as `{}`.
         const isRootStream =
           isListReturn && fieldHasStreamDirective(delegationContext);

@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/delegate",
-  "version": "12.2.1",
+  "version": "12.3.0",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +35,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^16.9.0 || ^17.0.0"
+    "graphql": "^16.0.0 || ^17.0.0"
   },
   "dependencies": {
     "@graphql-tools/batch-execute": "workspace:^",

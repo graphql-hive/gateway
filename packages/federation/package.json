@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/federation",
-  "version": "4.5.3",
+  "version": "4.6.0",
   "type": "module",
   "description": "Useful tools to create and manipulate GraphQL schemas.",
   "repository": {
@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +35,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^16.9.0 || ^17.0.0"
+    "graphql": "^16.0.0 || ^17.0.0"
   },
   "dependencies": {
     "@graphql-tools/delegate": "workspace:^",

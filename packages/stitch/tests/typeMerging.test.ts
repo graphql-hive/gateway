@@ -114,7 +114,7 @@ describe('merging using type merging', () => {
     expect(userByIdData.chirps[1].author.email).not.toBe(null);
   });
 
-  // Ported from ardatan/graphql-tools#4337 - zero-arg / keyless type merge
+  // Ported from ardatan/graphql-tools#4337 — zero-arg / keyless type merge
   test('works without resolver args', async () => {
     let chirpSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `

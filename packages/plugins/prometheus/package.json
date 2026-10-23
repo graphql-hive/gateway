@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/plugin-prometheus",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "type": "module",
   "repository": {
     "type": "git",
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

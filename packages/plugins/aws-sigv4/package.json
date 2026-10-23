@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-aws-sigv4",
-  "version": "2.0.69",
+  "version": "2.0.70",
   "type": "module",
   "repository": {
     "type": "git",
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@apollo/subgraph": "^2.13.3",
-    "@graphql-hive/gateway-runtime": "workspace:*",
+    "@graphql-hive/gateway-runtime": "workspace:^",
     "@types/aws4": "^1.11.6",
     "graphql": "^16.12.0",
     "graphql-yoga": "^6.0.0",

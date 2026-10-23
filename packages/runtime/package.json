@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-runtime",
-  "version": "2.12.2",
+  "version": "2.13.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

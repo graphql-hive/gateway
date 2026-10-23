@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-deduplicate-request",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "repository": {
     "type": "git",
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -47,7 +47,7 @@
     "@whatwg-node/promise-helpers": "^2.0.0"
   },
   "devDependencies": {
-    "@graphql-hive/gateway-runtime": "workspace:*",
+    "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-mesh/types": "^0.107.1",
     "@whatwg-node/fetch": "^0.12.1",
     "graphql": "^16.12.0",

@@ -228,7 +228,7 @@ interface SchemaGeneration {
   /**
    * Number of in-flight operations pinned to this generation. Incremented once
    * per operation (in the gateway's onExecute) and held until that operation
-   * fully completes - i.e. across all of its subgraph hops. A superseded
+   * fully completes — i.e. across all of its subgraph hops. A superseded
    * generation is disposed once this reaches zero.
    */
   inFlight: number;
@@ -568,15 +568,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   /**
    * Pin the generation serving `schema` for the lifetime of one operation, so it
    * is not disposed while the operation is still running across all of its
-   * subgraph hops. Returns a lease exposing the pinned generation's executor  -
+   * subgraph hops. Returns a lease exposing the pinned generation's executor —
    * the operation must execute through it (not through the current generation's,
-   * which may already be a newer one) - and an idempotent release callback.
+   * which may already be a newer one) — and an idempotent release callback.
    * Returns undefined if `schema` is not a known live generation; the operation
    * then proceeds unpinned on the current generation, and disposal falls back to
    * the drain timeout.
    *
    * Long-lived streaming operations (subscriptions) are intentionally NOT pinned
-   * by the caller - rather than overlapping indefinitely, they end (and the
+   * by the caller — rather than overlapping indefinitely, they end (and the
    * client reconnects) when their superseded generation is disposed: right away
    * when it is idle, otherwise once it finishes draining.
    */
@@ -587,7 +587,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     if (!generation) {
       // The schema isn't one we built (e.g. a plugin returned a wrapped/rebuilt
       // schema object). Graceful reload then silently has no effect for this
-      // traffic, so warn once - not per request - to make it visible.
+      // traffic, so warn once — not per request — to make it visible.
       if (!this.warnedUntrackedSchema) {
         this.warnedUntrackedSchema = true;
         this.opts.transportContext?.log.warn(
@@ -598,7 +598,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       return undefined;
     }
     if (generation.disposed) {
-      // The operation outlived its generation (already disposed). Benign - it
+      // The operation outlived its generation (already disposed). Benign — it
       // proceeds unpinned; not warned, as this is expected around reloads.
       return undefined;
     }
@@ -661,7 +661,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     (forceDisposeTimer as { unref?: () => void }).unref?.();
     generation.forceDisposeTimer = forceDisposeTimer;
     // Enforce the cap after registering this generation; if it is exceeded the
-    // oldest draining generation is force-disposed immediately - the cap takes
+    // oldest draining generation is force-disposed immediately — the cap takes
     // precedence over its drain timer. Fall back to the default for any invalid
     // value (including NaN, which would make `size + 1 > cap` always false and
     // silently disable the cap).
@@ -681,7 +681,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private enforceGenerationCap(maxConcurrentGenerations: number): void {
     // Sets iterate in insertion order, so the first draining generation is the
     // oldest. With a cap of 1 the only draining entry is the one just retired,
-    // so it is force-disposed here - i.e. overlap is effectively off. The guard
+    // so it is force-disposed here — i.e. overlap is effectively off. The guard
     // also handles a non-positive cap (drain everything).
     while (this.drainingGenerations.size + 1 > maxConcurrentGenerations) {
       const oldest = this.drainingGenerations.values().next().value;
@@ -839,7 +839,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
       },
     );
-    // Dispose every live generation - the current one and any still draining  -
+    // Dispose every live generation — the current one and any still draining —
     // so no transports or in-flight executors are leaked on shutdown.
     const generations: SchemaGeneration[] = [];
     if (this.currentGeneration) {
@@ -857,7 +857,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       generation.disposed = true;
       // Clear any per-generation SCHEMA_RELOAD reason so in-flight work on a
       // draining generation aborts with SHUTTING_DOWN (via the `?? this.disposeReason`
-      // fallback) rather than SCHEMA_RELOAD - otherwise clients might retry into
+      // fallback) rather than SCHEMA_RELOAD — otherwise clients might retry into
       // a shutting-down gateway instead of failing over.
       generation.disposeReason = undefined;
       disposables.push(generation.transportExecutorStack, generation.executor);
