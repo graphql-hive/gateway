@@ -1,5 +1,71 @@
 # @graphql-tools/stitching-directives
 
+## 4.1.2
+### Patch Changes
+
+
+
+- [#2671](https://github.com/graphql-hive/gateway/pull/2671) [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59) Thanks [@ardatan](https://github.com/ardatan)! - Allow `@merge` without `keyArg` when the resolver takes zero arguments, and make keyless type merges work when the initial subschema cannot satisfy the requested fields ([graphql-tools#4337](https://github.com/ardatan/graphql-tools/pull/4337)).
+  
+  Previously the validator rejected `@merge` on zero-arg fields (`args.length !== 1`). It now allows zero or one argument and only errors when there are multiple args without `keyArg` / `argsExpr`.
+  
+  Separately, keyless merges such as:
+  
+  ```ts
+  merge: {
+    Stats: {
+      fieldName: 'stats',
+      args: () => ({}),
+    },
+  }
+  ```
+  
+  had no key `selectionSet`. When the subschema that owned `Query.stats` did not have the requested fields (for example querying only `totalChirps` while that field lived on the other subschema), `finalizeGatewayRequest` stripped the empty nested selection and failed with "The request must contain at least one operation."
+  
+  For merged types that have resolvers but no key `selectionSet`, stitching now injects `__typename` into `fieldNodesByType` so a stub object remains and type merging can fill the remaining fields. This matches the partial-field failure called out in [this discussion](https://github.com/ardatan/graphql-tools/pull/4337#issuecomment-1086893317). Keyed merges (`selectionSet: '{ id }'`) are unchanged.
+
+
+- [#2671](https://github.com/graphql-hive/gateway/pull/2671) [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59) Thanks [@ardatan](https://github.com/ardatan)! - Fix type merging for unions queried with inline fragments ([graphql-tools#4965](https://github.com/ardatan/graphql-tools/pull/4965) / [#4966](https://github.com/ardatan/graphql-tools/issues/4966)).
+  
+  Typical setup: one subschema returns a stub member (`StubMajor { id }`) while another resolves the real union members via `@merge`:
+  
+  ```graphql
+  # students
+  union Major = StubMajor
+  type StubMajor { id: String! }
+  
+  # majors
+  type Query {
+    major(id: String!): Major @merge(keyField: "id")
+  }
+  union Major = MajorSuccess | MajorError
+  ```
+  
+  Client query:
+  
+  ```graphql
+  major {
+    ... on MajorSuccess { id name }
+    ... on MajorError { id code }
+  }
+  ```
+  
+  Three problems stacked:
+  
+  1. `@merge` on a union only registered concrete members (`MajorSuccess` / `MajorError`), not `Major` itself, so a `StubMajor` result never triggered merge.
+  2. `MergedTypeInfo` was not built for union types, and planners assumed object/interface `getFields()`.
+  3. Expanding a bare merge-key field (`id`) on a union into `... on StubMajor { id }` returned an **array** from the FIELD visitor; graphql-js `visit` nests that array as one selection instead of splicing it, so execution ignored the fragment and the merge key was never queried (`major(id: $id)` ran with empty variables).
+  
+  Fixes:
+  
+  - Register the abstract union/interface name for `@merge` as well as concrete members.
+  - Build merge info for unions; treat unions as field-less so the abstract planner re-fetches via inline fragments.
+  - Flatten nested selection arrays after union field expansion so stub keys are actually requested.
+  
+  This goes beyond the [schema-extension workaround](https://github.com/ardatan/graphql-tools/issues/4966#issuecomment-1670713991) discussed on the issue.
+- Updated dependencies [[`127576a`](https://github.com/graphql-hive/gateway/commit/127576a9e823cd2425c69432166a175464882b7f), [`befdb8e`](https://github.com/graphql-hive/gateway/commit/befdb8e3e352650c9f6c4e5fbeadfcf3615ee6ae), [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59)]:
+  - @graphql-tools/delegate@12.3.0
+
 ## 4.1.1
 ### Patch Changes
 
