@@ -16,7 +16,7 @@ Supported MCP methods: `initialize`, `tools/list`, `tools/call`, `resources/list
 
 ## Install
 
-Requires Node.js >= 20 and `graphql` as a peer dependency.
+Requires Node.js >= 22.15.0 and `graphql` as a peer dependency.
 
 ```bash
 npm install @graphql-hive/gateway-runtime @graphql-hive/plugin-mcp graphql

@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.15.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -39,7 +39,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0"
+    "graphql": "^16.9.0 || ^17.0.0"
   },
   "dependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.16",

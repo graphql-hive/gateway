@@ -120,10 +120,7 @@ export function serveSubgraph<TContext extends Record<string, any>>(
               const onSubgraphExecute = getOnSubgraphExecute({
                 onSubgraphExecuteHooks,
                 ...(config.transports ? { transports: config.transports } : {}),
-                transportContext: {
-                  ...configContext,
-                  logger: LegacyLogger.from(configContext.log),
-                },
+                transportContext: configContext,
                 transportEntryMap,
                 getSubgraphSchema: getUnifiedGraph,
                 transportExecutorStack,

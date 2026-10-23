@@ -15,7 +15,6 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
-  Logger as LegacyLogger,
   MeshFetch,
   MeshFetchRequestInit,
 } from '@graphql-mesh/types';
@@ -39,6 +38,7 @@ import type {
 import type {
   BatchingOptions,
   FetchAPI,
+  RequestIdOptions,
   YogaInitialContext,
   Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
@@ -53,7 +53,6 @@ import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { InboundInflightRequestDeduplicationYogaPluginOptions } from './plugins/useInboundInflightReqDedupe';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
-import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
@@ -141,8 +140,6 @@ export interface OnFetchHookPayload<TContext> {
    * The logger will be available in all cases.
    */
   context: (GatewayContext & TContext) | { log: Logger };
-  /** @deprecated Please use `log` from the {@link context} instead. */
-  logger: LegacyLogger;
   info: GraphQLResolveInfo;
   fetchFn: MeshFetch;
   setFetchFn: (fetchFn: MeshFetch) => void;
@@ -883,6 +880,13 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default false
    */
   multipart?: boolean;
+
+  /**
+   * Maximum request body size in bytes. Set to `false` to disable the limit.
+   *
+   * @default 25000000
+   */
+  maxRequestBodySize?: number | false;
 
   /**
    * Enable execution cancellation

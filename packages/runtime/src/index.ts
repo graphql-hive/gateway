@@ -1,7 +1,7 @@
 export * from './createGatewayRuntime';
 export type * from './types';
 export * from '@graphql-hive/logger';
-export * from './createLoggerFromLogging';
+export { createLoggerFromLogging } from 'graphql-yoga';
 export * from './plugins/useCustomFetch';
 export * from './plugins/useStaticFiles';
 export * from './getProxyExecutor';

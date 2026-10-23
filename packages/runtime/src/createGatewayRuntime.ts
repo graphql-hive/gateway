@@ -6,7 +6,6 @@ import {
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
-import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -80,9 +79,11 @@ import {
 } from 'graphql';
 import {
   chain,
+  createLoggerFromLogging,
   createYoga,
   FetchAPI,
   isAsyncIterable,
+  useConfigInServerContext,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -90,7 +91,6 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createDevFetcher } from './fetchers/dev';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
@@ -106,7 +106,6 @@ import {
 } from './landing-page.generated';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -115,7 +114,6 @@ import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
-import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphErrorPlugin } from './plugins/useSubgraphErrorPlugin';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
@@ -701,10 +699,7 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: {
-        ...configContext,
-        logger: LegacyLogger.from(configContext.log),
-      },
+      transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
@@ -775,6 +770,24 @@ export function createGatewayRuntime<
   });
 
   const defaultGatewayPlugin: GatewayPlugin = {
+    onRequest({ serverContext, request }) {
+      Object.assign(serverContext, { headers: getHeadersObj(request.headers) });
+    },
+    onFetch({ context, options, setOptions }) {
+      const attrs = context.log.attrs;
+      const requestId =
+        attrs && 'requestId' in attrs ? attrs['requestId'] : undefined;
+      if (config.requestId !== false && 'request' in context && requestId) {
+        const headerName =
+          (typeof config.requestId === 'object' &&
+            config.requestId.headerName) ||
+          'x-request-id';
+        setOptions({
+          ...options,
+          headers: { ...options.headers, [headerName]: String(requestId) },
+        });
+      }
+    },
     onRequestParse() {
       return handleMaybePromise(getSchema, () => {});
     },
@@ -1011,13 +1024,6 @@ export function createGatewayRuntime<
     );
   }
 
-  if (config.requestId !== false) {
-    const reqIdPlugin = useRequestId(
-      typeof config.requestId === 'object' ? config.requestId : undefined,
-    );
-    basePlugins.push(reqIdPlugin);
-  }
-
   if (isDisposable(wrappedCache)) {
     const cacheDisposePlugin = {
       onDispose() {
@@ -1178,7 +1184,8 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: LegacyLogger.from(log),
+    logging: log,
+    requestId: config.requestId,
     plugins: [
       ...basePlugins,
       ...extraPlugins,
@@ -1190,12 +1197,14 @@ export function createGatewayRuntime<
       if (!ctx.headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        ctx['headers'] = getHeadersObj(
-          ctx['req']?.headers || ctx?.request?.headers,
-        );
+        Object.assign(ctx, {
+          headers: getHeadersObj(ctx['req']?.headers || ctx?.request?.headers),
+        });
       }
       if (ctx['connectionParams']) {
-        ctx['headers'] = { ...ctx['headers'], ...ctx['connectionParams'] };
+        Object.assign(ctx, {
+          headers: { ...ctx['headers'], ...ctx['connectionParams'] },
+        });
       }
       return contextBuilder?.(ctx) ?? ctx;
     },
@@ -1209,6 +1218,7 @@ export function createGatewayRuntime<
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
+    maxRequestBodySize: config.maxRequestBodySize,
   });
 
   Object.defineProperties(yoga, {

@@ -503,7 +503,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       JSON.stringify(
         {
           name: 'Node.js',
-          image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
+          image: 'mcr.microsoft.com/devcontainers/javascript-node:22',
         },
         null,
         '  ',
