@@ -108,7 +108,7 @@
     "@graphql-mesh/cache-redis": "^0.108.1",
     "@graphql-mesh/cache-upstash-redis": "^0.4.1",
     "@graphql-mesh/cross-helpers": "^0.4.16",
-    "@graphql-mesh/hmac-upstream-signature": "^2.1.0",
+    "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-http-cache": "^0.108.1",
     "@graphql-mesh/plugin-jit": "^0.5.1",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
