@@ -7367,7 +7367,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/heapsnapshot@workspace:internal/heapsnapshot"
   dependencies:
-    "@tsconfig/node22": "npm:^22.0.6"
     "@tsconfig/recommended": "npm:^1.0.13"
     "@types/node": "npm:^25.0.0"
     pkgroll: "npm:2.27.1"
