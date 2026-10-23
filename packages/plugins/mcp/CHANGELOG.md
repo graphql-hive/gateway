@@ -1,5 +1,12 @@
 # @graphql-hive/plugin-mcp
 
+## 0.2.2
+### Patch Changes
+
+
+
+- [`62175b8`](https://github.com/graphql-hive/gateway/commit/62175b81b04237825372370de04dbdc11c239a01) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use semver dependencies matched by minor
+
 ## 0.2.1
 ### Patch Changes
 

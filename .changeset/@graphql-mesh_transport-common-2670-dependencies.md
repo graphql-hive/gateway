@@ -1,0 +1,8 @@
+---
+'@graphql-mesh/transport-common': patch
+---
+
+dependencies updates: 
+
+- Updated dependency [`@envelop/core@^6.0.0` ↗︎](https://www.npmjs.com/package/@envelop/core/v/6.0.0) (from `^5.4.0`, in `dependencies`)
+- Updated dependency [`graphql@^16.9.0 || ^17.0.0` ↗︎](https://www.npmjs.com/package/graphql/v/16.9.0) (from `^15.9.0 || ^16.9.0`, in `peerDependencies`)
