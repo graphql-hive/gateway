@@ -1,5 +1,82 @@
 # @graphql-tools/delegate
 
+## 12.3.0
+### Minor Changes
+
+
+
+- [#2672](https://github.com/graphql-hive/gateway/pull/2672) [`befdb8e`](https://github.com/graphql-hive/gateway/commit/befdb8e3e352650c9f6c4e5fbeadfcf3615ee6ae) Thanks [@ardatan](https://github.com/ardatan)! - Support `@defer` / `@stream` incremental delivery within schema stitching.
+  
+  **Gateway-owned `@defer` (default):** deferred selections are omitted from subgraph requests (only `@requires` / key dependencies are kept), so nested `@defer` can flush before slow fields resolve. Missing fields are filled later via type-merging or source resolvers.
+  
+  **Subgraph-forwarded `@defer`:** set `defer: true` on a `SubschemaConfig` (or `defer: true` on `getStitchedSchemaFromSupergraphSdl`) to forward `@defer` to that subgraph and merge incremental patches via `IncrementalReceiver`. With `batch: true` and `batchingOptions.defer` (or `subschema.defer`), multi-request batches wrap each root selection in `@defer` for subgraph compatibility; results are still collected before DataLoader waiters resolve. Single-request batches pass the AsyncIterable through so the initial payload can flush before deferred patches arrive.
+  
+  **Hive Gateway config:** extend `deferStream` instead of a separate flag:
+  
+  ```ts
+  deferStream: true // client-facing only (gateway-owned omit)
+  deferStream: { subgraph: true } // also forward @defer to every subgraph
+  deferStream: { subgraph: { users: true, '*': false } } // per-subgraph
+  ```
+  
+  `@graphql-tools/executor-http` adds `mergeIncremental` (default `true`: legacy growing snapshots). Set `mergeIncremental: false` to yield raw multipart parts like the default schema executor. Hive Gateway's `@graphql-mesh/transport-http` always uses passthrough (`mergeIncremental: false`).
+  
+  `IncrementalReceiver` prefers raw patches and cheaply tolerates accumulated snapshots (only fills missing keys). The HTTP executor preserves `hasNext` in accumulate mode.
+  
+  `@stream` continues to be forwarded on field directives as before. List streaming in `@graphql-tools/delegate` uses a plain async generator (no `@repeaterjs/repeater` dependency).
+  
+  Hive Router runtime does not plan incremental delivery yet; `deferStream.subgraph` applies to the stitching federation path.
+
+### Patch Changes
+
+
+
+- [#2666](https://github.com/graphql-hive/gateway/pull/2666) [`127576a`](https://github.com/graphql-hive/gateway/commit/127576a9e823cd2425c69432166a175464882b7f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Removed dependency [`@repeaterjs/repeater@^3.0.6` ↗︎](https://www.npmjs.com/package/@repeaterjs/repeater/v/3.0.6) (from `dependencies`)
+
+
+- [#2671](https://github.com/graphql-hive/gateway/pull/2671) [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59) Thanks [@ardatan](https://github.com/ardatan)! - Fix type merging for unions queried with inline fragments ([graphql-tools#4965](https://github.com/ardatan/graphql-tools/pull/4965) / [#4966](https://github.com/ardatan/graphql-tools/issues/4966)).
+  
+  Typical setup: one subschema returns a stub member (`StubMajor { id }`) while another resolves the real union members via `@merge`:
+  
+  ```graphql
+  # students
+  union Major = StubMajor
+  type StubMajor { id: String! }
+  
+  # majors
+  type Query {
+    major(id: String!): Major @merge(keyField: "id")
+  }
+  union Major = MajorSuccess | MajorError
+  ```
+  
+  Client query:
+  
+  ```graphql
+  major {
+    ... on MajorSuccess { id name }
+    ... on MajorError { id code }
+  }
+  ```
+  
+  Three problems stacked:
+  
+  1. `@merge` on a union only registered concrete members (`MajorSuccess` / `MajorError`), not `Major` itself, so a `StubMajor` result never triggered merge.
+  2. `MergedTypeInfo` was not built for union types, and planners assumed object/interface `getFields()`.
+  3. Expanding a bare merge-key field (`id`) on a union into `... on StubMajor { id }` returned an **array** from the FIELD visitor; graphql-js `visit` nests that array as one selection instead of splicing it, so execution ignored the fragment and the merge key was never queried (`major(id: $id)` ran with empty variables).
+  
+  Fixes:
+  
+  - Register the abstract union/interface name for `@merge` as well as concrete members.
+  - Build merge info for unions; treat unions as field-less so the abstract planner re-fetches via inline fragments.
+  - Flatten nested selection arrays after union field expansion so stub keys are actually requested.
+  
+  This goes beyond the [schema-extension workaround](https://github.com/ardatan/graphql-tools/issues/4966#issuecomment-1670713991) discussed on the issue.
+- Updated dependencies [[`680eb53`](https://github.com/graphql-hive/gateway/commit/680eb53b8d9ef9b45503c819780ff1d592773e35), [`62175b8`](https://github.com/graphql-hive/gateway/commit/62175b81b04237825372370de04dbdc11c239a01), [`680eb53`](https://github.com/graphql-hive/gateway/commit/680eb53b8d9ef9b45503c819780ff1d592773e35), [`befdb8e`](https://github.com/graphql-hive/gateway/commit/befdb8e3e352650c9f6c4e5fbeadfcf3615ee6ae)]:
+  - @graphql-tools/batch-execute@10.3.0
+
 ## 12.2.1
 ### Patch Changes
 

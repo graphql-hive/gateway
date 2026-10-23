@@ -1,5 +1,126 @@
 # @graphql-hive/gateway-runtime
 
+## 2.13.0
+### Minor Changes
+
+
+
+- [#2672](https://github.com/graphql-hive/gateway/pull/2672) [`befdb8e`](https://github.com/graphql-hive/gateway/commit/befdb8e3e352650c9f6c4e5fbeadfcf3615ee6ae) Thanks [@ardatan](https://github.com/ardatan)! - Support `@defer` / `@stream` incremental delivery within schema stitching.
+  
+  **Gateway-owned `@defer` (default):** deferred selections are omitted from subgraph requests (only `@requires` / key dependencies are kept), so nested `@defer` can flush before slow fields resolve. Missing fields are filled later via type-merging or source resolvers.
+  
+  **Subgraph-forwarded `@defer`:** set `defer: true` on a `SubschemaConfig` (or `defer: true` on `getStitchedSchemaFromSupergraphSdl`) to forward `@defer` to that subgraph and merge incremental patches via `IncrementalReceiver`. With `batch: true` and `batchingOptions.defer` (or `subschema.defer`), multi-request batches wrap each root selection in `@defer` for subgraph compatibility; results are still collected before DataLoader waiters resolve. Single-request batches pass the AsyncIterable through so the initial payload can flush before deferred patches arrive.
+  
+  **Hive Gateway config:** extend `deferStream` instead of a separate flag:
+  
+  ```ts
+  deferStream: true // client-facing only (gateway-owned omit)
+  deferStream: { subgraph: true } // also forward @defer to every subgraph
+  deferStream: { subgraph: { users: true, '*': false } } // per-subgraph
+  ```
+  
+  `@graphql-tools/executor-http` adds `mergeIncremental` (default `true`: legacy growing snapshots). Set `mergeIncremental: false` to yield raw multipart parts like the default schema executor. Hive Gateway's `@graphql-mesh/transport-http` always uses passthrough (`mergeIncremental: false`).
+  
+  `IncrementalReceiver` prefers raw patches and cheaply tolerates accumulated snapshots (only fills missing keys). The HTTP executor preserves `hasNext` in accumulate mode.
+  
+  `@stream` continues to be forwarded on field directives as before. List streaming in `@graphql-tools/delegate` uses a plain async generator (no `@repeaterjs/repeater` dependency).
+  
+  Hive Router runtime does not plan incremental delivery yet; `deferStream.subgraph` applies to the stitching federation path.
+
+### Patch Changes
+
+
+
+- [#2666](https://github.com/graphql-hive/gateway/pull/2666) [`127576a`](https://github.com/graphql-hive/gateway/commit/127576a9e823cd2425c69432166a175464882b7f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/generic-auth@^12.0.0` ↗︎](https://www.npmjs.com/package/@envelop/generic-auth/v/12.0.0) (from `^11.0.0`, in `dependencies`)
+
+
+- [#2666](https://github.com/graphql-hive/gateway/pull/2666) [`127576a`](https://github.com/graphql-hive/gateway/commit/127576a9e823cd2425c69432166a175464882b7f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix granular authorization returning HTTP 401 alongside partial GraphQL data when `genericAuth.rejectUnauthenticated` is `false`
+  
+  Default field-level authorization failures now use HTTP 200 in this configuration. Unauthorized fields remain `null` with an `UNAUTHORIZED_FIELD_OR_TYPE` error, while permitted data is still returned. This prevents HTTP intermediaries that discard non-2xx response bodies from hiding otherwise usable partial responses.
+  
+  For example, when JWT authentication is already configured to populate `context.jwt` with a verified payload, configure granular authorization as follows:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway'
+  
+  export default defineConfig({
+    supergraph: './supergraph.graphql',
+    genericAuth: {
+      mode: 'protect-granular',
+      resolveUserFn: context => context.jwt?.payload,
+      extractScopes: payload => payload?.roles || [],
+      rejectUnauthenticated: false
+    }
+  })
+  ```
+  
+  Given these types in the graph:
+  
+  ```graphql
+  directive @requiresScopes(scopes: [[String!]!]!) on OBJECT | FIELD_DEFINITION
+  
+  type Query {
+    invoice: Invoice
+  }
+  
+  type Invoice @requiresScopes(scopes: [["GraphQLLabDemo"]]) {
+    id: ID!
+    title: String
+    amount: Float @requiresScopes(scopes: [["ExtraPrivileged"]])
+  }
+  ```
+  
+  A user whose verified JWT contains `roles: ['GraphQLLabDemo']`, but not `ExtraPrivileged`, can request:
+  
+  ```graphql
+  {
+    invoice {
+      id
+      title
+      amount
+    }
+  }
+  ```
+  
+  The gateway returns HTTP 200 with partial data and the authorization error:
+  
+  ```json
+  {
+    "data": {
+      "invoice": {
+        "id": "1",
+        "title": "insurance",
+        "amount": null
+      }
+    },
+    "errors": [
+      {
+        "message": "Unauthorized field or type",
+        "locations": [{ "line": 5, "column": 5 }],
+        "path": ["invoice", "amount"],
+        "extensions": {
+          "code": "UNAUTHORIZED_FIELD_OR_TYPE"
+        }
+      }
+    ]
+  }
+  ```
+  
+  Whole-operation rejection remains unchanged: setting `rejectUnauthenticated: true`, or omitting it, still returns HTTP 401 for default authorization failures. Custom `validateUser` functions and JWT-level rejection settings are unaffected.
+- Updated dependencies [[`127576a`](https://github.com/graphql-hive/gateway/commit/127576a9e823cd2425c69432166a175464882b7f), [`680eb53`](https://github.com/graphql-hive/gateway/commit/680eb53b8d9ef9b45503c819780ff1d592773e35), [`62175b8`](https://github.com/graphql-hive/gateway/commit/62175b81b04237825372370de04dbdc11c239a01), [`befdb8e`](https://github.com/graphql-hive/gateway/commit/befdb8e3e352650c9f6c4e5fbeadfcf3615ee6ae), [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59), [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59), [`cd30482`](https://github.com/graphql-hive/gateway/commit/cd30482174173564e7a292f36b8dd12cc7cfab59)]:
+  - @graphql-tools/delegate@12.3.0
+  - @graphql-hive/signal@2.1.0
+  - @graphql-mesh/hmac-upstream-signature@2.1.1
+  - @graphql-tools/stitch@10.4.0
+  - @graphql-tools/federation@4.6.0
+  - @graphql-tools/executor-http@3.5.0
+  - @graphql-mesh/fusion-runtime@1.13.0
+  - @graphql-tools/batch-delegate@10.1.2
+  - @graphql-tools/wrap@11.2.2
+  - @graphql-mesh/transport-common@1.1.1
+
 ## 2.12.2
 ### Patch Changes
 

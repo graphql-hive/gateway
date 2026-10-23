@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-http-callback
 
+## 1.1.1
+### Patch Changes
+
+- Updated dependencies [[`680eb53`](https://github.com/graphql-hive/gateway/commit/680eb53b8d9ef9b45503c819780ff1d592773e35)]:
+  - @graphql-hive/signal@2.1.0
+  - @graphql-mesh/transport-common@1.1.1
+
 ## 1.1.0
 ### Minor Changes
 
