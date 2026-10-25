@@ -449,7 +449,12 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
   const fieldName = delegationContext.fieldName;
   for await (const result of iterable) {
     if (result?.incremental?.length) {
-      for (const patch of result.incremental) {
+      const lastPatchIndex = result.incremental.length - 1;
+      for (const [patchIndex, patch] of result.incremental.entries()) {
+        // Each patch is re-emitted as its own result; only the last one may
+        // carry the chunk's `hasNext: false`, or IncrementalReceiver stops
+        // before applying the remaining patches.
+        const hasNext = patchIndex < lastPatchIndex ? true : result.hasNext;
         if (patch.items != null) {
           // @stream list items: rewrite paths (TransformQuery unwrap) then
           // pass items through. Per-item result transforms are uncommon for
@@ -465,7 +470,7 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
             incremental: [
               rewrittenPath != null ? { ...patch, path: rewrittenPath } : patch,
             ],
-            hasNext: result.hasNext,
+            hasNext,
           };
           continue;
         }
@@ -486,7 +491,7 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
                   path: rewrittenPath,
                 },
               ],
-              hasNext: result.hasNext,
+              hasNext,
             };
             continue;
           }
@@ -523,7 +528,7 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
                     errors: [transformedValue as any],
                   },
                 ],
-                hasNext: result.hasNext,
+                hasNext,
               };
             } else if (
               transformedValue != null &&
@@ -533,19 +538,19 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
               // IncrementalReceiver fills only newly arrived gateway keys.
               yield {
                 data: { [fieldName]: transformedValue },
-                hasNext: result.hasNext,
+                hasNext,
               };
             } else {
               yield {
                 incremental: [patch],
-                hasNext: result.hasNext,
+                hasNext,
               };
             }
           } catch {
             // If transforms cannot reshape this patch, fall back to raw form.
             yield {
               incremental: [patch],
-              hasNext: result.hasNext,
+              hasNext,
             };
           }
           continue;
@@ -565,7 +570,7 @@ async function* transformDeferredChunks<TContext extends Record<string, any>>(
               ? { ...patch, path: rewrittenErrorPath }
               : patch,
           ],
-          hasNext: result.hasNext,
+          hasNext,
         };
       }
     } else if (result?.data) {

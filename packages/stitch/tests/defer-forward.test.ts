@@ -247,4 +247,170 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
       { id: '3', label: 'three' },
     ]);
   });
+
+  it('delivers deferred fields for every item of a nested list', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Item {
+          id: ID!
+          slowField: String
+        }
+        type Box {
+          items: [Item!]!
+        }
+        type Query {
+          box: Box
+        }
+      `,
+      resolvers: {
+        Query: {
+          box: () => ({ items: [{ id: '1' }, { id: '2' }, { id: '3' }] }),
+        },
+        Item: {
+          slowField: async ({ id }: { id: string }) => {
+            await setTimeout(20);
+            return `slow-${id}`;
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: executorFromSchema(schema),
+        },
+      ],
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        query {
+          box {
+            items {
+              id
+              ... @defer {
+                slowField
+              }
+            }
+          }
+        }
+      `),
+    });
+
+    expect(isAsyncIterable(result)).toBe(true);
+    const values: Array<{
+      data?: unknown;
+      incremental?: Array<{ data?: unknown; path?: Array<string | number> }>;
+      hasNext?: boolean;
+    }> = [];
+    for await (const v of result as AsyncIterable<(typeof values)[number]>) {
+      values.push(v);
+    }
+
+    expect(values[0]).toMatchObject({
+      data: { box: { items: [{ id: '1' }, { id: '2' }, { id: '3' }] } },
+      hasNext: true,
+    });
+    expect(
+      values
+        .flatMap((v) => v.incremental ?? [])
+        .sort((a, b) => Number(a.path?.[2]) - Number(b.path?.[2])),
+    ).toEqual([
+      { data: { slowField: 'slow-1' }, path: ['box', 'items', 0] },
+      { data: { slowField: 'slow-2' }, path: ['box', 'items', 1] },
+      { data: { slowField: 'slow-3' }, path: ['box', 'items', 2] },
+    ]);
+  });
+
+  it('delivers every patch when the subgraph sends several in one chunk', async () => {
+    let releaseSlowFields!: () => void;
+    const slowFieldsReleased = new Promise<void>((resolve) => {
+      releaseSlowFields = resolve;
+    });
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Item {
+          id: ID!
+          slowField: String
+        }
+        type Query {
+          items: [Item!]!
+        }
+      `,
+      resolvers: {
+        Query: {
+          items: () => [{ id: '1' }, { id: '2' }, { id: '3' }],
+        },
+        Item: {
+          slowField: async ({ id }: { id: string }) => {
+            await slowFieldsReleased;
+            return `slow-${id}`;
+          },
+        },
+      },
+    });
+
+    const subgraphExecutor = executorFromSchema(schema);
+    const subgraphChunks: Array<{ incremental?: ReadonlyArray<unknown> }> = [];
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: async (request) => {
+            const result = await subgraphExecutor(request);
+            if (!isAsyncIterable(result)) {
+              return result;
+            }
+            return (async function* () {
+              for await (const chunk of result) {
+                subgraphChunks.push(chunk);
+                yield chunk;
+              }
+            })();
+          },
+        },
+      ],
+    });
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        query {
+          items {
+            id
+            ... @defer {
+              slowField
+            }
+          }
+        }
+      `),
+    });
+
+    expect(isAsyncIterable(result)).toBe(true);
+    const values: Array<{
+      incremental?: Array<{ data?: unknown; path?: Array<string | number> }>;
+    }> = [];
+    for await (const v of result as AsyncIterable<(typeof values)[number]>) {
+      values.push(v);
+      if (values.length === 1) {
+        releaseSlowFields();
+      }
+    }
+
+    expect(subgraphChunks.at(-1)?.incremental).toHaveLength(3);
+    expect(
+      values
+        .flatMap((v) => v.incremental ?? [])
+        .sort((a, b) => Number(a.path?.[1]) - Number(b.path?.[1])),
+    ).toEqual([
+      { data: { slowField: 'slow-1' }, path: ['items', 0] },
+      { data: { slowField: 'slow-2' }, path: ['items', 1] },
+      { data: { slowField: 'slow-3' }, path: ['items', 2] },
+    ]);
+  });
 });
