@@ -361,4 +361,115 @@ describe('executor errors are propagated', () => {
       },
     ]);
   });
+
+  // Remote `User.email` throws while `name` succeeds. Stitching must not replace the
+  // whole `user` with null — only `email` is null, and the original error is kept.
+  it('keeps sibling fields when a remote field throws', async () => {
+    const remote = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          name: String
+          email: String
+        }
+        type Query {
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          user: () => ({ id: '1', name: 'Ada' }),
+        },
+        User: {
+          email: () => {
+            throw new Error('email unavailable');
+          },
+        },
+      },
+    });
+
+    const stitchedSchema = stitchSchemas({
+      subschemas: [remote],
+    });
+
+    const result = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
+        {
+          user(id: "1") {
+            name
+            email
+          }
+        }
+      `,
+    });
+
+    expect(result.data).toEqual({
+      user: {
+        name: 'Ada',
+        email: null,
+      },
+    });
+    expect(result.errors?.[0]?.message).toContain('email unavailable');
+  });
+
+  // A remote can return both `organization` data and account errors. Stitching
+  // used to wipe `organization` to null. The object must stay as the executor
+  // returned it.
+  it('keeps remote data when the remote also returns errors', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Organization {
+          name: String
+          accounts: [String]
+        }
+        type Query {
+          organization: Organization
+        }
+      `,
+    });
+
+    const stitchedSchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          executor: (async () => ({
+            data: {
+              organization: {
+                name: 'Acme',
+                accounts: ['a'],
+              },
+            },
+            errors: [
+              new GraphQLError('Account not found', {
+                path: ['organization', 'accounts', 0],
+              }),
+              new GraphQLError('Account not found', {
+                path: ['organization', 'accounts', 1],
+              }),
+            ],
+          })) as Executor,
+        },
+      ],
+    });
+
+    const result = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
+        {
+          organization {
+            name
+            accounts
+          }
+        }
+      `,
+    });
+
+    expect(result.data).toEqual({
+      organization: {
+        name: 'Acme',
+        accounts: ['a'],
+      },
+    });
+  });
 });

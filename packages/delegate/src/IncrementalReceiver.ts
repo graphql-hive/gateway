@@ -356,6 +356,33 @@ export class IncrementalReceiver {
           !(value instanceof Error)
         ) {
           this.mergeInto(root, appendPath(relPath, key), value);
+        } else if (
+          Array.isArray(existing) &&
+          value != null &&
+          typeof value === 'object' &&
+          !(value instanceof Error)
+        ) {
+          // Patches rebuilt from a list path (e.g. `items.1`) arrive as a
+          // sparse array or an index-keyed object; descend into the items we
+          // already hold so their deferred fields are filled. Nested lists
+          // (existing item is itself an array) recurse the same way.
+          const listPath = appendPath(relPath, key);
+          for (const indexKey of Object.keys(value)) {
+            const index = Number(indexKey);
+            const item = value[indexKey];
+            const existingItem = existing[index];
+            if (
+              Number.isInteger(index) &&
+              item != null &&
+              typeof item === 'object' &&
+              !(item instanceof Error) &&
+              existingItem != null &&
+              typeof existingItem === 'object' &&
+              !(existingItem instanceof Error)
+            ) {
+              this.mergeInto(root, appendPath(listPath, index), item);
+            }
+          }
         }
         continue;
       }

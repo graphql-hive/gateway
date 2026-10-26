@@ -1,6 +1,7 @@
+import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { assertSome } from '@graphql-tools/utils';
-import { graphql } from 'graphql';
+import { graphql, print } from 'graphql';
 import { describe, expect, test } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 
@@ -127,5 +128,90 @@ describe('extended interfaces', () => {
     });
     assertSome(result.data);
     expect(result.data['placement']).toEqual({ id: '23', name: 'Item 23' });
+  });
+
+  // Adding `foo` on the gateway via `extend type Movie_Type` used to rewrite the
+  // upstream query as `movie { ... on Movie_Type { title } }`. The remote only
+  // needs `movie { title }`; the extra inline fragment is unnecessary.
+  test('does not insert an unneeded inline fragment when extending a type', async () => {
+    let delegatedQuery = '';
+    const remote = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Movie {
+          id: ID!
+          title: String
+        }
+        type Movie_Type implements Movie {
+          id: ID!
+          title: String
+        }
+        type Query {
+          movie: Movie
+        }
+      `,
+      resolvers: {
+        Query: {
+          movie: () => ({
+            __typename: 'Movie_Type',
+            id: '1',
+            title: 'Dune',
+          }),
+        },
+        Movie: {
+          __resolveType: () => 'Movie_Type',
+        },
+      },
+    });
+
+    const stitchedSchema = stitchSchemas({
+      inheritResolversFromInterfaces: true,
+      subschemas: [
+        {
+          schema: remote,
+          executor: async ({ document }) => {
+            delegatedQuery = print(document);
+            return normalizedExecutor({
+              schema: remote,
+              document,
+            });
+          },
+        },
+      ],
+      typeDefs: /* GraphQL */ `
+        extend interface Movie {
+          foo: String
+        }
+        extend type Movie_Type {
+          foo: String
+        }
+      `,
+      resolvers: {
+        Movie: {
+          foo: () => 'foo',
+        },
+      },
+    });
+
+    const result = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
+        {
+          movie {
+            title
+            foo
+          }
+        }
+      `,
+    });
+
+    expect(result).toEqual({
+      data: {
+        movie: {
+          title: 'Dune',
+          foo: 'foo',
+        },
+      },
+    });
+    expect(delegatedQuery).not.toMatch(/\.\.\. on /);
   });
 });

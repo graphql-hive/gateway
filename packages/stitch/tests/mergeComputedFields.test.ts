@@ -1285,3 +1285,93 @@ it('test computed field with arguments', async () => {
     },
   });
 });
+
+// `estimate` is `@computed` and depends on `price` from another subschema. Planning
+// that computed field used to stop at the parent, so `estimate { amount currency }`
+// came back null. Nested selections on the computed type must still be fetched.
+it('keeps nested fields of a computed parent', async () => {
+  const products = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Product {
+        id: ID!
+        price: Float!
+      }
+      type Query {
+        product(id: ID!): Product
+      }
+    `,
+    resolvers: {
+      Query: {
+        product: (_root, { id }) => ({ id, price: 10 }),
+      },
+    },
+  });
+
+  const shipping = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Estimate {
+        amount: Float!
+        currency: String!
+      }
+      type Product {
+        id: ID!
+        estimate: Estimate
+      }
+      type Query {
+        _product(id: ID!, price: Float): Product
+      }
+    `,
+    resolvers: {
+      Query: {
+        _product: (_root, { id, price }) => ({
+          id,
+          estimate: { amount: price ?? 0, currency: 'USD' },
+        }),
+      },
+    },
+  });
+
+  const gatewaySchema = stitchSchemas({
+    subschemas: [
+      { schema: products },
+      {
+        schema: shipping,
+        merge: {
+          Product: {
+            selectionSet: '{ id }',
+            fieldName: '_product',
+            args: ({ id, price }) => ({ id, price }),
+            fields: {
+              estimate: { selectionSet: '{ price }', computed: true },
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  const result = await graphql({
+    schema: gatewaySchema,
+    source: /* GraphQL */ `
+      {
+        product(id: "1") {
+          estimate {
+            amount
+            currency
+          }
+        }
+      }
+    `,
+  });
+
+  expect(result).toEqual({
+    data: {
+      product: {
+        estimate: {
+          amount: 10,
+          currency: 'USD',
+        },
+      },
+    },
+  });
+});

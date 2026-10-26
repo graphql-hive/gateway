@@ -121,6 +121,9 @@ describe('Mutations executed as mutation on stitched schema', () => {
     });
   });
 
+  // Type merge on a mutation result used to always hit `Query.zeroUser`
+  // (`operation: 'query'` hardcoded). When both Query and Mutation expose
+  // the same field, the merge request must stay a mutation.
   test('Mutation executed when both mutation and query are available', async () => {
     const sub0Schema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
