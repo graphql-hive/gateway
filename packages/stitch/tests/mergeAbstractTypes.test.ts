@@ -1,3 +1,4 @@
+import { delegateToSchema } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { assertSome } from '@graphql-tools/utils';
@@ -209,5 +210,152 @@ describe('Merged associations', () => {
         network: { domain: 'network56.com' },
       },
     ]);
+  });
+});
+
+// Querying a union with an alias only on one member (`... on TitleTwo { renamedText: text }`)
+// used to return `renamedText: null` after stitching, even though the remote had the value.
+// Aliases on abstract types must be unwrapped the same way as on concrete objects.
+it('does not drop aliased fields on union types', async () => {
+  const articles = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type TitleOne {
+        text: String
+      }
+      type TitleTwo {
+        text: Int
+      }
+      union Title = TitleOne | TitleTwo
+      type Article {
+        title: Title
+      }
+      type Query {
+        articles: [Article]
+      }
+    `,
+    resolvers: {
+      Query: {
+        articles: () => [
+          { title: { __typename: 'TitleOne', text: 'hello world' } },
+          { title: { __typename: 'TitleTwo', text: 1 } },
+          { title: { __typename: 'TitleTwo', text: 2 } },
+          { title: { __typename: 'TitleOne', text: 'bye' } },
+        ],
+      },
+      Title: {
+        __resolveType: (obj: { text: string | number }) =>
+          typeof obj.text === 'number' ? 'TitleTwo' : 'TitleOne',
+      },
+    },
+  });
+
+  const gatewaySchema = stitchSchemas({
+    subschemas: [articles],
+  });
+
+  const result = await graphql({
+    schema: gatewaySchema,
+    source: /* GraphQL */ `
+      {
+        articles {
+          title {
+            ... on TitleOne {
+              text
+            }
+            ... on TitleTwo {
+              renamedText: text
+            }
+          }
+        }
+      }
+    `,
+  });
+
+  expect(result).toEqual({
+    data: {
+      articles: [
+        { title: { text: 'hello world' } },
+        { title: { renamedText: 1 } },
+        { title: { renamedText: 2 } },
+        { title: { text: 'bye' } },
+      ],
+    },
+  });
+});
+
+// Two stitch layers: the inner gateway adds `newProp` by delegating back to
+// `film`. An alias on that added field (`baz: newProp`) used to resolve null
+// on the outer layer even though `title` aliased as `x` was fine.
+it('keeps aliases on fields added by an inner stitch layer', async () => {
+  const films = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Film {
+        id: ID!
+        title: String!
+      }
+      type Query {
+        film(id: ID!): Film
+      }
+    `,
+    resolvers: {
+      Query: {
+        film: (_root, { id }) => ({
+          id,
+          title: `${id} film title`,
+        }),
+      },
+    },
+  });
+
+  const inner = stitchSchemas({
+    subschemas: [films],
+    typeDefs: /* GraphQL */ `
+      extend type Film {
+        newProp: Film
+      }
+    `,
+    resolvers: {
+      Film: {
+        newProp: (_parent, _args, context, info) =>
+          delegateToSchema({
+            schema: films,
+            fieldName: 'film',
+            args: { id: 'other' },
+            context,
+            info,
+          }),
+      },
+    },
+  });
+
+  const outer = stitchSchemas({
+    subschemas: [inner],
+  });
+
+  const result = await graphql({
+    schema: outer,
+    source: /* GraphQL */ `
+      {
+        film(id: "1") {
+          x: title
+          baz: newProp {
+            id
+            title
+          }
+        }
+      }
+    `,
+  });
+
+  expect(result).toEqual({
+    data: {
+      film: {
+        x: '1 film title',
+        baz: {
+          id: 'other',
+          title: 'other film title',
+        },
+      },
+    },
   });
 });

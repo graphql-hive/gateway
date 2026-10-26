@@ -3,6 +3,7 @@ import {
   delegateToSchema,
 } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { Executor } from '@graphql-tools/utils';
 import {
   ExtractField,
   TransformQuery,
@@ -11,6 +12,7 @@ import {
 } from '@graphql-tools/wrap';
 import {
   graphql,
+  GraphQLError,
   GraphQLScalarType,
   GraphQLSchema,
   Kind,
@@ -733,5 +735,107 @@ describe('transforms', () => {
         },
       });
     });
+  });
+
+  // After `wrapSchema`, a variable declared as `NestedInput!` and placed inside
+  // `OuterInput` (`echo(input: { nested: $input })`) was rejected as "cannot be
+  // used as an input type". The wrapped schema must accept the same query as the original.
+  test('accepts nested variable input types after wrapSchema', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        input NestedInput {
+          value: String!
+        }
+        input OuterInput {
+          nested: NestedInput!
+        }
+        type Query {
+          echo(input: OuterInput!): String
+        }
+      `,
+      resolvers: {
+        Query: {
+          echo: (_root, { input }) => input.nested.value,
+        },
+      },
+    });
+
+    const wrapped = wrapSchema({ schema });
+    const result = await graphql({
+      schema: wrapped,
+      source: /* GraphQL */ `
+        query ($input: NestedInput!) {
+          echo(input: { nested: $input })
+        }
+      `,
+      variableValues: { input: { value: 'ok' } },
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({ echo: 'ok' });
+  });
+
+  // A remote error with no `path` (common from some federated gateways) must not be
+  // painted onto every field by wrap/stitch. Data stays as the executor returned it;
+  // the error is only forwarded.
+  test('does not rewrite data when a remote error has no path', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Country {
+          name: String
+        }
+        type Company {
+          country: Country
+        }
+        type Query {
+          companies: [Company]
+        }
+      `,
+      resolvers: {
+        Query: {
+          companies: () => [
+            { country: { name: 'DE' } },
+            { country: { name: 'FR' } },
+            { country: { name: 'France' } },
+          ],
+        },
+      },
+    });
+
+    const wrapped = wrapSchema({
+      schema,
+      executor: (async () => ({
+        errors: [new GraphQLError('Country not found')],
+        data: {
+          companies: [
+            { country: null },
+            { country: { name: null } },
+            { country: { name: 'France' } },
+          ],
+        },
+      })) as Executor,
+    });
+
+    const result = await graphql({
+      schema: wrapped,
+      source: /* GraphQL */ `
+        {
+          companies {
+            country {
+              name
+            }
+          }
+        }
+      `,
+    });
+
+    expect(result.data).toEqual({
+      companies: [
+        { country: null },
+        { country: { name: null } },
+        { country: { name: 'France' } },
+      ],
+    });
+    expect(result.errors?.[0]?.message).toBe('Country not found');
   });
 });
