@@ -416,9 +416,11 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
   });
 
   /**
-   * Reporter setup from #2685: wrapSchema over a stitched schema, forward
-   * `@defer`, nested `@defer` on a field merged from another subgraph under
-   * connection paths like `assets.edges.<i>.node`.
+   * wrapSchema over a stitched schema, forward `@defer`, nested `@defer` on a
+   * field merged from another subgraph under connection paths like
+   * `assets.edges.<i>.node`. Without the list/hasNext merge fixes those
+   * deferred fields resolve as null; without the nested-merge guard, omitting
+   * `defer: true` recurses through defaultMergedResolver.
    */
   describe('wrapSchema over stitch (merged field under connection path)', () => {
     function buildMergedObjectStitch() {

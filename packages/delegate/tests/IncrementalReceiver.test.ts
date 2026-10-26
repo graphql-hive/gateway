@@ -85,7 +85,7 @@ describe('IncrementalReceiver error handling', () => {
     expect(parent['description']).toBe('later');
   });
 
-  it('merges deferred fields into existing nested list items (#2685)', async () => {
+  it('merges deferred fields into existing nested list items', async () => {
     // transformDeferredChunks rebuilds path ['box','items',1] into a tree and
     // re-emits a full-field data update; mergeInto must descend into arrays.
     const receiver = new IncrementalReceiver({
@@ -131,7 +131,7 @@ describe('IncrementalReceiver error handling', () => {
     expect(item2['slowField']).toBe('slow-3');
   });
 
-  it('keeps consuming sibling list patches while hasNext is still true (#2685)', async () => {
+  it('keeps consuming sibling list patches while hasNext is still true', async () => {
     // If a multi-patch chunk is re-emitted with hasNext:false on every part,
     // consume stops after the first and later list items stay null.
     const receiver = new IncrementalReceiver({

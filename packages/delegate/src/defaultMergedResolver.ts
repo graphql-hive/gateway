@@ -406,9 +406,10 @@ function resolveMissingFieldFromSourceSubschema(
     return undefined;
   }
 
-  // wrapSchema(stitched): the source field resolver is defaultMergedResolver
-  // again. Calling it with the same parent recurses. Re-fetch via the nested
-  // schema's merged-type resolver for the field owner when available.
+  // When the executable source is itself a stitched/wrapped schema, its field
+  // resolver is defaultMergedResolver again. Calling it with the same parent
+  // recurses. Re-fetch via the nested schema's merged-type resolver for the
+  // field owner when available.
   if (
     resolve === defaultMergedResolver ||
     resolve.name === 'defaultMergedResolver'
