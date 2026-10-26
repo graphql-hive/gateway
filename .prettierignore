@@ -21,3 +21,6 @@ CHANGELOG.md
 /internal/heapsnapshot/dist/
 *.tar.gz
 *.tgz
+
+# Frozen reproduction sources; SHA256.json records the measured bytes.
+/bench/delegation-memory/repro/

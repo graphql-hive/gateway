@@ -1,0 +1,48 @@
+{
+  "acceptedForLocalPerformance": true,
+  "confirmedHeapReduction": false,
+  "confirmedRssReduction": false,
+  "productionInstalled": false,
+  "decisions": {
+    "pilot": {
+      "mode": "pilot",
+      "passed": true,
+      "tests": {
+        "cpuMedian": true,
+        "elapsedMedian": true,
+        "heapRegression": true,
+        "rssRegression": true,
+        "cpuConsistency": true,
+        "elapsedConsistency": true
+      },
+      "memoryWin": null
+    },
+    "confirm": {
+      "mode": "confirm",
+      "passed": true,
+      "tests": {
+        "cpuMedian": true,
+        "elapsedMedian": true,
+        "heapRegression": true,
+        "rssRegression": true,
+        "cpuConsistency": true,
+        "elapsedConsistency": true
+      },
+      "memoryWin": {
+        "addedHeap": false,
+        "rss": false
+      }
+    },
+    "validation": {
+      "mode": "validate",
+      "passed": true,
+      "tests": {
+        "cpuMedian": true,
+        "elapsedMedian": true,
+        "heapRegression": true,
+        "rssRegression": true
+      },
+      "memoryWin": null
+    }
+  }
+}

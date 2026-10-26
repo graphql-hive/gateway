@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@graphql-hive/gateway-runtime": "2.12.2",
+    "@graphql-mesh/transport-http": "1.2.1",
+    "graphql": "16.14.0"
+  }
+}

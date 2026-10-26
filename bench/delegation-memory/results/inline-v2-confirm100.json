@@ -1,0 +1,446 @@
+{
+  "bytes": 100000000,
+  "ballastBytes": 0,
+  "source": {
+    "outputs/phase4/candidate-inline-composite.mjs": "2ba2a45539a2eecde046c1d7e28b5c1f8d2793f642d1970198ef70ea255c5a7d",
+    "outputs/phase4/case-inline-wrapper.mjs": "5555985145c480b54185d1ec960291e784331f2fd1a8be33de213456890ac938",
+    "outputs/phase4/run-inline.mjs": "2f0f980ae07708c64de1efb1f189f2a2f01bf40a2338e184a52fef830f82a5f6",
+    "outputs/phase2/case-wrapper.mjs": "fc24e9c12d1d8e2de5e92008388e3c9bc270e51a589224725c85923bf72b9434",
+    "outputs/phase2/candidate-annotation.mjs": "4c188ef2650196984234fce0242d9187d52d13aac329e2d77ad718e7149f80c3",
+    "outputs/phase2/candidate-compact-maps.mjs": "a1dd3fb11f4611537b1c7b119c007566170b618b99ef07ee338f18e5233fec6b",
+    "outputs/bench/case.mjs": "f3fa131b616232f92ccaf5caf2cae7523f67f9e5c00182ea7e0c3511408209db",
+    "outputs/bench/package-lock.json": "18f7dc043552fe855271b8b98fbd688a2219cb5ad49d7bdcc479955d89f36e28",
+    "outputs/bench/node_modules/@graphql-tools/delegate/dist/index.js": "6c008cefb60006ea2495bc05c56542143aec9bc691ec2d9fdd0015814c80caec",
+    "outputs/bench/node_modules/@whatwg-node/promise-helpers/esm/index.js": "31db7b400c2684c92172a9da510228608dc4b5fdb29a8e626100c0882779f1a8",
+    "outputs/bench/node_modules/@graphql-tools/utils/esm/getArgumentValues.js": "b99ff2d9da852476ca624a139c71cd68ae60cad9ab2003d7f91df2fb40b26406"
+  },
+  "events": [
+    {
+      "rep": 0,
+      "variant": "baseline",
+      "idleHeap": 24964536,
+      "peakHeap": 828551928,
+      "addedHeap": 803587392,
+      "peakRss": 1124421632,
+      "wallMs": 20510.7585,
+      "cpuMs": 29875,
+      "postGCHeap": 22889928,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "baseline",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-baseline.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-baseline.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-baseline.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 0,
+      "variant": "inline-composite",
+      "idleHeap": 25011232,
+      "peakHeap": 843720280,
+      "addedHeap": 818709048,
+      "peakRss": 1089576960,
+      "wallMs": 19694.514199999998,
+      "cpuMs": 26156,
+      "postGCHeap": 22922952,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "inline-composite",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-inline-composite.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-inline-composite.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r0-inline-composite.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 1,
+      "variant": "inline-composite",
+      "idleHeap": 25011400,
+      "peakHeap": 850355664,
+      "addedHeap": 825344264,
+      "peakRss": 1111478272,
+      "wallMs": 19074.635899999997,
+      "cpuMs": 27531,
+      "postGCHeap": 22924160,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "inline-composite",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-inline-composite.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-inline-composite.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-inline-composite.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 1,
+      "variant": "baseline",
+      "idleHeap": 24985128,
+      "peakHeap": 846749344,
+      "addedHeap": 821764216,
+      "peakRss": 1097637888,
+      "wallMs": 21701.0029,
+      "cpuMs": 30906,
+      "postGCHeap": 22898088,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "baseline",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-baseline.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-baseline.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r1-baseline.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 2,
+      "variant": "baseline",
+      "idleHeap": 24985288,
+      "peakHeap": 839762464,
+      "addedHeap": 814777176,
+      "peakRss": 1117323264,
+      "wallMs": 22325.6371,
+      "cpuMs": 30328,
+      "postGCHeap": 22896440,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "baseline",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-baseline.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-baseline.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-baseline.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 2,
+      "variant": "inline-composite",
+      "idleHeap": 25011992,
+      "peakHeap": 856594624,
+      "addedHeap": 831582632,
+      "peakRss": 1112444928,
+      "wallMs": 19352.9983,
+      "cpuMs": 27796,
+      "postGCHeap": 22924928,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "inline-composite",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-inline-composite.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-inline-composite.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r2-inline-composite.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 3,
+      "variant": "inline-composite",
+      "idleHeap": 25012048,
+      "peakHeap": 836090296,
+      "addedHeap": 811078248,
+      "peakRss": 1103966208,
+      "wallMs": 19763.7572,
+      "cpuMs": 28453,
+      "postGCHeap": 22925256,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "inline-composite",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-inline-composite.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-inline-composite.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-inline-composite.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 3,
+      "variant": "baseline",
+      "idleHeap": 24985984,
+      "peakHeap": 850753560,
+      "addedHeap": 825767576,
+      "peakRss": 1087643648,
+      "wallMs": 21389.1234,
+      "cpuMs": 27985,
+      "postGCHeap": 22906208,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "baseline",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-baseline.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-baseline.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r3-baseline.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 4,
+      "variant": "baseline",
+      "idleHeap": 24964552,
+      "peakHeap": 831069832,
+      "addedHeap": 806105280,
+      "peakRss": 1131823104,
+      "wallMs": 21963.0959,
+      "cpuMs": 29750,
+      "postGCHeap": 22891128,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "baseline",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-baseline.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-baseline.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-baseline.guard.json"
+        }
+      }
+    },
+    {
+      "rep": 4,
+      "variant": "inline-composite",
+      "idleHeap": 25011912,
+      "peakHeap": 854042504,
+      "addedHeap": 829030592,
+      "peakRss": 1093906432,
+      "wallMs": 18921.3931,
+      "cpuMs": 24953,
+      "postGCHeap": 22927968,
+      "flags": [
+        "--expose-gc",
+        "--max-old-space-size=1536",
+        "--max-semi-space-size=16"
+      ],
+      "config": {
+        "mode": "gateway-supergraph",
+        "count": 1428571,
+        "depth": 3,
+        "width": 1,
+        "textLength": 8,
+        "tailBytes": 11,
+        "concurrency": 1,
+        "patched": true,
+        "optimization": "shared-clone+fast-metadata+fast-result",
+        "targetBytes": 100000000,
+        "stress": true,
+        "ballastBytes": 0,
+        "fixturePath": "<workspace>\\work\\fixtures\\dense-100000000.json",
+        "profile": false,
+        "measureHeap": false,
+        "phase2Variant": "compact-annotation",
+        "phase4Variant": "inline-composite",
+        "resultPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-inline-composite.result.json",
+        "startPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-inline-composite.start.json",
+        "guard": {
+          "maxRss": 2684354560,
+          "minFree": 3221225472,
+          "logPath": "<workspace>\\outputs\\phase4/inline-v2-confirm100-r4-inline-composite.guard.json"
+        }
+      }
+    }
+  ],
+  "policy": {
+    "oldMiB": 1536,
+    "semiMiB": 16,
+    "observer": false
+  },
+  "startedAt": "2026-10-25T22:05:18.809Z",
+  "completedAt": "2026-10-25T22:08:58.457Z"
+}
