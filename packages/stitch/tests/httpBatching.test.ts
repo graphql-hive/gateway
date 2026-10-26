@@ -73,14 +73,17 @@ describe('HTTP request batching on a stitched schema', () => {
     }
   `;
 
-  function wrapFetch(yoga: { fetch: typeof fetch }) {
+  // Yoga's fetch is not `typeof fetch` (no `preconnect`). Apollo's links
+  // still want the global signature, so wrap and assert at that boundary.
+  function wrapFetch(yoga: ReturnType<typeof createYoga>) {
     const bodies: unknown[] = [];
-    const fetch: typeof globalThis.fetch = async (input, init) => {
+    const yogaFetch = yoga.fetch as typeof globalThis.fetch;
+    const fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.body) {
         bodies.push(JSON.parse(String(init.body)));
       }
-      return yoga.fetch(input as RequestInfo, init);
-    };
+      return yogaFetch(input, init);
+    }) as typeof globalThis.fetch;
     return { fetch, bodies };
   }
 
