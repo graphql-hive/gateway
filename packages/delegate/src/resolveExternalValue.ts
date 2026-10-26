@@ -1,5 +1,11 @@
 import { Maybe } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  fakePromise,
+  isActualPromise,
+  isPromise,
+  promiseLikeFinally,
+  unfakePromise,
+} from '@whatwg-node/promise-helpers';
 import {
   getNullableType,
   GraphQLCompositeType,
@@ -21,6 +27,9 @@ import {
 } from './mergeFields.js';
 import { Subschema } from './Subschema.js';
 import { MergedTypeInfo, StitchingInfo, SubschemaConfig } from './types.js';
+
+const CompactFieldSubschemaMap =
+  function CompactFieldSubschemaMap() {} as unknown as new () => object;
 
 export function resolveExternalValue<TContext extends Record<string, any>>(
   result: any,
@@ -50,30 +59,16 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
       return null;
     }
   } else if (isCompositeType(type)) {
-    return handleMaybePromise(
-      () =>
-        resolveExternalObject(
-          type,
-          result,
-          unpathedErrors,
-          subschema,
-          context,
-          info,
-          skipTypeMerging,
-        ),
-      (result) => {
-        if (info && isAbstractType(type)) {
-          if (result.__typename != null) {
-            const resolvedType = info!.schema.getType(result.__typename);
-            if (!resolvedType) {
-              return null;
-            }
-          }
-          return result;
-        }
-        return result;
-      },
+    const resolved = resolveExternalObject(
+      type,
+      result,
+      unpathedErrors,
+      subschema,
+      context,
+      info,
+      skipTypeMerging,
     );
+    return finishCompositeResult(resolved, type, info);
   } else if (isListType(type)) {
     if (Array.isArray(result)) {
       return resolveExternalList(
@@ -98,6 +93,63 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
   }
 }
 
+// Keep the ordinary synchronous path free of per-object continuation closures
+// and fake-promise wrappers. Promise/thenable normalization must retain the
+// behavior of handleMaybePromise, including inherited fake-promise markers.
+function normalizeCompositeResult(value: any): any {
+  if (value && isActualPromise(value)) return unfakePromise(value);
+  if (isPromise(value)) {
+    return unfakePromise({
+      then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
+      catch: (reject) => fakePromise(value.then((res) => res, reject)),
+      finally: (cb) => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
+      [Symbol.toStringTag]: 'Promise',
+    });
+  }
+  return value;
+}
+
+function validateCompositeResult(
+  value: any,
+  type: GraphQLCompositeType,
+  info: GraphQLResolveInfo | undefined,
+): any {
+  if (info && isAbstractType(type)) {
+    if (value.__typename != null) {
+      const resolvedType = info.schema.getType(value.__typename);
+      if (!resolvedType) return null;
+    }
+    return value;
+  }
+  return value;
+}
+
+function finishCompositeResult(
+  value: any,
+  type: GraphQLCompositeType,
+  info: GraphQLResolveInfo | undefined,
+): any {
+  if (value && isActualPromise(value)) {
+    return unfakePromise(
+      value.then(
+        (result) => validateCompositeResult(result, type, info),
+        undefined,
+      ),
+    );
+  }
+  if (isPromise(value)) {
+    return unfakePromise(
+      fakePromise(
+        value.then(
+          (result) => validateCompositeResult(result, type, info),
+          undefined,
+        ),
+      ),
+    );
+  }
+  return normalizeCompositeResult(validateCompositeResult(value, type, info));
+}
+
 function resolveExternalObject<TContext extends Record<string, any>>(
   type: GraphQLCompositeType,
   object: any,
@@ -114,7 +166,7 @@ function resolveExternalObject<TContext extends Record<string, any>>(
       object,
       unpathedErrors,
       subschema,
-      Object.create(null),
+      Object.setPrototypeOf(new CompactFieldSubschemaMap(), null),
     );
   }
   if (skipTypeMerging || info == null) {
