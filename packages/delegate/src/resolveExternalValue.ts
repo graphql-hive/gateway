@@ -96,6 +96,9 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
 // Keep the ordinary synchronous path free of per-object continuation closures
 // and fake-promise wrappers. Promise/thenable normalization must retain the
 // behavior of handleMaybePromise, including inherited fake-promise markers.
+// The custom thenable wrapper mirrors @whatwg-node/promise-helpers 1.3.2
+// (fakePromise/unfakePromise). Keep the differential compatibility cases when
+// upgrading that dependency; do not replace this with Promise.resolve.
 function normalizeCompositeResult(value: any): any {
   if (value && isActualPromise(value)) return unfakePromise(value);
   if (isPromise(value)) {

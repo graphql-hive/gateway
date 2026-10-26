@@ -1,5 +1,10 @@
 # Delegation allocation investigation
 
+**Current PR validation:** the [source-built base-versus-PR comparison](source/README.md)
+isolates the gateway changes with an unchanged executor. Five 50 MB pairs show
+35.80% less request-added heap, 29.43% less RSS, 29.69% less CPU and 26.85% less
+elapsed time. The older measurements below remain historical combination evidence.
+
 This PR ports three accepted allocation changes into the gateway: skip the HTTP
 result clone for an unshared query, use compact fresh null-prototype metadata
 maps with a local reusable annotation descriptor, and avoid fake-promise wrappers
