@@ -1,2 +1,0 @@
-# Preserve measured bytes, including whitespace, across Git checkout policies.
-* -text -whitespace
