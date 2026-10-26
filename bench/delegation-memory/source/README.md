@@ -1,30 +1,38 @@
 # Source-built base versus PR
 
-This comparison isolates the gateway PR. Base is
-`534d5f5352a0f726445db543d19fea90ef5ecfc3`; candidate implements the same source
-changes as `97a8a3d`, with additional regression tests and comments. Both use
-the same dependency installation and built gateway runtime. Only the built
-delegate and HTTP-executor entry points differ, and the harness asserts that
-both selected modules were loaded. **No GraphQL Tools executor patch is used.**
+This final comparison isolates the gateway PR against upstream main
+`2b0aa18b4a3f966d601728370cee9a8c28a2bc2a`, including its latest delegation/stitching fixes.
+The candidate includes that base plus this PR's changes. Both sides use the same
+new lockfile, compiler and built runtime; only delegate and HTTP-executor entry
+points differ, and the harness asserts both selected modules were loaded.
+**No GraphQL Tools executor patch is used.**
 
 ## Five fresh-process pairs, 50 MB response
 
-| Metric                           | Base median | PR median | Median paired reduction | Improving pairs |
-| -------------------------------- | ----------: | --------: | ----------------------: | --------------: |
-| Idle heap                        |    32.79 MB |  32.78 MB |                   0.03% |             3/5 |
-| Maximum observed heap checkpoint |  1139.17 MB | 740.12 MB |                  34.76% |             5/5 |
-| Request-added heap               |  1106.38 MB | 707.31 MB |              **35.80%** |             5/5 |
-| Process-lifetime peak RSS        |  1312.84 MB | 926.43 MB |              **29.43%** |             5/5 |
-| CPU                              |     18.58 s |   13.06 s |                  29.69% |             5/5 |
-| Elapsed                          |     13.35 s |    9.42 s |                  26.85% |             5/5 |
-| Released, post-GC heap           |    30.68 MB |  30.68 MB |                  0.008% |             3/5 |
+| Metric                | Base median | PR median | Median paired reduction |
+| --------------------- | ----------: | --------: | ----------------------: |
+| Idle heap             |    32.80 MB |  32.79 MB |                   0.03% |
+| Observed peak heap    |  1139.99 MB | 742.01 MB |                  34.75% |
+| Request-added heap    |  1107.18 MB | 709.22 MB |                  35.78% |
+| Peak RSS              |  1310.52 MB | 926.30 MB |                  29.36% |
+| CPU                   |     19.00 s |   12.34 s |                  35.03% |
+| Elapsed               |     14.07 s |    9.53 s |                  33.57% |
+| Released post-GC heap |    30.69 MB |  30.68 MB |                   0.02% |
 
-Paired request-added heap reductions range 34.88–36.52%; RSS reductions
-29.35–32.19%. All responses match exactly 50,000,000 bytes and SHA-256
+Every pair improves request-added heap, RSS, CPU and elapsed. Paired added-heap
+reductions range 34.85–36.37%; RSS 29.15–29.67%.
+All responses match exactly 50,000,000 bytes and SHA-256
 `e81bdf4ba606a7cdb8d45169257102601faaa1490186b4f97c2a91dd1a96e806`.
-These results meet the >30% request-added heap target, but do not establish
-a >30% median RSS reduction. They compare this PR with its unmodified base;
-they are not another 35.8% improvement over the earlier optimized baseline.
+Percentages are medians of paired reductions, not ratios of independent medians.
+The request-added heap reduction exceeds 30%; the median RSS reduction does not.
+This measures all PR changes against the unmodified base, not an additional
+reduction beyond the earlier optimized implementation.
+
+The current evidence is `results/main-pilot25.json` and
+`results/main-confirm50{,.summary}.json`. The earlier `source-*` series against
+534d5f5 is retained as historical evidence. After upstream advanced, dependencies,
+source tests, typechecking and builds were refreshed before repeating the
+25 MB pilot and 50 MB confirmation.
 
 ## Method and limits
 
@@ -76,9 +84,9 @@ trial, and refuses to replace existing results. Start at 25 MB / three pairs.
 Keep all measurements serial. Results include raw per-run baselines, peaks,
 CPU/time, response hashes and selected build paths, with local prefixes redacted.
 
-Source regression validation: 603 tests pass across delegate, HTTP executor,
-stitching and batch-execution suites (two skipped, two TODOs; one skipped file).
-The final async-merging test uses the source executor and passes after its type
-annotations were tightened. Repository-wide TypeScript checking, changed-source
+Source regression validation: 770 tests pass across delegate, HTTP executor,
+stitching, batch execution, wrapping, and the updated federation-key tests
+(four skipped, two TODOs; two skipped files).
+The async-merging tests use the source executor. Repository-wide TypeScript checking, changed-source
 lint and ESM/CJS smoke tests pass. Upstream multi-version/platform CI remains
 subject to maintainer approval of workflows from this fork.

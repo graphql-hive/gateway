@@ -2,7 +2,7 @@
 
 **Current PR validation:** the [source-built base-versus-PR comparison](source/README.md)
 isolates the gateway changes with an unchanged executor. Five 50 MB pairs show
-35.80% less request-added heap, 29.43% less RSS, 29.69% less CPU and 26.85% less
+35.78% less request-added heap, 29.36% less RSS, 35.03% less CPU and 33.57% less
 elapsed time. The older measurements below remain historical combination evidence.
 
 This PR ports three accepted allocation changes into the gateway: skip the HTTP

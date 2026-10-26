@@ -1,5 +1,7 @@
 # Source-built PR verification (predeclared)
 
+Final integration amendment, before new trials: upstream main advanced to 2b0aa18b4a3f966d601728370cee9a8c28a2bc2a with delegate/stitch fixes. Merge that base into the candidate, refresh identical dependencies, rebuild both sides, and repeat 25MB3pairs then 50MB5pairs under the same gates/guards. Retain the original 534d5f5 series separately; final claims will use the updated-base series. Both sides use the new main lockfile. No measured runs overlap the integration tests or builds.
+
 Before larger trials: the source pilot base uses ~735MB RSS at25MB. Linear100MB extrapolation exceeds the2.5GiB RSS guard. Amend confirmation to50MB5pairs, before any50MB trials. Keep guard unchanged; do not attempt100/150 unless later measured scaling supports headroom. No claim of100/150 source-build performance from these smaller cases.
 
 Compare base 534d5f5352a0f726445db543d19fea90ef5ecfc3 with the PR implementation. Build both changed packages with the same compiler and dependencies; use the source-built gateway runtime and unchanged workspace dependencies on both sides. The runner verifies that the selected delegate/HTTP builds were actually loaded. No executor overlays or ballast.
