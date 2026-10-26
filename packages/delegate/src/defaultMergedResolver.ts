@@ -21,6 +21,7 @@ import {
   getPlanLeftOverFromParent,
 } from './leftOver.js';
 import {
+  annotateExternalObject,
   EMPTY_OBJECT,
   getActualFieldNodes,
   getSubschema,
@@ -402,6 +403,93 @@ function resolveMissingFieldFromSourceSubschema(
   if (resolve == null || resolve === defaultFieldResolver) {
     // Skip the schema-default field resolver: it only reads parent[fieldName],
     // which is exactly what we already know is missing.
+    return undefined;
+  }
+
+  // wrapSchema(stitched): the source field resolver is defaultMergedResolver
+  // again. Calling it with the same parent recurses. Re-fetch via the nested
+  // schema's merged-type resolver for the field owner when available.
+  if (
+    resolve === defaultMergedResolver ||
+    resolve.name === 'defaultMergedResolver'
+  ) {
+    const innerStitchingInfo = originalSchema.extensions?.['stitchingInfo'] as
+      | StitchingInfo
+      | undefined;
+    const innerTypeName =
+      (typeof parent.__typename === 'string' && parent.__typename) ||
+      parentTypeName;
+    const innerMergedTypeInfo = innerStitchingInfo?.mergedTypes[innerTypeName];
+    const fieldOwner =
+      innerMergedTypeInfo?.uniqueFields[sourceFieldName] ??
+      innerMergedTypeInfo?.nonUniqueFields[sourceFieldName]?.[0];
+    const ownerResolver =
+      fieldOwner && innerMergedTypeInfo?.resolvers.get(fieldOwner);
+    const typeInOwner =
+      fieldOwner &&
+      (fieldOwner.transformedSchema.getType(innerTypeName) ??
+        originalSchema.getType(innerTypeName));
+    if (
+      ownerResolver &&
+      fieldOwner &&
+      typeInOwner &&
+      isObjectType(typeInOwner)
+    ) {
+      const selectionSet: SelectionSetNode = {
+        kind: Kind.SELECTION_SET,
+        selections: info.fieldNodes,
+      };
+      // Annotate a working copy so handleResolverResult can merge into it
+      // without mutating outer wrap symbols incorrectly.
+      const innerParent: ExternalObject = annotateExternalObject(
+        { ...parent },
+        getUnpathedErrors(parent),
+        fieldOwner,
+        Object.create(null),
+      );
+      const innerInfo = { ...info, schema: originalSchema };
+      return handleMaybePromise(
+        () =>
+          ownerResolver(
+            innerParent,
+            context,
+            innerInfo,
+            fieldOwner,
+            selectionSet,
+            undefined,
+            typeInOwner,
+          ),
+        (resolverResult) => {
+          handleResolverResult(
+            resolverResult,
+            fieldOwner,
+            selectionSet,
+            innerParent,
+            innerParent[FIELD_SUBSCHEMA_MAP_SYMBOL] ?? Object.create(null),
+            innerInfo,
+            responsePathAsArray(info.path).slice(0, -1),
+            innerParent[UNPATHED_ERRORS_SYMBOL] ?? [],
+          );
+          if (!isMissingFieldValue(innerParent, responseKey)) {
+            const value = innerParent[responseKey];
+            parent[responseKey] = value;
+            if (parent[FIELD_SUBSCHEMA_MAP_SYMBOL]) {
+              parent[FIELD_SUBSCHEMA_MAP_SYMBOL][responseKey] =
+                subschema as any;
+            }
+            return resolveExternalValue(
+              value,
+              getUnpathedErrors(parent),
+              subschema as any,
+              context,
+              info,
+            );
+          }
+          return undefined;
+        },
+      );
+    }
+    // No nested merge plan — avoid the recursive call.
     return undefined;
   }
 
