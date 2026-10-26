@@ -1,8 +1,0 @@
----
-'@graphql-mesh/plugin-jwt-auth': patch
----
-
-dependencies updates: 
-
-- Updated dependency [`@graphql-yoga/plugin-jwt@^4.0.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-jwt/v/4.0.0) (from `^3.10.2`, in `dependencies`)
-- Updated dependency [`graphql@^16.9.0 || ^17.0.0` ↗︎](https://www.npmjs.com/package/graphql/v/16.9.0) (from `^15.9.0 || ^16.9.0`, in `peerDependencies`)
