@@ -12,9 +12,10 @@ import { createYoga } from 'graphql-yoga';
 import { describe, expect, test } from 'vitest';
 
 // Same client path as the leftover report: Apollo Client `BatchHttpLink`
-// against a stitched gateway. The link posts a JSON *array* of operations.
+// against a stitched schema. The link posts a JSON *array* of operations.
 // `express-graphql` rejects that array (`POST body sent invalid JSON`)
-// before stitch runs. Yoga / Hive Gateway `batching: true` accepts it.
+// before stitch runs. GraphQL Yoga (`batching: true`) and Apollo Server
+// accept it.
 describe('HTTP request batching on a stitched schema', () => {
   const accounts = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
