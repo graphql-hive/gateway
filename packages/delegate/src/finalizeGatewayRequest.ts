@@ -1152,7 +1152,10 @@ function filterSelectionSet(
           // Gateway-owned @defer on a named spread: keep only @requires / key
           // dependencies from the fragment body (same as deferred inline
           // fragments), so merge still has the keys it needs.
-          if (hasDeferDirective(node.directives) && !forwardDefer) {
+          if (
+            !forwardDefer &&
+            isActiveDefer(node.directives, delegationContext)
+          ) {
             const frag = fragmentDefsByName[node.name.value];
             if (!frag?.selectionSet?.selections?.length) {
               return null;
@@ -1187,6 +1190,14 @@ function filterSelectionSet(
           }
 
           usedFragments.push(node.name.value);
+          // `@defer(if: false)` is no `@defer`: send the spread as ordinary
+          // selections, without a directive the subgraph may not support.
+          if (!forwardDefer && hasDeferDirective(node.directives)) {
+            return {
+              ...node,
+              directives: withoutDefer(node.directives),
+            };
+          }
           return undefined;
         },
       },
@@ -1243,7 +1254,7 @@ function filterSelectionSet(
           }
           if (
             !forwardDefer &&
-            hasDeferDirective(node.directives) &&
+            isActiveDefer(node.directives, delegationContext) &&
             node.selectionSet?.selections
           ) {
             // Snapshot before child fields absent from this schema are stripped
@@ -1269,7 +1280,17 @@ function filterSelectionSet(
           // the subgraph stream patches. Otherwise `@defer` is gateway-owned:
           // omit deferred selections (keeping only @requires/key deps) so the
           // initial payload can flush before slow deferred fields resolve.
-          if (hasDeferDirective(selection.directives) && !forwardDefer) {
+          if (!forwardDefer && hasDeferDirective(selection.directives)) {
+            if (!isActiveDefer(selection.directives, delegationContext)) {
+              // `@defer(if: false)`: keep the selections, drop the directive.
+              if (!selection.selectionSet?.selections?.length) {
+                return null;
+              }
+              return {
+                ...selection,
+                directives: withoutDefer(selection.directives),
+              };
+            }
             const dependencySelections = snappedDependencies ?? [];
             if (dependencySelections.length === 0) {
               return null;
@@ -1387,6 +1408,41 @@ function hasDeferDirective(
   return false;
 }
 
+/**
+ * Whether a `@defer` in this list actually defers. `@defer(if: false)`, or
+ * `@defer(if: $flag)` with `$flag` false, must behave as if there were no
+ * `@defer` at all, so the gateway may not strip its selections.
+ */
+function isActiveDefer(
+  directives: ReadonlyArray<DirectiveNode> | undefined,
+  delegationContext: DelegationContext<any>,
+): boolean {
+  const defer = directives?.find(
+    (directive) => directive.name.value === 'defer',
+  );
+  if (defer == null) {
+    return false;
+  }
+  const ifArgument = defer.arguments?.find((arg) => arg.name.value === 'if');
+  if (ifArgument == null) {
+    return true;
+  }
+  if (ifArgument.value.kind === Kind.BOOLEAN) {
+    return ifArgument.value.value;
+  }
+  if (ifArgument.value.kind === Kind.VARIABLE) {
+    const variableValues = delegationContext.info?.variableValues;
+    return variableValues?.[ifArgument.value.name.value] !== false;
+  }
+  return true;
+}
+
+function withoutDefer(
+  directives: ReadonlyArray<DirectiveNode> | undefined,
+): DirectiveNode[] | undefined {
+  return directives?.filter((directive) => directive.name.value !== 'defer');
+}
+
 function hasStreamDirective(
   directives: ReadonlyArray<DirectiveNode> | undefined,
 ): boolean {
@@ -1447,6 +1503,46 @@ function collectDeferredDependencySelections(
 
   const dependencies: SelectionNode[] = [];
   const seen = new Set<string>();
+  const subschema = delegationContext.subschema as Subschema;
+  // The gateway can fetch a field it omitted again only through this
+  // subschema's merged-type resolver, and only with the key it needs.
+  const canRefetch =
+    typeConfig?.resolvers?.has(subschema) === true &&
+    typeConfig.selectionSets.get(subschema) != null;
+  // A subschema with no executor runs in this process, and the gateway can
+  // resolve an omitted field later by calling its own field resolver. Over a
+  // transport there is no such fallback: the subgraph's schema has no
+  // resolvers, only the remote service does.
+  const executesInProcess = delegationContext.subschemaConfig?.executor == null;
+  let keyAdded = false;
+
+  function addKeySelections() {
+    if (keyAdded) {
+      return;
+    }
+    keyAdded = true;
+    for (const keySelection of typeConfig!.selectionSets.get(subschema)!
+      .selections) {
+      if (keySelection.kind === Kind.FIELD) {
+        const responseKey =
+          keySelection.alias?.value ?? keySelection.name.value;
+        if (seen.has(responseKey)) {
+          continue;
+        }
+        seen.add(responseKey);
+      }
+      dependencies.push(keySelection);
+    }
+  }
+
+  function keepOwnField(node: SelectionNode & { kind: Kind.FIELD }) {
+    const responseKey = node.alias?.value ?? node.name.value;
+    if (seen.has(responseKey)) {
+      return;
+    }
+    seen.add(responseKey);
+    dependencies.push(node);
+  }
 
   function addDependencyField(fieldName: string) {
     if (seen.has(fieldName) || parentFields[fieldName] == null) {
@@ -1498,9 +1594,22 @@ function collectDeferredDependencySelections(
           // Deferred field lives on another subschema - pull in the
           // @requires / key fields this subschema must supply first.
           addDependenciesForMergedField(fieldName);
+        } else if (fieldName === '__typename') {
+          keepOwnField(node);
+        } else if (canRefetch || executesInProcess) {
+          // The field is on this subschema: drop it so @defer can flush
+          // before it resolves. Over a transport, keep the key so the gateway
+          // can fetch it again through the merged-type resolver.
+          if (canRefetch) {
+            addKeySelections();
+          }
+        } else {
+          // A remote subschema with no way to fetch the parent again (no key,
+          // or no resolver for this subschema): keep the field in this request. The gateway
+          // still delivers it in the deferred payload; it just cannot be
+          // fetched later.
+          keepOwnField(node);
         }
-        // If the field is on this subschema, drop it so @defer can flush
-        // before local resolution (gateway-owned incremental delivery).
       } else if (node.kind === Kind.INLINE_FRAGMENT && node.selectionSet) {
         walk(node.selectionSet.selections);
       } else if (node.kind === Kind.FRAGMENT_SPREAD) {
