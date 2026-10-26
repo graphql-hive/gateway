@@ -65,6 +65,25 @@ describe('getKeyFnForFederation', () => {
       ],
     });
   });
+  // `requires: "id environment{id}"` (no space before `{`) used to keep only
+  // `id` because keys were split on spaces. Nested selections must parse the
+  // same way as `environment { id }`.
+  it('parses a nested requires field without a space before the brace', () => {
+    const keyFn = getKeyFnForFederation('Whatever', ['id environment{id}']);
+    expect(
+      keyFn({
+        __typename: 'Whatever',
+        id: 'w1',
+        environment: { __typename: 'Environment', id: 'e1', extra: 'drop' },
+        extra: 'drop',
+      }),
+    ).toEqual({
+      __typename: 'Whatever',
+      id: 'w1',
+      environment: { __typename: 'Environment', id: 'e1' },
+    });
+  });
+
   it('filter errors as null', () => {
     const key = ['name', 'address { city }'];
     const data = {
