@@ -4,6 +4,7 @@ import useMeshLiveQuery from '@graphql-mesh/plugin-live-query';
 export const gatewayConfig = defineConfig({
   webhooks: true,
   plugins: (ctx) => [
+    // Mesh live-query plugin types lag Envelop 6 / Yoga 6 plugin context generics.
     useMeshLiveQuery({
       ...ctx,
       invalidations: [
@@ -12,6 +13,6 @@ export const gatewayConfig = defineConfig({
           invalidate: ['Query.todos'],
         },
       ],
-    }),
+    }) as any,
   ],
 });
