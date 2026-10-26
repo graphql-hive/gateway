@@ -1,14 +1,20 @@
+import {
+  ApolloClient,
+  ApolloLink,
+  gql,
+  HttpLink,
+  InMemoryCache,
+} from '@apollo/client';
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, test } from 'vitest';
 
-// Apollo Client `BatchHttpLink` posts a JSON *array* of operations, e.g.
-// `[{ query, variables }, { query, variables }]`. `express-graphql` treats
-// that array as invalid (`POST body sent invalid JSON`) before stitching
-// ever runs, so `HttpLink` works and `BatchHttpLink` 400s. The stitched
-// schema itself is fine: serve it with Yoga / Hive Gateway `batching: true`
-// and the same body returns one result per operation.
+// Same client path as the leftover report: Apollo Client `BatchHttpLink`
+// against a stitched gateway. The link posts a JSON *array* of operations.
+// `express-graphql` rejects that array (`POST body sent invalid JSON`)
+// before stitch runs. Yoga / Hive Gateway `batching: true` accepts it.
 describe('HTTP request batching on a stitched schema', () => {
   const accounts = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
@@ -48,7 +54,7 @@ describe('HTTP request batching on a stitched schema', () => {
     subschemas: [accounts, inventory],
   });
 
-  const assessmentsQuery = /* GraphQL */ `
+  const OME_CLIENT_ASSESSMENTS = gql`
     query ome_client_assessments($uuid: ID!) {
       client_assessments(uuid: $uuid) {
         id
@@ -57,7 +63,7 @@ describe('HTTP request batching on a stitched schema', () => {
     }
   `;
 
-  const skuQuery = /* GraphQL */ `
+  const SKU = gql`
     query sku($id: ID!) {
       sku(id: $id) {
         id
@@ -66,58 +72,112 @@ describe('HTTP request batching on a stitched schema', () => {
     }
   `;
 
-  const batchBody = JSON.stringify([
-    { query: assessmentsQuery, variables: { uuid: '12345' } },
-    { query: skuQuery, variables: { id: 'sku-1' } },
-  ]);
+  function wrapFetch(yoga: { fetch: typeof fetch }) {
+    const bodies: unknown[] = [];
+    const fetch: typeof globalThis.fetch = async (input, init) => {
+      if (init?.body) {
+        bodies.push(JSON.parse(String(init.body)));
+      }
+      return yoga.fetch(input as RequestInfo, init);
+    };
+    return { fetch, bodies };
+  }
 
-  test('BatchHttpLink array is rejected without batching', async () => {
-    await using yoga = createYoga({ schema });
-    const res = await yoga.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: batchBody,
-    });
-    expect(res.status).toBe(400);
-  });
-
-  test('BatchHttpLink array returns one result per operation when batching is on', async () => {
-    await using yoga = createYoga({ schema, batching: true });
-    const res = await yoga.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: batchBody,
-    });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([
-      {
-        data: {
-          client_assessments: [{ id: '12345', name: 'intake' }],
-        },
+  function batchClient(fetch: typeof globalThis.fetch) {
+    return new ApolloClient({
+      link: ApolloLink.from([
+        new BatchHttpLink({
+          uri: 'http://localhost:4000/graphql',
+          fetch,
+        }),
+      ]),
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        query: { fetchPolicy: 'no-cache' },
       },
-      {
-        data: {
-          sku: { id: 'sku-1', title: 'widget' },
-        },
-      },
-    ]);
-  });
+    });
+  }
 
-  test('a single HttpLink body still works with batching on', async () => {
-    await using yoga = createYoga({ schema, batching: true });
-    const res = await yoga.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: assessmentsQuery,
+  async function runReporterQueries(client: ApolloClient<object>) {
+    return Promise.all([
+      client.query({
+        query: OME_CLIENT_ASSESSMENTS,
         variables: { uuid: '12345' },
       }),
+      client.query({
+        query: SKU,
+        variables: { id: 'sku-1' },
+      }),
+    ]);
+  }
+
+  test('BatchHttpLink fails against a stitched schema without HTTP batching', async () => {
+    await using yoga = createYoga({ schema });
+    const { fetch } = wrapFetch(yoga);
+    const client = batchClient(fetch);
+
+    await expect(runReporterQueries(client)).rejects.toThrow(/400|batch|JSON/i);
+  });
+
+  test('BatchHttpLink resolves both operations when the stitched server batches', async () => {
+    await using yoga = createYoga({ schema, batching: true });
+    const { fetch, bodies } = wrapFetch(yoga);
+    const client = batchClient(fetch);
+
+    const [assessments, sku] = await runReporterQueries(client);
+
+    expect(bodies).toHaveLength(1);
+    expect(Array.isArray(bodies[0])).toBe(true);
+    expect(bodies[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          operationName: 'ome_client_assessments',
+          variables: { uuid: '12345' },
+        }),
+        expect.objectContaining({
+          operationName: 'sku',
+          variables: { id: 'sku-1' },
+        }),
+      ]),
+    );
+
+    expect(assessments.data).toEqual({
+      client_assessments: [
+        { __typename: 'Assessment', id: '12345', name: 'intake' },
+      ],
     });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({
-      data: {
-        client_assessments: [{ id: '12345', name: 'intake' }],
+    expect(sku.data).toEqual({
+      sku: { __typename: 'Sku', id: 'sku-1', title: 'widget' },
+    });
+  });
+
+  test('HttpLink still works with batching on', async () => {
+    await using yoga = createYoga({ schema, batching: true });
+    const { fetch, bodies } = wrapFetch(yoga);
+    const client = new ApolloClient({
+      link: ApolloLink.from([
+        new HttpLink({
+          uri: 'http://localhost:4000/graphql',
+          fetch,
+        }),
+      ]),
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        query: { fetchPolicy: 'no-cache' },
       },
+    });
+
+    const result = await client.query({
+      query: OME_CLIENT_ASSESSMENTS,
+      variables: { uuid: '12345' },
+    });
+
+    expect(bodies).toHaveLength(1);
+    expect(Array.isArray(bodies[0])).toBe(false);
+    expect(result.data).toEqual({
+      client_assessments: [
+        { __typename: 'Assessment', id: '12345', name: 'intake' },
+      ],
     });
   });
 });
