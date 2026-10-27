@@ -9,3 +9,5 @@ When the subgraph owning an entity could not resolve it (`__resolveReference` re
 A missing non-nullable field now also reports a `Cannot return null for non-nullable field` error, unless an upstream error already covers that path.
 
 When the subgraph reports a failed `_entities` field without an entity index, the error is now relocated to every affected entity path including the list indices, instead of a path without them.
+
+Closes #2658
