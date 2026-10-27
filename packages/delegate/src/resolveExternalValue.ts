@@ -145,14 +145,13 @@ function finishCompositeResult(
     );
   }
   if (isPromise(value)) {
-    return unfakePromise(
-      fakePromise(
-        value.then(
-          (result) => validateCompositeResult(result, type, info),
-          undefined,
-        ),
-      ),
-    );
+    // Bun includes the call expression in TypeErrors for non-callable `then`.
+    // Retain the legacy wrapper's expression as well as its error behavior.
+    // A const undefined is inlined by Bun, so keep reject as a variable.
+    const resolve = (result: unknown) =>
+      validateCompositeResult(result, type, info);
+    let reject: undefined;
+    return unfakePromise(fakePromise(value.then(resolve, reject)));
   }
   return normalizeCompositeResult(validateCompositeResult(value, type, info));
 }
