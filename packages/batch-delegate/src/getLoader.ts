@@ -3,7 +3,7 @@ import {
   getActualFieldNodes,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
-import { memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
+import { memoize1, memoize3, relocatedError } from '@graphql-tools/utils';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
 import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
@@ -73,7 +73,8 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
   };
 }
 
-const getLoadersMap = memoize2(function getLoadersMap<K, V, C>(
+const getLoadersMap = memoize3(function getLoadersMap<K, V, C>(
+  _rootValue: Record<string, any>,
   _context: Record<string, any>,
   _schema: GraphQLSchema | SubschemaConfig<any, any, any, any>,
 ) {
@@ -113,8 +114,13 @@ export function getLoader<K = any, V = any, C = K>(
   // we want to use the rootvalue because on streaming results it will be available
   // and will always change for the next value in the iterable. this makes sure
   // that the data loader does not use the same cache for each streaming value
-  const contextKey = info?.rootValue || context || GLOBAL_CONTEXT;
-  const loaders = getLoadersMap<K, V, C>(contextKey, schema);
+  // but the rootvalue alone is not enough, servers like mercurius share a single
+  // rootvalue across all requests so the context has to scope the loaders too
+  const loaders = getLoadersMap<K, V, C>(
+    info?.rootValue || GLOBAL_CONTEXT,
+    context || GLOBAL_CONTEXT,
+    schema,
+  );
 
   let cacheKey = fieldName;
 
