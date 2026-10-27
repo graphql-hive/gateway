@@ -19,13 +19,52 @@ async function execute(query: string) {
             type Product @key(fields: "id") {
               id: ID!
               price: Int
+              name: String!
             }
           `,
           resolvers: {
             Query: {
               product: () => {
-                return { id: 1, price: 20.2 };
+                return { id: 1, price: 20.2, name: 'Product' };
               },
+            },
+            Product: {
+              __resolveReference: ({ id }: { id: string }) => {
+                if (id === 'failing') {
+                  throw new GraphQLError('Product lookup failed');
+                }
+                // unknown product
+                return null;
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'items',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            extend schema
+              @link(
+                url: "https://specs.apollo.dev/federation/v2.3"
+                import: ["@key"]
+              )
+            type Query {
+              missing: [Item!]!
+              failing: [Item!]!
+            }
+            type Item {
+              id: ID!
+              product: Product
+            }
+            type Product @key(fields: "id", resolvable: false) {
+              id: ID!
+            }
+          `,
+          resolvers: {
+            Query: {
+              missing: () => [{ id: '1', product: { id: 'missing' } }],
+              failing: () => [{ id: '2', product: { id: 'failing' } }],
             },
           },
         },
@@ -149,3 +188,109 @@ it.each([
     expect(result.errors?.map((error) => error.path)).toEqual([path]);
   },
 );
+
+it.each([
+  {
+    name: 'no fragment',
+    query: /* GraphQL */ `
+      {
+        missing {
+          product {
+            id
+            name
+          }
+        }
+      }
+    `,
+  },
+  {
+    name: 'inline fragment',
+    query: /* GraphQL */ `
+      {
+        missing {
+          product {
+            ... on Product {
+              id
+              name
+            }
+          }
+        }
+      }
+    `,
+  },
+  {
+    name: 'inline fragment and __typename',
+    query: /* GraphQL */ `
+      {
+        missing {
+          product {
+            __typename
+            ... on Product {
+              id
+              name
+            }
+          }
+        }
+      }
+    `,
+  },
+  {
+    name: 'named fragment',
+    query: /* GraphQL */ `
+      {
+        missing {
+          product {
+            ...P
+          }
+        }
+      }
+      fragment P on Product {
+        id
+        name
+      }
+    `,
+  },
+])(
+  'nulls an unresolved entity with missing non-nullable fields through $name',
+  async ({ query }) => {
+    const result = await execute(query);
+
+    assertSingleExecutionValue(result);
+    expect(result.data).toEqual({ missing: [{ product: null }] });
+    expect(
+      result.errors?.map(({ message, path }) => ({ message, path })),
+    ).toEqual([
+      {
+        message: 'Cannot return null for non-nullable field Product.name.',
+        path: ['missing', 0, 'product', 'name'],
+      },
+    ]);
+  },
+);
+
+it('nulls an entity whose lookup failed and keeps the list index in the error path', async () => {
+  const result = await execute(/* GraphQL */ `
+    {
+      failing {
+        product {
+          __typename
+          ... on Product {
+            id
+            name
+          }
+        }
+      }
+    }
+  `);
+
+  assertSingleExecutionValue(result);
+  expect(result.data).toEqual({ failing: [{ product: null }] });
+  expect(
+    result.errors?.map(({ message, path }) => ({ message, path })),
+  ).toEqual([
+    {
+      message: 'Product lookup failed',
+      path: ['failing', 0, 'product'],
+    },
+  ]);
+});
