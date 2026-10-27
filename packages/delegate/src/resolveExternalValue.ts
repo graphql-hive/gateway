@@ -99,6 +99,10 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
 // The custom thenable wrapper mirrors @whatwg-node/promise-helpers 1.3.2
 // (fakePromise/unfakePromise). Keep the differential compatibility cases when
 // upgrading that dependency; do not replace this with Promise.resolve.
+// Once Gateway can require promise-helpers >=2.0.1 (Node >=22.15), revisit
+// using its optimized handleMaybePromise instead of this local normalization:
+// https://github.com/ardatan/whatwg-node/pull/3733
+// Recheck compatibility and performance before removing the local fast path.
 function normalizeCompositeResult(value: any): any {
   if (value && isActualPromise(value)) return unfakePromise(value);
   if (isPromise(value)) {
