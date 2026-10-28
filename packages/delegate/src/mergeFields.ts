@@ -51,31 +51,11 @@ export function annotateExternalObject<TContext>(
     GraphQLSchema | SubschemaConfig<any, any, any, Record<string, any>>
   >,
 ): ExternalObject {
-  // Convert flags independently of prototype changes in target Proxy traps.
-  // Preserve existing descriptor inheritance when the prototype is customized.
-  if (
-    'enumerable' in Object.prototype ||
-    'configurable' in Object.prototype ||
-    'get' in Object.prototype ||
-    'set' in Object.prototype
-  ) {
-    Object.defineProperties(object, {
-      [OBJECT_SUBSCHEMA_SYMBOL]: { value: subschema, writable: true },
-      [FIELD_SUBSCHEMA_MAP_SYMBOL]: { value: subschemaMap, writable: true },
-      [UNPATHED_ERRORS_SYMBOL]: { value: errors, writable: true },
-    });
-    return object;
-  }
-  const defineProperty = Object.defineProperty;
-  const descriptor: PropertyDescriptor = Object.setPrototypeOf(
-    { value: subschema, writable: true },
-    null,
-  );
-  defineProperty(object, OBJECT_SUBSCHEMA_SYMBOL, descriptor);
-  descriptor.value = subschemaMap;
-  defineProperty(object, FIELD_SUBSCHEMA_MAP_SYMBOL, descriptor);
-  descriptor.value = errors;
-  defineProperty(object, UNPATHED_ERRORS_SYMBOL, descriptor);
+  Object.defineProperties(object, {
+    [OBJECT_SUBSCHEMA_SYMBOL]: { value: subschema, writable: true },
+    [FIELD_SUBSCHEMA_MAP_SYMBOL]: { value: subschemaMap, writable: true },
+    [UNPATHED_ERRORS_SYMBOL]: { value: errors, writable: true },
+  });
   return object;
 }
 

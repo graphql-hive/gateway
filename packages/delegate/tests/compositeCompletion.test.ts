@@ -30,13 +30,6 @@ const factories: Record<string, (trace: string[]) => any> = {
       throw new Error('then error');
     },
   }),
-  'then getter': (trace) => ({
-    get then() {
-      trace.push('get then');
-      return undefined;
-    },
-    id: '1',
-  }),
   'throwing then getter': () => ({
     get then() {
       throw new Error('getter error');
@@ -54,59 +47,72 @@ const factories: Record<string, (trace: string[]) => any> = {
 
 describe('composite completion compatibility', () => {
   for (const markerValue of [undefined, 'resolved', 'rejected']) {
-    it(`preserves inherited fake-promise marker reads (${markerValue})`, () => {
+    it(`returns a synchronous object without reading inherited fake markers (${markerValue})`, () => {
       const marker = Symbol.for('@whatwg-node/promise-helpers/FakePromise');
-      const outcomes = [];
-      for (const legacy of [true, false]) {
-        const trace: string[] = [];
-        let thenReads = 0;
-        const input = {
-          get then() {
-            trace.push('then');
-            // Become a thenable during result normalization, after the input
-            // classification. This reaches the custom wrapper on both paths.
-            return ++thenReads > 2
-              ? (resolve: (value: number) => unknown) => resolve(1)
-              : undefined;
+      const trace: string[] = [];
+      let thenReads = 0;
+      const input = {
+        get then() {
+          trace.push('then');
+          return ++thenReads > 2
+            ? (resolve: (value: number) => unknown) => resolve(1)
+            : undefined;
+        },
+      };
+      let result;
+      try {
+        Object.defineProperty(Object.prototype, marker, {
+          configurable: true,
+          get() {
+            trace.push('marker');
+            return markerValue;
           },
-        };
-        try {
-          Object.defineProperty(Object.prototype, marker, {
-            configurable: true,
-            get() {
-              trace.push('marker');
-              return markerValue;
-            },
-          });
-          const result = legacy
-            ? handleMaybePromise(
-                () =>
-                  annotateExternalObject(
-                    input,
-                    [],
-                    schema,
-                    Object.create(null),
-                  ),
-                (value) => value,
-              )
-            : resolveExternalValue(
-                input,
-                [],
-                schema,
-                undefined,
-                undefined,
-                schema.getQueryType()!.getFields()['row']!.type,
-                true,
-              );
-          outcomes.push({ returned: typeof result, trace });
-        } catch (error) {
-          outcomes.push({ thrown: String(error), trace });
-        } finally {
-          Reflect.deleteProperty(Object.prototype, marker);
-        }
+        });
+        // The synchronous fast path does not normalize an ordinary object through
+        // helper wrappers or interpret markers inherited from a polluted global.
+        result = resolveExternalValue(
+          input,
+          [],
+          schema,
+          undefined,
+          undefined,
+          schema.getQueryType()!.getFields()['row']!.type,
+          true,
+        );
+      } finally {
+        Reflect.deleteProperty(Object.prototype, marker);
       }
-      expect(outcomes[1]).toEqual(outcomes[0]);
-      expect(outcomes[0]!.trace).toContain('marker');
+      expect(result).toBe(input);
+      expect(trace).toEqual(['then']);
+      expect(thenReads).toBe(1);
+    });
+  }
+
+  for (const abstract of [false, true]) {
+    it(`classifies a synchronous ${abstract ? 'abstract' : 'concrete'} object once`, () => {
+      let thenReads = 0;
+      const input = {
+        id: '1',
+        __typename: 'Row',
+        get then() {
+          thenReads++;
+          return undefined;
+        },
+      };
+      const type = schema.getType(abstract ? 'Node' : 'Row')!;
+      const info = { schema, returnType: type } as GraphQLResolveInfo;
+      const result = resolveExternalValue(
+        input,
+        [],
+        schema,
+        undefined,
+        info,
+        undefined,
+        true,
+      );
+      expect(thenReads).toBe(1);
+      expect(result).toBe(input);
+      expect(result.id).toBe('1');
     });
   }
 

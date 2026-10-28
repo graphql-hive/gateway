@@ -1,11 +1,5 @@
 import { Maybe } from '@graphql-tools/utils';
-import {
-  fakePromise,
-  isActualPromise,
-  isPromise,
-  promiseLikeFinally,
-  unfakePromise,
-} from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import {
   getNullableType,
   GraphQLCompositeType,
@@ -26,8 +20,14 @@ import {
   mergeFields,
 } from './mergeFields.js';
 import { Subschema } from './Subschema.js';
-import { MergedTypeInfo, StitchingInfo, SubschemaConfig } from './types.js';
+import {
+  ExternalObject,
+  MergedTypeInfo,
+  StitchingInfo,
+  SubschemaConfig,
+} from './types.js';
 
+// V8 (Node 24): ~32 B per empty map vs ~192 B for Object.create(null).
 const CompactFieldSubschemaMap =
   function CompactFieldSubschemaMap() {} as unknown as new () => object;
 
@@ -68,7 +68,13 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
       info,
       skipTypeMerging,
     );
-    return finishCompositeResult(resolved, type, info);
+    if (!isPromise(resolved)) {
+      return validateCompositeResult(resolved, type, info);
+    }
+    return handleMaybePromise(
+      () => resolved,
+      (value) => validateCompositeResult(value, type, info),
+    );
   } else if (isListType(type)) {
     if (Array.isArray(result)) {
       return resolveExternalList(
@@ -93,34 +99,11 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
   }
 }
 
-// Keep the ordinary synchronous path free of per-object continuation closures
-// and fake-promise wrappers. Promise/thenable normalization must retain the
-// behavior of handleMaybePromise, including inherited fake-promise markers.
-// The custom thenable wrapper mirrors @whatwg-node/promise-helpers 1.3.2
-// (fakePromise/unfakePromise). Keep the differential compatibility cases when
-// upgrading that dependency; do not replace this with Promise.resolve.
-// Once Gateway can require promise-helpers >=2.0.1 (Node >=22.15), revisit
-// using its optimized handleMaybePromise instead of this local normalization:
-// https://github.com/ardatan/whatwg-node/pull/3733
-// Recheck compatibility and performance before removing the local fast path.
-function normalizeCompositeResult(value: any): any {
-  if (value && isActualPromise(value)) return unfakePromise(value);
-  if (isPromise(value)) {
-    return unfakePromise({
-      then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
-      catch: (reject) => fakePromise(value.then((res) => res, reject)),
-      finally: (cb) => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
-      [Symbol.toStringTag]: 'Promise',
-    });
-  }
-  return value;
-}
-
 function validateCompositeResult(
-  value: any,
+  value: ExternalObject,
   type: GraphQLCompositeType,
   info: GraphQLResolveInfo | undefined,
-): any {
+): ExternalObject | null {
   if (info && isAbstractType(type)) {
     if (value.__typename != null) {
       const resolvedType = info.schema.getType(value.__typename);
@@ -129,31 +112,6 @@ function validateCompositeResult(
     return value;
   }
   return value;
-}
-
-function finishCompositeResult(
-  value: any,
-  type: GraphQLCompositeType,
-  info: GraphQLResolveInfo | undefined,
-): any {
-  if (value && isActualPromise(value)) {
-    return unfakePromise(
-      value.then(
-        (result) => validateCompositeResult(result, type, info),
-        undefined,
-      ),
-    );
-  }
-  if (isPromise(value)) {
-    // Bun includes the call expression in TypeErrors for non-callable `then`.
-    // Retain the legacy wrapper's expression as well as its error behavior.
-    // A const undefined is inlined by Bun, so keep reject as a variable.
-    const resolve = (result: unknown) =>
-      validateCompositeResult(result, type, info);
-    let reject: undefined;
-    return unfakePromise(fakePromise(value.then(resolve, reject)));
-  }
-  return normalizeCompositeResult(validateCompositeResult(value, type, info));
 }
 
 function resolveExternalObject<TContext extends Record<string, any>>(
