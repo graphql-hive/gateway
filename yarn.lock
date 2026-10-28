@@ -4976,7 +4976,7 @@ __metadata:
     "@graphql-hive/logger": "workspace:^"
     "@graphql-tools/graphql-file-loader": "npm:^8.1.24"
     "@graphql-tools/load": "npm:^8.1.21"
-    "@langfuse/client": "npm:^5.14.0"
+    "@langfuse/client": "npm:^6.0.2"
     "@opentelemetry/api": "npm:^1.9.1"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     "@whatwg-node/server": "npm:^0.13.0"
@@ -7836,36 +7836,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langfuse/client@npm:^5.14.0":
-  version: 5.14.0
-  resolution: "@langfuse/client@npm:5.14.0"
+"@langfuse/client@npm:^6.0.2":
+  version: 6.0.2
+  resolution: "@langfuse/client@npm:6.0.2"
   dependencies:
-    "@langfuse/core": "npm:^5.14.0"
-    "@langfuse/tracing": "npm:^5.14.0"
+    "@langfuse/core": "npm:^6.0.2"
+    "@langfuse/tracing": "npm:^6.0.2"
     mustache: "npm:^4.2.0"
   peerDependencies:
     "@opentelemetry/api": ^1.9.0
-  checksum: 10c0/07710626f788fda0154ccb707aee3b88de3a013a0b56e8efaf180ed6d372cf98f7ba5f4a7d764cac7a5669fd5ca64aa087e5b984b22ed182a1640f05aaccde9b
+  checksum: 10c0/59bf00fc676fa1f32c80ab3acc3cc4d2674e6eff28842d3722a6d08f9c68429ea60e859b396207a8e0e1336f76a4cec4b19c9abdd26d437b14068460dbf03782
   languageName: node
   linkType: hard
 
-"@langfuse/core@npm:^5.14.0":
-  version: 5.14.0
-  resolution: "@langfuse/core@npm:5.14.0"
+"@langfuse/core@npm:^6.0.2":
+  version: 6.0.2
+  resolution: "@langfuse/core@npm:6.0.2"
   peerDependencies:
     "@opentelemetry/api": ^1.9.0
-  checksum: 10c0/ef74f90626235707e32f4af91a90354458c17a704bebe201d94f61221d3dcb2d9ac00c2e7af128523de5bd4867a9e25ac24aa764893af6d6e2088bff5ec0ce32
+  checksum: 10c0/5bf1ababfe4c9c7032350fd90d5c5cd162ad54fe8ab32d59f09c53ae0f642333ca165612883072b2b7acbb9034e80751c8e59e9920c1c64f280440e19126f70e
   languageName: node
   linkType: hard
 
-"@langfuse/tracing@npm:^5.14.0":
-  version: 5.14.0
-  resolution: "@langfuse/tracing@npm:5.14.0"
+"@langfuse/tracing@npm:^6.0.2":
+  version: 6.0.2
+  resolution: "@langfuse/tracing@npm:6.0.2"
   dependencies:
-    "@langfuse/core": "npm:^5.14.0"
+    "@langfuse/core": "npm:^6.0.2"
   peerDependencies:
     "@opentelemetry/api": ^1.9.0
-  checksum: 10c0/216bc7f6a9f2b6f288525f9a927534a29d65532bf769d9858b151c02e3cd3757cc8edd10355028ff67a1d9ffa4da3c00e99f5e6f373eb4a16d2d96ecf9f2be69
+  checksum: 10c0/a4e7b4633d96d7542dc7ad8901e248d70fb0eff9b1ee076ed83d815f3ec79c132855fcae9cdff6495ca14cb562d1c7395dcb859c0aec03b01d39a2f70acd80e9
   languageName: node
   linkType: hard
 
@@ -18371,7 +18371,7 @@ __metadata:
     "@changesets/changelog-github": "npm:^1.0.1"
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.7.1"
-    "@langfuse/client": "npm:^5.14.0"
+    "@langfuse/client": "npm:^6.0.2"
     "@opentelemetry/api": "npm:^1.9.1"
     "@tsconfig/node22": "npm:^22.0.6"
     "@tsconfig/strictest": "npm:2.0.8"
