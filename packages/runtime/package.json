@@ -78,7 +78,7 @@
     "@types/node": "^26.6.5",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.12.1",
-    "@whatwg-node/promise-helpers": "^2.0.0",
+    "@whatwg-node/promise-helpers": "^2.0.1",
     "@whatwg-node/server": "^0.13.0",
     "@whatwg-node/server-plugin-cookies": "^2.0.1",
     "graphql-ws": "^6.0.6",
