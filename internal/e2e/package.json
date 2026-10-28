@@ -5,7 +5,7 @@
   "devDependencies": {
     "@apollo/gateway": "^2.14.4",
     "@types/dockerode": "^4.0.2",
-    "@types/node": "^25.9.9",
+    "@types/node": "^26.6.5",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.12.1",
     "dockerode": "^5.0.1",
