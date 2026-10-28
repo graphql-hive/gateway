@@ -10,3 +10,5 @@ settled and the request hung idle. Track leftover work and, once the
 queue is empty, reject unsettled deferreds with `SATISFIABILITY_ERROR`
 (Apollo composition-style message, including selection snippet and
 subschema names when set).
+
+Closes #2695
