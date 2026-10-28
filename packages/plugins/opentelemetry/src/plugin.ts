@@ -61,8 +61,7 @@ const initializationTime =
 const ignoredRequests = new WeakSet<Request>();
 
 type BooleanOrPredicate<TInput = never> =
-  | boolean
-  | ((input: TInput) => boolean);
+  boolean | ((input: TInput) => boolean);
 
 export type OpenTelemetryGatewayPluginOptions = {
   /**

@@ -249,14 +249,12 @@ export function createGatewayRuntime<
   // gracefulSchemaReload is enabled; left undefined otherwise (proxy path, or
   // feature off — superseded generations are then disposed immediately anyway).
   let retainGenerationFor:
-    | ((schema: GraphQLSchema) => SchemaGenerationLease | undefined)
-    | undefined;
+    ((schema: GraphQLSchema) => SchemaGenerationLease | undefined) | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
   const allowArbitraryDocumentsForPersistedDocuments:
-    | boolean
-    | ((request: Request) => MaybePromise<boolean>) =
+    boolean | ((request: Request) => MaybePromise<boolean>) =
     config.persistedDocuments?.allowArbitraryDocuments ?? false;
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
@@ -1014,9 +1012,7 @@ export function createGatewayRuntime<
   }
 
   const basePlugins: (
-    | ServerAdapterPlugin<any>
-    | YogaPlugin<any>
-    | GatewayPlugin<any>
+    ServerAdapterPlugin<any> | YogaPlugin<any> | GatewayPlugin<any>
   )[] = [
     useConfigInServerContext({ configContext }),
     defaultGatewayPlugin,
@@ -1056,9 +1052,7 @@ export function createGatewayRuntime<
   }
 
   const extraPlugins: (
-    | ServerAdapterPlugin<any>
-    | YogaPlugin<any>
-    | GatewayPlugin<any>
+    ServerAdapterPlugin<any> | YogaPlugin<any> | GatewayPlugin<any>
   )[] = [];
 
   if (config.webhooks) {
