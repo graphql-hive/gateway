@@ -190,6 +190,7 @@ export interface InflightRequestOptions {
 type InflightRequestId = string;
 
 const inflightRequests = new Map<InflightRequestId, Promise<ExecutionResult>>();
+const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
 
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
@@ -584,6 +585,11 @@ export function buildHTTPExecutor(
       }
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
+      if (inflightRequest) {
+        // Isolate every consumer when a request is actually shared, including
+        // the consumer that originally started the request.
+        sharedInflightRequests.add(inflightRequest as Promise<ExecutionResult>);
+      }
       if (!inflightRequest) {
         inflightRequest = runInflightRequest();
         if (isPromise(inflightRequest)) {
@@ -597,7 +603,13 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
-          if (result == null || !result.data) {
+          if (
+            result == null ||
+            !result.data ||
+            !sharedInflightRequests.has(
+              inflightRequest as Promise<ExecutionResult>,
+            )
+          ) {
             return result;
           }
           const clonedResult: ExecutionResult = {

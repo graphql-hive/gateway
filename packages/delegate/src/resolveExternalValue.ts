@@ -1,5 +1,5 @@
 import { Maybe } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import {
   getNullableType,
   GraphQLCompositeType,
@@ -20,7 +20,16 @@ import {
   mergeFields,
 } from './mergeFields.js';
 import { Subschema } from './Subschema.js';
-import { MergedTypeInfo, StitchingInfo, SubschemaConfig } from './types.js';
+import {
+  ExternalObject,
+  MergedTypeInfo,
+  StitchingInfo,
+  SubschemaConfig,
+} from './types.js';
+
+// V8 (Node 24): ~32 B per empty map vs ~192 B for Object.create(null).
+const CompactFieldSubschemaMap =
+  function CompactFieldSubschemaMap() {} as unknown as new () => object;
 
 export function resolveExternalValue<TContext extends Record<string, any>>(
   result: any,
@@ -50,29 +59,21 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
       return null;
     }
   } else if (isCompositeType(type)) {
+    const resolved = resolveExternalObject(
+      type,
+      result,
+      unpathedErrors,
+      subschema,
+      context,
+      info,
+      skipTypeMerging,
+    );
+    if (!isPromise(resolved)) {
+      return validateCompositeResult(resolved, type, info);
+    }
     return handleMaybePromise(
-      () =>
-        resolveExternalObject(
-          type,
-          result,
-          unpathedErrors,
-          subschema,
-          context,
-          info,
-          skipTypeMerging,
-        ),
-      (result) => {
-        if (info && isAbstractType(type)) {
-          if (result.__typename != null) {
-            const resolvedType = info!.schema.getType(result.__typename);
-            if (!resolvedType) {
-              return null;
-            }
-          }
-          return result;
-        }
-        return result;
-      },
+      () => resolved,
+      (value) => validateCompositeResult(value, type, info),
     );
   } else if (isListType(type)) {
     if (Array.isArray(result)) {
@@ -98,6 +99,21 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
   }
 }
 
+function validateCompositeResult(
+  value: ExternalObject,
+  type: GraphQLCompositeType,
+  info: GraphQLResolveInfo | undefined,
+): ExternalObject | null {
+  if (info && isAbstractType(type)) {
+    if (value.__typename != null) {
+      const resolvedType = info.schema.getType(value.__typename);
+      if (!resolvedType) return null;
+    }
+    return value;
+  }
+  return value;
+}
+
 function resolveExternalObject<TContext extends Record<string, any>>(
   type: GraphQLCompositeType,
   object: any,
@@ -114,7 +130,7 @@ function resolveExternalObject<TContext extends Record<string, any>>(
       object,
       unpathedErrors,
       subschema,
-      Object.create(null),
+      Object.setPrototypeOf(new CompactFieldSubschemaMap(), null),
     );
   }
   if (skipTypeMerging || info == null) {
