@@ -49,10 +49,10 @@
     "prepack": "yarn build"
   },
   "devDependencies": {
-    "get-tsconfig": "^4.13.0",
-    "glob": "^13.0.0",
+    "get-tsconfig": "^4.14.3",
+    "glob": "^13.0.6",
     "pkgroll": "2.27.1",
-    "sucrase": "^3.35.0"
+    "sucrase": "^3.35.1"
   },
   "sideEffects": false
 }

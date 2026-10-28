@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.13",
-    "@types/node": "^25.0.0",
+    "@types/node": "^25.9.9",
     "pkgroll": "2.27.1",
     "typescript": "6.0.3"
   }

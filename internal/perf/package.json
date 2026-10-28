@@ -13,7 +13,7 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
-    "@types/k6": "^2.0.0",
-    "@types/ws": "^8.5.12"
+    "@types/k6": "^2.3.0",
+    "@types/ws": "^8.18.2"
   }
 }
