@@ -10,7 +10,7 @@
     "@apollo/subgraph": "^2.15.1",
     "@as-integrations/express5": "^1.1.2",
     "@graphql-mesh/compose-cli": "^1.8.4",
-    "@omnigraph/openapi": "^0.109.54",
+    "@omnigraph/openapi": "^0.112.7",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "cors": "^2.8.6",
