@@ -378,3 +378,206 @@ describe('nullable merging', () => {
     expect(result).toEqual(expectedResult);
   });
 });
+
+/**
+ * When a merged field is only reachable via a merge key that nothing ever
+ * produces, leftover resolution used to return a deferred promise that never
+ * settled and the request hung idle. After leftover work drains, that deferred
+ * must be rejected so the query completes with a field error instead.
+ */
+describe('leftover work-queue drain', () => {
+  it('settles unresolvable leftover fields instead of hanging', async () => {
+    const usersSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          name: String!
+        }
+        type Query {
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          user: (_root, { id }) => ({ id, name: 'Ada' }),
+        },
+      },
+    });
+
+    // Nullable bio so a field error does not null-bubble the whole User.
+    const profilesSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          email: ID!
+          bio: String
+        }
+        type Query {
+          _userByEmail(email: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          _userByEmail: (_root, { email }) => ({ email, bio: 'hello' }),
+        },
+      },
+    });
+
+    const gateway = stitchSchemas({
+      subschemas: [
+        {
+          name: 'users',
+          schema: usersSchema,
+          merge: {
+            User: {
+              selectionSet: '{ id }',
+              fieldName: 'user',
+              args: ({ id }) => ({ id }),
+            },
+          },
+        },
+        {
+          name: 'profiles',
+          schema: profilesSchema,
+          merge: {
+            User: {
+              // Reachable only via email, which no subschema ever produces.
+              selectionSet: '{ email }',
+              fieldName: '_userByEmail',
+              args: ({ email }) => ({ email }),
+            },
+          },
+        },
+      ],
+    });
+
+    const result = await graphql({
+      schema: gateway,
+      source: /* GraphQL */ `
+        query {
+          user(id: "1") {
+            id
+            name
+            bio
+          }
+        }
+      `,
+    });
+
+    expect(result.data).toEqual({
+      user: {
+        id: '1',
+        name: 'Ada',
+        bio: null,
+      },
+    });
+    expect(result.errors).toBeDefined();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors![0]!.extensions?.['code']).toBe(
+      'SATISFIABILITY_ERROR',
+    );
+    expect(result.errors![0]!.path).toEqual(['user', 'bio']);
+    expect(result.errors![0]!.message).toBe(
+      [
+        'The following field cannot be satisfied by the subschemas:',
+        '{',
+        '  user {',
+        '    bio',
+        '  }',
+        '}',
+        'because:',
+        '- from subschema "users":',
+        '  - cannot find field "User.bio".',
+        '  - cannot move to subschema "profiles" using key fields { email } of "User"; the key field(s) cannot be resolved from subschema "users".',
+      ].join('\n'),
+    );
+    // a hang here means the leftover deferred was not settled by the work-queue drain
+  }, 2000);
+
+  it('still resolves reachable merged fields', async () => {
+    const usersSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          name: String!
+          email: ID!
+        }
+        type Query {
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          user: (_root, { id }) => ({
+            id,
+            name: 'Ada',
+            email: 'ada@example.com',
+          }),
+        },
+      },
+    });
+
+    const profilesSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          email: ID!
+          bio: String!
+        }
+        type Query {
+          _userByEmail(email: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          _userByEmail: (_root, { email }) => ({ email, bio: 'hello' }),
+        },
+      },
+    });
+
+    const gateway = stitchSchemas({
+      subschemas: [
+        {
+          schema: usersSchema,
+          merge: {
+            User: {
+              selectionSet: '{ id }',
+              fieldName: 'user',
+              args: ({ id }) => ({ id }),
+            },
+          },
+        },
+        {
+          schema: profilesSchema,
+          merge: {
+            User: {
+              selectionSet: '{ email }',
+              fieldName: '_userByEmail',
+              args: ({ email }) => ({ email }),
+            },
+          },
+        },
+      ],
+    });
+
+    const result = await graphql({
+      schema: gateway,
+      source: /* GraphQL */ `
+        query {
+          user(id: "1") {
+            id
+            name
+            bio
+          }
+        }
+      `,
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      user: {
+        id: '1',
+        name: 'Ada',
+        bio: 'hello',
+      },
+    });
+  });
+});
