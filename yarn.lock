@@ -3619,7 +3619,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     graphql-sse: "npm:^2.6.3"
     tslib: "npm:^2.8.1"
-    url-join: "npm:^5.2.0"
+    url-join: "npm:^6.0.0"
   languageName: unknown
   linkType: soft
 
@@ -27177,10 +27177,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"url-join@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "url-join@npm:5.2.0"
-  checksum: 10c0/3faaf3a54f1dae235a42fe7a82e7142e81139c962c6c64168b8f4b53c2f37a7d5c14e24c146ee9564c4b63878a90ce5898416257d0d90d59fd929e8ead259702
+"url-join@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "url-join@npm:6.0.0"
+  checksum: 10c0/671c8501119b632e3ed3e84afe7fa2e21f558069ad287261a20be5d42add9387dfa1960e9e841e123ed6887e0774b8f1508c94643815670c4e05c5d0d9eeea17
   languageName: node
   linkType: hard
 
