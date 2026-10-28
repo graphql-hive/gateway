@@ -1,5 +1,18 @@
 # @graphql-tools/batch-delegate
 
+## 10.1.3
+### Patch Changes
+
+
+
+- [#2700](https://github.com/graphql-hive/gateway/pull/2700) [`4c1d3f0`](https://github.com/graphql-hive/gateway/commit/4c1d3f01c4e2842d9fd2c1f81a3f753da1d57405) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Scope batch delegation loaders to both the `rootValue` and the `context`
+  
+  Servers like mercurius pass the same `rootValue` object to every execution, which made the loaders outlive the request and serve stale results and stale variable values on subsequent requests.
+  
+  Closes [#2630](https://github.com/graphql-hive/gateway/issues/2630)
+- Updated dependencies [[`aabe28a`](https://github.com/graphql-hive/gateway/commit/aabe28a87cc4e85f590bbf4340a9c8700d544223), [`a558eea`](https://github.com/graphql-hive/gateway/commit/a558eeae3c94deb60d40f98232b9d4d82ae9d9a1)]:
+  - @graphql-tools/delegate@12.3.1
+
 ## 10.1.2
 ### Patch Changes
 

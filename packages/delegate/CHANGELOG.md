@@ -1,5 +1,28 @@
 # @graphql-tools/delegate
 
+## 12.3.1
+### Patch Changes
+
+
+
+- [#2687](https://github.com/graphql-hive/gateway/pull/2687) [`aabe28a`](https://github.com/graphql-hive/gateway/commit/aabe28a87cc4e85f590bbf4340a9c8700d544223) Thanks [@ardatan](https://github.com/ardatan)! - Deliver forwarded `@defer` patches for nested list items and avoid recursion through `wrapSchema` over a stitched schema
+  
+  When a subschema has `defer: true`, deferred fields inside list items were resolved as `null`: `IncrementalReceiver` did not merge patches into existing list items (including nested lists), and when the subgraph sent several patches in one chunk, every re-emitted patch carried the chunk's `hasNext: false`, so only the first one was applied.
+  
+  Without `defer: true`, a deferred field owned by another inner subschema under `wrapSchema` over a stitched schema called `defaultMergedResolver` on the nested schema with the same parent and recursed. Re-fetch via the nested merged-type resolver for the field owner instead.
+
+
+- [#2701](https://github.com/graphql-hive/gateway/pull/2701) [`a558eea`](https://github.com/graphql-hive/gateway/commit/a558eeae3c94deb60d40f98232b9d4d82ae9d9a1) Thanks [@ardatan](https://github.com/ardatan)! - Settle unsatisfiable stitched leftover fields instead of hanging
+  
+  When a merged field could only be fetched with a merge key that never
+  arrived, leftover resolution returned a deferred promise that never
+  settled and the request hung idle. Track leftover work and, once the
+  queue is empty, reject unsettled deferreds with `SATISFIABILITY_ERROR`
+  (Apollo composition-style message, including selection snippet and
+  subschema names when set).
+  
+  Closes [#2695](https://github.com/graphql-hive/gateway/issues/2695)
+
 ## 12.3.0
 ### Minor Changes
 

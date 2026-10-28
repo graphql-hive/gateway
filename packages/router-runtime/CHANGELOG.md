@@ -1,5 +1,31 @@
 # @graphql-hive/router-runtime
 
+## 1.6.7
+### Patch Changes
+
+
+
+- [#2699](https://github.com/graphql-hive/gateway/pull/2699) [`a3d8baf`](https://github.com/graphql-hive/gateway/commit/a3d8bafc8602845b71423bdaea780b2406ab47f2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Skip computing the query plan cache key on in-memory plan cache hits when the supergraph has no progressive override
+  
+  The native `computeCacheKey` call scales with the size of the query and was running on every request, even when the plan for the document was already cached.
+  
+  Closes [#2655](https://github.com/graphql-hive/gateway/issues/2655)
+
+
+- [#2698](https://github.com/graphql-hive/gateway/pull/2698) [`90b8c46`](https://github.com/graphql-hive/gateway/commit/90b8c461dbf9f6c41d608d4697b64630db612074) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Null out unresolved entities selected through fragments, report non-nullable field errors and keep list indices in entity error paths
+  
+  When the subgraph owning an entity could not resolve it (`__resolveReference` returned `null` or threw) and its fields were selected through an inline or named fragment, the entity was returned as `{}` or `{ "__typename": ... }` instead of `null`. A missing non-nullable field inside a fragment now nulls the parent, the same as without a fragment.
+  
+  A missing non-nullable field now also reports a `Cannot return null for non-nullable field` error, unless an upstream error already covers that path.
+  
+  When the subgraph reports a failed `_entities` field without an entity index, the error is now relocated to every affected entity path including the list indices, instead of a path without them.
+  
+  Closes [#2658](https://github.com/graphql-hive/gateway/issues/2658)
+- Updated dependencies [[`aabe28a`](https://github.com/graphql-hive/gateway/commit/aabe28a87cc4e85f590bbf4340a9c8700d544223), [`a558eea`](https://github.com/graphql-hive/gateway/commit/a558eeae3c94deb60d40f98232b9d4d82ae9d9a1)]:
+  - @graphql-tools/delegate@12.3.1
+  - @graphql-tools/federation@4.6.1
+  - @graphql-mesh/fusion-runtime@1.13.1
+
 ## 1.6.6
 ### Patch Changes
 
