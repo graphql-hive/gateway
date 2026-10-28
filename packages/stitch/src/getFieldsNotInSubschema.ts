@@ -1,28 +1,6 @@
-import {
-  extractUnavailableFields,
-  getVariableValues,
-  handleOverrideByDelegation,
-  StitchingInfo,
-  Subschema,
-  subtractSelectionSets,
-} from '@graphql-tools/delegate';
+import { extractUnavailableFields, getVariableValues, handleOverrideByDelegation, StitchingInfo, Subschema, subtractSelectionSets } from '@graphql-tools/delegate';
 import { collectSubFields, memoize3 } from '@graphql-tools/utils';
-import {
-  FieldNode,
-  FragmentDefinitionNode,
-  getNamedType,
-  GraphQLCompositeType,
-  GraphQLField,
-  GraphQLObjectType,
-  GraphQLSchema,
-  isAbstractType,
-  isInterfaceType,
-  isObjectType,
-  Kind,
-  SelectionNode,
-  SelectionSetNode,
-  TypeNameMetaFieldDef,
-} from 'graphql';
+import { FieldNode, FragmentDefinitionNode, getNamedType, GraphQLCompositeType, GraphQLField, GraphQLObjectType, GraphQLSchema, isAbstractType, isInterfaceType, isObjectType, Kind, SelectionNode, SelectionSetNode, TypeNameMetaFieldDef } from 'graphql';
 import { GraphQLResolveInfo } from 'graphql/type';
 
 export function getFieldsNotInSubschema(
@@ -185,14 +163,9 @@ export function getFieldsNotInSubschema(
               return false;
             }
             // field is already provided by this subgraph via @provides
-            if (
-              providedTypeFieldPairs?.has(
-                `${fieldType.name}.${selection.name.value}`,
-              )
-            ) {
-              return false;
-            }
-            return true;
+            return !providedTypeFieldPairs?.has(
+              `${fieldType.name}.${selection.name.value}`,
+            );
           },
           fragments,
         );
@@ -219,24 +192,25 @@ export function getFieldsNotInSubschema(
         addedSubFieldNodes = true;
       }
     };
-    if ((isComputedField || fieldNotInSchema) && fieldNodesByFieldForType) {
-      const visitedFieldNames = new Set<string>();
-      addMissingRequiredFields({
-        fieldName,
-        fields,
-        fieldsNotInSchema,
-        visitedFieldNames,
-        onAdd: onAddMissingRequiredFields,
-        fieldNodesByField: fieldNodesByFieldForType,
-      });
-    }
-    // Function selectionSets are stored in dynamicSelectionSetsByField and applied
-    // during visitSelectionSet for direct delegation. Type-merge planning only
-    // consulted fieldNodesByField (string selectionSets), so gateway fields with
-    // request-time dependencies (e.g. salePrice(country) → priceForCountry(country))
-    // never injected those deps into the merge fetch. Evaluate them here against
-    // the actual field nodes so arg-forwarding selectionSets participate in the plan.
     if (isComputedField || fieldNotInSchema) {
+      if (fieldNodesByFieldForType) {
+        const visitedFieldNames = new Set<string>();
+        addMissingRequiredFields({
+          fieldName,
+          fields,
+          fieldsNotInSchema,
+          visitedFieldNames,
+          onAdd: onAddMissingRequiredFields,
+          fieldNodesByField: fieldNodesByFieldForType,
+        });
+      }
+
+      // Function selectionSets are stored in dynamicSelectionSetsByField and applied
+      // during visitSelectionSet for direct delegation. Type-merge planning only
+      // consulted fieldNodesByField (string selectionSets), so gateway fields with
+      // request-time dependencies (e.g. salePrice(country) → priceForCountry(country))
+      // never injected those deps into the merge fetch. Evaluate them here against
+      // the actual field nodes so arg-forwarding selectionSets participate in the plan.
       const dynamicSelectionSets =
         stitchingInfo?.dynamicSelectionSetsByField?.[gatewayType.name]?.[
           fieldName
