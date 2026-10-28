@@ -1156,8 +1156,7 @@ it('test computed field with arguments', async () => {
             key,
           }: {
             key:
-              | { upc: string; price: number; weight: number }
-              | { upc: string };
+              { upc: string; price: number; weight: number } | { upc: string };
           },
         ) => {
           const product = products.find((p) => p.upc === key.upc);

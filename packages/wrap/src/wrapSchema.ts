@@ -20,8 +20,7 @@ export const wrapSchema = memoize1(function wrapSchema<
   TConfig extends Record<string, any> = Record<string, any>,
 >(
   subschemaConfig:
-    | SubschemaConfig<any, any, any, TConfig>
-    | Subschema<any, any, any, TConfig>,
+    SubschemaConfig<any, any, any, TConfig> | Subschema<any, any, any, TConfig>,
 ): GraphQLSchema {
   const targetSchema = subschemaConfig.schema;
 

@@ -12,8 +12,7 @@ export interface TimeoutFactoryPayload {
 }
 
 export type UpstreamTimeoutPluginOptions =
-  | number
-  | ((payload: TimeoutFactoryPayload) => number | undefined);
+  number | ((payload: TimeoutFactoryPayload) => number | undefined);
 
 export function useUpstreamTimeout<TContext extends Record<string, any>>(
   opts: UpstreamTimeoutPluginOptions,

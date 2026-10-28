@@ -210,8 +210,7 @@ export function defaultMergedResolver(
         responseKey,
         path: responsePathAsArray(info.path),
         sourceSubschema: parent[OBJECT_SUBSCHEMA_SYMBOL] as
-          | Subschema
-          | undefined,
+          Subschema | undefined,
       });
       const fieldNodesByType =
         stitchingInfo?.fieldNodesByField?.[parentTypeName]?.[info.fieldName];
@@ -461,8 +460,7 @@ function resolveMissingFieldFromSourceSubschema(
   // field owner when available.
   if (resolve === defaultMergedResolver) {
     const innerStitchingInfo = originalSchema.extensions?.['stitchingInfo'] as
-      | StitchingInfo
-      | undefined;
+      StitchingInfo | undefined;
     const innerTypeName =
       (typeof parent.__typename === 'string' && parent.__typename) ||
       parentTypeName;

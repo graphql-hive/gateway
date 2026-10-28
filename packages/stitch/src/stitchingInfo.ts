@@ -240,8 +240,7 @@ function createMergedTypes<
 
           // Object, interface, or union (unions have no fields of their own)
           const type = subschema.transformedSchema.getType(typeName) as
-            | GraphQLObjectType
-            | GraphQLInterfaceType;
+            GraphQLObjectType | GraphQLInterfaceType;
 
           const resolver =
             mergedTypeConfig.resolve ??

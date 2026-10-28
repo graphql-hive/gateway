@@ -1419,8 +1419,7 @@ function shouldForwardDefer(
   delegationContext: DelegationContext<any>,
 ): boolean {
   const config = delegationContext.subschemaConfig as
-    | { defer?: boolean }
-    | undefined;
+    { defer?: boolean } | undefined;
   return config?.defer === true;
 }
 
