@@ -75,7 +75,7 @@
     "@graphql-yoga/plugin-defer-stream": "^4.0.0",
     "@graphql-yoga/plugin-persisted-operations": "^4.0.0",
     "@theguild/federation-composition": "^0.26.1",
-    "@types/node": "^25.0.0",
+    "@types/node": "^25.9.9",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.12.1",
     "@whatwg-node/promise-helpers": "^2.0.0",
