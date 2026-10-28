@@ -14,18 +14,20 @@ import { forwardArgsToSelectionSet, stitchSchemas } from '../src/index.js';
  * resolvers saw missing parent fields.
  */
 describe('dynamic selectionSet during type merging', () => {
-  it('injects function selectionSet deps (with forwarded args) into the merge fetch', async () => {
+  it('injects function selectionSet deps (with renamed forwarded args) into the merge fetch', async () => {
     const priceForCountry = vi.fn(
-      (_parent: { identifier: string }, args: { country: string }) =>
-        args.country === 'GB' ? 1000 : null,
+      (
+        _parent: { identifier: string },
+        args: { countryCode: string },
+      ) => (args.countryCode === 'GB' ? 1000 : null),
     );
 
     // Full stone fields live here (providing subschema).
-    const gemsSchema = makeExecutableSchema({
+    const schema2 = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type Stone {
           identifier: ID!
-          priceForCountry(country: String!): Float
+          priceForCountry(countryCode: String!): Float
         }
         type Query {
           getStones(identifiers: [ID!]!): [Stone]!
@@ -41,18 +43,18 @@ describe('dynamic selectionSet during type merging', () => {
     });
 
     // Stub origin: only the merge key.
-    const catalogSchema = makeExecutableSchema({
+    const schema1 = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type Stone {
           identifier: ID!
         }
         type Query {
-          catalogStone(identifier: ID!): Stone
+          stone(identifier: ID!): Stone!
         }
       `,
       resolvers: {
         Query: {
-          catalogStone: (_root, { identifier }) => ({ identifier }),
+          stone: (_root, { identifier }) => ({ identifier }),
         },
       },
     });
@@ -60,17 +62,17 @@ describe('dynamic selectionSet during type merging', () => {
     const schema = stitchSchemas({
       subschemas: [
         {
-          schema: catalogSchema,
+          schema: schema1,
           merge: {
             Stone: {
               selectionSet: '{ identifier }',
-              fieldName: 'catalogStone',
+              fieldName: 'stone',
               args: ({ identifier }) => ({ identifier }),
             },
           },
         },
         {
-          schema: gemsSchema,
+          schema: schema2,
           merge: {
             Stone: {
               selectionSet: '{ identifier }',
@@ -90,7 +92,7 @@ describe('dynamic selectionSet during type merging', () => {
         Stone: {
           salePrice: {
             selectionSet: forwardArgsToSelectionSet('{ priceForCountry }', {
-              priceForCountry: ['country'],
+              priceForCountry: { country: 'countryCode' },
             }),
             resolve: (root: { priceForCountry?: number | null }) =>
               root.priceForCountry,
@@ -103,7 +105,7 @@ describe('dynamic selectionSet during type merging', () => {
       schema,
       source: /* GraphQL */ `
         query {
-          catalogStone(identifier: "stone-1") {
+          stone(identifier: "stone-1") {
             identifier
             salePrice(country: "GB")
           }
@@ -113,13 +115,15 @@ describe('dynamic selectionSet during type merging', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({
-      catalogStone: {
+      stone: {
         identifier: 'stone-1',
         salePrice: 1000,
       },
     });
     expect(priceForCountry).toHaveBeenCalled();
-    expect(priceForCountry.mock.calls[0]?.[1]).toMatchObject({ country: 'GB' });
+    expect(priceForCountry.mock.calls[0]?.[1]).toMatchObject({
+      countryCode: 'GB',
+    });
   });
 
   it('still resolves when the object already originates from the providing subschema', async () => {
@@ -127,7 +131,7 @@ describe('dynamic selectionSet during type merging', () => {
       typeDefs: /* GraphQL */ `
         type Stone {
           identifier: ID!
-          priceForCountry(country: String!): Float
+          priceForCountry(countryCode: String!): Float
         }
         type Query {
           getStones(identifiers: [ID!]!): [Stone]!
@@ -142,7 +146,7 @@ describe('dynamic selectionSet during type merging', () => {
         },
         Stone: {
           priceForCountry: (_parent, args) =>
-            args.country === 'US' ? 1200 : null,
+            args.countryCode === 'US' ? 1200 : null,
         },
       },
     });
@@ -170,7 +174,7 @@ describe('dynamic selectionSet during type merging', () => {
         Stone: {
           salePrice: {
             selectionSet: forwardArgsToSelectionSet('{ priceForCountry }', {
-              priceForCountry: ['country'],
+              priceForCountry: { country: 'countryCode' },
             }),
             resolve: (root: { priceForCountry?: number | null }) =>
               root.priceForCountry,
