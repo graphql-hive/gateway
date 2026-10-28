@@ -91,9 +91,9 @@
   },
   "devDependencies": {
     "@nats-io/jetstream": "^3.4.0",
-    "@nats-io/nats-core": "^3.2.0",
-    "@nats-io/transport-node": "^3.2.0",
-    "ioredis": "^5.8.2",
+    "@nats-io/nats-core": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
+    "ioredis": "^5.11.1",
     "pkgroll": "2.27.1"
   },
   "sideEffects": false
