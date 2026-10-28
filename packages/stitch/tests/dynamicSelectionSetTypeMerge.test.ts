@@ -14,6 +14,18 @@ type AddVatFn = (
   args: { country: string; price: number },
 ) => number;
 
+/** Base USD prices by country code (providing subschema). */
+const PRICE_BY_COUNTRY: Record<string, number> = {
+  GB: 1000,
+  US: 1200,
+};
+
+/** VAT multipliers by country (stub / compute subschema). */
+const VAT_BY_COUNTRY: Record<string, number> = {
+  GB: 1.2,
+  US: 1.1,
+};
+
 /**
  * Gateway fields may declare a function `selectionSet` so dependencies can
  * forward arguments from the gateway field (see forwardArgsToSelectionSet).
@@ -27,16 +39,17 @@ type AddVatFn = (
  * Mirrors a common gateway pattern: merge pricing from one subschema, then
  * compute a final amount via a root field on another (e.g. addVat).
  */
-function createSalePriceGateway(resolvers: {
-  priceForCountry: PriceForCountryFn;
-  addVat: AddVatFn;
-}): {
+function createSalePriceGateway(): {
   schema: GraphQLSchema;
   priceForCountry: Mock<PriceForCountryFn>;
   addVat: Mock<AddVatFn>;
 } {
-  const priceForCountry = vi.fn(resolvers.priceForCountry);
-  const addVat = vi.fn(resolvers.addVat);
+  const priceForCountry = vi.fn<PriceForCountryFn>(
+    (_parent, args) => PRICE_BY_COUNTRY[args.countryCode] ?? null,
+  );
+  const addVat = vi.fn<AddVatFn>(
+    (_root, args) => args.price * (VAT_BY_COUNTRY[args.country] ?? 1),
+  );
 
   // Providing subschema: full stone fields including priced-by-country.
   const schema2 = makeExecutableSchema({
@@ -161,12 +174,7 @@ function expectArgsContaining(
 
 describe('dynamic selectionSet during type merging', () => {
   it('injects function selectionSet deps into the merge fetch, then delegates to addVat', async () => {
-    const { schema, priceForCountry, addVat } = createSalePriceGateway({
-      priceForCountry: (_parent, args) =>
-        args.countryCode === 'GB' ? 1000 : null,
-      addVat: (_root, args) =>
-        args.country === 'GB' ? args.price * 1.2 : args.price,
-    });
+    const { schema, priceForCountry, addVat } = createSalePriceGateway();
 
     const result = await graphql({
       schema,
@@ -184,20 +192,18 @@ describe('dynamic selectionSet during type merging', () => {
     expect(result.data).toEqual({
       stone: {
         identifier: 'stone-1',
-        salePrice: 1200,
+        salePrice: PRICE_BY_COUNTRY.GB! * VAT_BY_COUNTRY.GB!,
       },
     });
     expectArgsContaining(priceForCountry, { countryCode: 'GB' });
-    expectArgsContaining(addVat, { country: 'GB', price: 1000 });
+    expectArgsContaining(addVat, {
+      country: 'GB',
+      price: PRICE_BY_COUNTRY.GB,
+    });
   });
 
   it('still resolves when the object already originates from the providing subschema', async () => {
-    const { schema, addVat } = createSalePriceGateway({
-      priceForCountry: (_parent, args) =>
-        args.countryCode === 'US' ? 1200 : null,
-      addVat: (_root, args) =>
-        args.country === 'US' ? args.price * 1.1 : args.price,
-    });
+    const { schema, addVat } = createSalePriceGateway();
 
     const result = await graphql({
       schema,
@@ -212,8 +218,13 @@ describe('dynamic selectionSet during type merging', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({
-      gemStone: { salePrice: 1320 },
+      gemStone: {
+        salePrice: PRICE_BY_COUNTRY.US! * VAT_BY_COUNTRY.US!,
+      },
     });
-    expectArgsContaining(addVat, { country: 'US', price: 1200 });
+    expectArgsContaining(addVat, {
+      country: 'US',
+      price: PRICE_BY_COUNTRY.US,
+    });
   });
 });
