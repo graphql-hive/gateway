@@ -450,31 +450,18 @@ describe('leftover work-queue drain', () => {
       ],
     });
 
-    const result = await Promise.race([
-      graphql({
-        schema: gateway,
-        source: /* GraphQL */ `
-          query {
-            user(id: "1") {
-              id
-              name
-              bio
-            }
+    const result = await graphql({
+      schema: gateway,
+      source: /* GraphQL */ `
+        query {
+          user(id: "1") {
+            id
+            name
+            bio
           }
-        `,
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error(
-                'TIMED OUT: leftover deferred was not settled by work-queue drain',
-              ),
-            ),
-          2000,
-        ),
-      ),
-    ]);
+        }
+      `,
+    });
 
     expect(result.data).toEqual({
       user: {
@@ -503,7 +490,8 @@ describe('leftover work-queue drain', () => {
         '  - cannot move to subschema "profiles" using key fields { email } of "User"; the key field(s) cannot be resolved from subschema "users".',
       ].join('\n'),
     );
-  });
+    // a hang here means the leftover deferred was not settled by the work-queue drain
+  }, 2000);
 
   it('still resolves reachable merged fields', async () => {
     const usersSchema = makeExecutableSchema({
