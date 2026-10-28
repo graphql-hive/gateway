@@ -47,7 +47,7 @@
     "@opentelemetry/api": "^1.9.1",
     "@tsconfig/node22": "^22.0.6",
     "@tsconfig/strictest": "2.0.8",
-    "@types/node": "25.9.9",
+    "@types/node": "26.6.5",
     "@yarnpkg/cli": "4.17.0",
     "@yarnpkg/core": "4.9.0",
     "@yarnpkg/plugin-pack": "4.0.5",
