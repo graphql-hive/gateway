@@ -45,7 +45,7 @@
     "@graphql-mesh/types": "^0.107.1",
     "@graphql-mesh/utils": "^0.107.1",
     "@graphql-yoga/plugin-jwt": "^4.0.0",
-    "tslib": "^2.4.0"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@envelop/core": "^6.0.0",
