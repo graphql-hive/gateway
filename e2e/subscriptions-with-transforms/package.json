@@ -2,7 +2,7 @@
   "name": "@e2e/subscriptions-with-transforms",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.8.2",
+    "@graphql-mesh/compose-cli": "^1.8.4",
     "graphql": "16.14.0",
     "graphql-sse": "^2.6.3",
     "graphql-yoga": "^6.0.0",
