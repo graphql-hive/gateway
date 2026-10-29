@@ -4,8 +4,6 @@
 
 dependencies updates: 
 
-- Updated dependency [`@envelop/core@^6.0.0` ↗︎](https://www.npmjs.com/package/@envelop/core/v/6.0.0) (from `^5.4.0`, in `dependencies`)
-- Updated dependency [`@envelop/rate-limiter@^11.0.0` ↗︎](https://www.npmjs.com/package/@envelop/rate-limiter/v/11.0.0) (from `^10.1.0`, in `dependencies`)
 - Updated dependency [`@escape.tech/graphql-armor-block-field-suggestions@^3.0.1` ↗︎](https://www.npmjs.com/package/@escape.tech/graphql-armor-block-field-suggestions/v/3.0.1) (from `^3.0.0`, in `dependencies`)
 - Updated dependency [`@escape.tech/graphql-armor-max-tokens@^2.5.1` ↗︎](https://www.npmjs.com/package/@escape.tech/graphql-armor-max-tokens/v/2.5.1) (from `^2.5.0`, in `dependencies`)
 - Updated dependency [`@graphql-hive/render-laboratory@^0.1.22` ↗︎](https://www.npmjs.com/package/@graphql-hive/render-laboratory/v/0.1.22) (from `^0.1.16`, in `dependencies`)
@@ -22,8 +20,7 @@ dependencies updates:
 - Updated dependency [`@graphql-tools/code-file-loader@^9.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/9.1.0) (from `^8.1.26`, in `dependencies`)
 - Updated dependency [`@graphql-tools/graphql-file-loader@^9.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/9.1.0) (from `^8.1.6`, in `dependencies`)
 - Updated dependency [`@graphql-tools/load@^9.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/9.1.0) (from `^8.1.6`, in `dependencies`)
-- Updated dependency [`@graphql-tools/utils@^13.1.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/13.1.3) (from `^12.0.1`, in `dependencies`)
-- Updated dependency [`@graphql-yoga/render-graphiql@^6.0.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/6.0.1) (from `^5.16.2`, in `dependencies`)
+- Updated dependency [`@graphql-yoga/render-graphiql@^6.0.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/6.0.1) (from `^6.0.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/context-async-hooks@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.12.0) (from `^2.10.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/context-zone@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.12.0) (from `^2.10.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/core@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.12.0) (from `^2.10.0`, in `dependencies`)
@@ -32,9 +29,7 @@ dependencies updates:
 - Updated dependency [`@opentelemetry/propagator-b3@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.12.0) (from `^2.10.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/propagator-jaeger@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.12.0) (from `^2.10.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/sdk-metrics@^2.12.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.12.0) (from `^2.10.0`, in `dependencies`)
-- Updated dependency [`@whatwg-node/promise-helpers@^2.0.1` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/2.0.1) (from `^1.3.2`, in `dependencies`)
-- Updated dependency [`@whatwg-node/server@^0.13.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.13.0) (from `^0.11.0`, in `dependencies`)
+- Updated dependency [`@whatwg-node/promise-helpers@^2.0.1` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/2.0.1) (from `^2.0.0`, in `dependencies`)
 - Updated dependency [`commander@^14.0.3` ↗︎](https://www.npmjs.com/package/commander/v/14.0.3) (from `^14.0.2`, in `dependencies`)
-- Updated dependency [`graphql-yoga@^6.0.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/6.0.1) (from `^5.21.1`, in `dependencies`)
+- Updated dependency [`graphql-yoga@^6.0.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/6.0.1) (from `^6.0.0`, in `dependencies`)
 - Updated dependency [`ws@^8.22.0` ↗︎](https://www.npmjs.com/package/ws/v/8.22.0) (from `^8.21.0`, in `dependencies`)
-- Updated dependency [`graphql@^16.9.0 || ^17.0.0` ↗︎](https://www.npmjs.com/package/graphql/v/16.9.0) (from `^15.9.0 || ^16.9.0`, in `peerDependencies`)
