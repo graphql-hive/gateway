@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 // by importing the router query planner binaries here
 // we allow leak tests to not fail when detecting open handles
 // showing that jest wouldn't close due to napi-rs customgc
@@ -35,7 +36,9 @@ export default {
   ),
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    '^.+\\.m?(t|j)s?$': 'babel-jest',
+    // resolve the root babel-jest so it peers with root babel 8. the bare 'babel-jest'
+    // string makes jest pick its own nested copy which runs on babel 7
+    '^.+\\.m?(t|j)s?$': fileURLToPath(import.meta.resolve('babel-jest')),
   },
   moduleNameMapper: {
     '^graphql$': '<rootDir>/node_modules/graphql/index.js',

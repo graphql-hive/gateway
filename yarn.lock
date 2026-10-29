@@ -1131,7 +1131,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/helper-plugin-utils@npm:^7.0.0, @babel/helper-plugin-utils@npm:^7.10.4, @babel/helper-plugin-utils@npm:^7.12.13, @babel/helper-plugin-utils@npm:^7.14.5, @babel/helper-plugin-utils@npm:^7.20.2, @babel/helper-plugin-utils@npm:^7.27.1, @babel/helper-plugin-utils@npm:^7.8.0":
+"@babel/helper-plugin-utils@npm:^7.0.0, @babel/helper-plugin-utils@npm:^7.10.4, @babel/helper-plugin-utils@npm:^7.12.13, @babel/helper-plugin-utils@npm:^7.14.5, @babel/helper-plugin-utils@npm:^7.20.2, @babel/helper-plugin-utils@npm:^7.8.0":
   version: 7.28.6
   resolution: "@babel/helper-plugin-utils@npm:7.28.6"
   checksum: 10c0/3f5f8acc152fdbb69a84b8624145ff4f9b9f6e776cb989f9f968f8606eb7185c5c3cfcf3ba08534e37e1e0e1c118ac67080610333f56baa4f7376c99b5f1143d
@@ -1398,18 +1398,6 @@ __metadata:
   peerDependencies:
     "@babel/core": ^8.0.0
   checksum: 10c0/f584eb0da64b2a43d296a0cbfee5f0225d7f443b4e77b9c25f2fa6eef4e16831716ec0a18ece13e6c1d7525f33f7626564dcf4a8bfdc008b5bb271b46ad18b58
-  languageName: node
-  linkType: hard
-
-"@babel/plugin-proposal-explicit-resource-management@npm:7.27.4":
-  version: 7.27.4
-  resolution: "@babel/plugin-proposal-explicit-resource-management@npm:7.27.4"
-  dependencies:
-    "@babel/helper-plugin-utils": "npm:^7.27.1"
-    "@babel/plugin-transform-destructuring": "npm:^7.27.3"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 10c0/00d3ca1d365179162b051292d3a8780ff86e6d1858fa139fc700be222013b5e6607654b11420fc143b130892d0405d288f41656cdba0cd546b9c2454dcbce038
   languageName: node
   linkType: hard
 
@@ -1752,18 +1740,6 @@ __metadata:
   peerDependencies:
     "@babel/core": ^8.0.0
   checksum: 10c0/a8b1190b986ac9a57a74e85dfdf376811a0dca8a4d0f5a7f7e7c006bdbfb3fadc1ec7cd639f7258ef15de69fd2c9bf88f3d14dad1f9228cadb30bf4fa44a44e1
-  languageName: node
-  linkType: hard
-
-"@babel/plugin-transform-destructuring@npm:^7.27.3":
-  version: 7.29.7
-  resolution: "@babel/plugin-transform-destructuring@npm:7.29.7"
-  dependencies:
-    "@babel/helper-plugin-utils": "npm:^7.29.7"
-    "@babel/traverse": "npm:^7.29.7"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 10c0/74ff73303d32f8379f636741d3e48e2a20bbeb6e8b0d9343daad1952242f0ea78f319b4c871b5623739033b61459c9eed3d98f699fd192c45eab61ed8ad4c5ec
   languageName: node
   linkType: hard
 
@@ -18821,7 +18797,6 @@ __metadata:
   dependencies:
     "@babel/core": "npm:8.0.9"
     "@babel/plugin-proposal-decorators": "npm:8.0.2"
-    "@babel/plugin-proposal-explicit-resource-management": "npm:7.27.4"
     "@babel/plugin-transform-class-properties": "npm:8.0.1"
     "@babel/plugin-transform-class-static-block": "npm:8.0.5"
     "@babel/plugin-transform-private-methods": "npm:^8.0.1"
@@ -18838,6 +18813,7 @@ __metadata:
     "@yarnpkg/cli": "npm:4.17.0"
     "@yarnpkg/core": "npm:4.9.0"
     "@yarnpkg/plugin-pack": "npm:4.0.5"
+    babel-jest: "npm:30.5.2"
     bun: "npm:1.4.4"
     cross-env: "npm:10.1.0"
     eslint: "npm:10.13.0"

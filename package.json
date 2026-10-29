@@ -34,7 +34,6 @@
   "devDependencies": {
     "@babel/core": "8.0.9",
     "@babel/plugin-proposal-decorators": "8.0.2",
-    "@babel/plugin-proposal-explicit-resource-management": "7.27.4",
     "@babel/plugin-transform-class-properties": "8.0.1",
     "@babel/plugin-transform-class-static-block": "8.0.5",
     "@babel/plugin-transform-private-methods": "^8.0.1",
@@ -51,6 +50,7 @@
     "@yarnpkg/cli": "4.17.0",
     "@yarnpkg/core": "4.9.0",
     "@yarnpkg/plugin-pack": "4.0.5",
+    "babel-jest": "30.5.2",
     "bun": "1.4.4",
     "cross-env": "10.1.0",
     "eslint": "10.13.0",
