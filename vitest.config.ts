@@ -1,5 +1,4 @@
-import path from 'node:path';
-import ts from 'typescript';
+import { createPathsMatcher, getTsconfig } from 'get-tsconfig';
 import { defineConfig } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout.mts';
 import { isCI, usingHiveRouterRuntime } from './internal/env/src/index.ts';
@@ -23,24 +22,31 @@ const inline = [
 ];
 
 // vite's native resolve.tsconfigPaths skips importers outside the project (like
-// inlined node_modules), so we turn tsconfig paths into aliases which apply everywhere
-const tsconfigPaths: Record<string, string[]> = ts.readConfigFile(
-  path.resolve(import.meta.dirname, 'tsconfig.json'),
-  ts.sys.readFile,
-).config.compilerOptions.paths;
-const tsconfigPathAliases = Object.entries(tsconfigPaths).map(
-  ([key, [target]]) => ({
-    find: new RegExp(
-      `^${key.replace(/[.+?^${}()|[\]\\/]/g, '\\$&').replace('*', '(.*)')}$`,
-    ),
-    replacement: path.resolve(import.meta.dirname, target!.replace('*', '$1')),
-  }),
-);
+// inlined node_modules), so we resolve tsconfig paths ourselves for every importer.
+// same matcher as the e2e child processes use in internal/e2e/src/workspace-paths-hook.mts
+const matchTsconfigPaths = createPathsMatcher(
+  getTsconfig(import.meta.dirname)!,
+)!;
 
 export default defineConfig({
+  plugins: [
+    {
+      name: 'tsconfig-paths',
+      enforce: 'pre',
+      async resolveId(id, importer) {
+        for (const candidate of matchTsconfigPaths(id)) {
+          // let vite resolve the candidate too because wildcard targets have no extension
+          const resolved = await this.resolve(candidate, importer, {
+            skipSelf: true,
+          });
+          if (resolved) return resolved;
+        }
+        return null;
+      },
+    },
+  ],
   resolve: {
     alias: [
-      ...tsconfigPathAliases,
       { find: 'graphql', replacement: 'graphql/index.js' }, // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
     ],
   },

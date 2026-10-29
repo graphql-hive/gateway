@@ -18820,6 +18820,7 @@ __metadata:
     eslint: "npm:10.13.0"
     eslint-plugin-import: "npm:2.32.0"
     eslint-plugin-n: "npm:18.5.0"
+    get-tsconfig: "npm:^4.14.3"
     graphql: "npm:16.14.2"
     jest: "npm:30.5.2"
     node-gyp: "npm:13.1.0"
