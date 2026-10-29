@@ -56,4 +56,25 @@ describe('forwardArgsToSelectionSet', () => {
     assertIntValueNode(result.selections[1].arguments[0]?.value);
     expect(result.selections[1].arguments[0]?.value.value).toEqual('1');
   });
+
+  test('renames forwarded arguments when mapping uses a name map', () => {
+    const gatewayField = parseSelectionSet(
+      '{ salePrice(country: "GB", currency: "GBP") }',
+    ).selections[0];
+    assertFieldNode(gatewayField);
+
+    const buildSelectionSet = forwardArgsToSelectionSet('{ priceForCountry }', {
+      priceForCountry: { country: 'countryCode' },
+    });
+    const result = buildSelectionSet(gatewayField).selections[0];
+    assertFieldNode(result);
+    expect(result.name.value).toEqual('priceForCountry');
+    assertSome(result.arguments);
+    expect(result.arguments.length).toEqual(1);
+    expect(result.arguments[0]?.name.value).toEqual('countryCode');
+    expect(result.arguments[0]?.value).toMatchObject({
+      kind: 'StringValue',
+      value: 'GB',
+    });
+  });
 });
