@@ -2479,6 +2479,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/template@npm:8.0.0":
+  version: 8.0.0
+  resolution: "@babel/template@npm:8.0.0"
+  dependencies:
+    "@babel/code-frame": "npm:^8.0.0"
+    "@babel/parser": "npm:^8.0.0"
+    "@babel/types": "npm:^8.0.0"
+  checksum: 10c0/8a5e5687299517cc6b0efff3a6342cf4c4256aeeffa14753cc8d08106aaf0ba1916707c0e1f385b511a7b42c6c87806fecaecd4fe06316207475e0d4d1148e2c
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.18.10, @babel/template@npm:^7.20.7, @babel/template@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/template@npm:7.29.7"
@@ -2490,14 +2501,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/template@npm:^8.0.0":
+"@babel/template@patch:@babel/template@npm%3A8.0.0#~/.yarn/patches/@babel-template-npm-8.0.0-61679d7ac9.patch":
   version: 8.0.0
-  resolution: "@babel/template@npm:8.0.0"
+  resolution: "@babel/template@patch:@babel/template@npm%3A8.0.0#~/.yarn/patches/@babel-template-npm-8.0.0-61679d7ac9.patch::version=8.0.0&hash=6b7a7b"
   dependencies:
     "@babel/code-frame": "npm:^8.0.0"
     "@babel/parser": "npm:^8.0.0"
     "@babel/types": "npm:^8.0.0"
-  checksum: 10c0/8a5e5687299517cc6b0efff3a6342cf4c4256aeeffa14753cc8d08106aaf0ba1916707c0e1f385b511a7b42c6c87806fecaecd4fe06316207475e0d4d1148e2c
+  checksum: 10c0/8620d658215096dfcbbc831468e40de0fa27126d666800b2351813f7c4df8536cebe2e41b702ae6ce2cf4ec160f12eadb1cd21f46eca20f22a655fd3769e395f
   languageName: node
   linkType: hard
 
@@ -20684,6 +20695,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jest-circus@patch:jest-circus@npm%3A30.5.2#~/.yarn/patches/jest-circus-npm-30.5.2-f39ee4ffd4.patch":
+  version: 30.5.2
+  resolution: "jest-circus@patch:jest-circus@npm%3A30.5.2#~/.yarn/patches/jest-circus-npm-30.5.2-f39ee4ffd4.patch::version=30.5.2&hash=25a790"
+  dependencies:
+    "@jest/environment": "npm:30.5.2"
+    "@jest/expect": "npm:30.5.2"
+    "@jest/test-result": "npm:30.5.2"
+    "@jest/types": "npm:30.5.1"
+    "@types/node": "npm:*"
+    chalk: "npm:^4.1.2"
+    co: "npm:^4.6.0"
+    dedent: "npm:^1.6.0"
+    is-generator-fn: "npm:^2.1.0"
+    jest-each: "npm:30.5.2"
+    jest-matcher-utils: "npm:30.5.2"
+    jest-message-util: "npm:30.5.1"
+    jest-runtime: "npm:30.5.2"
+    jest-snapshot: "npm:30.5.2"
+    jest-util: "npm:30.5.1"
+    p-limit: "npm:^3.1.0"
+    pretty-format: "npm:30.5.1"
+    pure-rand: "npm:^7.0.0"
+    slash: "npm:^3.0.0"
+    stack-utils: "npm:^2.0.6"
+  checksum: 10c0/ecafb81b081a64e8d73e3cf328917b81c8aa87844c4ea836a4ee9337e0d226316d8109e9a8ccea3025db9d7b8cc24600cc51aa0b218521666b4146ed037aeec9
+  languageName: node
+  linkType: hard
+
 "jest-cli@npm:30.5.2":
   version: 30.5.2
   resolution: "jest-cli@npm:30.5.2"
@@ -20851,11 +20890,11 @@ __metadata:
 
 "jest-leak-detector@patch:jest-leak-detector@npm:^29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
   version: 29.7.0
-  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=bbbac3"
+  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=731e57"
   dependencies:
     jest-get-type: "npm:^29.6.3"
     pretty-format: "npm:^29.7.0"
-  checksum: 10c0/c950374dc4ee6b9b3ba5b4c937f5edca67cee44f68330d7ff7317054ddf3cd8ad70fcb50948f45cef0b9eeef56c3eae537b4658b77f65d6886b5f14ecc54aa22
+  checksum: 10c0/57fc35b54b28de7f23518c660f82eb3cb7cefe6aced13b50509a564989196ba3065321ac3ed12002544d986ce1767e0f9148f74c572c2c3a6e35fd7287936161
   languageName: node
   linkType: hard
 

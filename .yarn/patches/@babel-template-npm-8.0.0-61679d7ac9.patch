@@ -1,0 +1,22 @@
+diff --git a/lib/index.js b/lib/index.js
+index 48b99c2961a7007bede9ed9a0d1155f64f276d69..9513ef533732bd098c782dad73ec5c1531ada981 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -516,12 +516,15 @@ function createTemplateBuilder(formatter, defaultOpts) {
+   });
+ }
+ function extendedTrace(fn) {
+-  const rootErr = new Error();
++  // format the stack right away instead of holding the error. an unformatted error keeps
++  // the call sites (and their receivers) alive, which leaks whatever was on the stack when
++  // the template was built - like jest's module executor and the whole test environment
++  const rootStack = new Error().stack?.split("\n").slice(3).join("\n") ?? "";
+   return arg => {
+     try {
+       return fn(arg);
+     } catch (err) {
+-      err.stack += `\n    =============\n${rootErr.stack.split("\n").slice(3).join("\n")}`;
++      err.stack += `\n    =============\n${rootStack}`;
+       throw err;
+     }
+   };

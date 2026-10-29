@@ -1,8 +1,8 @@
 diff --git a/build/index.js b/build/index.js
-index a8ccb1e..70699fd 100644
+index a8ccb1e30185feca0358162f3d59623dab741d9a..aa5526b172722744ba164d68c885b752d2ce5bd0 100644
 --- a/build/index.js
 +++ b/build/index.js
-@@ -74,26 +74,14 @@ class LeakDetector {
+@@ -74,26 +74,25 @@ class LeakDetector {
      value = null;
    }
    async isLeaking() {
@@ -14,8 +14,8 @@ index a8ccb1e..70699fd 100644
 +      eval('%CollectGarbage(true)');
        await tick();
      }
-     return this._isReferenceBeingHeld;
-   }
+-    return this._isReferenceBeingHeld;
+-  }
 -  _runGarbageCollector() {
 -    // @ts-expect-error: not a function on `globalThis`
 -    const isGarbageCollectorHidden = globalThis.gc == null;
@@ -27,7 +27,18 @@ index a8ccb1e..70699fd 100644
 -    // The GC was not initially exposed, so let's hide it again.
 -    if (isGarbageCollectorHidden) {
 -      (0, _v().setFlagsFromString)('--no-expose-gc');
--    }
--  }
++    if (this._isReferenceBeingHeld) {
++      // timers capture the async context they were created in, and jest-circus runs every test
++      // inside an AsyncLocalStorage holding the test. short-lived node internal timers, like the
++      // http date header cache that lives for up to 1s, keep the environment alive until they fire.
++      // wait them out and collect again so only references that outlive them count as leaks
++      await new Promise(resolve => setTimeout(resolve, 1100));
++      for (let i = 0; i < 10; i++) {
++        eval('%CollectGarbage(true)');
++        await tick();
++      }
+     }
++    return this._isReferenceBeingHeld;
+   }
  }
  exports.default = LeakDetector;
