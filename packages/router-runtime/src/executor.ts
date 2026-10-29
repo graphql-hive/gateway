@@ -2,6 +2,7 @@ import { documentStringMap } from '@envelop/core';
 import type {
   BatchFetchNode,
   EntityBatchAlias,
+  FetchNode,
   FetchNodePathSegment,
   FetchRewrite,
   FlattenNodePathSegment,
@@ -223,20 +224,9 @@ type NormalizedFlattenNodePathSegment =
   | { kind: 'List' };
 
 /**
- * A path segment of a context rewrite. `Parent` steps up to the object holding the field
- * that leads to the current value.
- */
-type ContextPathSegment = FetchNodePathSegment | 'Parent';
-
-/**
  * The `@fromContext` details the query planner adds to entity fetches and batch aliases.
  */
-interface FetchContext {
-  /** The context variables declared by the operation. */
-  contextVariables?: string[];
-  /** Where every context variable reads its value from, relative to the entity. */
-  contextRewrites?: { path: ContextPathSegment[]; renameKeyTo: string }[];
-}
+type FetchContext = Pick<FetchNode, 'contextVariables' | 'contextRewrites'>;
 
 /**
  * Entities whose context variables have the same values. Every group is sent with its own
@@ -331,7 +321,7 @@ function getContextGroupVariables(context: FetchContext): string[] {
  */
 function selectContextValue(
   value: unknown,
-  path: ContextPathSegment[],
+  path: FetchNodePathSegment[],
   supergraphSchema: GraphQLSchema,
 ): unknown {
   if (!path.length || value == null) {
@@ -673,7 +663,7 @@ function prepareFlattenContext(
     [flattenNode.path],
     requires,
     fetchNode.inputRewrites,
-    fetchNode as FetchContext,
+    fetchNode,
     executionContext.supergraphSchema,
   );
   if (!collected.entities.length) {
@@ -720,7 +710,7 @@ function prepareBatchFetchContext(
         alias.paths,
         requires,
         alias.inputRewrites,
-        alias as FetchContext,
+        alias,
         executionContext.supergraphSchema,
       );
       collectedByVariableName.set(alias.representationsVariableName, collected);
@@ -762,7 +752,7 @@ function getBatchWaveVariables(
     if (alias.groups[wave]) {
       continue;
     }
-    for (const name of getContextGroupVariables(alias.alias as FetchContext)) {
+    for (const name of getContextGroupVariables(alias.alias)) {
       if (!(name in variables)) {
         variables[name] = alias.groups[0]?.variables[name] ?? null;
       }
@@ -876,12 +866,12 @@ function executeBatchFetchPlanNode(
   const aliased =
     waves.length > 1 &&
     batchFetchNode.entityBatch.aliases.some(
-      (alias) => (alias as FetchContext).contextVariables?.length,
+      (alias) => alias.contextVariables?.length,
     )
       ? writeContextAliasedDocument(
           getDocumentNodeOfFetchingNode(batchFetchNode),
           batchFetchNode.entityBatch.aliases.flatMap((alias) => [
-            ...getContextGroupVariables(alias as FetchContext),
+            ...getContextGroupVariables(alias),
             alias.representationsVariableName,
           ]),
           waves.length,
@@ -992,7 +982,6 @@ function executeFlattenFetchPlanNode(
   executionContext: QueryPlanExecutionContext,
   flatten: FlattenPreparedContext,
 ): MaybePromise<any> {
-  const context = fetchNode as FetchContext;
   const document = getDocumentNodeOfFetchingNode(fetchNode);
   const selectedVariables = selectFetchVariables(
     executionContext.variableValues,
@@ -1003,7 +992,7 @@ function executeFlattenFetchPlanNode(
   const groups = flatten.groups.flatMap((group, index) =>
     group.representations.length ? [index] : [],
   );
-  const contextVariables = context.contextVariables ?? [];
+  const contextVariables = fetchNode.contextVariables ?? [];
   // one alias per context group, unless a context variable is non-null. those groups are
   // fetched one by one instead
   const aliased =
@@ -1016,7 +1005,7 @@ function executeFlattenFetchPlanNode(
     )
       ? writeContextAliasedDocument(
           document,
-          [...getContextGroupVariables(context), 'representations'],
+          [...getContextGroupVariables(fetchNode), 'representations'],
           groups.length,
         )
       : null;
@@ -1921,7 +1910,7 @@ function normalizeRewrite(rewrite: FetchRewrite): NormalizedRewrite | null {
  * Returns `null` for paths through a parent, those only make sense for context rewrites
  * and leave the data as is.
  */
-function normalizeRewritePath(path: ContextPathSegment[]): string[] | null {
+function normalizeRewritePath(path: FetchNodePathSegment[]): string[] | null {
   const normalized: string[] = [];
   for (const segment of path) {
     if (segment === 'Parent') {

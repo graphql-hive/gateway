@@ -1,6 +1,6 @@
 import type {
+  FetchNode,
   FlattenNodePathSegment,
-  PlanNode,
   QueryPlan,
 } from '@graphql-hive/router-query-planner';
 import type { ExecutionResult } from '@graphql-tools/utils';
@@ -10,9 +10,7 @@ import { executeQueryPlan } from '../src/executor';
 
 // the query plans are produced by the hive router query planner for the
 // supergraph behind this schema, `Transaction.amount` reads its `code`
-// argument from the `currency` of the nearest `User` with `@fromContext`.
-// the installed planner types dont know about the context fields yet, hence
-// the plan node casts
+// argument from the `currency` of the nearest `User` with `@fromContext`
 
 const supergraphSchema = buildSchema(/* GraphQL */ `
   type Query {
@@ -75,7 +73,10 @@ const usersTxsPath: FlattenNodePathSegment[] = [
 function flattenPlan(
   rootOperation: string,
   path: FlattenNodePathSegment[],
-  fetch: Record<string, unknown>,
+  fetch: Pick<
+    FetchNode,
+    'variableUsages' | 'operation' | 'contextVariables' | 'contextRewrites'
+  >,
 ): QueryPlan {
   return {
     kind: 'QueryPlan',
@@ -97,7 +98,7 @@ function flattenPlan(
             operationKind: 'query',
             requires: transactionRequires,
             ...fetch,
-          } as unknown as PlanNode,
+          },
         },
       ],
     },
@@ -662,7 +663,7 @@ describe('@fromContext', () => {
                 },
               ],
             },
-          } as unknown as PlanNode,
+          },
         ],
       },
     };
@@ -888,7 +889,7 @@ describe('@fromContext', () => {
                     })),
                   })),
                 },
-              } as unknown as PlanNode,
+              },
             ],
           },
         },
