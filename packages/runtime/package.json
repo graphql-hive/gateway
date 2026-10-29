@@ -86,7 +86,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@apollo/subgraph": "^2.15.1",
+    "@apollo/subgraph": "2.14.4",
     "@graphql-mesh/fusion-composition": "^0.11.4",
     "@graphql-mesh/transport-rest": "patch:@graphql-mesh/transport-rest@npm%3A0.12.1#~/.yarn/patches/@graphql-mesh-transport-rest-npm-0.12.1-e33622e3a5.patch",
     "@omnigraph/openapi": "^0.112.7",
