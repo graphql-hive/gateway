@@ -3259,7 +3259,7 @@ __metadata:
   resolution: "@e2e/federation-provides@workspace:e2e/federation-provides"
   dependencies:
     "@apollo/subgraph": "npm:2.14.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3458,7 +3458,7 @@ __metadata:
   dependencies:
     "@apollo/subgraph": "npm:2.14.0"
     "@launchdarkly/node-server-sdk": "npm:9.15.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3510,7 +3510,7 @@ __metadata:
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
     "@omnigraph/openapi": "npm:^0.112.7"
     fets: "npm:^0.8.12"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
   languageName: unknown
   linkType: soft
 
@@ -3538,7 +3538,7 @@ __metadata:
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
     "@omnigraph/openapi": "npm:^0.112.7"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     moment: "npm:^2.31.0"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3653,7 +3653,7 @@ __metadata:
   dependencies:
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
   languageName: unknown
   linkType: soft
 
@@ -3680,7 +3680,7 @@ __metadata:
     "@graphql-mesh/incontext-sdk-codegen": "npm:^0.3.3"
     "@omnigraph/openapi": "npm:^0.112.7"
     fets: "npm:^0.8.12"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
@@ -3690,7 +3690,7 @@ __metadata:
   resolution: "@e2e/progressive-override-example@workspace:e2e/progressive-override"
   dependencies:
     "@apollo/subgraph": "npm:2.14.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3701,7 +3701,7 @@ __metadata:
   resolution: "@e2e/progressive-override-mixed@workspace:e2e/progressive-override-mixed"
   dependencies:
     "@apollo/subgraph": "npm:2.14.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3715,7 +3715,7 @@ __metadata:
     "@apollo/subgraph": "npm:2.14.0"
     "@as-integrations/express5": "npm:^1.1.2"
     express: "npm:^5.3.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-tag: "npm:2.12.7"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3727,7 +3727,7 @@ __metadata:
   dependencies:
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
   languageName: unknown
   linkType: soft
 
@@ -3743,7 +3743,7 @@ __metadata:
   dependencies:
     "@apollo/subgraph": "npm:^2.13.3"
     "@graphql-hive/gateway": "workspace:*"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3755,7 +3755,7 @@ __metadata:
   dependencies:
     "@apollo/subgraph": "npm:^2.13.3"
     "@graphql-hive/gateway": "workspace:*"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
@@ -3766,7 +3766,7 @@ __metadata:
   resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
   dependencies:
     "@graphql-hive/gateway": "workspace:*"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
   languageName: unknown
   linkType: soft
 
@@ -3824,7 +3824,7 @@ __metadata:
   resolution: "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-sse: "npm:^2.6.3"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
@@ -3875,7 +3875,7 @@ __metadata:
     "@graphql-codegen/typescript-generic-sdk": "npm:^5.0.1"
     "@graphql-codegen/typescript-operations": "npm:^6.2.0"
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     graphql-tag: "npm:^2.12.7"
     graphql-yoga: "npm:^6.0.1"
     tslib: "npm:^2.8.1"
@@ -18871,7 +18871,7 @@ __metadata:
     eslint: "npm:10.13.0"
     eslint-plugin-import: "npm:2.32.0"
     eslint-plugin-n: "npm:18.5.0"
-    graphql: "npm:16.14.0"
+    graphql: "npm:16.14.2"
     jest: "npm:30.5.2"
     node-gyp: "npm:13.1.0"
     prettier: "npm:3.9.10"
@@ -19543,10 +19543,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:16.14.0":
-  version: 16.14.0
-  resolution: "graphql@npm:16.14.0"
-  checksum: 10c0/baaa368fcfeb7bf2cdf94b9f31bf916e97eaa9e7e82148a7046f31cbd49b760b38190f22393b024cbdd9ca0f4f46287515de0136b6a0cc164074b36ad7b50618
+"graphql@npm:16.14.2":
+  version: 16.14.2
+  resolution: "graphql@npm:16.14.2"
+  checksum: 10c0/a95a96961eaff55cc9fe9d31fae6f33499ac988b972d07ea5085024cb1333f515b902f376e7393a5489aa82200a8aff3eb96580e4d1b69d702ed19b6eb1ce97a
   languageName: node
   linkType: hard
 

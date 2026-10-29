@@ -10,7 +10,7 @@
     "@graphql-mesh/incontext-sdk-codegen": "^0.3.3",
     "@omnigraph/openapi": "^0.112.7",
     "fets": "^0.8.12",
-    "graphql": "16.14.0",
+    "graphql": "16.14.2",
     "tslib": "^2.8.1"
   }
 }
