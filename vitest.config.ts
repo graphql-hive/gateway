@@ -1,3 +1,5 @@
+import path from 'node:path';
+import ts from 'typescript';
 import { defineConfig } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout.mts';
 import { isCI, usingHiveRouterRuntime } from './internal/env/src/index.ts';
@@ -20,12 +22,27 @@ const inline = [
   /@whatwg-node\/server/,
 ];
 
+// vite's native resolve.tsconfigPaths skips importers outside the project (like
+// inlined node_modules), so we turn tsconfig paths into aliases which apply everywhere
+const tsconfigPaths: Record<string, string[]> = ts.readConfigFile(
+  path.resolve(import.meta.dirname, 'tsconfig.json'),
+  ts.sys.readFile,
+).config.compilerOptions.paths;
+const tsconfigPathAliases = Object.entries(tsconfigPaths).map(
+  ([key, [target]]) => ({
+    find: new RegExp(
+      `^${key.replace(/[.+?^${}()|[\]\\/]/g, '\\$&').replace('*', '(.*)')}$`,
+    ),
+    replacement: path.resolve(import.meta.dirname, target!.replace('*', '$1')),
+  }),
+);
+
 export default defineConfig({
   resolve: {
-    tsconfigPaths: true,
-    alias: {
-      graphql: 'graphql/index.js', // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
-    },
+    alias: [
+      ...tsconfigPathAliases,
+      { find: 'graphql', replacement: 'graphql/index.js' }, // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
+    ],
   },
   test: {
     server: { deps: { inline } },
