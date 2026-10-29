@@ -1,8 +1,7 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
-import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI, usingHiveRouterRuntime } from './internal/env/src/index';
-import { isNotPlatform } from './internal/env/src/node';
+import { timeout as testTimeout } from './internal/e2e/src/timeout.mts';
+import { isCI, usingHiveRouterRuntime } from './internal/env/src/index.ts';
+import { isNotPlatform } from './internal/env/src/node.ts';
 
 // By default, Vite bypasses node_packages to native Node; meaning, imports to
 // packages that match the tsconfig paths wont work because Node will require the
@@ -22,8 +21,8 @@ const inline = [
 ];
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
   resolve: {
+    tsconfigPaths: true,
     alias: {
       graphql: 'graphql/index.js', // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
     },

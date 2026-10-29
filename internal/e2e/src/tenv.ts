@@ -29,7 +29,7 @@ import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
-import { interval, retries } from './timeout';
+import { interval, retries } from './timeout.mts';
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
