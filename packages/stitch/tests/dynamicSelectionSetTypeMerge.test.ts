@@ -1,6 +1,6 @@
 import { delegateToSchema, SubschemaConfig } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { graphql, GraphQLSchema } from 'graphql';
+import { graphql, GraphQLSchema, OperationTypeNode } from 'graphql';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { forwardArgsToSelectionSet, stitchSchemas } from '../src/index.js';
 
@@ -139,7 +139,7 @@ function createSalePriceGateway(): {
             }
             return delegateToSchema({
               schema: schema1Subschema,
-              operation: 'query',
+              operation: OperationTypeNode.QUERY,
               fieldName: 'addVat',
               args: {
                 country: args.country,
@@ -192,13 +192,13 @@ describe('dynamic selectionSet during type merging', () => {
     expect(result.data).toEqual({
       stone: {
         identifier: 'stone-1',
-        salePrice: PRICE_BY_COUNTRY.GB! * VAT_BY_COUNTRY.GB!,
+        salePrice: PRICE_BY_COUNTRY['GB']! * VAT_BY_COUNTRY['GB']!,
       },
     });
     expectArgsContaining(priceForCountry, { countryCode: 'GB' });
     expectArgsContaining(addVat, {
       country: 'GB',
-      price: PRICE_BY_COUNTRY.GB,
+      price: PRICE_BY_COUNTRY['GB'],
     });
   });
 
@@ -219,12 +219,12 @@ describe('dynamic selectionSet during type merging', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({
       gemStone: {
-        salePrice: PRICE_BY_COUNTRY.US! * VAT_BY_COUNTRY.US!,
+        salePrice: PRICE_BY_COUNTRY['US']! * VAT_BY_COUNTRY['US']!,
       },
     });
     expectArgsContaining(addVat, {
       country: 'US',
-      price: PRICE_BY_COUNTRY.US,
+      price: PRICE_BY_COUNTRY['US'],
     });
   });
 });

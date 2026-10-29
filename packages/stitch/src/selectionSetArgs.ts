@@ -19,7 +19,10 @@ export type ForwardArgsMapping = Record<
   string[] | Record<string, string>
 >;
 
-const renameArgument = (argument: ArgumentNode, name: string): ArgumentNode => ({
+const renameArgument = (
+  argument: ArgumentNode,
+  name: string,
+): ArgumentNode => ({
   ...argument,
   name: {
     ...argument.name,
