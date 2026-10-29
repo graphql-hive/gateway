@@ -6,7 +6,6 @@ import {
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
-import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -43,7 +42,6 @@ import {
   Blob,
   btoa,
   CompressionStream,
-  crypto,
   DecompressionStream,
   fetch,
   File,
@@ -80,9 +78,11 @@ import {
 } from 'graphql';
 import {
   chain,
+  createLoggerFromLogging,
   createYoga,
   FetchAPI,
   isAsyncIterable,
+  useConfigInServerContext,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -90,7 +90,6 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createDevFetcher } from './fetchers/dev';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
@@ -106,7 +105,6 @@ import {
 } from './landing-page.generated';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -115,7 +113,6 @@ import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { useInboundInflightReqDedupeForYoga } from './plugins/useInboundInflightReqDedupe';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
-import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphErrorPlugin } from './plugins/useSubgraphErrorPlugin';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
@@ -159,7 +156,11 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  const fetchAPI: FetchAPI = {
+  // `@whatwg-node/fetch@0.12` no longer exports `crypto`; use the platform
+  // global. Keep it on the FetchAPI object so nested Yoga 5 peers that still
+  // type FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
+  // those packages publish Yoga 6 builds.
+  const fetchAPI = {
     fetch,
     Request,
     Response,
@@ -181,7 +182,7 @@ export function createGatewayRuntime<
     URLPattern,
     URL,
     URLSearchParams,
-  };
+  } as FetchAPI;
   if (config?.fetchAPI) {
     for (const key in config.fetchAPI) {
       const fetchAPIKey = key as keyof FetchAPI;
@@ -253,16 +254,10 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  let allowArbitraryDocumentsForPersistedDocuments:
+  const allowArbitraryDocumentsForPersistedDocuments:
     | boolean
-    | ((request: Request) => MaybePromise<boolean>) = false;
-  if (config.persistedDocuments?.allowArbitraryDocuments != null) {
-    allowArbitraryDocumentsForPersistedDocuments =
-      config.persistedDocuments?.allowArbitraryDocuments;
-  } else if (config.persistedDocuments?.allowArbitraryOperations) {
-    allowArbitraryDocumentsForPersistedDocuments =
-      config.persistedDocuments?.allowArbitraryOperations;
-  }
+    | ((request: Request) => MaybePromise<boolean>) =
+    config.persistedDocuments?.allowArbitraryDocuments ?? false;
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
   // documents plugin
@@ -701,10 +696,7 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: {
-        ...configContext,
-        logger: LegacyLogger.from(configContext.log),
-      },
+      transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
@@ -775,6 +767,40 @@ export function createGatewayRuntime<
   });
 
   const defaultGatewayPlugin: GatewayPlugin = {
+    onRequest({ serverContext, request }) {
+      // Prefer Node `req.headers` when present: `getHeadersObj` returns plain
+      // IncomingMessage header maps as-is (no Proxy). Fetch `Headers` need the
+      // Proxy path. Keep that order for the hot path; other header tricks
+      // (WS upgrade without Request, connectionParams merge) stay unchanged.
+      const reqHeaders = (
+        serverContext as {
+          req?: { headers?: Headers | Record<string, string | string[]> };
+        }
+      ).req?.headers;
+      Object.assign(serverContext, {
+        headers: getHeadersObj(reqHeaders || request.headers),
+      });
+    },
+    onFetch({ context, options, setOptions }) {
+      // Yoga owns request-id minting / response echo / `log.child({ requestId })`.
+      // Keep this onFetch forward so subgraphs see the same correlation id.
+      if (config.requestId === false || !('request' in context)) {
+        return;
+      }
+      const attrs = context.log?.attrs;
+      const requestId =
+        attrs && !Array.isArray(attrs) ? attrs['requestId'] : undefined;
+      if (typeof requestId !== 'string' || !requestId) {
+        return;
+      }
+      const headerName =
+        (typeof config.requestId === 'object' && config.requestId.headerName) ||
+        'x-request-id';
+      setOptions({
+        ...options,
+        headers: { ...options.headers, [headerName]: requestId },
+      });
+    },
     onRequestParse() {
       return handleMaybePromise(getSchema, () => {});
     },
@@ -1011,13 +1037,6 @@ export function createGatewayRuntime<
     );
   }
 
-  if (config.requestId !== false) {
-    const reqIdPlugin = useRequestId(
-      typeof config.requestId === 'object' ? config.requestId : undefined,
-    );
-    basePlugins.push(reqIdPlugin);
-  }
-
   if (isDisposable(wrappedCache)) {
     const cacheDisposePlugin = {
       onDispose() {
@@ -1178,7 +1197,10 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: LegacyLogger.from(log),
+    // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
+    logging: log,
+    // Delegate request-id correlation to Yoga (same option shape as createYoga).
+    requestId: config.requestId,
     plugins: [
       ...basePlugins,
       ...extraPlugins,
@@ -1186,16 +1208,21 @@ export function createGatewayRuntime<
       ...appendPlugins,
     ],
     context(ctx) {
-      // @ts-expect-error - ctx.headers might be present
-      if (!ctx.headers) {
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
-        ctx['headers'] = getHeadersObj(
-          ctx['req']?.headers || ctx?.request?.headers,
+      // Yoga context typing is a generic intersection; mutate via a wide view.
+      const mutable = ctx as any;
+      if (!mutable.headers) {
+        // Prefer Node `req.headers` when present (`getHeadersObj` passthrough);
+        // fall back to Fetch `request.headers` (e.g. non-Node adapters).
+        // WebSockets often have only the upgrade `req`.
+        mutable.headers = getHeadersObj(
+          mutable.req?.headers || mutable.request?.headers,
         );
       }
-      if (ctx['connectionParams']) {
-        ctx['headers'] = { ...ctx['headers'], ...ctx['connectionParams'] };
+      if (mutable.connectionParams) {
+        mutable.headers = {
+          ...mutable.headers,
+          ...mutable.connectionParams,
+        };
       }
       return contextBuilder?.(ctx) ?? ctx;
     },
@@ -1209,6 +1236,7 @@ export function createGatewayRuntime<
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
     multipart: config.multipart ?? false,
+    maxRequestBodySize: config.maxRequestBodySize,
   });
 
   Object.defineProperties(yoga, {

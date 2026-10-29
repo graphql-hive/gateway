@@ -1,11 +1,8 @@
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import {
-  createGraphQLError,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
-import { buildSchema, GraphQLObjectType, parse } from 'graphql';
+import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { buildSchema, GraphQLError, GraphQLObjectType, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { stitchingDirectives } from '../src';
 
@@ -214,7 +211,7 @@ describe('Reproductions for issues', () => {
   });
 
   it('multiple endpoints', async () => {
-    const { stitchingDirectivesTransformer, stitchingDirectivesTypeDefs } =
+    const { stitchingDirectivesTransformer, allStitchingDirectivesTypeDefs } =
       stitchingDirectives();
     const users = [
       { id: '1', name: 'Arda Doe', age: 25 },
@@ -222,7 +219,7 @@ describe('Reproductions for issues', () => {
     ];
     const userSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             id: ID!
@@ -246,7 +243,7 @@ describe('Reproductions for issues', () => {
     });
     const firstNameSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             name: String!
@@ -271,7 +268,7 @@ describe('Reproductions for issues', () => {
     });
     const ageSchema = makeExecutableSchema({
       typeDefs: [
-        stitchingDirectivesTypeDefs,
+        allStitchingDirectivesTypeDefs,
         /* GraphQL */ `
           type User {
             id: ID!
@@ -360,11 +357,11 @@ describe('Reproductions for issues', () => {
       { id: '3', authorId: '2', body: 'Could be better.' },
       { id: '4', authorId: '2', body: 'Prefer something else.' },
     ];
-    const { stitchingDirectivesTypeDefs, stitchingDirectivesTransformer } =
+    const { allStitchingDirectivesTypeDefs, stitchingDirectivesTransformer } =
       stitchingDirectives();
     const accountsSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-        ${stitchingDirectivesTypeDefs}
+        ${allStitchingDirectivesTypeDefs}
         type User {
           id: ID!
           name: String!
@@ -381,7 +378,7 @@ describe('Reproductions for issues', () => {
           me: () => users[0],
           user: (_root, { id }) =>
             users.find((user) => user.id === id) ||
-            createGraphQLError('Record not found', {
+            new GraphQLError('Record not found', {
               extensions: {
                 code: 'NOT_FOUND',
               },
@@ -391,7 +388,7 @@ describe('Reproductions for issues', () => {
     });
     const reviewsSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-        ${stitchingDirectivesTypeDefs}
+        ${allStitchingDirectivesTypeDefs}
         type Review {
           id: ID!
           body: String
@@ -420,12 +417,12 @@ describe('Reproductions for issues', () => {
         User: {
           reviews: (user) =>
             reviews.filter((review) => review.authorId === user.id),
-          totalReviews: () => createGraphQLError('RANDOM ERROR'),
+          totalReviews: () => new GraphQLError('RANDOM ERROR'),
         },
         Query: {
           review: (_root, { id }) =>
             reviews.find((review) => review.id === id) ||
-            createGraphQLError('Record not found', {
+            new GraphQLError('Record not found', {
               extensions: {
                 code: 'NOT_FOUND',
               },

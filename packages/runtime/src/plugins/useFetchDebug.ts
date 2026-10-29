@@ -1,21 +1,16 @@
-import { FetchAPI } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
 export function useFetchDebug<
   TContext extends Record<string, any>,
 >(): GatewayPlugin<TContext> {
-  let fetchAPI: FetchAPI;
   return {
-    onYogaInit({ yoga }) {
-      fetchAPI = yoga.fetchAPI;
-    },
     onFetch({ url, options, context }) {
       let shouldLog = false;
       context.log.debug(() => (shouldLog = true));
       if (!shouldLog) {
         return; // debug level is not enabled
       }
-      const fetchId = fetchAPI.crypto.randomUUID();
+      const fetchId = crypto.randomUUID();
       const log = context.log.child({ fetchId }, '[useFetchDebug] ');
       log.debug(
         {

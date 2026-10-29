@@ -1,5 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import {
   defaultPrintFn,
   type Transport,
@@ -25,8 +25,8 @@ import {
   type Executor,
   type GraphQLResolveInfoHelpers,
   type Maybe,
-  type MaybePromise,
 } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   handleMaybePromise,
   mapAsyncIterator,
@@ -147,7 +147,6 @@ function getTransportExecutor({
         transportContext?.log ||
         // if the logger is not provided by the context, create a new silent one just for consistency in the hooks
         new Logger({ level: false });
-      const logger = transportContext?.logger || LegacyLogger.from(log);
       return getSubgraphExecutor({
         subgraphName,
         subgraph,
@@ -165,7 +164,6 @@ function getTransportExecutor({
         getDisposeReason,
         ...transportContext,
         log,
-        logger,
       });
     },
   );

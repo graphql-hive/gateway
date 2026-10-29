@@ -18,6 +18,7 @@ import {
   delegateToSchema,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
+import { mergeSchemas } from '@graphql-tools/schema';
 import {
   asArray,
   getDirectiveExtensions,
@@ -38,7 +39,6 @@ import {
   isSchema,
   parse,
 } from 'graphql';
-import { mergeSchemas } from 'graphql-yoga';
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphConfig,
@@ -120,10 +120,7 @@ export function serveSubgraph<TContext extends Record<string, any>>(
               const onSubgraphExecute = getOnSubgraphExecute({
                 onSubgraphExecuteHooks,
                 ...(config.transports ? { transports: config.transports } : {}),
-                transportContext: {
-                  ...configContext,
-                  logger: LegacyLogger.from(configContext.log),
-                },
+                transportContext: configContext,
                 transportEntryMap,
                 getSubgraphSchema: getUnifiedGraph,
                 transportExecutorStack,

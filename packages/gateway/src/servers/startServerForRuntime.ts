@@ -1,5 +1,5 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { MaybePromise } from '@graphql-tools/utils';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
 import { startNodeHttpServer } from './nodeHttp';

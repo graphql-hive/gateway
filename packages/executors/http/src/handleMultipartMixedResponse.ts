@@ -1,9 +1,6 @@
 import type { IncomingMessage } from 'http';
-import {
-  ExecutionResult,
-  mapAsyncIterator,
-  mergeIncrementalResult,
-} from '@graphql-tools/utils';
+import { ExecutionResult, mergeIncrementalResult } from '@graphql-tools/utils';
+import { mapAsyncIterator } from '@whatwg-node/promise-helpers';
 import { meros as merosReadableStream } from 'meros/browser';
 import { meros as merosIncomingMessage } from 'meros/node';
 

@@ -15,7 +15,6 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
-  Logger as LegacyLogger,
   MeshFetch,
   MeshFetchRequestInit,
 } from '@graphql-mesh/types';
@@ -24,12 +23,12 @@ import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   ExecutionRequest,
   IResolvers,
-  MaybePromise,
   TypeSource,
   ValidationRule,
 } from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import type {
   DocumentNode,
   GraphQLSchema,
@@ -39,6 +38,7 @@ import type {
 import type {
   BatchingOptions,
   FetchAPI,
+  RequestIdOptions,
   YogaInitialContext,
   Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
@@ -53,7 +53,6 @@ import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { InboundInflightRequestDeduplicationYogaPluginOptions } from './plugins/useInboundInflightReqDedupe';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
-import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
@@ -141,8 +140,6 @@ export interface OnFetchHookPayload<TContext> {
    * The logger will be available in all cases.
    */
   context: (GatewayContext & TContext) | { log: Logger };
-  /** @deprecated Please use `log` from the {@link context} instead. */
-  logger: LegacyLogger;
   info: GraphQLResolveInfo;
   fetchFn: MeshFetch;
   setFetchFn: (fetchFn: MeshFetch) => void;
@@ -542,19 +539,6 @@ export interface GatewayHivePersistedDocumentsOptions {
     // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
     | ((request: Request) => MaybePromise<boolean>);
   /**
-   * Whether arbitrary documents should be allowed along-side persisted documents.
-   *
-   * Alternatively, you can provide a function that returns a boolean value based on
-   * the request's headers.
-   *
-   * @default false
-   *
-   * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
-   */
-  allowArbitraryOperations?:
-    | boolean
-    | ((request: Request) => MaybePromise<boolean>);
-  /**
    * TTL in seconds for cached persisted documents.
    * When set (and the gateway cache is configured), enables Layer 2 caching.
    * Requires a cache backend to be configured via the `cache` option.
@@ -642,19 +626,6 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
         allowArbitraryDocuments?:
           | boolean
           // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
-          | ((request: Request) => MaybePromise<boolean>);
-        /**
-         * Whether arbitrary documents should be allowed along-side persisted documents.
-         *
-         * Alternatively, you can provide a function that returns a boolean value based on
-         * the request's headers.
-         *
-         * @default false
-         *
-         * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
-         */
-        allowArbitraryOperations?:
-          | boolean
           | ((request: Request) => MaybePromise<boolean>);
       });
   /**
@@ -883,6 +854,13 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default false
    */
   multipart?: boolean;
+
+  /**
+   * Maximum request body size in bytes. Set to `false` to disable the limit.
+   *
+   * @default 25000000
+   */
+  maxRequestBodySize?: number | false;
 
   /**
    * Enable execution cancellation

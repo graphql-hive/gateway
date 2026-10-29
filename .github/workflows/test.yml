@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
@@ -71,7 +70,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
@@ -104,11 +102,6 @@ jobs:
       matrix:
         setup:
           # Node
-          - workflow-name: Node 20 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            hive-router-runtime: 0
-            node-version: 20
           - workflow-name: Node 22 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
@@ -204,8 +197,10 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
-        name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
+      # Workspace packages (incl. @graphql-hive/logger) ship dist/ via package
+      # exports; Yoga 6 imports the logger from node_modules, so node/bun e2e
+      # children need a build too — not only docker/bin/rollup paths.
+      - name: Build
         run: yarn build
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
