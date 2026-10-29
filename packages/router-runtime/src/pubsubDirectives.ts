@@ -11,7 +11,6 @@ import {
   getDirectiveExtensions,
   getDirectiveInExtensions,
   MaybeAsyncIterable,
-  MaybePromise,
   memoize2,
   mergeDeep,
   parseSelectionSet,
@@ -19,6 +18,7 @@ import {
   ValueVisitor,
   visitResult,
 } from '@graphql-tools/utils';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   ArgumentNode,
   BREAK,

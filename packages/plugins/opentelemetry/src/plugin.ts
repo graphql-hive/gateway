@@ -6,8 +6,8 @@ import {
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
-import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { ExecutionRequest } from '@graphql-tools/utils';
+import { fakePromise, unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   context,
   hive,

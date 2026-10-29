@@ -120,11 +120,7 @@ describe('handleEventStreamResponse', () => {
     });
   });
 
-  it.skipIf(
-    // we skip bun because we cant cancel the stream while reading it (it's locked)
-    // however, the same test from nodejs applies in bun
-    globalThis.Bun,
-  )('should gracefully report stream cancel with aborted signal', async () => {
+  it('should gracefully report stream cancel with aborted signal', async () => {
     const ctrl = new AbortController();
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
@@ -140,22 +136,17 @@ describe('handleEventStreamResponse', () => {
     );
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
+    // Abort alone is enough: the handler cancels its reader (WHATWG-valid) so
+    // the pending read settles and the abort is reported as a GraphQLError.
+    // Do not call stream.cancel() here - the body is locked to that reader.
     queueMicrotask(() => {
-      ctrl.abort(); // we abort
-      readableStream.cancel(); // then cancel
-      // so that the error reported is the abort error
+      ctrl.abort();
     });
 
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-      {
-        "done": false,
-        "value": {
-          "errors": [
-            [GraphQLError: This operation was aborted],
-          ],
-        },
-      }
-    `);
+    const { value, done } = await iterator.next();
+    expect(done).toBe(false);
+    // Node: "This operation was aborted"; Bun: "The operation was aborted."
+    expect(value?.errors?.[0]?.message).toMatch(/operation was aborted/i);
 
     await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
       {
@@ -172,14 +163,17 @@ describe('handleEventStreamResponse', () => {
     `);
   });
 
-  it.skipIf(
-    // we skip bun because we cant cancel the stream while reading it (it's locked)
-    // however, the same test from nodejs applies in bun
-    globalThis.Bun,
-  )('should gracefully report stream errors', async () => {
+  // Stream failures must surface as GraphQLError. Use controller.error() - that
+  // is what makes reader.read() reject. The old version of this test called
+  // stream.cancel(Oops!) instead; cancel is not an error (pending read settles
+  // as done), and cancel while locked is invalid per WHATWG anyway.
+  it('should gracefully report stream errors', async () => {
+    const originalError = new Error('Oops!');
     const readableStream = new ReadableStream<Uint8Array>({
-      start() {
-        // dont enqueue anything, to hang on iterator.next()
+      start(controller) {
+        queueMicrotask(() => {
+          controller.error(originalError);
+        });
       },
     });
 
@@ -187,13 +181,8 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    const originalError = new Error('Oops!');
-    queueMicrotask(() => {
-      readableStream.cancel(originalError); // this will throw in reader.read()
-    });
-
     const { value, done } = await iterator.next();
-    expect(done).toBeFalsy();
+    expect(done).toBe(false);
     expect(value).toMatchInlineSnapshot(`
       {
         "errors": [
@@ -216,6 +205,37 @@ describe('handleEventStreamResponse', () => {
         "value": undefined,
       }
     `);
+  });
+
+  // Cancel (via the locked reader / iterator.return) is clean teardown, not a
+  // GraphQLError - contrast with controller.error above.
+  it('should complete cleanly when the stream is canceled', async () => {
+    let cancelled = false;
+    const readableStream = new ReadableStream<Uint8Array>({
+      start() {
+        // dont enqueue anything, to hang on iterator.next()
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    const nextPromise = iterator.next();
+    queueMicrotask(() => {
+      void iterator.return();
+    });
+
+    await expect(nextPromise).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+    expect(cancelled).toBe(true);
   });
 
   it('should handle multiple events in a single chunk', async () => {

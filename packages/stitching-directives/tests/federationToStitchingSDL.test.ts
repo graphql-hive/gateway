@@ -23,7 +23,7 @@ describe('federation sdl', () => {
     `;
 
     const stitchingSdl = /* GraphQL */ `
-      ${defaultStitchingDirectives.stitchingDirectivesTypeDefs}
+      ${defaultStitchingDirectives.allStitchingDirectivesTypeDefs}
       type Product implements IProduct @key(selectionSet: "{ id }") {
         id: ID!
         shippingCost: Int @computed(selectionSet: "{ weight }")
@@ -56,7 +56,7 @@ describe('federation sdl', () => {
     `;
 
     const stitchingSdl = /* GraphQL */ `
-      ${defaultStitchingDirectives.stitchingDirectivesTypeDefs}
+      ${defaultStitchingDirectives.allStitchingDirectivesTypeDefs}
       type Product @key(selectionSet: "{ id }") {
         id: ID!
       }
@@ -86,7 +86,7 @@ describe('federation sdl', () => {
     `;
 
     const stitchingSdl = /* GraphQL */ `
-      ${defaultStitchingDirectives.stitchingDirectivesTypeDefs}
+      ${defaultStitchingDirectives.allStitchingDirectivesTypeDefs}
       type Product @key(selectionSet: "{ id }") {
         id: ID!
       }
@@ -120,7 +120,7 @@ describe('federation sdl', () => {
     `;
 
     const stitchingSdl = /* GraphQL */ `
-      ${defaultStitchingDirectives.stitchingDirectivesTypeDefs}
+      ${defaultStitchingDirectives.allStitchingDirectivesTypeDefs}
       type Product {
         id: ID!
         name: String

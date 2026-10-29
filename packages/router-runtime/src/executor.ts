@@ -8,12 +8,9 @@ import type {
   QueryPlan,
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
+import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
-  getFragmentsFromDocument,
-  getVariableValues,
-} from '@graphql-tools/executor';
-import {
-  createGraphQLError,
+  coerceGetVariableValuesResult,
   ExecutionRequest,
   getDirective,
   getOperationASTFromDocument,
@@ -29,6 +26,7 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
+  getVariableValues,
   GraphQLError,
   GraphQLNamedType,
   GraphQLSchema,
@@ -183,12 +181,15 @@ function createQueryPlanExecutionContext({
 
   let variableValues = executionRequest.variables;
   if (operation.variableDefinitions) {
-    const variableValuesResult = getVariableValues(
-      supergraphSchema,
-      operation.variableDefinitions,
-      variableValues || globalEmpty,
+    // graphql 16 returns `{ coerced }`; graphql 17 returns `{ variableValues }`.
+    const variableValuesResult = coerceGetVariableValuesResult(
+      getVariableValues(
+        supergraphSchema,
+        operation.variableDefinitions,
+        variableValues || globalEmpty,
+      ),
     );
-    if (variableValuesResult.errors) {
+    if ('errors' in variableValuesResult) {
       if (variableValuesResult.errors.length === 1) {
         throw variableValuesResult.errors[0];
       }
@@ -985,7 +986,7 @@ function handleSubgraphExecutionError(
   if (error instanceof GraphQLError) {
     graphQLError = error;
   } else {
-    graphQLError = createGraphQLError(error.message, {
+    graphQLError = new GraphQLError(error.message, {
       originalError: error,
       extensions: {
         code: 'DOWNSTREAM_SERVICE_ERROR',

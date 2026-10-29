@@ -39,7 +39,6 @@ describe('HTTP Transport', () => {
 
     const executor = httpTransport.getSubgraphExecutor({
       log,
-      logger,
       subgraphName,
       transportEntry: {
         kind: 'http',

@@ -18,11 +18,9 @@ export interface HiveConsoleUsagePluginOptions extends Omit<
   /**
    * Extract client info from the GraphQL Context.
    */
-  clientInfo?:
-    | HiveConsoleUsageClientInfo
-    | ((
-        context: GatewayContext,
-      ) => null | undefined | HiveConsoleUsageClientInfo);
+  clientInfo?: (
+    context: GatewayContext,
+  ) => null | undefined | HiveConsoleUsageClientInfo;
 }
 
 export interface HiveConsoleUsageClientInfo {
@@ -87,21 +85,11 @@ export default function useHiveConsole<
     ...options.agent,
   } as HiveConsolePluginOptions['agent'];
 
-  // avoiding a breaking change by supporting the old usage option
-  // which allowed passing an object to the clientInfo instead of a function
-  // TODO: this approach is deprecated, please remove in the upcoming major version
   let usage: HiveUsagePluginOptions | boolean | undefined = undefined;
   if (options.usage && typeof options.usage === 'object') {
     usage = {
       ...options.usage,
-      clientInfo:
-        options.usage.clientInfo == null
-          ? defaultClientInfoFactory
-          : typeof options.usage.clientInfo === 'object'
-            ? () =>
-                // @ts-expect-error clientInfo will be an object
-                options.usage!.clientInfo
-            : options.usage.clientInfo,
+      clientInfo: options.usage.clientInfo ?? defaultClientInfoFactory,
     };
   } else {
     usage = options.usage;

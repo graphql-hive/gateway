@@ -2,7 +2,7 @@ import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { isCI, usingHiveRouterRuntime } from '@internal/testing';
-import { crypto, fetch } from '@whatwg-node/fetch';
+import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);

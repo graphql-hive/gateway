@@ -1,7 +1,6 @@
 import { Logger } from '@graphql-hive/logger';
 import { pathToArray } from '@graphql-tools/utils';
 import { print } from 'graphql';
-import { FetchAPI } from 'graphql-yoga';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
 /** Will add the plugin only if the log level is debug. */
@@ -39,12 +38,8 @@ export function useMaybeDelegationPlanDebug<
 function useDelegationPlanDebug<
   TContext extends Record<string, any>,
 >(): GatewayPlugin<TContext> {
-  let fetchAPI: FetchAPI;
   const stageExecuteLogById = new WeakMap<GatewayContext, Set<string>>();
   return {
-    onYogaInit({ yoga }) {
-      fetchAPI = yoga.fetchAPI;
-    },
     onDelegationPlan({
       typeName,
       variables,
@@ -53,7 +48,7 @@ function useDelegationPlanDebug<
       context,
       info,
     }) {
-      const planId = fetchAPI.crypto.randomUUID();
+      const planId = crypto.randomUUID();
       const log = context.log.child(
         { planId, typeName },
         '[useDelegationPlanDebug] ',
@@ -120,7 +115,7 @@ function useDelegationPlanDebug<
       }
       contextLog.add(logStr);
       const logMeta: Record<string, string> = {
-        stageId: fetchAPI.crypto.randomUUID(),
+        stageId: crypto.randomUUID(),
         subgraph,
         typeName,
       };

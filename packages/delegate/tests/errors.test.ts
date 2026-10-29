@@ -1,10 +1,6 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import {
-  createGraphQLError,
-  ExecutionResult,
-  relocatedError,
-} from '@graphql-tools/utils';
+import { ExecutionResult, relocatedError } from '@graphql-tools/utils';
 import {
   graphql,
   GraphQLError,
@@ -61,7 +57,7 @@ describe('Errors', () => {
     test('should return single error', () => {
       const result = checkResultAndHandleErrors(
         {
-          errors: [createGraphQLError('Test error')],
+          errors: [new GraphQLError('Test error')],
         },
         {
           fieldName: 'responseKey',
@@ -83,7 +79,7 @@ describe('Errors', () => {
       const result = checkResultAndHandleErrors(
         {
           errors: [
-            createGraphQLError('Test error', {
+            new GraphQLError('Test error', {
               extensions: {
                 code: 'UNAUTHENTICATED',
               },
@@ -113,8 +109,8 @@ describe('Errors', () => {
       const result = checkResultAndHandleErrors(
         {
           errors: [
-            createGraphQLError('Test error'),
-            createGraphQLError('Test error 2'),
+            new GraphQLError('Test error'),
+            new GraphQLError('Test error 2'),
           ],
         },
         {
@@ -149,12 +145,12 @@ describe('Errors', () => {
       const result = checkResultAndHandleErrors(
         {
           errors: [
-            createGraphQLError('Test error', {
+            new GraphQLError('Test error', {
               extensions: {
                 code: 'GOOD',
               },
             }),
-            createGraphQLError('Test error 2', {
+            new GraphQLError('Test error 2', {
               extensions: {
                 code: 'VERY_GOOD',
               },
@@ -196,10 +192,7 @@ describe('Errors', () => {
     });
 
     test('should return multiple errors with original errors in ExecutionResult format', () => {
-      const errors = [
-        createGraphQLError('Error1'),
-        createGraphQLError('Error2'),
-      ];
+      const errors = [new GraphQLError('Error1'), new GraphQLError('Error2')];
       const result = checkResultAndHandleErrors(
         {
           errors,

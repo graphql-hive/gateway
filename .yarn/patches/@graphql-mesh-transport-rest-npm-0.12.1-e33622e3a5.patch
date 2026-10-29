@@ -1,0 +1,30 @@
+diff --git a/cjs/directives/httpOperation.js b/cjs/directives/httpOperation.js
+index 67ba179724b0a0280dc4e8868ab58b2777a3378b..75533ba46f3dc4259c6f5d34bad6b70a412dadd5 100644
+--- a/cjs/directives/httpOperation.js
++++ b/cjs/directives/httpOperation.js
+@@ -42,6 +42,10 @@ function addHTTPRootFieldResolver(schema, field, globalLogger = new utils_1.Defa
+     };
+     const returnNamedGraphQLType = (0, graphql_1.getNamedType)(field.type);
+     field.resolve = async (root, args, context, info) => {
++        // graphql-tools/executor (and graphql-js) may pass a frozen EMPTY_ARGS object
++        if (!Object.isExtensible(args)) {
++            args = { ...args };
++        }
+         if (jsonApiFields) {
+             args.fields = undefined;
+         }
+diff --git a/esm/directives/httpOperation.js b/esm/directives/httpOperation.js
+index 329424bf57ffd961964530266b644f59636da46f..da1f25020089a622e692bc883ce6e2ed72510d83 100644
+--- a/esm/directives/httpOperation.js
++++ b/esm/directives/httpOperation.js
+@@ -38,6 +38,10 @@ export function addHTTPRootFieldResolver(schema, field, globalLogger = new Defau
+     };
+     const returnNamedGraphQLType = getNamedType(field.type);
+     field.resolve = async (root, args, context, info) => {
++        // graphql-tools/executor (and graphql-js) may pass a frozen EMPTY_ARGS object
++        if (!Object.isExtensible(args)) {
++            args = { ...args };
++        }
+         if (jsonApiFields) {
+             args.fields = undefined;
+         }

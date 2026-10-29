@@ -1,4 +1,3 @@
-import { createDeferred } from '@graphql-tools/utils';
 import { FieldNode } from 'graphql';
 import { Subschema } from './Subschema.js';
 import { DelegationPlanBuilder, ExternalObject } from './types.js';
@@ -8,9 +7,6 @@ export type Deferred<T = unknown> = {
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: any) => void;
 };
-
-// TODO: Remove this after Node 22
-export { createDeferred };
 
 export interface DelegationPlanLeftOver {
   unproxiableFieldNodes: Array<FieldNode>;

@@ -1,7 +1,6 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
-import { MaybePromise } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   DocumentNode,
   Kind,

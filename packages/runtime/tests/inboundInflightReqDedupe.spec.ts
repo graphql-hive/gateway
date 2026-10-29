@@ -3,8 +3,10 @@ import { envelop, useEngine, useSchema } from '@envelop/core';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { mergeIncrementalResult } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
-import { DeferredPromise } from '@whatwg-node/promise-helpers';
-import { createDeferredPromise } from '@whatwg-node/server';
+import {
+  createDeferredPromise,
+  DeferredPromise,
+} from '@whatwg-node/promise-helpers';
 import { execute as graphqlExecute, parse } from 'graphql';
 import { ExecutionResult } from 'graphql-ws';
 import { createSchema, createYoga } from 'graphql-yoga';
