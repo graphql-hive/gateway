@@ -230,9 +230,9 @@ export function getFieldsNotInSubschema(
       // Function selectionSets are stored in dynamicSelectionSetsByField and applied
       // during visitSelectionSet for direct delegation. Type-merge planning only
       // consulted fieldNodesByField (string selectionSets), so gateway fields with
-      // request-time dependencies (e.g. salePrice(country) → priceForCountry(country))
-      // never injected those deps into the merge fetch. Evaluate them here against
-      // the actual field nodes so arg-forwarding selectionSets participate in the plan.
+      // request-time dependencies never injected those deps into the merge fetch.
+      // Evaluate them here against the actual field nodes so arg-forwarding
+      // selectionSets participate in the plan.
       const dynamicSelectionSets =
         stitchingInfo?.dynamicSelectionSetsByField?.[gatewayType.name]?.[
           fieldName
