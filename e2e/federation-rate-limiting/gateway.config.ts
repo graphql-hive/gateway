@@ -6,13 +6,15 @@ if (isNaN(rateLimitTtl)) {
 }
 
 export const gatewayConfig = defineConfig({
-  rateLimiting: [
-    {
-      type: 'Query',
-      field: 'users',
-      max: 5,
-      ttl: rateLimitTtl,
-      identifier: 'anonymous',
-    },
-  ],
+  rateLimiting: {
+    config: [
+      {
+        type: 'Query',
+        field: 'users',
+        max: 5,
+        ttl: rateLimitTtl,
+        identifier: 'anonymous',
+      },
+    ],
+  },
 });

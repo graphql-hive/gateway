@@ -1,8 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { createGraphQLError, ExecutionRequest } from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
-import { ExecutionResult, parse } from 'graphql';
+import { ExecutionResult, GraphQLError, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
@@ -563,14 +563,14 @@ describe('Shared Root Fields', () => {
               sub1: true,
             }),
             nonNullableFail: () => {
-              throw createGraphQLError('My original subgraph error!', {
+              throw new GraphQLError('My original subgraph error!', {
                 extensions: {
                   code: 'BAD_REQUEST',
                 },
               });
             },
             nullableFail: () => {
-              throw createGraphQLError('My original subgraph error!', {
+              throw new GraphQLError('My original subgraph error!', {
                 extensions: {
                   code: 'BAD_REQUEST',
                 },

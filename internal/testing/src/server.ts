@@ -1,12 +1,11 @@
 import { createServer } from 'node:http';
 import type { AddressInfo, Socket } from 'node:net';
-import { createDeferred } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter } from '@whatwg-node/server';
 import { WebSocket, WebSocketServer } from 'ws';
 
 export function getAvailablePort(): Promise<number> {
-  const deferred = createDeferred<number>();
+  const deferred = Promise.withResolvers<number>();
   const server = createServer();
   server.once('error', (err) => deferred.reject(err));
   server.listen(0, () => {

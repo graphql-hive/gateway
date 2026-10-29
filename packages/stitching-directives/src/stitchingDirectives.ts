@@ -19,7 +19,6 @@ export interface StitchingDirectivesResult {
   computedDirectiveTypeDefs: string;
   mergeDirectiveTypeDefs: string;
   canonicalDirectiveTypeDefs: string;
-  stitchingDirectivesTypeDefs: string; // for backwards compatibility
   allStitchingDirectivesTypeDefs: string;
   stitchingDirectivesValidator: (schema: GraphQLSchema) => GraphQLSchema;
   stitchingDirectivesTransformer: (
@@ -106,7 +105,6 @@ export function stitchingDirectives(
     computedDirectiveTypeDefs,
     mergeDirectiveTypeDefs,
     canonicalDirectiveTypeDefs,
-    stitchingDirectivesTypeDefs: allStitchingDirectivesTypeDefs, // for backwards compatibility
     allStitchingDirectivesTypeDefs,
     keyDirective,
     computedDirective,

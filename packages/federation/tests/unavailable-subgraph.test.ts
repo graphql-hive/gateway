@@ -1,7 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { dispose } from '@graphql-mesh/utils';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-import { createGraphQLError } from '@graphql-tools/utils';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -9,7 +8,7 @@ import {
 } from '@internal/testing';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
-import { FormattedExecutionResult, parse } from 'graphql';
+import { FormattedExecutionResult, GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -52,7 +51,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
                     };
                   },
                   testErrorQuery: () => {
-                    throw createGraphQLError('My original subgraph1 error!', {
+                    throw new GraphQLError('My original subgraph1 error!', {
                       extensions: {
                         code: 'BAD_REQUEST',
                       },
@@ -102,7 +101,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
                     };
                   },
                   testErrorQuery: () => {
-                    throw createGraphQLError('My original subgraph2 error!', {
+                    throw new GraphQLError('My original subgraph2 error!', {
                       extensions: {
                         code: 'BAD_REQUEST',
                       },

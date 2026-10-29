@@ -420,11 +420,11 @@ describe('merge canonical types', () => {
 });
 
 describe('merge @canonical directives', () => {
-  const { stitchingDirectivesTransformer, stitchingDirectivesTypeDefs } =
+  const { stitchingDirectivesTransformer, allStitchingDirectivesTypeDefs } =
     stitchingDirectives();
   const firstSchema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
-      ${stitchingDirectivesTypeDefs}
+      ${allStitchingDirectivesTypeDefs}
       "first"
       type Product @canonical {
         "first"
@@ -450,7 +450,7 @@ describe('merge @canonical directives', () => {
   });
   const secondSchema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
-      ${stitchingDirectivesTypeDefs}
+      ${allStitchingDirectivesTypeDefs}
       "second"
       type Product {
         "second"

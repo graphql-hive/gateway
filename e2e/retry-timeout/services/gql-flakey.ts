@@ -1,8 +1,8 @@
 import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Opts } from '@internal/testing';
-import { parse } from 'graphql';
-import { createGraphQLError, createYoga } from 'graphql-yoga';
+import { GraphQLError, parse } from 'graphql';
+import { createYoga } from 'graphql-yoga';
 
 const opts = Opts(process.argv);
 
@@ -32,7 +32,7 @@ createServer(
               const secondsToWait = Math.ceil(
                 (1000 - (Date.now() - lastAttempt)) / 1000,
               );
-              return createGraphQLError('You are too early, still wait...', {
+              return new GraphQLError('You are too early, still wait...', {
                 extensions: {
                   http: {
                     status: 429,
@@ -58,7 +58,7 @@ createServer(
             }
             // Second attempt will fail with 500
             if (i === 2) {
-              return createGraphQLError('Flakiness...', {
+              return new GraphQLError('Flakiness...', {
                 extensions: {
                   http: {
                     status: 503,
