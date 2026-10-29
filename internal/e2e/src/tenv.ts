@@ -4,6 +4,7 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
+import { pathToFileURL } from 'url';
 import { inspect } from 'util';
 import {
   IntrospectAndCompose,
@@ -33,7 +34,10 @@ import { interval, retries } from './timeout.mts';
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
 // loaded after tsx in node children so deps in node_modules resolve workspace packages from src
-const workspacePathsHook = path.join(__dirname, 'workspace-paths-hook.mts');
+// node --import needs a file:// url on windows, bare absolute paths like d:\ are rejected
+const workspacePathsHook = pathToFileURL(
+  path.join(__dirname, 'workspace-paths-hook.mts'),
+).href;
 
 const docker = new Dockerode();
 
