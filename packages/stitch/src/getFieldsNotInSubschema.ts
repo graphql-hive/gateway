@@ -1,6 +1,28 @@
-import { extractUnavailableFields, getVariableValues, handleOverrideByDelegation, StitchingInfo, Subschema, subtractSelectionSets } from '@graphql-tools/delegate';
+import {
+  extractUnavailableFields,
+  getVariableValues,
+  handleOverrideByDelegation,
+  StitchingInfo,
+  Subschema,
+  subtractSelectionSets,
+} from '@graphql-tools/delegate';
 import { collectSubFields, memoize3 } from '@graphql-tools/utils';
-import { FieldNode, FragmentDefinitionNode, getNamedType, GraphQLCompositeType, GraphQLField, GraphQLObjectType, GraphQLSchema, isAbstractType, isInterfaceType, isObjectType, Kind, SelectionNode, SelectionSetNode, TypeNameMetaFieldDef } from 'graphql';
+import {
+  FieldNode,
+  FragmentDefinitionNode,
+  getNamedType,
+  GraphQLCompositeType,
+  GraphQLField,
+  GraphQLObjectType,
+  GraphQLSchema,
+  isAbstractType,
+  isInterfaceType,
+  isObjectType,
+  Kind,
+  SelectionNode,
+  SelectionSetNode,
+  TypeNameMetaFieldDef,
+} from 'graphql';
 import { GraphQLResolveInfo } from 'graphql/type';
 
 export function getFieldsNotInSubschema(
