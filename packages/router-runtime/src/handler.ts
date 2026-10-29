@@ -118,9 +118,11 @@ export async function unifiedGraphHandler(
 
   // without progressive override the plan depends only on the document and
   // operation name, so we can skip the costly native cache key on in-memory hits
+  // read once because the labels never change for a planner, and the native getter
+  // throws when called while a `planAsync` of a concurrent request is in flight
+  const overrideLabels = queryPlanner.overrideLabels;
   const hasProgressiveOverride =
-    queryPlanner.overrideLabels.length > 0 ||
-    queryPlanner.overridePercentages.length > 0;
+    overrideLabels.length > 0 || queryPlanner.overridePercentages.length > 0;
 
   function planDocument(executionRequest: ExecutionRequest) {
     let operationCache = documentOperationPlanCache.get(
@@ -134,7 +136,7 @@ export async function unifiedGraphHandler(
       }
     }
     const activeLabels = new Set<string>();
-    for (const label of queryPlanner.overrideLabels) {
+    for (const label of overrideLabels) {
       if (opts.handleProgressiveOverride?.(label, executionRequest.context)) {
         activeLabels.add(label);
       }
@@ -259,7 +261,7 @@ export async function unifiedGraphHandler(
         },
       );
     },
-    overrideLabels: queryPlanner.overrideLabels,
+    overrideLabels,
   };
 }
 
