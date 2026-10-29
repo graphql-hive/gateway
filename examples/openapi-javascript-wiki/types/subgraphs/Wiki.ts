@@ -72,18 +72,21 @@ export type Mutation = {
 
 
 export type Mutationpost_media_math_check_by_typeArgs = {
+  q: Scalars['JSON']['input'];
   type: mutationInput_post_media_math_check_by_type_type;
 };
 
 
 export type Mutationpost_transform_html_from_by_from_lang_to_by_to_langArgs = {
   from_lang: Scalars['String']['input'];
+  html: Scalars['JSON']['input'];
   to_lang: Scalars['String']['input'];
 };
 
 
 export type Mutationpost_transform_html_from_by_from_lang_to_by_to_lang_by_providerArgs = {
   from_lang: Scalars['String']['input'];
+  html: Scalars['JSON']['input'];
   provider: mutationInput_post_transform_html_from_by_from_lang_to_by_to_lang_by_provider_provider;
   to_lang: Scalars['String']['input'];
 };
