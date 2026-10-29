@@ -1689,7 +1689,7 @@ function projectSelectionSet(
         );
         if (!explained) {
           executionContext.errors.push(
-            createGraphQLError(
+            new GraphQLError(
               `Cannot return null for non-nullable field ${parentType.name}.${field.name}.`,
               { path: fieldPath },
             ),
