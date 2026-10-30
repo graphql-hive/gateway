@@ -1076,8 +1076,7 @@ function executeFlattenFetchPlanNode(
             : fetchResult.data;
 
           const returnedEntities = responseData?._entities as
-            | EntityRepresentation[]
-            | undefined;
+            EntityRepresentation[] | undefined;
           if (Array.isArray(returnedEntities)) {
             mergeFlattenEntities(returnedEntities, flatten, range);
           }
