@@ -20890,11 +20890,11 @@ __metadata:
 
 "jest-leak-detector@patch:jest-leak-detector@npm:^29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
   version: 29.7.0
-  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=731e57"
+  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=bbbac3"
   dependencies:
     jest-get-type: "npm:^29.6.3"
     pretty-format: "npm:^29.7.0"
-  checksum: 10c0/57fc35b54b28de7f23518c660f82eb3cb7cefe6aced13b50509a564989196ba3065321ac3ed12002544d986ce1767e0f9148f74c572c2c3a6e35fd7287936161
+  checksum: 10c0/c950374dc4ee6b9b3ba5b4c937f5edca67cee44f68330d7ff7317054ddf3cd8ad70fcb50948f45cef0b9eeef56c3eae537b4658b77f65d6886b5f14ecc54aa22
   languageName: node
   linkType: hard
 
