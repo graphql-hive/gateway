@@ -365,8 +365,7 @@ const subschemaConfigTransformerPresets: Array<SubschemaConfigTransform<any>> =
 function applySubschemaConfigTransforms<TContext = Record<string, any>>(
   subschemaConfigTransforms: Array<SubschemaConfigTransform<TContext>>,
   subschemaOrSubschemaConfig:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, TContext>,
+    GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
   subschemaMap: Map<
     GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
     Subschema<any, any, any, TContext>

@@ -1,10 +1,10 @@
-import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import { createServer } from 'http';
 import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
+import { pathToFileURL } from 'url';
 import { inspect } from 'util';
 import {
   IntrospectAndCompose,
@@ -29,9 +29,15 @@ import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
-import { interval, retries } from './timeout';
+import { interval, retries } from './timeout.mts';
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
+
+// loaded after tsx in node children so deps in node_modules resolve workspace packages from src
+// node --import needs a file:// url on windows, bare absolute paths like d:\ are rejected
+const workspacePathsHook = pathToFileURL(
+  path.join(__dirname, 'workspace-paths-hook.mts'),
+).href;
 
 const docker = new Dockerode();
 
@@ -77,18 +83,6 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
-
-`);
-  }
-  if (
-    (runner === 'node' || runner === 'bun') &&
-    !isCI() &&
-    !existsSync(path.join(__project, 'packages', 'logger', 'dist', 'index.js'))
-  ) {
-    process.stderr.write(`
-⚠️ @graphql-hive/logger dist/ is missing. Yoga resolves it via package exports.
-Run: yarn build
-(or: yarn workspace @graphql-hive/logger run build)
 
 `);
   }
@@ -581,6 +575,8 @@ export function createTenv(cwd: string): Tenv {
             args.includes('--jit') ? null : '--inspect-port=0',
             '--import',
             'tsx',
+            '--import',
+            workspacePathsHook,
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
@@ -700,6 +696,8 @@ export function createTenv(cwd: string): Tenv {
         'node',
         '--import',
         'tsx', // we use tsx because we want to leverage tsconfig paths
+        '--import',
+        workspacePathsHook,
         path.join(
           __project,
           'node_modules',
@@ -769,6 +767,8 @@ export function createTenv(cwd: string): Tenv {
         'node',
         '--import',
         'tsx',
+        '--import',
+        workspacePathsHook,
         path.join(cwd, 'services', name),
         createServicePortOpt(name, port),
         gatewayPort && createPortOpt(gatewayPort),

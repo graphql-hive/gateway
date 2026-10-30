@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "graphql": "^16.12.0",
-    "graphql-sse": "^2.6.0",
-    "ioredis": "^5.8.2"
+    "graphql-sse": "^2.6.3",
+    "ioredis": "^5.11.1"
   }
 }

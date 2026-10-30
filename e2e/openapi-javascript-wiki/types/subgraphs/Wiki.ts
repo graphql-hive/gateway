@@ -786,9 +786,7 @@ export namespace WikiTypes {
 
   /** The input type of the given formula; can be tex or inline-tex */
   export type mutationInput_post_media_math_check_by_type_type =
-    | 'chem'
-    | 'inline_tex'
-    | 'tex';
+    'chem' | 'inline_tex' | 'tex';
 
   /** The machine translation provider id */
   export type mutationInput_post_transform_html_from_by_from_lang_to_by_to_lang_by_provider_provider =
@@ -860,9 +858,7 @@ export namespace WikiTypes {
 
   /** The output format; can be svg or mml */
   export type queryInput_media_math_render_by_format_by_hash_format =
-    | 'mml'
-    | 'png'
-    | 'svg';
+    'mml' | 'png' | 'svg';
 
   /**
    * If you want to filter by editor-type, use one of anonymous, group-bot (registered
@@ -942,12 +938,11 @@ export namespace WikiTypes {
    * of their activity level, use all-activity-levels.
    */
   export type queryInput_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_activity_level =
-
-      | '_1__4_edits'
-      | '_5__24_edits'
-      | '_25__99_edits'
-      | '_100___edits'
-      | 'all_activity_levels';
+    | '_1__4_edits'
+    | '_5__24_edits'
+    | '_25__99_edits'
+    | '_100___edits'
+    | 'all_activity_levels';
 
   /**
    * If you want to filter by editor-type, use one of anonymous, group-bot (registered
@@ -1059,12 +1054,11 @@ export namespace WikiTypes {
    * of their activity-level, use all-activity-levels.
    */
   export type queryInput_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_activity_level =
-
-      | '_1__4_edits'
-      | '_5__24_edits'
-      | '_25__99_edits'
-      | '_100___edits'
-      | 'all_activity_levels';
+    | '_1__4_edits'
+    | '_5__24_edits'
+    | '_25__99_edits'
+    | '_100___edits'
+    | 'all_activity_levels';
 
   /**
    * If you want to filter by editor-type, use one of anonymous, group-bot (registered
@@ -1275,13 +1269,11 @@ export namespace WikiTypes {
 
   /** The tool category to list tools and language pairs for */
   export type queryInput_transform_list_tool_by_tool_by_from_by_to_tool =
-    | 'dictionary'
-    | 'mt';
+    'dictionary' | 'mt';
 
   /** The tool category to list tools and language pairs for */
   export type queryInput_transform_list_tool_by_tool_by_from_tool =
-    | 'dictionary'
-    | 'mt';
+    'dictionary' | 'mt';
 
   /** The tool category to list tools and language pairs for */
   export type queryInput_transform_list_tool_by_tool_tool = 'dictionary' | 'mt';

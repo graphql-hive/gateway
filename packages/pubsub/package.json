@@ -85,15 +85,15 @@
     }
   },
   "dependencies": {
-    "@repeaterjs/repeater": "^3.0.6",
+    "@repeaterjs/repeater": "^3.1.0",
     "@whatwg-node/disposablestack": "^0.0.6",
-    "@whatwg-node/promise-helpers": "^2.0.0"
+    "@whatwg-node/promise-helpers": "^2.0.1"
   },
   "devDependencies": {
     "@nats-io/jetstream": "^3.4.0",
-    "@nats-io/nats-core": "^3.2.0",
-    "@nats-io/transport-node": "^3.2.0",
-    "ioredis": "^5.8.2",
+    "@nats-io/nats-core": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
+    "ioredis": "^5.11.1",
     "pkgroll": "2.27.1"
   },
   "sideEffects": false

@@ -33,7 +33,8 @@ it.skipIf(
       with: 'mesh',
       services: [
         await service('products', {
-          env: natsEnv,
+          // services always run on the host, never in docker
+          env: { ...natsEnv, NATS_HOST: '0.0.0.0' },
         }),
         await service('reviews'),
       ],

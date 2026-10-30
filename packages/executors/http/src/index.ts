@@ -98,8 +98,7 @@ export interface HTTPExecutorOptions {
    * Additional headers to include when querying the original schema
    */
   headers?:
-    | HeadersConfig
-    | ((executorRequest?: ExecutionRequest) => HeadersConfig);
+    HeadersConfig | ((executorRequest?: ExecutionRequest) => HeadersConfig);
   /**
    * HTTP method to use when querying the original schema.x
    * @default 'POST'
@@ -730,8 +729,7 @@ export function buildHTTPExecutor(
       let result: ExecutionResult<any> | undefined;
       let attempt = 0;
       function retryAttempt():
-        | Promise<ExecutionResult<any>>
-        | ExecutionResult<any> {
+        Promise<ExecutionResult<any>> | ExecutionResult<any> {
         if (disposeCtrl?.signal.aborted) {
           return createResultForAbort(disposeCtrl.signal.reason);
         }

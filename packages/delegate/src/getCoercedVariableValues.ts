@@ -1,9 +1,7 @@
 import type { VariableValues } from '@graphql-tools/utils';
 
 type VersionedVariableValues =
-  | Record<string, unknown>
-  | VariableValues<Record<string, unknown>>
-  | undefined;
+  Record<string, unknown> | VariableValues<Record<string, unknown>> | undefined;
 
 /**
  * Returns the runtime variable values, regardless of the graphql-js version.
