@@ -155,3 +155,39 @@ it('reuses the in-memory query plan for the same document', async () => {
   // https://github.com/graphql-hive/gateway/issues/2655
   expect(computeCacheKey).toHaveBeenCalledTimes(1);
 });
+
+it('plans concurrent operations', async () => {
+  await using gw = createGatewayTester({
+    unifiedGraphHandler,
+    subgraphs: [
+      {
+        name: 'upstream',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello: String
+              world: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello: () => 'world',
+              world: () => 'hello',
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  // different documents so both are planned while the other one is in flight
+  await expect(
+    Promise.all([
+      gw.execute({ query: '{ hello }' }),
+      gw.execute({ query: '{ world }' }),
+    ]),
+  ).resolves.toEqual([
+    { data: { hello: 'world' } },
+    { data: { world: 'hello' } },
+  ]);
+});
