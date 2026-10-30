@@ -21,6 +21,15 @@ const ESM_PACKAGES = [
   'extract-files',
   'is-plain-obj',
   'array-shuffle',
+  // babel 8 is esm only and required from cjs graphql-tag-pluck
+  '@babel',
+  'obug',
+  'js-tokens',
+  // node-fetch v3 and its deps are esm only
+  'node-fetch',
+  'fetch-blob',
+  'formdata-polyfill',
+  'data-uri-to-buffer',
 ];
 
 export default {
@@ -48,7 +57,10 @@ export default {
       useESM: true,
     }),
   },
-  transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
+  // only check the last node_modules segment so nested esm packages get transformed too
+  transformIgnorePatterns: [
+    `node_modules/(?!.*node_modules/)(?!(${ESM_PACKAGES.join('|')})/)`,
+  ],
   testPathIgnorePatterns: [
     '/node_modules/',
     // we don't care about leaks in internal tests
