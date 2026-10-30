@@ -40,5 +40,3 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### jest-leak-detector
 
 1. Triggers garbage collection with `%CollectGarbage(true)` on every tick instead of exposing `gc` once.
-2. Some Node internals keep short-lived timers, for example the HTTP server's `Date` header cache, which lives for up to 1 second. Through the captured async context, such a timer keeps the test environment alive until it fires, which makes leak detection flaky.
-3. If the environment is still held after the first collection, the detector waits 1.1 seconds and collects again. Only references that outlive these timers are reported as leaks. Suites that do not leak are not slowed down.
