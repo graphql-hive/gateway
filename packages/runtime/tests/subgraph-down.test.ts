@@ -199,12 +199,18 @@ describe('Error handling', () => {
             });
           }
           if (url === 'http://subgraph2:4000/graphql') {
-            return subgraph2server.fetch(url, options as RequestInit);
+            return (subgraph2Res = subgraph2server.fetch(
+              url,
+              options as RequestInit,
+            ));
           }
           return new Response(null, { status: 404 });
         }),
       ],
     });
+    // stitching responds as soon as non-nullable subgraph1 fails without waiting for subgraph2,
+    // so we wait for it ourselves or else its yoga logs after the test is done and jest exits with 1
+    let subgraph2Res: Promise<Response> | Response | undefined;
     const resp = await gw.fetch('http://gateway:4000/graphql', {
       method: 'POST',
       headers: {
@@ -224,6 +230,7 @@ describe('Error handling', () => {
       }),
     });
     const res = await resp.json();
+    await subgraph2Res;
     expect(res).toEqual({
       data: null,
       errors: [
