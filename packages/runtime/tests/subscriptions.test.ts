@@ -149,13 +149,13 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
+    // The re-subscribe attempt fails validation (the new schema has no
+    // Subscription type) and its result ends the stream.
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-          },
-          message: 'operation has been aborted due to a schema reload',
+          message:
+            'Schema is not configured to execute subscription operation.',
         },
       ],
     });
@@ -229,13 +229,13 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
+    // The re-subscribe attempt fails validation (the new schema has no
+    // Subscription type) and its result ends the stream.
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-          },
-          message: 'operation has been aborted due to a schema reload',
+          message:
+            'Schema is not configured to execute subscription operation.',
         },
       ],
     });
@@ -294,11 +294,13 @@ describe('Subscriptions', () => {
     }, 1000);
     await consumed;
 
+    // The re-subscribe attempt fails validation (the new schema has no
+    // Subscription type) and its result ends the stream.
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
-          extensions: { code: 'SCHEMA_RELOAD' },
-          message: 'operation has been aborted due to a schema reload',
+          message:
+            'Schema is not configured to execute subscription operation.',
         },
       ],
     });
@@ -433,13 +435,13 @@ describe('Subscriptions', () => {
     }, 1000);
     await consumed;
 
+    // The re-subscribe attempt fails validation (the new schema has no
+    // Subscription type) and its result ends the stream.
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-          },
-          message: 'operation has been aborted due to a schema reload',
+          message:
+            'Schema is not configured to execute subscription operation.',
         },
       ],
     });
@@ -582,15 +584,95 @@ describe('Subscriptions', () => {
     }
     await consumed;
 
+    // The re-subscribe attempt fails validation (the new schema has no
+    // Subscription type) and its result ends the stream.
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-          },
-          message: 'operation has been aborted due to a schema reload',
+          message:
+            'Schema is not configured to execute subscription operation.',
         },
       ],
     });
+  }, 20_000);
+  it('re-subscribes transparently when the operation is still valid after a schema update', async () => {
+    let changeSchema = false;
+    const versionSchema = (version: string) =>
+      createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            foo: String!
+            ${version === 'v1' ? '' : 'addedByReload: String!'}
+          }
+
+          type Subscription {
+            version: String!
+          }
+        `,
+        resolvers: {
+          Query: {
+            foo: () => 'bar',
+          },
+          Subscription: {
+            version: {
+              subscribe: () =>
+                new Repeater<string>((push, stop) => {
+                  void push(version);
+                  leftovers.push(stop);
+                }),
+              resolve: (value: string) => value,
+            },
+          },
+        },
+      });
+
+    await using serve = createGatewayTester({
+      pollingInterval: 500,
+      subgraphs: () => {
+        if (changeSchema) {
+          return [{ name: 'upstream', schema: versionSchema('v2') }];
+        }
+        changeSchema = true;
+        return [{ name: 'upstream', schema: versionSchema('v1') }];
+      },
+    });
+
+    const sse = createSSEClient({
+      url: 'http://mesh/graphql',
+      fetchFn: serve.fetch,
+    });
+
+    const sub = sse.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          version
+        }
+      `,
+    });
+
+    const msgs: unknown[] = [];
+    globalThis.setTimeout(() => {
+      // Drives the poll that picks up the changed schema and reloads.
+      void serve.execute({
+        query: /* GraphQL */ `
+          query {
+            foo
+          }
+        `,
+      });
+    }, 1000);
+    for await (const msg of sub) {
+      msgs.push(msg);
+      if (msgs.length === 2) {
+        break;
+      }
+    }
+
+    // First event from the original stream, second from the re-subscribed
+    // one, no error frame in between.
+    expect(msgs).toMatchObject([
+      { data: { version: 'v1' } },
+      { data: { version: 'v2' } },
+    ]);
   }, 20_000);
 });
