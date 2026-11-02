@@ -3278,7 +3278,7 @@ __metadata:
     "@graphql-mesh/incontext-sdk-codegen": "npm:^0.3.1"
     "@omnigraph/openapi": "npm:^0.109.49"
     graphql: "npm:^16.12.0"
-    graphql-scalars: "npm:^1.25.0"
+    graphql-scalars: "npm:^2.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
@@ -18435,6 +18435,17 @@ __metadata:
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/ae7151171dcd4230f4b3d3dff94e29315d2a8ab903a81f9a9f5820974a854373f877ef10d779839c437f29d4e5ef7b13e9b9e0e7f947004fda39c9e72422736a
+  languageName: node
+  linkType: hard
+
+"graphql-scalars@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "graphql-scalars@npm:2.0.1"
+  dependencies:
+    tslib: "npm:^2.5.0"
+  peerDependencies:
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10c0/69cd83e9bc576a1d59924bfe807113b24f89e82f2701d289490b21468ae5fba461985719b979f5ca01309095db4fd8cb7d62bdaaca80c2e000a563cdc788d97c
   languageName: node
   linkType: hard
 
