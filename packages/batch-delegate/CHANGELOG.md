@@ -1,5 +1,11 @@
 # @graphql-tools/batch-delegate
 
+## 10.1.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@12.3.2
+
 ## 10.1.3
 ### Patch Changes
 
