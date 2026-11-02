@@ -176,9 +176,7 @@ it.skipIf(
           price: 100,
           shippingEstimate: 10,
           review: {
-            // NOTE: it's not the requested `id` because of stitching plan decision
-            // if we ever fix this and the requested `id` is used, just update the test
-            content: 'Resolved review for product ' + 'noid',
+            content: 'Resolved review for product ' + id,
           },
         },
       },

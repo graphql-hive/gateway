@@ -36,8 +36,6 @@ import {
   getOnSubgraphExecute,
   getTransportEntryMapUsingFusionAndFederationDirectives,
   millisecondsToStr,
-  OnDelegationPlanHook,
-  OnDelegationStageExecuteHook,
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
@@ -80,8 +78,6 @@ export interface UnifiedGraphHandlerOpts {
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
   handleProgressiveOverride?(label: string, context: any): boolean;
-  onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
-  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
   /**
    * Configure the batch delegation options for all merged types in all subschemas.
@@ -124,8 +120,6 @@ export interface UnifiedGraphManagerOptions<TContext> {
   onSubgraphExecuteHooks?: OnSubgraphExecuteHook<TContext>[];
   // TODO: Will be removed later once we get rid of v0
   onDelegateHooks?: OnDelegateHook<unknown>[];
-  onDelegationPlanHooks?: OnDelegationPlanHook<TContext>[];
-  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<TContext>[];
   /**
    * Whether to batch the subgraph executions.
    * @default true
@@ -269,8 +263,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private unifiedGraph?: GraphQLSchema;
   private lastLoadedUnifiedGraph?: string | GraphQLSchema | DocumentNode;
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
-  private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
-  private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<GraphQLSchema>;
   private polling$?: MaybePromise<void>;
@@ -299,9 +291,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         : stitchingUnifiedGraphHandler);
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
-    this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
-    this.onDelegationStageExecuteHooks =
-      opts?.onDelegationStageExecuteHooks || [];
     if (opts.pollingInterval != null) {
       opts.transportContext?.log.debug(
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
@@ -464,8 +453,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             onSubgraphExecute(subgraphName, execReq) {
               return onSubgraphExecute(subgraphName, execReq);
             },
-            onDelegationPlanHooks: this.onDelegationPlanHooks,
-            onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
             onDelegateHooks: this.opts.onDelegateHooks,
             batchDelegateOptions: this.opts.batchDelegateOptions,
             subgraphDefer: this.opts.subgraphDefer,

@@ -264,6 +264,38 @@ describe('resolveLocalFieldResult', () => {
     expect(inventoryResolver).not.toHaveBeenCalled();
   });
 
+  it('prefers multi-entryPoint owners over computed-only single-key peers', () => {
+    // Clone-less Product@key(id)+@key(name) lives in entryPointSelectionSets;
+    // inventory @requires stays in selectionSets with the same { id } key.
+    const inventory = {
+      name: 'inventory',
+      merge: { Person: { fields: { surname: { computed: true } } } },
+    };
+    const products = { name: 'products' };
+    const inventoryResolver = vi.fn();
+    const productsResolver = vi.fn((value: any) => value);
+    resolveLocalFieldResult({ id: '1' }, context, info, {
+      mergedTypes: {
+        Person: {
+          typeName: 'Person',
+          selectionSets: new Map([[inventory, parseSelectionSet('{ id }')]]),
+          entryPointSelectionSets: new Map([
+            [
+              products,
+              [parseSelectionSet('{ id }'), parseSelectionSet('{ name }')],
+            ],
+          ]),
+          resolvers: new Map([
+            [inventory, inventoryResolver],
+            [products, productsResolver],
+          ]),
+        },
+      },
+    } as unknown as StitchingInfo);
+    expect(productsResolver).toHaveBeenCalledTimes(1);
+    expect(inventoryResolver).not.toHaveBeenCalled();
+  });
+
   it('enables type merging for stitching to resolve other subschemas', async () => {
     const products = { name: 'products' };
     const productsResolver = vi.fn((..._args: unknown[]) => ({

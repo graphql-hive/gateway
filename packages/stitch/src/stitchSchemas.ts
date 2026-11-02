@@ -39,7 +39,7 @@ import {
   createStitchingInfo,
 } from './stitchingInfo.js';
 import {
-  isolateComputedFieldsTransformer,
+  deferComputedFieldsTransformer,
   splitMergedTypeEntryPointsTransformer,
 } from './subschemaConfigTransforms/index.js';
 import { buildTypeCandidates, buildTypes } from './typeCandidates.js';
@@ -360,7 +360,7 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
 }
 
 const subschemaConfigTransformerPresets: Array<SubschemaConfigTransform<any>> =
-  [isolateComputedFieldsTransformer, splitMergedTypeEntryPointsTransformer];
+  [deferComputedFieldsTransformer, splitMergedTypeEntryPointsTransformer];
 
 function applySubschemaConfigTransforms<TContext = Record<string, any>>(
   subschemaConfigTransforms: Array<SubschemaConfigTransform<TContext>>,

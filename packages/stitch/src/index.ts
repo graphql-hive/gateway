@@ -1,5 +1,10 @@
 export { stitchSchemas } from './stitchSchemas.js';
-export { createMergedTypeResolver } from './createMergedTypeResolver.js';
+export {
+  createMergedTypeResolver,
+  createMultiEntryMergedTypeResolver,
+  overlayMergedTypeEntryPoint,
+} from './createMergedTypeResolver.js';
+export { entryPointAppliesToParent } from './entryPointAppliesToParent.js';
 export { forwardArgsToSelectionSet } from './selectionSetArgs.js';
 
 export * from './subschemaConfigTransforms/index.js';
