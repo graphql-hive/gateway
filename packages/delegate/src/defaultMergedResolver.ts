@@ -10,6 +10,7 @@ import {
   GraphQLError,
   GraphQLResolveInfo,
   GraphQLSchema,
+  isAbstractType,
   isObjectType,
   Kind,
   responsePathAsArray,
@@ -263,6 +264,69 @@ export function defaultMergedResolver(
           if (!isMissingFieldValue(parent, responseKey)) {
             return handleResult(parent, responseKey, context, info);
           }
+          // mergeFields may have staged @requires deps and left this field in
+          // plan leftover. Wait on a deferred instead of returning undefined,
+          // otherwise clone-less multi-stage requires never settle (e.g.
+          // requires-with-fragments from the owning subgraph).
+          const leftOverAfter = getPlanLeftOverFromParent(parent);
+          if (leftOverAfter) {
+            let missingFieldNodes =
+              leftOverAfter.missingFieldsParentMap.get(parent);
+            if (!missingFieldNodes) {
+              missingFieldNodes = [];
+              leftOverAfter.missingFieldsParentMap.set(
+                parent,
+                missingFieldNodes,
+              );
+            }
+            // Unproxiable nodes come from the plan builder and may not be
+            // reference-equal to info.fieldNodes (synthetic mergeFields node).
+            // Match by field name so leftover can still settle this key.
+            const unproxiableNames = new Set(
+              leftOverAfter.unproxiableFieldNodes.map((u) => u.name.value),
+            );
+            if (unproxiableNames.has(info.fieldName)) {
+              missingFieldNodes.push(...info.fieldNodes);
+            }
+            let missingDeferredFields =
+              leftOverAfter.missingFieldsParentDeferredMap.get(parent);
+            if (!missingDeferredFields) {
+              missingDeferredFields = new Map();
+              leftOverAfter.missingFieldsParentDeferredMap.set(
+                parent,
+                missingDeferredFields,
+              );
+            }
+            const existingDeferred = missingDeferredFields.get(responseKey);
+            if (existingDeferred) {
+              return existingDeferred.promise;
+            }
+            const deferred = createDeferredPromise<unknown>();
+            missingDeferredFields.set(responseKey, deferred);
+            leftOverDeferredContext.set(deferred, {
+              parentTypeName: parent?.__typename || info.parentType.name,
+              fieldName: info.fieldName,
+              responseKey,
+              path: responsePathAsArray(info.path),
+              sourceSubschema: parent[OBJECT_SUBSCHEMA_SYMBOL] as
+                Subschema | undefined,
+            });
+            const fieldNodesByType =
+              stitchingInfo?.fieldNodesByField?.[parentTypeName]?.[
+                info.fieldName
+              ];
+            if (
+              fieldNodesByType?.every((fn) => {
+                const key = fn.alias?.value ?? fn.name.value;
+                return !isMissingFieldValue(parent, key);
+              })
+            ) {
+              handleResult(parent, responseKey, context, info);
+            } else {
+              handleLeftOver(parent, context, info, leftOverAfter);
+            }
+            return deferred.promise;
+          }
           // Deferred selections are omitted from the initial subgraph request.
           // mergeFields only plans fields that live on *other* subschemas, so a
           // field that belongs on the source subschema but was skipped under
@@ -458,7 +522,14 @@ function resolveMissingFieldFromSourceSubschema(
   // resolver is defaultMergedResolver again. Calling it with the same parent
   // recurses. Re-fetch via the nested schema's merged-type resolver for the
   // field owner when available.
-  if (resolve === defaultMergedResolver) {
+  //
+  // Match by identity *or* name: wrapped stitch schemas may install another
+  // resolver also named `defaultMergedResolver` (different function instance),
+  // e.g. wrapSchema-over-stitch + @defer without SubschemaConfig.defer.
+  if (
+    resolve === defaultMergedResolver ||
+    resolve.name === 'defaultMergedResolver'
+  ) {
     const innerStitchingInfo = originalSchema.extensions?.['stitchingInfo'] as
       StitchingInfo | undefined;
     const innerTypeName =
@@ -722,7 +793,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
   info: GraphQLResolveInfo,
 ) {
   // If this subschema is satisfied now, try to resolve the deferred fields
-  if (parentSatisfiedSelectionSet(flattenedParent, selectionSet)) {
+  if (parentSatisfiedSelectionSet(flattenedParent, selectionSet, info.schema)) {
     const missingFieldNodes =
       leftOver.missingFieldsParentMap.get(leftOverParent);
     if (missingFieldNodes) {
@@ -778,7 +849,13 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
         const nestedParent = flattenedParent[responseKey];
         const nestedSelectionSet = selectionNode.selectionSet;
         if (nestedParent != null) {
-          if (!parentSatisfiedSelectionSet(nestedParent, nestedSelectionSet)) {
+          if (
+            !parentSatisfiedSelectionSet(
+              nestedParent,
+              nestedSelectionSet,
+              info.schema,
+            )
+          ) {
             async function handleNestedParentItem(
               nestedParentItem: any,
               fieldNode: FieldNode,
@@ -810,6 +887,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                     getActualFieldNodes(fieldNode),
                     context,
                     info,
+                    nestedParentItem,
                   );
                   if (delegationPlan?.length) {
                     // Later optimize
@@ -855,6 +933,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                     parentSatisfiedSelectionSet(
                       nestedParent,
                       nestedSelectionSet,
+                      info.schema,
                     )
                   ) {
                     handleFlattenedParent(
@@ -980,11 +1059,12 @@ function handleDeferredResolverFailure(
 function parentSatisfiedSelectionSet(
   parent: any,
   selectionSet: SelectionSetNode,
+  schema?: GraphQLSchema,
 ): Set<Subschema> | undefined {
   if (Array.isArray(parent)) {
     const subschemas = new Set<Subschema>();
     for (const item of parent) {
-      const satisfied = parentSatisfiedSelectionSet(item, selectionSet);
+      const satisfied = parentSatisfiedSelectionSet(item, selectionSet, schema);
       if (satisfied === undefined) {
         return undefined;
       }
@@ -1020,6 +1100,7 @@ function parentSatisfiedSelectionSet(
         const satisfied = parentSatisfiedSelectionSet(
           parent[responseKey],
           selection.selectionSet,
+          schema,
         );
         if (satisfied === undefined) {
           return undefined;
@@ -1029,9 +1110,24 @@ function parentSatisfiedSelectionSet(
         }
       }
     } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+      // Skip fragments that cannot apply to this runtime object; otherwise
+      // requires like `... on Baz { baz } ... on Qux { qux }` fail on a Qux
+      // parent because baz is absent (requires-with-fragments).
+      if (
+        selection.typeCondition &&
+        typeof parent.__typename === 'string' &&
+        !runtimeTypeMatchesCondition(
+          parent.__typename,
+          selection.typeCondition.name.value,
+          schema,
+        )
+      ) {
+        continue;
+      }
       const inlineSatisfied = parentSatisfiedSelectionSet(
         parent,
         selection.selectionSet,
+        schema,
       );
       if (inlineSatisfied === undefined) {
         return undefined;
@@ -1042,6 +1138,32 @@ function parentSatisfiedSelectionSet(
     }
   }
   return subschemas;
+}
+
+function runtimeTypeMatchesCondition(
+  runtimeTypeName: string,
+  conditionTypeName: string,
+  schema?: GraphQLSchema,
+): boolean {
+  if (runtimeTypeName === conditionTypeName) {
+    return true;
+  }
+  if (schema == null) {
+    return false;
+  }
+  const conditionType = schema.getType(conditionTypeName);
+  const runtimeType = schema.getType(runtimeTypeName);
+  if (
+    conditionType == null ||
+    runtimeType == null ||
+    !isObjectType(runtimeType)
+  ) {
+    return false;
+  }
+  if (isAbstractType(conditionType)) {
+    return schema.isSubType(conditionType, runtimeType);
+  }
+  return false;
 }
 
 function flattenPromise<T>(data: T): Promise<T> | T {
