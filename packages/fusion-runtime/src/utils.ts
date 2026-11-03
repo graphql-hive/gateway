@@ -213,9 +213,12 @@ export function getOnSubgraphExecute({
         transportContext.log = log;
         log.debug('Initializing executor');
       }
+      // concurrent first requests share the same pending transport executor, otherwise
+      // each would create its own executor and lose things like inflight dedupe
+      let loadingExecutor$: MaybePromise<Executor> | undefined;
       // Lazy executor that loads transport executor on demand
       executor = function lazyExecutor(subgraphExecReq: ExecutionRequest) {
-        return handleMaybePromise(
+        loadingExecutor$ ||= handleMaybePromise(
           () =>
             // Gets the transport executor for the given subgraph
             getTransportExecutor({
@@ -246,8 +249,17 @@ export function getOnSubgraphExecute({
             });
             // Caches the executor for future use
             subgraphExecutorMap.set(subgraphName, executor);
-            return executor(subgraphExecReq);
+            return executor;
           },
+          (err) => {
+            // dont cache failures so the next request retries loading the transport
+            loadingExecutor$ = undefined;
+            throw err;
+          },
+        );
+        return handleMaybePromise(
+          () => loadingExecutor$!,
+          (executor_) => executor_(subgraphExecReq),
         );
       };
       // Caches the lazy executor to prevent race conditions
