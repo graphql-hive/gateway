@@ -153,11 +153,25 @@ export interface HTTPExecutorOptions {
    *
    * Requests are deduplicated only within the same executor and the same `context` object,
    * because the `fetch` implementation receives the `context` and may handle each request
-   * differently.
+   * differently. See `deduplicateInflightRequestsPerContext` to deduplicate across contexts.
    *
    * @default true
    */
   deduplicateInflightRequests?: boolean;
+  /**
+   * Whether inflight requests are deduplicated only within the same `context` object.
+   *
+   * When `false`, identical requests are deduplicated across different contexts within the
+   * same executor. Use this only when the `fetch` implementation does not handle requests
+   * differently based on the `context`, because the `context` of the first request will be
+   * used for all deduplicated requests.
+   *
+   * Hive Gateway's HTTP transport always sets this to `false` so that identical subgraph
+   * requests from different clients are deduplicated.
+   *
+   * @default true
+   */
+  deduplicateInflightRequestsPerContext?: boolean;
 
   /**
    * This option allows you to include the response detauls in the result extensions when a request fails.
@@ -589,7 +603,11 @@ export function buildHTTPExecutor(
         return runInflightRequest();
       }
       let inflightRequests = inflightRequestsWithoutContext;
-      if (context != null) {
+      // when per-context dedupe is off, everything shares the executor-wide map
+      if (
+        context != null &&
+        options?.deduplicateInflightRequestsPerContext !== false
+      ) {
         if (Object(context) !== context) {
           // primitives cant be weakmap keys, just dont dedupe
           return runInflightRequest();
