@@ -575,7 +575,28 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
             ...cmdAndArgs(background.wait),
           );
         } else {
-          await waitForExit;
+          // packages from a stable release can take a few minutes to become installable from
+          // the npm registry after publishing, so retry when npm cant find a version (ETARGET).
+          // --prefer-online on retries skips npm's cached packuments which would still miss the version
+          for (let retries = 10, exit = waitForExit; ; retries--) {
+            try {
+              await exit;
+              break;
+            } catch (err) {
+              if (!retries || !String(err).includes('ETARGET')) {
+                throw err;
+              }
+              console.warn(
+                `Version not found on the npm registry, retrying "${task.name}" in 30s (${retries} retries left)...`,
+              );
+              await setTimeout(30_000);
+              [, exit] = await spawn(
+                { cwd: exampleDir, signal: AbortSignal.timeout(TIMEOUT) },
+                ...cmdAndArgs(task),
+                '--prefer-online',
+              );
+            }
+          }
         }
       }
 
