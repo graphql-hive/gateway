@@ -82,6 +82,9 @@ export default {
       // executor). Must stay after options spread so gateway consumers cannot
       // accidentally re-enable legacy accumulate via transportEntries.
       mergeIncremental: false,
+      // subgraph requests from different clients carry different contexts but
+      // should still be deduped, the gateway fetch doesnt vary by context alone
+      deduplicateInflightRequestsPerContext: false,
       getDisposeReason: payload.getDisposeReason,
       // @ts-expect-error - TODO: Fix this in executor-http
       fetch: payload.fetch,
