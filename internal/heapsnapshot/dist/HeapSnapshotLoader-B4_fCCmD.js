@@ -884,22 +884,7 @@ class Multimap {
 }
 
 function withResolvers() {
-  if (Promise.withResolvers) return Promise.withResolvers();
-  let resolveFn;
-  let rejectFn;
-  const promise = new Promise(function deferredPromiseExecutor(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  });
-  return {
-    promise,
-    get resolve() {
-      return resolveFn;
-    },
-    get reject() {
-      return rejectFn;
-    }
-  };
+  return Promise.withResolvers();
 }
 
 class HeapSnapshotEdge {
@@ -4162,7 +4147,8 @@ var HeapSnapshot$1 = /*#__PURE__*/Object.freeze({
 
 const kFakePromise = Symbol.for('@whatwg-node/promise-helpers/FakePromise');
 function isPromise(value) {
-    return value?.then != null;
+    const maybePromise = value;
+    return typeof maybePromise?.then === 'function';
 }
 function isActualPromise(value) {
     const maybePromise = value;

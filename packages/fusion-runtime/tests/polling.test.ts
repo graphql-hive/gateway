@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
@@ -8,11 +8,7 @@ import {
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import {
-  createDeferred,
-  fakePromise,
-  isAsyncIterable,
-} from '@graphql-tools/utils';
+import { isAsyncIterable } from '@graphql-tools/utils';
 import {
   assertSingleExecutionValue,
   usingHiveRouterRuntime,
@@ -20,6 +16,7 @@ import {
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
   DeferredPromise,
+  fakePromise,
   handleMaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
@@ -195,7 +192,10 @@ describe('Polling', () => {
       createSchema({ typeDefs: 'type Query { value: String }' }),
       createSchema({ typeDefs: 'type Query { value: String, next: String }' }),
     ];
-    const cacheWrites = [createDeferred<void>(), createDeferred<void>()];
+    const cacheWrites = [
+      Promise.withResolvers<void>(),
+      Promise.withResolvers<void>(),
+    ];
     let schemaIndex = 0;
 
     const log = new Logger({ level: false });
@@ -203,7 +203,6 @@ describe('Polling', () => {
       getUnifiedGraph: () => schemas[schemaIndex]!,
       transportContext: {
         log,
-        logger: LegacyLogger.from(log),
         cache: {
           get: () => undefined,
           set: () => cacheWrites[schemaIndex]!.promise,
@@ -504,7 +503,7 @@ describe('Polling', () => {
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,
-      transportContext: { log, logger: LegacyLogger.from(log) },
+      transportContext: { log },
       transports() {
         log.debug('transports');
         return {
@@ -531,7 +530,7 @@ describe('Polling', () => {
       },
     });
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(1);
-    graphDeferred = createDeferred();
+    graphDeferred = Promise.withResolvers<string>();
     await advanceTimersByTimeAsync(10_000);
     const secondRes = await executor({
       document: parse(/* GraphQL */ `

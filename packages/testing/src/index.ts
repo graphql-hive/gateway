@@ -11,6 +11,7 @@ import {
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isDebug } from '~internal/env';
 import {
   GraphQLFieldResolver,
@@ -20,7 +21,6 @@ import {
 } from 'graphql';
 import {
   createYoga,
-  DisposableSymbols,
   YogaServerOptions,
   type YogaServerInstance,
 } from 'graphql-yoga';

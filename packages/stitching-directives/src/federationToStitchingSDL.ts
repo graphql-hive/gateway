@@ -174,5 +174,7 @@ export function federationToStitchingSDL(
     }
   }
 
-  return [stitchingConfig.stitchingDirectivesTypeDefs, print(doc)].join('\n');
+  return [stitchingConfig.allStitchingDirectivesTypeDefs, print(doc)].join(
+    '\n',
+  );
 }

@@ -1,0 +1,66 @@
+diff --git a/build/index.js b/build/index.js
+index 7ef344c4566e561e04b644e1b2d9371fde6ae2e3..2dc703f989c254e5fbc08ecca94ddd07c5e709e1 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -1157,13 +1157,23 @@ var _nodeAsync_hooks = require("node:async_hooks");
+  */
+ 
+ const testExecutionContext = new _nodeAsync_hooks.AsyncLocalStorage();
++// the async local storage only ever holds a numeric id, the contexts themselves live in this map.
++// every timer, socket or other async resource created during a test captures the store, and
++// long-lived ones (like node's bundled undici fast timer or the default dns channel) outlive the
++// suite. any object created in here belongs to the test realm and would keep the whole test
++// environment alive through them, while the map goes away together with this module's runtime
++const testExecutionContexts = new Map();
+ let activeDescribeRetryAttempts = 0;
+-const getTestExecutionContext = () => testExecutionContext.getStore();
++const getTestExecutionContext = () => testExecutionContexts.get(testExecutionContext.getStore());
+ exports.getTestExecutionContext = getTestExecutionContext;
+-const runInTestExecutionContext = (context, callback) => testExecutionContext.run({
+-  ...testExecutionContext.getStore(),
+-  ...context
+-}, callback);
++const runInTestExecutionContext = (context, callback) => {
++  const id = testExecutionContexts.size + 1;
++  testExecutionContexts.set(id, {
++    ...getTestExecutionContext(),
++    ...context
++  });
++  return testExecutionContext.run(id, callback);
++};
+ exports.runInTestExecutionContext = runInTestExecutionContext;
+ const startDescribeRetryAttempt = () => {
+   activeDescribeRetryAttempts++;
+diff --git a/build/jestAdapterInit.js b/build/jestAdapterInit.js
+index 7f1cfe9aa324111bd8b7b265d18b70a1e30c8719..f2291450f124823468c06fc92baf39736c3552b1 100644
+--- a/build/jestAdapterInit.js
++++ b/build/jestAdapterInit.js
+@@ -1398,13 +1398,23 @@ var _nodeAsync_hooks = require("node:async_hooks");
+  */
+ 
+ const testExecutionContext = new _nodeAsync_hooks.AsyncLocalStorage();
++// the async local storage only ever holds a numeric id, the contexts themselves live in this map.
++// every timer, socket or other async resource created during a test captures the store, and
++// long-lived ones (like node's bundled undici fast timer or the default dns channel) outlive the
++// suite. any object created in here belongs to the test realm and would keep the whole test
++// environment alive through them, while the map goes away together with this module's runtime
++const testExecutionContexts = new Map();
+ let activeDescribeRetryAttempts = 0;
+-const getTestExecutionContext = () => testExecutionContext.getStore();
++const getTestExecutionContext = () => testExecutionContexts.get(testExecutionContext.getStore());
+ exports.getTestExecutionContext = getTestExecutionContext;
+-const runInTestExecutionContext = (context, callback) => testExecutionContext.run({
+-  ...testExecutionContext.getStore(),
+-  ...context
+-}, callback);
++const runInTestExecutionContext = (context, callback) => {
++  const id = testExecutionContexts.size + 1;
++  testExecutionContexts.set(id, {
++    ...getTestExecutionContext(),
++    ...context
++  });
++  return testExecutionContext.run(id, callback);
++};
+ exports.runInTestExecutionContext = runInTestExecutionContext;
+ const startDescribeRetryAttempt = () => {
+   activeDescribeRetryAttempts++;

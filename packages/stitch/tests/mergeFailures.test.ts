@@ -1,11 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import {
-  assertSome,
-  createGraphQLError,
-  ExecutionResult,
-} from '@graphql-tools/utils';
-import { graphql, GraphQLSchema } from 'graphql';
+import { assertSome, ExecutionResult } from '@graphql-tools/utils';
+import { graphql, GraphQLError, GraphQLSchema } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 
 describe('merge failures', () => {
@@ -88,7 +84,7 @@ describe('merge failures', () => {
     const expectedResult: ExecutionResult = {
       data: { thing: null },
       errors: [
-        createGraphQLError('unable to produce the thing', {
+        new GraphQLError('unable to produce the thing', {
           path: ['thing', 'description'],
         }),
       ],

@@ -66,18 +66,21 @@ export type Mutation = {
 
 
 export type MutationPost_Media_Math_Check_By_TypeArgs = {
+  q: Scalars['JSON']['input'];
   type: MutationInput_Post_Media_Math_Check_By_Type_Type;
 };
 
 
 export type MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs = {
   from_lang: Scalars['String']['input'];
+  html: Scalars['JSON']['input'];
   to_lang: Scalars['String']['input'];
 };
 
 
 export type MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs = {
   from_lang: Scalars['String']['input'];
+  html: Scalars['JSON']['input'];
   provider: MutationInput_Post_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_Provider_Provider;
   to_lang: Scalars['String']['input'];
 };
@@ -2278,9 +2281,9 @@ export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type MutationResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  post_media_math_check_by_type?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<MutationPost_Media_Math_Check_By_TypeArgs, 'type'>>;
-  post_transform_html_from_by_from_lang_to_by_to_lang?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs, 'from_lang' | 'to_lang'>>;
-  post_transform_html_from_by_from_lang_to_by_to_lang_by_provider?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs, 'from_lang' | 'provider' | 'to_lang'>>;
+  post_media_math_check_by_type?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<MutationPost_Media_Math_Check_By_TypeArgs, 'q' | 'type'>>;
+  post_transform_html_from_by_from_lang_to_by_to_lang?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs, 'from_lang' | 'html' | 'to_lang'>>;
+  post_transform_html_from_by_from_lang_to_by_to_lang_by_provider?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs, 'from_lang' | 'html' | 'provider' | 'to_lang'>>;
 };
 
 export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {

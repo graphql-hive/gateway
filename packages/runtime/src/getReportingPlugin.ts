@@ -1,5 +1,5 @@
-import { MaybePromise } from '@graphql-tools/utils';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import useHiveConsole, {
   HiveConsolePluginOptions,
@@ -14,8 +14,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
   config: GatewayConfig<TContext>,
   configContext: GatewayConfigContext,
   allowArbitraryDocuments:
-    | boolean
-    | ((request: Request) => MaybePromise<boolean>) = false,
+    boolean | ((request: Request) => MaybePromise<boolean>) = false,
 ): GatewayPlugin<TContext> {
   if (config.reporting?.type === 'hive') {
     const { target, ...reporting } = config.reporting;

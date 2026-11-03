@@ -4,13 +4,13 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
+import { pathToFileURL } from 'url';
 import { inspect } from 'util';
 import {
   IntrospectAndCompose,
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   createOpt,
@@ -23,14 +23,21 @@ import {
 import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { getEnvBool, isCI } from '~internal/env';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
-import { interval, retries } from './timeout';
+import { interval, retries } from './timeout.mts';
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
+
+// loaded after tsx in node children so deps in node_modules resolve workspace packages from src
+// node --import needs a file:// url on windows, bare absolute paths like d:\ are rejected
+const workspacePathsHook = pathToFileURL(
+  path.join(__dirname, 'workspace-paths-hook.mts'),
+).href;
 
 const docker = new Dockerode();
 
@@ -568,6 +575,8 @@ export function createTenv(cwd: string): Tenv {
             args.includes('--jit') ? null : '--inspect-port=0',
             '--import',
             'tsx',
+            '--import',
+            workspacePathsHook,
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
@@ -687,6 +696,8 @@ export function createTenv(cwd: string): Tenv {
         'node',
         '--import',
         'tsx', // we use tsx because we want to leverage tsconfig paths
+        '--import',
+        workspacePathsHook,
         path.join(
           __project,
           'node_modules',
@@ -756,6 +767,8 @@ export function createTenv(cwd: string): Tenv {
         'node',
         '--import',
         'tsx',
+        '--import',
+        workspacePathsHook,
         path.join(cwd, 'services', name),
         createServicePortOpt(name, port),
         gatewayPort && createPortOpt(gatewayPort),
@@ -1141,7 +1154,7 @@ export function createTenv(cwd: string): Tenv {
 }
 
 export function getAvailablePort(): Promise<number> {
-  const deferred = createDeferred<number>();
+  const deferred = Promise.withResolvers<number>();
   const server = createServer();
   server.once('error', (err) => deferred.reject(err));
   server.listen(0, () => {

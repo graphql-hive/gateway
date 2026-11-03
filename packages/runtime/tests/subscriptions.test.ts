@@ -1,6 +1,6 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
-import { createDeferred, type MaybePromise } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { createClient as createSSEClient } from 'graphql-sse';
 import { createSchema, Repeater } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -130,24 +130,31 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
-    globalThis.setTimeout(async () => {
-      await expect(
-        serve.execute({
-          query: /* GraphQL */ `
-            query {
-              foo
-            }
-          `,
-        }),
-      ).resolves.toMatchObject({
-        data: {
-          foo: 'bar',
-        },
-      });
-    }, 1000);
+    // Await after the subscription ends so `await using` does not dispose the
+    // gateway before this query runs (Bun aborts the subscription on reload
+    // before a fire-and-forget 1s timer).
+    const queryAfterReload = new Promise((resolve, reject) => {
+      globalThis.setTimeout(() => {
+        serve
+          .execute({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          })
+          .then(resolve, reject);
+      }, 1000);
+    });
     for await (const msg of sub) {
       msgs.push(msg);
     }
+
+    await expect(queryAfterReload).resolves.toMatchObject({
+      data: {
+        foo: 'bar',
+      },
+    });
 
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
@@ -216,18 +223,29 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
-    globalThis.setTimeout(() => {
-      void serve.execute({
-        query: /* GraphQL */ `
-          query {
-            foo
-          }
-        `,
-      });
-    }, 1000);
+    // Same as above: keep the gateway alive until the post-reload query settles.
+    const queryAfterReload = new Promise((resolve, reject) => {
+      globalThis.setTimeout(() => {
+        serve
+          .execute({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          })
+          .then(resolve, reject);
+      }, 1000);
+    });
     for await (const msg of sub) {
       msgs.push(msg);
     }
+
+    await expect(queryAfterReload).resolves.toMatchObject({
+      data: {
+        foo: 'bar',
+      },
+    });
 
     expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
@@ -243,7 +261,7 @@ describe('Subscriptions', () => {
 
   it('does not pin subscriptions during graceful reload', async () => {
     let changeSchema = false;
-    const subscribed = createDeferred<void>();
+    const subscribed = Promise.withResolvers();
 
     await using serve = createGatewayTester({
       pollingInterval: 500,
@@ -306,9 +324,9 @@ describe('Subscriptions', () => {
 
   it('releases the generation pin of an aborted operation so the superseded generation still drains', async () => {
     let changeSchema = false;
-    const blockingEntered = createDeferred<void>();
-    const releaseBlocking = createDeferred<string>();
-    const subscribed = createDeferred<void>();
+    const blockingEntered = Promise.withResolvers();
+    const releaseBlocking = Promise.withResolvers();
+    const subscribed = Promise.withResolvers();
 
     await using serve = createGatewayTester({
       pollingInterval: 500,
@@ -450,9 +468,9 @@ describe('Subscriptions', () => {
 
   it('keeps a subscription on a draining generation until the last pinned operation finishes', async () => {
     let changeSchema = false;
-    const blockingEntered = createDeferred<void>();
-    const releaseBlocking = createDeferred<string>();
-    const subscribed = createDeferred<void>();
+    const blockingEntered = Promise.withResolvers();
+    const releaseBlocking = Promise.withResolvers();
+    const subscribed = Promise.withResolvers();
 
     await using serve = createGatewayTester({
       pollingInterval: 500,

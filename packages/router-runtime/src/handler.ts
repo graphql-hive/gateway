@@ -11,7 +11,7 @@ import {
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
-import { crypto, TextEncoder } from '@whatwg-node/fetch';
+import { TextEncoder } from '@whatwg-node/fetch';
 import {
   handleMaybePromise,
   isPromise,

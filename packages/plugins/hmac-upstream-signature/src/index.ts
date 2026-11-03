@@ -6,7 +6,7 @@ import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type { FetchAPI, GraphQLParams, YogaLogger } from 'graphql-yoga';
+import type { FetchAPI, GraphQLParams, Logger } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
 
 export type HMACUpstreamSignatureOptions = {
@@ -48,12 +48,10 @@ export const defaultParamsSerializer = (params: GraphQLParams) =>
 
 function createCryptoKey({
   textEncoder,
-  crypto,
   secret,
   usages,
 }: {
   textEncoder: TextEncoder;
-  crypto: Crypto;
   secret: string;
   usages: KeyUsage[];
 }): Promise<CryptoKey> {
@@ -105,7 +103,6 @@ export function useHmacUpstreamSignature(
           () =>
             (key$ ||= createCryptoKey({
               textEncoder,
-              crypto: fetchAPI.crypto,
               secret: options.secret,
               usages: ['sign'],
             })),
@@ -117,7 +114,7 @@ export function useHmacUpstreamSignature(
               serializedExecutionRequest,
             );
             return handleMaybePromise(
-              () => fetchAPI.crypto.subtle.sign('HMAC', key, encodedContent),
+              () => crypto.subtle.sign('HMAC', key, encodedContent),
               (signature) => {
                 const extensionValue = fetchAPI.btoa(
                   String.fromCharCode(...new Uint8Array(signature)),
@@ -166,10 +163,10 @@ export function useHmacSignatureValidation(
   let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
-  let logger: YogaLogger;
+  let log: Logger;
   return {
     onYogaInit({ yoga }) {
-      logger = yoga.logger;
+      log = yoga.log;
     },
     onParams({ params, fetchAPI }) {
       textEncoder ||= new fetchAPI.TextEncoder();
@@ -185,7 +182,6 @@ export function useHmacSignatureValidation(
         () =>
           (key$ ||= createCryptoKey({
             textEncoder,
-            crypto: fetchAPI.crypto,
             secret: options.secret,
             usages: ['verify'],
           })),
@@ -195,14 +191,14 @@ export function useHmacSignatureValidation(
             c.charCodeAt(0),
           );
           const serializedParams = paramsSerializer(params);
-          logger.debug(
-            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
+          log.debug(
             { serializedParams },
+            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
           );
 
           return handleMaybePromise(
             () =>
-              fetchAPI.crypto.subtle.verify(
+              crypto.subtle.verify(
                 'HMAC',
                 key,
                 sigBuf,
@@ -210,7 +206,7 @@ export function useHmacSignatureValidation(
               ),
             (result) => {
               if (!result) {
-                logger.error(
+                log.error(
                   '[useHmacSignatureValidation] HMAC signature does not match the body content. short circuit request.',
                 );
                 throw new Error(

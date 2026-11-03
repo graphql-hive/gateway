@@ -3,7 +3,7 @@ import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest, Executor } from '@graphql-tools/utils';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
-import { GraphQLSchema, parse, print, versionInfo } from 'graphql';
+import { GraphQLSchema, parse, print } from 'graphql';
 import { kebabCase } from 'lodash';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -138,12 +138,6 @@ describe('Optimizations', () => {
 });
 
 describe('awareness-of-other-fields', () => {
-  if (versionInfo.major < 16) {
-    it('Skip test for older versions of GraphQL-js', () => {
-      expect(true).toBe(true);
-    });
-    return;
-  }
   let supergraphSdl: string;
   let gwSchema: GraphQLSchema;
   let subgraphCalls: { [subgraph: string]: number } = {};

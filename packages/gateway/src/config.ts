@@ -135,9 +135,8 @@ export async function getBuiltinPluginsFromConfig(
   if (config.rateLimiting) {
     plugins.push(
       useRateLimiting({
-        config: Array.isArray(config.rateLimiting)
-          ? config.rateLimiting
-          : typeof config.rateLimiting === 'object'
+        config:
+          typeof config.rateLimiting === 'object'
             ? config.rateLimiting.config
             : [],
         cache: ctx.cache,
@@ -147,7 +146,8 @@ export async function getBuiltinPluginsFromConfig(
 
   if (config.jit) {
     const { useJIT } = await import('@graphql-mesh/plugin-jit');
-    plugins.push(useJIT());
+    // Envelop 6 nests @envelop/types; JIT plugin types resolve to a parallel copy.
+    plugins.push(useJIT() as (typeof plugins)[number]);
   }
 
   if (config.awsSigv4) {

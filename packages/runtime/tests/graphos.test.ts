@@ -2,7 +2,7 @@ import {
   type GatewayConfigContext,
   type GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway-runtime';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import { Response } from '@whatwg-node/fetch';
 import { fakePromise } from '@whatwg-node/promise-helpers';
@@ -181,7 +181,6 @@ function createTestFetcher(
     unifiedGraphFetcher: (transportContext: Partial<TransportContext> = {}) => {
       return fetcher.unifiedGraphFetcher({
         log,
-        logger: LegacyLogger.from(log),
         ...transportContext,
       });
     },

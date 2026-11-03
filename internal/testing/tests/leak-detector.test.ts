@@ -40,7 +40,8 @@ describe.skipIf(process.env['LEAK_TEST'] || globalThis.Bun)(
 
       expect(await detector1.isLeaking()).toBeFalsy();
       expect(await detector2.isLeaking()).toBeFalsy();
-    });
+      // every positive leak check waits ~1.1s for short-lived node timers, and there are 4 here
+    }, 15_000);
 
     it('should detect no leak', async () => {
       let obj: {} | null = {};
