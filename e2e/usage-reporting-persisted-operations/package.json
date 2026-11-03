@@ -2,7 +2,7 @@
   "name": "@e2e/usage-reporting-persisted-operations",
   "private": true,
   "dependencies": {
-    "@repeaterjs/repeater": "^3.0.6",
+    "@repeaterjs/repeater": "^3.1.0",
     "@whatwg-node/server": "^0.13.0",
     "graphql": "^16.12.0",
     "graphql-ws": "^6.0.6"

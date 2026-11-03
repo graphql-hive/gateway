@@ -3,6 +3,8 @@
   "compilerOptions": {
     // tsc only for type checking
     "noEmit": true,
+    // lets vitest.config.ts use explicit .ts extensions for vite's native config loader
+    "allowImportingTsExtensions": true,
     // pkgroll will take care of building, we use the most modern JS while coding
     "module": "esnext",
     "moduleResolution": "bundler",

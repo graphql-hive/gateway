@@ -4,16 +4,16 @@
   "private": true,
   "main": "./src/index.ts",
   "dependencies": {
-    "@whatwg-node/promise-helpers": "^2.0.0",
-    "canvas": "^3.2.0",
-    "chart.js": "^4.5.1",
-    "chartjs-plugin-trendline": "^3.1.1",
-    "parse-duration": "^2.0.0",
+    "@whatwg-node/promise-helpers": "^2.0.1",
+    "canvas": "^3.2.3",
+    "chart.js": "^4.6.1",
+    "chartjs-plugin-trendline": "^3.2.14",
+    "parse-duration": "^2.1.9",
     "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
-    "ws": "^8.21.0"
+    "ws": "^8.22.0"
   },
   "devDependencies": {
-    "@types/k6": "^2.0.0",
-    "@types/ws": "^8.5.12"
+    "@types/k6": "^2.3.0",
+    "@types/ws": "^8.18.2"
   }
 }

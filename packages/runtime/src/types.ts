@@ -1029,8 +1029,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default false
    */
   inboundInflightRequestDeduplication?:
-    | boolean
-    | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
+    boolean | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
 }
 
 interface DisableIntrospectionOptions<TContext extends Record<string, any>> {

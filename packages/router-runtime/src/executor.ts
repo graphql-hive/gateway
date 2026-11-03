@@ -932,8 +932,7 @@ function executeFetchPlanNode(
 
       if (flattenState && flattenState.entityRefs.length) {
         const returnedEntities = responseData._entities as
-          | EntityRepresentation[]
-          | undefined;
+          EntityRepresentation[] | undefined;
         if (Array.isArray(returnedEntities)) {
           mergeFlattenEntities(returnedEntities, flattenState);
         }
@@ -1690,7 +1689,7 @@ function projectSelectionSet(
         );
         if (!explained) {
           executionContext.errors.push(
-            createGraphQLError(
+            new GraphQLError(
               `Cannot return null for non-nullable field ${parentType.name}.${field.name}.`,
               { path: fieldPath },
             ),
