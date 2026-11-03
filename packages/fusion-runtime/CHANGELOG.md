@@ -1,5 +1,16 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.13.3
+### Patch Changes
+
+
+
+- [#2717](https://github.com/graphql-hive/gateway/pull/2717) [`cc5870d`](https://github.com/graphql-hive/gateway/commit/cc5870de856effe1e277b79ee2cd87bd046179a2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Create a single transport executor per subgraph when concurrent requests arrive before the transport is loaded
+  
+  Concurrent first requests to a subgraph share the same pending transport executor so that features scoped to the executor, like inflight request deduplication, apply to them as well.
+- Updated dependencies []:
+  - @graphql-tools/federation@4.6.3
+
 ## 1.13.2
 ### Patch Changes
 
