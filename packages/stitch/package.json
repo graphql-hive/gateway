@@ -55,7 +55,7 @@
     "dataloader": "^2.2.3",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.21.1",
-    "pkgroll": "2.27.1"
+    "pkgroll": "2.29.0"
   },
   "sideEffects": false
 }
