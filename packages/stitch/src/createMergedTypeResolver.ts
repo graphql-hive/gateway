@@ -1,10 +1,12 @@
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
   delegateToSchema,
+  MergedTypeConfig,
   MergedTypeResolver,
   MergedTypeResolverOptions,
   Subschema,
 } from '@graphql-tools/delegate';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   getNamedType,
   GraphQLList,
@@ -12,6 +14,7 @@ import {
   OperationTypeNode,
 } from 'graphql';
 import { GraphQLResolveInfo } from 'graphql/type';
+import { entryPointAppliesToParent } from './entryPointAppliesToParent.js';
 
 function getMergeOperation(
   info: GraphQLResolveInfo,
@@ -30,6 +33,126 @@ function getMergeOperation(
     return 'mutation' as OperationTypeNode;
   }
   return 'query' as OperationTypeNode;
+}
+
+/**
+ * Overlay a single entryPoint on the parent merge config so shared
+ * `key` / `argsFromKeys` / `valuesFromResults` / `dataLoaderOptions` /
+ * `args` / `fieldName` defaults are preserved (same as the old
+ * isolation-clone transformer).
+ */
+export type OverlayMergedTypeEntryPointResult<
+  TContext extends Record<string, any> = any,
+> = MergedTypeResolverOptions & {
+  selectionSet?: string;
+  key?: (originalResult: any) => any;
+  resolve?: MergedTypeResolver<TContext>;
+};
+
+export function overlayMergedTypeEntryPoint<
+  TContext extends Record<string, any> = any,
+>(
+  mergedTypeConfig: MergedTypeConfig<any, any, TContext>,
+  entryPoint: MergedTypeResolverOptions & {
+    selectionSet?: string;
+    key?: (originalResult: any) => any;
+    resolve?: MergedTypeResolver<any>;
+  },
+): OverlayMergedTypeEntryPointResult<TContext> {
+  const {
+    entryPoints: _entryPoints,
+    fields: _fields,
+    canonical: _canonical,
+    ...parentDefaults
+  } = mergedTypeConfig as MergedTypeConfig<any, any, TContext> &
+    Record<string, unknown>;
+  return {
+    ...(parentDefaults as OverlayMergedTypeEntryPointResult<TContext>),
+    ...(entryPoint as OverlayMergedTypeEntryPointResult<TContext>),
+  };
+}
+
+/**
+ * Multi-key merge on one subschema: try each entryPoint's `key` until one
+ * returns a non-null value, then batchDelegate with that entry's fieldName.
+ */
+export function createMultiEntryMergedTypeResolver<
+  TContext extends Record<string, any> = any,
+>(
+  mergedTypeConfig: MergedTypeConfig<any, any, TContext>,
+  mergedType?: GraphQLOutputType | string,
+): MergedTypeResolver<TContext> | undefined {
+  const entryPoints = mergedTypeConfig.entryPoints;
+  if (entryPoints == null || entryPoints.length < 2) {
+    return (
+      mergedTypeConfig.resolve ??
+      createMergedTypeResolver(mergedTypeConfig, mergedType)
+    );
+  }
+  const prepared = entryPoints.map((ep) => {
+    const overlay = overlayMergedTypeEntryPoint<TContext>(mergedTypeConfig, ep);
+    return {
+      entryPoint: overlay,
+      resolver:
+        overlay.resolve ??
+        createMergedTypeResolver<TContext>(overlay, mergedType),
+    };
+  });
+  if (prepared.every((p) => p.resolver == null)) {
+    return undefined;
+  }
+  return function multiEntryMergedTypeResolver(
+    originalResult,
+    context,
+    info,
+    subschema,
+    selectionSet,
+    _key,
+    type,
+    skipTypeMerging = true,
+  ) {
+    const tryAt = (i: number): ReturnType<MergedTypeResolver<TContext>> => {
+      if (i >= prepared.length) {
+        return originalResult;
+      }
+      const { entryPoint: ep, resolver } = prepared[i]!;
+      if (resolver == null || !entryPointAppliesToParent(ep, originalResult)) {
+        return tryAt(i + 1);
+      }
+      // Batched entries expose `key`; single-result entries use `args` only.
+      if (ep.key == null) {
+        return resolver(
+          originalResult,
+          context,
+          info,
+          subschema,
+          selectionSet,
+          undefined,
+          type,
+          skipTypeMerging,
+        );
+      }
+      return handleMaybePromise(
+        () => ep.key!(originalResult),
+        (key) => {
+          if (key == null) {
+            return tryAt(i + 1);
+          }
+          return resolver(
+            originalResult,
+            context,
+            info,
+            subschema,
+            selectionSet,
+            key,
+            type,
+            skipTypeMerging,
+          );
+        },
+      );
+    };
+    return tryAt(0);
+  };
 }
 
 export function createMergedTypeResolver<

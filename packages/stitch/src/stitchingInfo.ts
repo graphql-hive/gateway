@@ -33,7 +33,10 @@ import {
   visit,
 } from 'graphql';
 import { createDelegationPlanBuilder } from './createDelegationPlanBuilder.js';
-import { createMergedTypeResolver } from './createMergedTypeResolver.js';
+import {
+  createMergedTypeResolver,
+  createMultiEntryMergedTypeResolver,
+} from './createMergedTypeResolver.js';
 import { MergeTypeCandidate, MergeTypeFilter } from './types.js';
 
 export function createStitchingInfo<
@@ -129,6 +132,10 @@ function createMergedTypes<
           Subschema<any, any, any, TContext>,
           SelectionSetNode
         > = new Map();
+        const entryPointSelectionSets: Map<
+          Subschema<any, any, any, TContext>,
+          SelectionSetNode[]
+        > = new Map();
         const fieldSelectionSets: Map<
           Subschema<any, any, any, TContext>,
           Record<string, SelectionSetNode>
@@ -166,7 +173,25 @@ function createMergedTypes<
             continue;
           }
 
-          if (mergedTypeConfig.selectionSet) {
+          const multiEntryPoints =
+            mergedTypeConfig.entryPoints != null &&
+            mergedTypeConfig.entryPoints.length >= 2
+              ? mergedTypeConfig.entryPoints
+              : null;
+
+          if (multiEntryPoints) {
+            const epSels: SelectionSetNode[] = [];
+            for (const ep of multiEntryPoints) {
+              if (ep.selectionSet) {
+                epSels.push(
+                  parseSelectionSet(ep.selectionSet, { noLocation: true }),
+                );
+              }
+            }
+            if (epSels.length) {
+              entryPointSelectionSets.set(subschema, epSels);
+            }
+          } else if (mergedTypeConfig.selectionSet) {
             const selectionSet = parseSelectionSet(
               mergedTypeConfig.selectionSet,
               {
@@ -244,13 +269,16 @@ function createMergedTypes<
 
           const resolver =
             mergedTypeConfig.resolve ??
-            createMergedTypeResolver(mergedTypeConfig, type);
+            (multiEntryPoints
+              ? createMultiEntryMergedTypeResolver(mergedTypeConfig, type)
+              : createMergedTypeResolver(mergedTypeConfig, type));
 
           if (resolver == null) {
             continue;
           }
 
-          const keyFn = mergedTypeConfig.key;
+          // Multi-entry resolvers pick the key themselves; only wrap single-key.
+          const keyFn = multiEntryPoints ? undefined : mergedTypeConfig.key;
           resolvers.set(
             subschema,
             keyFn
@@ -288,14 +316,24 @@ function createMergedTypes<
           // inline fragments on concrete members during delegation planning.
           if (isObjectType(type) || isInterfaceType(type)) {
             const fieldMap = type.getFields();
-            const selectionSet = selectionSets.get(subschema);
+            // Single-key: skip key leaves (they arrive with the representation).
+            // Multi-entry: a field may be a key on one entry and a value on
+            // another (e.g. Product.id via upc-key), so only skip leaves that
+            // appear in *every* entry's selectionSet.
+            const keySelectionSets =
+              entryPointSelectionSets.get(subschema) ??
+              (selectionSets.has(subschema)
+                ? [selectionSets.get(subschema)!]
+                : []);
             for (const fieldName in fieldMap) {
               const field = fieldMap[fieldName];
               const fieldType = getNamedType(field?.type);
               if (
-                selectionSet &&
                 isLeafType(fieldType) &&
-                selectionSetContainsTopLevelField(selectionSet, fieldName)
+                keySelectionSets.length > 0 &&
+                keySelectionSets.every((selectionSet) =>
+                  selectionSetContainsTopLevelField(selectionSet, fieldName),
+                )
               ) {
                 continue;
               }
@@ -316,9 +354,15 @@ function createMergedTypes<
         > = new Map();
         if (sourceSubschemas) {
           for (const subschema of sourceSubschemas) {
-            const filteredSubschemas = targetSubschemas.filter(
-              (s) => s !== subschema,
-            );
+            // Subschemas that own computed / field-@requires fields must be
+            // allowed as their own merge target so shippingEstimate can
+            // re-enter after deps land.
+            const ownsComputedOrRequires =
+              fieldSelectionSets.get(subschema) != null &&
+              Object.keys(fieldSelectionSets.get(subschema)!).length > 0;
+            const filteredSubschemas = ownsComputedOrRequires
+              ? targetSubschemas
+              : targetSubschemas.filter((s) => s !== subschema);
             if (filteredSubschemas.length) {
               targetSubschemasBySubschema.set(subschema, filteredSubschemas);
             }
@@ -330,6 +374,7 @@ function createMergedTypes<
           targetSubschemas: targetSubschemasBySubschema,
           typeMaps,
           selectionSets,
+          entryPointSelectionSets,
           fieldSelectionSets,
           uniqueFields: Object.create({}),
           nonUniqueFields: Object.create({}),
@@ -416,7 +461,8 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     if (
       mergedTypeInfo == null ||
       mergedTypeInfo.resolvers.size === 0 ||
-      mergedTypeInfo.selectionSets.size > 0
+      mergedTypeInfo.selectionSets.size > 0 ||
+      (mergedTypeInfo.entryPointSelectionSets?.size ?? 0) > 0
     ) {
       continue;
     }
@@ -438,19 +484,20 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     const mergedTypeInfo = mergedTypes[typeName];
     if (
       mergedTypeInfo?.selectionSets == null &&
+      mergedTypeInfo?.entryPointSelectionSets == null &&
       mergedTypeInfo?.fieldSelectionSets == null
     ) {
       continue;
     }
 
-    for (const [
-      subschemaConfig,
-      selectionSet,
-    ] of mergedTypeInfo.selectionSets) {
+    const applyKeySelectionSet = (
+      subschemaConfig: Subschema<any, any, any, TContext>,
+      selectionSet: SelectionSetNode,
+    ) => {
       const schema = subschemaConfig.transformedSchema;
       const type = schema.getType(typeName);
       if (type == null) {
-        continue;
+        return;
       }
       if (isObjectType(type) || isInterfaceType(type)) {
         const fields = type.getFields();
@@ -480,6 +527,24 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
           '__typename',
           selectionSet,
         );
+      }
+    };
+
+    for (const [
+      subschemaConfig,
+      selectionSet,
+    ] of mergedTypeInfo.selectionSets) {
+      applyKeySelectionSet(subschemaConfig, selectionSet);
+    }
+
+    if (mergedTypeInfo.entryPointSelectionSets) {
+      for (const [
+        subschemaConfig,
+        selectionSets,
+      ] of mergedTypeInfo.entryPointSelectionSets) {
+        for (const selectionSet of selectionSets) {
+          applyKeySelectionSet(subschemaConfig, selectionSet);
+        }
       }
     }
 

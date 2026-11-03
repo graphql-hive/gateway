@@ -177,9 +177,21 @@ export function getFieldsNotInSubschema(
           field,
           subFieldNode,
           (fieldType, selection) => {
+            // If this subschema participates in type-merge for the nested
+            // type, older planning assumed merge will fetch every nested
+            // selection. That is wrong when no merge target actually owns
+            // the field (parent-entity-call: Category.details only exists
+            // on a Product-keyed subgraph with no Category @key). Only
+            // suppress when some Category/Product/... merge target can
+            // provide the leaf; otherwise keep it unavailable so the parent
+            // Product planner can route through the owning entry.
+            const nestedMerged = stitchingInfo.mergedTypes[fieldType.name];
             if (
-              stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
-                subschema,
+              nestedMerged?.resolvers.get(subschema) &&
+              mergedTypeHasOwnerForField(
+                nestedMerged,
+                fieldType.name,
+                selection.name.value,
               )
             ) {
               return false;
@@ -231,6 +243,29 @@ export function getFieldsNotInSubschema(
     }
   }
   return Array.from(fieldsNotInSchema);
+}
+
+/**
+ * True when at least one merge-target subschema for `typeName` defines
+ * `fieldName` on that type. Used so nested selections are not assumed to be
+ * type-mergeable when only the parent object key path can reach them.
+ */
+function mergedTypeHasOwnerForField(
+  mergedTypeInfo: StitchingInfo['mergedTypes'][string],
+  typeName: string,
+  fieldName: string,
+): boolean {
+  for (const [targetSubschema] of mergedTypeInfo.resolvers) {
+    const schema = targetSubschema.transformedSchema;
+    const type = schema?.getType(typeName);
+    if (
+      (isObjectType(type) || isInterfaceType(type)) &&
+      type.getFields()[fieldName] != null
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function addMissingRequiredFields({
