@@ -476,6 +476,81 @@ describe('buildHTTPExecutor', () => {
     expect(requestCount).toBe(2);
   });
 
+  it('does not deduplicate inflight requests across different contexts', async () => {
+    let fetchCount = 0;
+    await using executor = buildHTTPExecutor({
+      async fetch(_url, _init, context) {
+        fetchCount++;
+        await setTimeout(50);
+        return Response.json({ data: { viewer: context.user } });
+      },
+    });
+    const document = parse(/* GraphQL */ `
+      query {
+        viewer
+      }
+    `);
+    const [alice, bob] = await Promise.all([
+      executor({ document, context: { user: 'alice' } }),
+      executor({ document, context: { user: 'bob' } }),
+    ]);
+    expect(alice).toEqual({ data: { viewer: 'alice' } });
+    expect(bob).toEqual({ data: { viewer: 'bob' } });
+    expect(fetchCount).toBe(2);
+  });
+
+  it('deduplicates inflight requests within the same context', async () => {
+    let fetchCount = 0;
+    await using executor = buildHTTPExecutor({
+      async fetch(_url, _init, context) {
+        fetchCount++;
+        await setTimeout(50);
+        return Response.json({ data: { viewer: context.user } });
+      },
+    });
+    const document = parse(/* GraphQL */ `
+      query {
+        viewer
+      }
+    `);
+    const context = { user: 'alice' };
+    const results = await Promise.all([
+      executor({ document, context }),
+      executor({ document, context }),
+    ]);
+    expect(results).toEqual([
+      { data: { viewer: 'alice' } },
+      { data: { viewer: 'alice' } },
+    ]);
+    expect(fetchCount).toBe(1);
+  });
+
+  it('does not share inflight requests across executors', async () => {
+    const document = parse(/* GraphQL */ `
+      query {
+        viewer
+      }
+    `);
+    await using aliceExecutor = buildHTTPExecutor({
+      async fetch() {
+        await setTimeout(50);
+        return Response.json({ data: { viewer: 'alice' } });
+      },
+    });
+    await using bobExecutor = buildHTTPExecutor({
+      async fetch() {
+        await setTimeout(50);
+        return Response.json({ data: { viewer: 'bob' } });
+      },
+    });
+    const [alice, bob] = await Promise.all([
+      aliceExecutor({ document }),
+      bobExecutor({ document }),
+    ]);
+    expect(alice).toEqual({ data: { viewer: 'alice' } });
+    expect(bob).toEqual({ data: { viewer: 'bob' } });
+  });
+
   it('should allow for custom timeout factory function', async () => {
     let hasAborted = false;
     await using executor = buildHTTPExecutor({

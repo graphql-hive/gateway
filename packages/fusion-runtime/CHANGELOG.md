@@ -1,5 +1,37 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.13.3
+### Patch Changes
+
+
+
+- [#2717](https://github.com/graphql-hive/gateway/pull/2717) [`cc5870d`](https://github.com/graphql-hive/gateway/commit/cc5870de856effe1e277b79ee2cd87bd046179a2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Create a single transport executor per subgraph when concurrent requests arrive before the transport is loaded
+  
+  Concurrent first requests to a subgraph share the same pending transport executor so that features scoped to the executor, like inflight request deduplication, apply to them as well.
+- Updated dependencies []:
+  - @graphql-tools/federation@4.6.3
+
+## 1.13.2
+### Patch Changes
+
+- Updated dependencies [[`9877255`](https://github.com/graphql-hive/gateway/commit/98772559ea8a529b3c6235722ac5cc7b82992c11)]:
+  - @graphql-tools/batch-execute@10.3.1
+  - @graphql-tools/delegate@12.3.2
+  - @graphql-tools/federation@4.6.2
+  - @graphql-tools/stitch@10.4.2
+  - @graphql-tools/stitching-directives@4.1.4
+  - @graphql-tools/wrap@11.2.4
+
+## 1.13.1
+### Patch Changes
+
+- Updated dependencies [[`aabe28a`](https://github.com/graphql-hive/gateway/commit/aabe28a87cc4e85f590bbf4340a9c8700d544223), [`a558eea`](https://github.com/graphql-hive/gateway/commit/a558eeae3c94deb60d40f98232b9d4d82ae9d9a1)]:
+  - @graphql-tools/delegate@12.3.1
+  - @graphql-tools/stitch@10.4.1
+  - @graphql-tools/federation@4.6.1
+  - @graphql-tools/stitching-directives@4.1.3
+  - @graphql-tools/wrap@11.2.3
+
 ## 1.13.0
 ### Minor Changes
 

@@ -59,20 +59,20 @@ RUN npm install npm@latest -g
 RUN npm install tar@^7 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
-# fix glob vulnerability by updating glob to latest version ^11
+# glob >=14.0.2 addresses traversal cancellation denial of service
 # deal with CVE-2025-64756
-RUN npm install glob@^11 -g
-# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v26
+RUN npm install glob@^14.0.2 -g
+# node-gyp resolves the global glob on node v26 to avoid a vulnerable nested copy
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
-# npm uses glob v11, so we've just bumped it to the latest
+# npm resolves the global glob to avoid a vulnerable nested copy
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
 
 # fix @isaacs/brace-expansion vulnerability by updating it to the latest version ^5.0.1
 RUN npm install @isaacs/brace-expansion@^5.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 
-# fix minimatch vulnerability by updating it to the latest version ^10.2.4
-RUN npm install minimatch@^10.2.4 -g
+# minimatch >=11.0.1 addresses denial of service from crafted glob pattern expansion
+RUN npm install minimatch@^11.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 # fix brace-expansion vulnerability by updating it to the latest version ^5.0.4

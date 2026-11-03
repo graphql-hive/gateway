@@ -1,5 +1,34 @@
 # @graphql-hive/gateway
 
+## 2.15.6
+### Patch Changes
+
+- Updated dependencies [[`cc5870d`](https://github.com/graphql-hive/gateway/commit/cc5870de856effe1e277b79ee2cd87bd046179a2)]:
+  - @graphql-mesh/transport-http@1.2.4
+  - @graphql-hive/plugin-aws-sigv4@2.0.73
+  - @graphql-hive/gateway-runtime@2.13.3
+  - @graphql-hive/plugin-opentelemetry@1.5.8
+  - @graphql-mesh/plugin-prometheus@2.2.8
+
+## 2.15.5
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.13.2
+  - @graphql-mesh/transport-http@1.2.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.72
+  - @graphql-hive/plugin-opentelemetry@1.5.7
+  - @graphql-mesh/plugin-prometheus@2.2.7
+
+## 2.15.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.13.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.71
+  - @graphql-hive/plugin-opentelemetry@1.5.6
+  - @graphql-mesh/plugin-prometheus@2.2.6
+
 ## 2.15.3
 ### Patch Changes
 

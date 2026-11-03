@@ -116,10 +116,23 @@ export async function unifiedGraphHandler(
     Map<string | null, MaybePromise<QueryPlan>>
   >();
 
+  // without progressive override the plan depends only on the document and
+  // operation name, so we can skip the costly native cache key on in-memory hits
+  const hasProgressiveOverride =
+    queryPlanner.overrideLabels.length > 0 ||
+    queryPlanner.overridePercentages.length > 0;
+
   function planDocument(executionRequest: ExecutionRequest) {
     let operationCache = documentOperationPlanCache.get(
       executionRequest.document,
     );
+    const operationName = executionRequest.operationName ?? null;
+    if (!hasProgressiveOverride) {
+      const plan = operationCache?.get(operationName);
+      if (plan) {
+        return plan;
+      }
+    }
     const activeLabels = new Set<string>();
     for (const label of queryPlanner.overrideLabels) {
       if (opts.handleProgressiveOverride?.(label, executionRequest.context)) {
@@ -135,16 +148,17 @@ export async function unifiedGraphHandler(
       activeLabels,
       percentageValue,
     );
+    const memoryCacheKey = hasProgressiveOverride ? cacheKey : operationName;
 
     // we dont need to worry about releasing values. the map values in weakmap
     // will all be released when document node is GCed
     if (operationCache) {
-      const plan = operationCache.get(cacheKey);
+      const plan = operationCache.get(memoryCacheKey);
       if (plan) {
         return plan;
       }
     } else {
-      operationCache = new Map<string, MaybePromise<QueryPlan>>();
+      operationCache = new Map<string | null, MaybePromise<QueryPlan>>();
       documentOperationPlanCache.set(executionRequest.document, operationCache);
     }
 
@@ -183,11 +197,11 @@ export async function unifiedGraphHandler(
         );
       },
       (queryPlan) => {
-        operationCache.set(cacheKey, queryPlan);
+        operationCache.set(memoryCacheKey, queryPlan);
         return queryPlan;
       },
     );
-    operationCache.set(cacheKey, plan);
+    operationCache.set(memoryCacheKey, plan);
     return plan;
   }
 

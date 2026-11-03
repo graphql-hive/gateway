@@ -80,7 +80,7 @@ describe('HTTP deduplication result cloning', () => {
     }
   });
 
-  it('isolates all consumers of a shared request, including across executor instances', async () => {
+  it('isolates shared consumers while keeping executor instances independent', async () => {
     const clone = vi.spyOn(globalThis, 'structuredClone');
     try {
       let finish!: (response: Response) => void;
@@ -89,7 +89,9 @@ describe('HTTP deduplication result cloning', () => {
       });
       const fetchA = vi.fn(() => response);
       const fetchB = vi.fn(async () =>
-        Response.json({ data: { node: { value: 'unexpected second fetch' } } }),
+        Response.json({
+          data: { node: { value: 'independent second fetch' } },
+        }),
       );
       const endpoint = 'http://shared-clone-test/graphql';
       await using executorA = buildHTTPExecutor({ endpoint, fetch: fetchA });
@@ -105,15 +107,49 @@ describe('HTTP deduplication result cloning', () => {
       const third = executorA({ document });
       finish(Response.json({ data: { node: { value: 'original' } } }));
       const results = await Promise.all([first, second, third]);
-      for (const result of results.slice(1)) {
-        assertSingleExecutionValue(result);
-        expect(result).toEqual({ data: { node: { value: 'original' } } });
-      }
+      expect(results[1]).toEqual({
+        data: { node: { value: 'independent second fetch' } },
+      });
+      expect(results[2]).toEqual({ data: { node: { value: 'original' } } });
       expect(fetchA).toHaveBeenCalledTimes(1);
-      expect(fetchB).not.toHaveBeenCalled();
-      expect(clone).toHaveBeenCalledTimes(3);
+      expect(fetchB).toHaveBeenCalledTimes(1);
+      expect(clone).toHaveBeenCalledTimes(2);
     } finally {
       clone.mockRestore();
     }
   });
+
+  for (const perContext of [true, false]) {
+    it(`clones only shared results with per-context deduplication ${perContext}`, async () => {
+      const clone = vi.spyOn(globalThis, 'structuredClone');
+      try {
+        let release!: () => void;
+        const pending = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        const fetch = vi.fn(async () => {
+          await pending;
+          return Response.json({ data: { node: { value: 'original' } } });
+        });
+        await using executor = buildHTTPExecutor({
+          endpoint: 'http://context-clone-test/graphql',
+          fetch,
+          deduplicateInflightRequestsPerContext: perContext,
+        });
+        const document = parse('{ node { value } }');
+        const first = executor({ document, context: { client: 'first' } });
+        const second = executor({ document, context: { client: 'second' } });
+        release();
+        const results = await Promise.all([first, second]);
+        expect(results).toEqual([
+          { data: { node: { value: 'original' } } },
+          { data: { node: { value: 'original' } } },
+        ]);
+        expect(fetch).toHaveBeenCalledTimes(perContext ? 2 : 1);
+        expect(clone).toHaveBeenCalledTimes(perContext ? 0 : 2);
+      } finally {
+        clone.mockRestore();
+      }
+    });
+  }
 });

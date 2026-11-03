@@ -150,9 +150,28 @@ export interface HTTPExecutorOptions {
    * Whether to deduplicate inflight requests with the same parameters.
    * This can be useful to avoid making multiple identical requests to the upstream service when
    * multiple parts of the gateway are requesting the same data at the same time.
+   *
+   * Requests are deduplicated only within the same executor and the same `context` object,
+   * because the `fetch` implementation receives the `context` and may handle each request
+   * differently. See `deduplicateInflightRequestsPerContext` to deduplicate across contexts.
+   *
    * @default true
    */
   deduplicateInflightRequests?: boolean;
+  /**
+   * Whether inflight requests are deduplicated only within the same `context` object.
+   *
+   * When `false`, identical requests are deduplicated across different contexts within the
+   * same executor. Use this only when the `fetch` implementation does not handle requests
+   * differently based on the `context`, because the `context` of the first request will be
+   * used for all deduplicated requests.
+   *
+   * Hive Gateway's HTTP transport always sets this to `false` so that identical subgraph
+   * requests from different clients are deduplicated.
+   *
+   * @default true
+   */
+  deduplicateInflightRequestsPerContext?: boolean;
 
   /**
    * This option allows you to include the response detauls in the result extensions when a request fails.
@@ -189,9 +208,6 @@ export interface InflightRequestOptions {
 
 type InflightRequestId = string;
 
-const inflightRequests = new Map<InflightRequestId, Promise<ExecutionResult>>();
-const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
-
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
@@ -218,6 +234,17 @@ export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
+  const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
+  // inflight requests are scoped per executor and per context because the fetch
+  // fn receives the context and may behave differently for each
+  const inflightRequestsByContext = new WeakMap<
+    object,
+    Map<InflightRequestId, Promise<ExecutionResult>>
+  >();
+  const inflightRequestsWithoutContext = new Map<
+    InflightRequestId,
+    Promise<ExecutionResult>
+  >();
   let disposeCtrl: AbortController | undefined;
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
@@ -575,6 +602,23 @@ export function buildHTTPExecutor(
       }
       if (typeof inflightRequestOptions.body === 'object') {
         return runInflightRequest();
+      }
+      let inflightRequests = inflightRequestsWithoutContext;
+      // when per-context dedupe is off, everything shares the executor-wide map
+      if (
+        context != null &&
+        options?.deduplicateInflightRequestsPerContext !== false
+      ) {
+        if (Object(context) !== context) {
+          // primitives cant be weakmap keys, just dont dedupe
+          return runInflightRequest();
+        }
+        let contextInflightRequests = inflightRequestsByContext.get(context);
+        if (!contextInflightRequests) {
+          contextInflightRequests = new Map();
+          inflightRequestsByContext.set(context, contextInflightRequests);
+        }
+        inflightRequests = contextInflightRequests;
       }
       let inflightRequestId = `${inflightRequestOptions.url}|${inflightRequestOptions.method}`;
       if (inflightRequestOptions.body) {

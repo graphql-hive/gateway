@@ -1,5 +1,24 @@
 # @graphql-mesh/transport-http
 
+## 1.2.4
+### Patch Changes
+
+
+
+- [#2717](https://github.com/graphql-hive/gateway/pull/2717) [`cc5870d`](https://github.com/graphql-hive/gateway/commit/cc5870de856effe1e277b79ee2cd87bd046179a2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Add `deduplicateInflightRequestsPerContext` option to the HTTP executor
+  
+  When `true` (default), inflight requests are deduplicated only within the same `context` object. When `false`, identical requests are deduplicated across different contexts within the same executor.
+  
+  Hive Gateway's HTTP transport sets it to `false` so that identical subgraph requests coming from different clients are deduplicated.
+- Updated dependencies [[`cc5870d`](https://github.com/graphql-hive/gateway/commit/cc5870de856effe1e277b79ee2cd87bd046179a2)]:
+  - @graphql-tools/executor-http@3.6.0
+
+## 1.2.3
+### Patch Changes
+
+- Updated dependencies [[`4a2d3b6`](https://github.com/graphql-hive/gateway/commit/4a2d3b6a4e34cbe984ce7e36fd3306d907fb29d1)]:
+  - @graphql-tools/executor-http@3.5.1
+
 ## 1.2.2
 ### Patch Changes
 

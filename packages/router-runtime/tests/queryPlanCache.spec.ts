@@ -1,6 +1,7 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
+import { QueryPlanner } from '@graphql-hive/router-query-planner';
 import type { KeyValueCache } from '@graphql-mesh/types';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
 
 function createMockCache() {
@@ -19,6 +20,10 @@ function createMockCache() {
   } satisfies KeyValueCache;
   return { cache, get, set };
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const QUERY_PLAN_CACHE_KEY_PREFIX = 'hive-gateway:query-plan:';
 
@@ -113,4 +118,40 @@ it('reuses a query plan cached by another gateway instance through the shared ca
   // gwB found the plan gwA cached, so it never recomputed/re-cached it.
   expect(getQueryPlanCacheSetCalls(set)).toHaveLength(1);
   expect(get).toHaveBeenCalledWith(cachedKey);
+});
+
+it('reuses the in-memory query plan for the same document', async () => {
+  const computeCacheKey = vi.spyOn(QueryPlanner.prototype, 'computeCacheKey');
+  const planAsync = vi.spyOn(QueryPlanner.prototype, 'planAsync');
+  await using gw = createGatewayTester({
+    unifiedGraphHandler,
+    subgraphs: [
+      {
+        name: 'upstream',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello: () => 'world',
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  for (let i = 0; i < 5; i++) {
+    await expect(gw.execute({ query: '{ hello }' })).resolves.toMatchObject({
+      data: { hello: 'world' },
+    });
+  }
+
+  expect(planAsync).toHaveBeenCalledTimes(1);
+  // the native cache key should not be computed on a plan cache hit
+  // https://github.com/graphql-hive/gateway/issues/2655
+  expect(computeCacheKey).toHaveBeenCalledTimes(1);
 });

@@ -7,6 +7,7 @@ import {
   defaultFieldResolver,
   FieldNode,
   getNamedType,
+  GraphQLError,
   GraphQLResolveInfo,
   GraphQLSchema,
   isObjectType,
@@ -203,6 +204,15 @@ export function defaultMergedResolver(
         'stitchingInfo'
       ] as StitchingInfo;
       const parentTypeName = parent?.__typename || info.parentType.name;
+      leftOverDeferredContext.set(deferred, {
+        parentTypeName,
+        fieldName: info.fieldName,
+        responseKey,
+        path: responsePathAsArray(info.path),
+        sourceSubschema: parent[OBJECT_SUBSCHEMA_SYMBOL] as
+          | Subschema
+          | undefined,
+      });
       const fieldNodesByType =
         stitchingInfo?.fieldNodesByField?.[parentTypeName]?.[info.fieldName];
       if (
@@ -617,6 +627,7 @@ function handleResult<TContext extends Record<string, any>>(
   const leftOver = getPlanLeftOverFromParent(parent);
   // Handle possible deferred fields if any left over from the previous delegation plan is found
   if (leftOver) {
+    const endWork = beginLeftOverWork(leftOver);
     return handleMaybePromise(
       () => resolvedData$,
       (resolvedData) => {
@@ -624,6 +635,8 @@ function handleResult<TContext extends Record<string, any>>(
         handleLeftOver(parent, context, info, leftOver);
         return resolvedData;
       },
+      undefined,
+      endWork,
     );
   }
   return resolvedData$;
@@ -638,6 +651,7 @@ function handleLeftOver<TContext extends Record<string, any>>(
   const stitchingInfo = info.schema.extensions?.[
     'stitchingInfo'
   ] as StitchingInfo;
+  let scheduledWork = false;
   if (stitchingInfo) {
     for (const possibleSubschema of leftOver.nonProxiableSubschemas) {
       const parentTypeName = info.parentType.name;
@@ -662,12 +676,14 @@ function handleLeftOver<TContext extends Record<string, any>>(
       // Wait until the parent is flattened, then check if non proxiable subschemas are satisfied now,
       // then the deferred fields can be resolved
       if (selectionSets.size) {
+        scheduledWork = true;
         const selectionSet: SelectionSetNode = {
           kind: Kind.SELECTION_SET,
           selections: Array.from(selectionSets).flatMap(
             (selectionSet) => selectionSet.selections,
           ),
         };
+        const endWork = beginLeftOverWork(leftOver);
         handleMaybePromise(
           () => flattenPromise(parent),
           (flattenedParent) => {
@@ -683,9 +699,16 @@ function handleLeftOver<TContext extends Record<string, any>>(
               info,
             );
           },
+          undefined,
+          endWork,
         );
       }
     }
+  }
+  // No async work was started (e.g. empty selection sets). Drain so any
+  // unsettled leftover deferreds cannot hang the request forever.
+  if (!scheduledWork) {
+    scheduleLeftOverDrain(leftOver);
   }
 }
 
@@ -716,6 +739,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
           kind: Kind.SELECTION_SET,
           selections: missingFieldNodes,
         };
+        const endWork = beginLeftOverWork(leftOver);
         handleMaybePromise(
           () =>
             resolver(
@@ -740,6 +764,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
           },
           (error) =>
             handleDeferredResolverFailure(leftOver, leftOverParent, error),
+          endWork,
         );
       }
     }
@@ -760,87 +785,95 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
               nestedParentItem: any,
               fieldNode: FieldNode,
             ) {
-              const nestedTypeName = nestedParentItem['__typename'];
-              const sourceSubschema = getSubschema(
-                flattenedParent,
-                responseKey,
-              ) as Subschema;
-              if (sourceSubschema && nestedTypeName) {
-                const variableValues = getCoercedVariableValues(
-                  info.variableValues,
-                );
-                const delegationPlan = stitchingInfo.mergedTypes[
-                  nestedTypeName
-                ]?.delegationPlanBuilder(
-                  info.schema,
-                  sourceSubschema,
-                  variableValues != null &&
-                    Object.keys(variableValues).length > 0
-                    ? variableValues
-                    : EMPTY_OBJECT,
-                  info.fragments != null &&
-                    Object.keys(info.fragments).length > 0
-                    ? info.fragments
-                    : EMPTY_OBJECT,
-                  getActualFieldNodes(fieldNode),
-                  context,
-                  info,
-                );
-                if (delegationPlan?.length) {
-                  // Later optimize
-                  for (const delegationMap of delegationPlan) {
-                    for (const [subschema, selectionSet] of delegationMap) {
-                      const resolver =
-                        stitchingInfo.mergedTypes[
-                          nestedTypeName
-                        ]?.resolvers.get(subschema);
-                      if (resolver) {
-                        const subschemaTypes =
+              const endWork = beginLeftOverWork(leftOver);
+              try {
+                const nestedTypeName = nestedParentItem['__typename'];
+                const sourceSubschema = getSubschema(
+                  flattenedParent,
+                  responseKey,
+                ) as Subschema;
+                if (sourceSubschema && nestedTypeName) {
+                  const variableValues = getCoercedVariableValues(
+                    info.variableValues,
+                  );
+                  const delegationPlan = stitchingInfo.mergedTypes[
+                    nestedTypeName
+                  ]?.delegationPlanBuilder(
+                    info.schema,
+                    sourceSubschema,
+                    variableValues != null &&
+                      Object.keys(variableValues).length > 0
+                      ? variableValues
+                      : EMPTY_OBJECT,
+                    info.fragments != null &&
+                      Object.keys(info.fragments).length > 0
+                      ? info.fragments
+                      : EMPTY_OBJECT,
+                    getActualFieldNodes(fieldNode),
+                    context,
+                    info,
+                  );
+                  if (delegationPlan?.length) {
+                    // Later optimize
+                    for (const delegationMap of delegationPlan) {
+                      for (const [subschema, selectionSet] of delegationMap) {
+                        const resolver =
                           stitchingInfo.mergedTypes[
                             nestedTypeName
-                          ]!.typeMaps.get(subschema)!;
-                        const returnType = subschemaTypes[nestedTypeName];
-                        const res = await resolver(
-                          nestedParentItem,
-                          context,
-                          info,
-                          subschema,
-                          selectionSet,
-                          returnType, // returnType
-                          info.parentType,
-                        );
-                        if (res) {
-                          handleResolverResult(
-                            res,
+                          ]?.resolvers.get(subschema);
+                        if (resolver) {
+                          const subschemaTypes =
+                            stitchingInfo.mergedTypes[
+                              nestedTypeName
+                            ]!.typeMaps.get(subschema)!;
+                          const returnType = subschemaTypes[nestedTypeName];
+                          const res = await resolver(
+                            nestedParentItem,
+                            context,
+                            info,
                             subschema,
                             selectionSet,
-                            nestedParentItem,
-                            (nestedParentItem[FIELD_SUBSCHEMA_MAP_SYMBOL] ||=
-                              new Map()),
-                            info,
-                            responsePathAsArray(info.path),
-                            (nestedParentItem[UNPATHED_ERRORS_SYMBOL] ||= []),
+                            returnType, // returnType
+                            info.parentType,
                           );
+                          if (res) {
+                            handleResolverResult(
+                              res,
+                              subschema,
+                              selectionSet,
+                              nestedParentItem,
+                              (nestedParentItem[FIELD_SUBSCHEMA_MAP_SYMBOL] ||=
+                                new Map()),
+                              info,
+                              responsePathAsArray(info.path),
+                              (nestedParentItem[UNPATHED_ERRORS_SYMBOL] ||= []),
+                            );
+                          }
                         }
                       }
                     }
                   }
+                  if (
+                    parentSatisfiedSelectionSet(
+                      nestedParent,
+                      nestedSelectionSet,
+                    )
+                  ) {
+                    handleFlattenedParent(
+                      flattenedParent,
+                      leftOverParent,
+                      possibleSubschema,
+                      selectionSet,
+                      leftOver,
+                      stitchingInfo,
+                      parentTypeName,
+                      context,
+                      info,
+                    );
+                  }
                 }
-                if (
-                  parentSatisfiedSelectionSet(nestedParent, nestedSelectionSet)
-                ) {
-                  handleFlattenedParent(
-                    flattenedParent,
-                    leftOverParent,
-                    possibleSubschema,
-                    selectionSet,
-                    leftOver,
-                    stitchingInfo,
-                    parentTypeName,
-                    context,
-                    info,
-                  );
-                }
+              } finally {
+                endWork();
               }
             }
             if (Array.isArray(nestedParent)) {
@@ -908,8 +941,13 @@ function handleDeferredResolverResult<TContext extends Record<string, any>>(
             })
           ) {
             // requirements are satisfied, trigger handleLeftOver to fetch this field
+            const endWork = beginLeftOverWork(leftOver);
             setTimeout(() => {
-              handleLeftOver(leftOverParent, context, info, leftOver);
+              try {
+                handleLeftOver(leftOverParent, context, info, leftOver);
+              } finally {
+                endWork();
+              }
             }, 0);
           }
         }
@@ -1045,4 +1083,186 @@ function flattenPromise<T>(data: T): Promise<T> | T {
     return newData;
   }
   return data;
+}
+
+/**
+ * Tracks in-flight leftover work (flatten, entity fetch, nested leftover,
+ * setTimeout retries). When the queue drains and deferreds remain unsettled,
+ * reject them so the request cannot hang forever on an unresolvable leftover.
+ */
+type LeftOverWorkState = {
+  pending: number;
+  drainScheduled: boolean;
+};
+
+const leftOverWorkState = new WeakMap<
+  DelegationPlanLeftOver,
+  LeftOverWorkState
+>();
+
+function getLeftOverWorkState(
+  leftOver: DelegationPlanLeftOver,
+): LeftOverWorkState {
+  let state = leftOverWorkState.get(leftOver);
+  if (!state) {
+    state = { pending: 0, drainScheduled: false };
+    leftOverWorkState.set(leftOver, state);
+  }
+  return state;
+}
+
+function beginLeftOverWork(leftOver: DelegationPlanLeftOver): () => void {
+  const state = getLeftOverWorkState(leftOver);
+  state.pending++;
+  let ended = false;
+  return () => {
+    if (ended) {
+      return;
+    }
+    ended = true;
+    state.pending--;
+    scheduleLeftOverDrain(leftOver);
+  };
+}
+
+function scheduleLeftOverDrain(leftOver: DelegationPlanLeftOver): void {
+  const state = getLeftOverWorkState(leftOver);
+  if (state.drainScheduled) {
+    return;
+  }
+  state.drainScheduled = true;
+  queueMicrotask(() => {
+    state.drainScheduled = false;
+    if (state.pending > 0) {
+      return;
+    }
+    rejectOrphanedLeftOverDeferreds(leftOver);
+  });
+}
+
+function rejectOrphanedLeftOverDeferreds(
+  leftOver: DelegationPlanLeftOver,
+): void {
+  for (const [
+    parent,
+    deferredFields,
+  ] of leftOver.missingFieldsParentDeferredMap) {
+    if (!deferredFields.size) {
+      leftOver.missingFieldsParentDeferredMap.delete(parent);
+      continue;
+    }
+    for (const [responseKey, deferred] of deferredFields) {
+      const ctx = leftOverDeferredContext.get(deferred);
+      deferred.reject(
+        new GraphQLError(
+          buildSatisfiabilityErrorMessage(leftOver, responseKey, ctx, parent),
+          {
+            extensions: {
+              code: 'SATISFIABILITY_ERROR',
+            },
+          },
+        ),
+      );
+      leftOverDeferredContext.delete(deferred);
+    }
+    deferredFields.clear();
+    leftOver.missingFieldsParentDeferredMap.delete(parent);
+  }
+}
+
+type LeftOverDeferredContext = {
+  parentTypeName: string;
+  fieldName: string;
+  responseKey: string;
+  path: Array<string | number>;
+  sourceSubschema: Subschema | undefined;
+};
+
+const leftOverDeferredContext = new WeakMap<
+  { promise: Promise<unknown> },
+  LeftOverDeferredContext
+>();
+
+function formatSubschemaLabel(
+  subschema: Subschema | SubschemaConfig | undefined,
+  fallback: string,
+): string {
+  const name = subschema?.name;
+  if (name) {
+    return `subschema "${name}"`;
+  }
+  return fallback;
+}
+
+/**
+ * Build a nested selection snippet from a response path, skipping list indices
+ * so the message reads like Apollo composition satisfiability errors.
+ */
+function printPathAsQuerySelection(
+  path: ReadonlyArray<string | number>,
+): string {
+  const fields = path.filter((segment): segment is string => {
+    return typeof segment === 'string';
+  });
+  if (fields.length === 0) {
+    return '{\n}';
+  }
+  const lines: string[] = ['{'];
+  for (let i = 0; i < fields.length; i++) {
+    const pad = '  '.repeat(i + 1);
+    if (i === fields.length - 1) {
+      lines.push(`${pad}${fields[i]}`);
+    } else {
+      lines.push(`${pad}${fields[i]} {`);
+    }
+  }
+  for (let i = fields.length - 1; i >= 1; i--) {
+    lines.push(`${'  '.repeat(i)}}`);
+  }
+  lines.push('}');
+  return lines.join('\n');
+}
+
+function buildSatisfiabilityErrorMessage(
+  leftOver: DelegationPlanLeftOver,
+  responseKey: string,
+  ctx: LeftOverDeferredContext | undefined,
+  parent: ExternalObject,
+): string {
+  const parentTypeName =
+    ctx?.parentTypeName ||
+    (typeof parent?.__typename === 'string' ? parent.__typename : 'Object');
+  const fieldName = ctx?.fieldName || responseKey;
+  const qualifiedField = `${parentTypeName}.${fieldName}`;
+  const path = ctx?.path?.length ? ctx.path : [responseKey];
+  const selection = printPathAsQuerySelection(path);
+
+  const sourceSubschema =
+    ctx?.sourceSubschema ||
+    (parent[OBJECT_SUBSCHEMA_SYMBOL] as Subschema | undefined);
+  const sourceLabel = formatSubschemaLabel(
+    sourceSubschema,
+    'the current subschema',
+  );
+
+  const reasons: string[] = [`- cannot find field "${qualifiedField}".`];
+  for (const target of leftOver.nonProxiableSubschemas) {
+    const targetLabel = formatSubschemaLabel(target, 'another subschema');
+    const mergeConfig = target.merge?.[parentTypeName];
+    const keyFields = mergeConfig?.selectionSet?.trim();
+    const keyPhrase = keyFields
+      ? `using key fields ${keyFields} of "${parentTypeName}"`
+      : `using key fields of "${parentTypeName}"`;
+    reasons.push(
+      `- cannot move to ${targetLabel} ${keyPhrase}; the key field(s) cannot be resolved from ${sourceLabel}.`,
+    );
+  }
+
+  return (
+    `The following field cannot be satisfied by the subschemas:\n` +
+    `${selection}\n` +
+    `because:\n` +
+    `- from ${sourceLabel}:\n` +
+    reasons.map((reason) => `  ${reason}`).join('\n')
+  );
 }

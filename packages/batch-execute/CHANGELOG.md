@@ -1,5 +1,12 @@
 # @graphql-tools/batch-execute
 
+## 10.3.1
+### Patch Changes
+
+
+
+- [`9877255`](https://github.com/graphql-hive/gateway/commit/98772559ea8a529b3c6235722ac5cc7b82992c11) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Batch only requests that share the same `context` in `createBatchingExecutor`
+
 ## 10.3.0
 ### Minor Changes
 

@@ -694,6 +694,15 @@ function normalizeBatchFetchErrors(
     }
 
     const entityIndex = errorPath[1];
+    if (entityIndex === undefined) {
+      // the whole aliased _entities field failed, so every entity in it failed
+      for (const mappedPaths of aliasContext.entityPathsByRepresentationIndex.values()) {
+        for (const mappedPath of mappedPaths) {
+          relocated.push(relocatedError(error, mappedPath));
+        }
+      }
+      continue;
+    }
     if (typeof entityIndex !== 'number') {
       relocated.push(error);
       continue;
@@ -1034,6 +1043,16 @@ function normalizeFetchErrors(
     const errorPath = error.path;
     if (errorPath) {
       const entityIndexPosition = errorPath.indexOf('_entities');
+      if (
+        entityIndexPosition !== -1 &&
+        entityIndexPosition === errorPath.length - 1
+      ) {
+        // the whole _entities field failed, so every entity in the fetch failed
+        for (const entityPath of flattenState.entityPaths) {
+          relocated.push(relocatedError(error, entityPath));
+        }
+        continue;
+      }
       if (entityIndexPosition !== -1) {
         const dedupIndex = errorPath[entityIndexPosition + 1];
         if (typeof dedupIndex === 'number') {
@@ -1518,14 +1537,24 @@ function projectSelectionSet(
   selectionSet: SelectionSetNode,
   type: GraphQLNamedType,
   executionContext: QueryPlanExecutionContext,
+  path: (string | number)[],
 ): any {
   if (data == null) {
     return data;
   }
   if (Array.isArray(data)) {
-    return data.map((item) =>
-      projectSelectionSet(item, selectionSet, type, executionContext),
-    );
+    return data.map((item, index) => {
+      path.push(index);
+      const projected = projectSelectionSet(
+        item,
+        selectionSet,
+        type,
+        executionContext,
+        path,
+      );
+      path.pop();
+      return projected;
+    });
   }
   const parentType = isEntityRepresentation(data)
     ? executionContext.supergraphSchema.getType(data.__typename)
@@ -1599,14 +1628,18 @@ function projectSelectionSet(
       }
       const fieldType = getNamedType(field.type);
       const responseKey = selection.alias?.value || selection.name.value;
-      let projectedValue = selection.selectionSet
-        ? projectSelectionSet(
-            data[responseKey],
-            selection.selectionSet,
-            fieldType,
-            executionContext,
-          )
-        : data[responseKey];
+      let projectedValue = data[responseKey];
+      if (selection.selectionSet) {
+        path.push(responseKey);
+        projectedValue = projectSelectionSet(
+          projectedValue,
+          selection.selectionSet,
+          fieldType,
+          executionContext,
+          path,
+        );
+        path.pop();
+      }
       if (projectedValue !== undefined) {
         if (isEnumType(fieldType)) {
           const enumType = fieldType;
@@ -1646,6 +1679,22 @@ function projectSelectionSet(
       } else if (field.name === '__typename') {
         result[responseKey] = type.name;
       } else if (isNonNullType(field.type)) {
+        const fieldPath = [...path, responseKey];
+        // an upstream error (like a failed entity lookup) already explains the missing value
+        const explained = executionContext.errors.some(
+          (error) =>
+            error.path &&
+            error.path.length <= fieldPath.length &&
+            error.path.every((segment, i) => segment === fieldPath[i]),
+        );
+        if (!explained) {
+          executionContext.errors.push(
+            createGraphQLError(
+              `Cannot return null for non-nullable field ${parentType.name}.${field.name}.`,
+              { path: fieldPath },
+            ),
+          );
+        }
         return null;
       } else {
         result[responseKey] = null;
@@ -1675,13 +1724,16 @@ function projectSelectionSet(
           selection.selectionSet,
           typeByTypename,
           executionContext,
+          path,
         );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
+        if (projectedValue == null) {
+          // null bubbles up from a missing non-nullable field inside the fragment
+          return null;
         }
+        Object.assign(
+          result,
+          mergeDeep([result, projectedValue], false, true, true),
+        );
       } else {
         // If data doesn't have a __typename, use the current parentType
         // and check if it satisfies the type condition
@@ -1702,13 +1754,15 @@ function projectSelectionSet(
             ? executionContext.supergraphSchema.getType(typeCondition)!
             : parentType,
           executionContext,
+          path,
         );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
+        if (projectedValue == null) {
+          return null;
         }
+        Object.assign(
+          result,
+          mergeDeep([result, projectedValue], false, true, true),
+        );
       }
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = executionContext.fragments[selection.name.value];
@@ -1738,13 +1792,15 @@ function projectSelectionSet(
         fragment.selectionSet,
         typeByTypename,
         executionContext,
+        path,
       );
-      if (projectedValue != null) {
-        Object.assign(
-          result,
-          mergeDeep([result, projectedValue], false, true, true),
-        );
+      if (projectedValue == null) {
+        return null;
       }
+      Object.assign(
+        result,
+        mergeDeep([result, projectedValue], false, true, true),
+      );
     }
   }
   return result;
@@ -1766,6 +1822,7 @@ function projectDataByOperation(executionContext: QueryPlanExecutionContext) {
     executionContext.operation.selectionSet,
     rootType,
     executionContext,
+    [],
   );
 }
 
