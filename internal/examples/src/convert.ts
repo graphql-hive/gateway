@@ -576,14 +576,18 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           );
         } else {
           // packages from a stable release can take a few minutes to become installable from
-          // the npm registry after publishing, so retry when npm cant find a version (ETARGET).
+          // the npm registry after publishing, so retry when npm cant find a version (ETARGET) or
+          // when the version is listed but its tarball isnt available yet (E404).
           // --prefer-online on retries skips npm's cached packuments which would still miss the version
           for (let retries = 10, exit = waitForExit; ; retries--) {
             try {
               await exit;
               break;
             } catch (err) {
-              if (!retries || !String(err).includes('ETARGET')) {
+              if (
+                !retries ||
+                !['ETARGET', 'E404'].some((code) => String(err).includes(code))
+              ) {
                 throw err;
               }
               console.warn(
