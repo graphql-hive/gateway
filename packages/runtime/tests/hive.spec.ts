@@ -252,6 +252,60 @@ describe('Hive CDN', () => {
     await setTimeout(10); // allow hive client to flush before disposing
     // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
+  it('does not attempt to report subscriptions when the schema has no subscription type', async () => {
+    let usageRequests = 0;
+    await using hiveServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (new URL(req.url).pathname === '/usage') {
+          usageRequests++;
+        }
+        return new Response();
+      }),
+    );
+    await using upstreamServer = await createDisposableServer(
+      createYoga({ schema: createUpstreamSchema() }),
+    );
+    await using gateway = createGatewayRuntime({
+      proxy: {
+        endpoint: `${upstreamServer.url}/graphql`,
+      },
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: hiveServer.url + '/graphql',
+          applicationUrl: hiveServer.url,
+          usageEndpoint: hiveServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      maskedErrors: false,
+      logging: isDebug(),
+    });
+
+    const response = await gateway.fetch(
+      'http://localhost/graphql',
+      initForExecuteFetchArgs(
+        {
+          query: /* GraphQL */ `
+            subscription {
+              foo
+            }
+          `,
+        },
+        { accept: 'text/event-stream' },
+      ),
+    );
+    expect(await response.text()).toContain(
+      'Schema is not configured to execute subscription operation.',
+    );
+
+    await setTimeout(10);
+    expect(usageRequests).toBe(0);
+  });
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(
