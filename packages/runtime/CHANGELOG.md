@@ -1,5 +1,25 @@
 # @graphql-hive/gateway-runtime
 
+## 2.13.4
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/batch-delegate@10.1.5
+  - @graphql-tools/delegate@12.3.3
+  - @graphql-tools/executor-common@1.1.1
+  - @graphql-tools/executor-http@3.6.1
+  - @graphql-tools/federation@4.6.4
+  - @graphql-mesh/fusion-runtime@1.13.4
+  - @graphql-mesh/hmac-upstream-signature@2.1.2
+  - @graphql-tools/stitch@10.4.3
+  - @graphql-mesh/transport-common@1.1.2
+  - @graphql-tools/wrap@11.2.5
+
 ## 2.13.3
 ### Patch Changes
 
