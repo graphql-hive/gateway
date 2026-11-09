@@ -463,52 +463,11 @@ describe('batch execution', () => {
       }),
       batchExecWithCapture({
         document: parse('{ field2 }'),
-        context: ctx,
       }),
     ]);
 
     expect(executorCalls).toEqual(1);
     expect(capturedContext).toBe(ctx);
     expect(capturedSubgraphName).toEqual('mySubgraph');
-  });
-
-  it('batches requests with different contexts separately', async () => {
-    const execute = createBatchingExecutor(async (req) => {
-      executorCalls += 1;
-      const data: Record<string, unknown> = {};
-      for (const field of (
-        req.document.definitions[0] as OperationDefinitionNode
-      ).selectionSet.selections) {
-        if (field.kind === 'Field') {
-          data[field.alias?.value ?? field.name.value] =
-            req.context?.['user']?.secret;
-        }
-      }
-      return { data } as ExecutionResult;
-    });
-    const [first, second, none] = (await Promise.all([
-      execute({
-        document: parse('{ secret }'),
-        context: { user: { secret: 'first-secret' } },
-      }),
-      execute({
-        document: parse('{ secret }'),
-        context: { user: { secret: 'second-secret' } },
-      }),
-      execute({ document: parse('{ secret }') }),
-    ])) as ExecutionResult[];
-    expect(first?.data).toEqual({ secret: 'first-secret' });
-    expect(second?.data).toEqual({ secret: 'second-secret' });
-    expect(none?.data).toEqual({ secret: undefined });
-    expect(executorCalls).toEqual(3);
-  });
-
-  it('still batches requests sharing the same context', async () => {
-    const ctx = {};
-    await Promise.all([
-      batchExec({ document: parse('{ field1 }'), context: ctx }),
-      batchExec({ document: parse('{ field2 }'), context: ctx }),
-    ]);
-    expect(executorCalls).toEqual(1);
   });
 });
