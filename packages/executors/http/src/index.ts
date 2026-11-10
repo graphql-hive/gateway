@@ -234,6 +234,7 @@ export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
+  const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
   // inflight requests are scoped per executor and per context because the fetch
   // fn receives the context and may behave differently for each
   const inflightRequestsByContext = new WeakMap<
@@ -628,6 +629,11 @@ export function buildHTTPExecutor(
       }
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
+      if (inflightRequest) {
+        // Isolate every consumer when a request is actually shared, including
+        // the consumer that originally started the request.
+        sharedInflightRequests.add(inflightRequest as Promise<ExecutionResult>);
+      }
       if (!inflightRequest) {
         inflightRequest = runInflightRequest();
         if (isPromise(inflightRequest)) {
@@ -641,7 +647,13 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
-          if (result == null || !result.data) {
+          if (
+            result == null ||
+            !result.data ||
+            !sharedInflightRequests.has(
+              inflightRequest as Promise<ExecutionResult>,
+            )
+          ) {
             return result;
           }
           const clonedResult: ExecutionResult = {
