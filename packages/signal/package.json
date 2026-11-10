@@ -39,7 +39,7 @@
     "prepack": "yarn build"
   },
   "devDependencies": {
-    "pkgroll": "2.27.1"
+    "pkgroll": "2.29.0"
   },
   "sideEffects": false
 }
