@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 3.6.2
+### Patch Changes
+
+
+
+- [#2691](https://github.com/graphql-hive/gateway/pull/2691) [`3e0a896`](https://github.com/graphql-hive/gateway/commit/3e0a896cf110d8a6290e20b10b6865813301f5ca) Thanks [@jhonDoe15](https://github.com/jhonDoe15)! - Reduce allocation during delegation: clone HTTP query results only when the in-flight request has multiple consumers, construct compact fresh null-prototype field metadata maps, and avoid temporary fake-promise wrappers for synchronous composite completion. Preserve shared-request isolation, metadata descriptors, and asynchronous completion behavior.
+
 ## 3.6.1
 ### Patch Changes
 
