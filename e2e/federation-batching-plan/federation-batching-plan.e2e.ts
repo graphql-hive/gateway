@@ -473,47 +473,45 @@ it('should consistently explain the query plan', async () => {
         "plan": [
           {
             "query": "query TestQuery {
-      users {
+      topProducts {
+        ... on Product {
+          upc
+          name
+          price
+          weight
+        }
+        upc
+        name
+        price
+        weight
         __typename
-        ...User
-        id
       }
-    }
-
-    fragment User on User {
-      id
-      username
-      name
+    }",
+            "subgraphName": "products",
+            "variables": {},
+          },
+          {
+            "query": "query TestQuery {
+      users {
+        ... on User {
+          id
+          username
+          name
+        }
+        id
+        username
+        name
+        __typename
+      }
     }",
             "subgraphName": "accounts",
             "variables": {},
           },
           {
-            "query": "query TestQuery($first: Int) {
-      topProducts(first: $first) {
-        __typename
-        ...Product
-        upc
-      }
-    }
-
-    fragment Product on Product {
-      __typename
-      upc
-      name
-      price
-      weight
-    }",
-            "subgraphName": "products",
-            "variables": {
-              "first": 5,
-            },
-          },
-          {
             "query": "query TestQuery($representations: [_Any!]!) {
       _entities(representations: $representations) {
-        __typename
         ... on Product {
+          __typename
           inStock
           shippingEstimate
         }
@@ -546,8 +544,8 @@ it('should consistently explain the query plan', async () => {
           {
             "query": "query TestQuery($representations: [_Any!]!) {
       _entities(representations: $representations) {
-        __typename
         ... on Product {
+          __typename
           name
           price
           weight
@@ -575,50 +573,100 @@ it('should consistently explain the query plan', async () => {
           {
             "query": "query TestQuery($representations: [_Any!]!) {
       _entities(representations: $representations) {
-        __typename
-        ... on Product {
+        ... on User {
+          __typename
           reviews {
             __typename
-            ...Review
-            author {
-              username
+            ... on Review {
               __typename
+              id
+              body
+            }
+            product {
               __typename
-              ...User
+              ... on Product {
+                __typename
+                upc
+              }
               reviews {
                 __typename
-                ...Review
-                product {
-                  ...Product
+                ... on Review {
+                  __typename
+                  id
+                  body
                 }
+                author {
+                  __typename
+                  ... on User {
+                    __typename
+                    id
+                  }
+                  reviews {
+                    __typename
+                    ... on Review {
+                      __typename
+                      id
+                      body
+                    }
+                    product {
+                      __typename
+                      ... on Product {
+                        __typename
+                        upc
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        ... on Product {
+          __typename
+          reviews {
+            __typename
+            ... on Review {
+              __typename
+              id
+              body
+            }
+            author {
+              __typename
+              ... on User {
+                __typename
                 id
               }
-              id
+              reviews {
+                __typename
+                ... on Review {
+                  __typename
+                  id
+                  body
+                }
+                product {
+                  __typename
+                  ... on Product {
+                    __typename
+                    upc
+                  }
+                }
+              }
             }
-            id
           }
-          upc
         }
       }
-    }
-
-    fragment Product on Product {
-      __typename
-      upc
-    }
-
-    fragment User on User {
-      __typename
-      id
-    }
-
-    fragment Review on Review {
-      id
-      body
     }",
             "subgraphName": "reviews",
             "variables": {
               "representations": [
+                {
+                  "__typename": "User",
+                  "id": "1",
+                },
+                {
+                  "__typename": "User",
+                  "id": "2",
+                },
                 {
                   "__typename": "Product",
                   "upc": "1",
@@ -637,81 +685,14 @@ it('should consistently explain the query plan', async () => {
           {
             "query": "query TestQuery($representations: [_Any!]!) {
       _entities(representations: $representations) {
-        __typename
         ... on User {
+          __typename
+          username
           name
         }
       }
     }",
             "subgraphName": "accounts",
-            "variables": {
-              "representations": [
-                {
-                  "__typename": "User",
-                  "id": "1",
-                },
-                {
-                  "__typename": "User",
-                  "id": "2",
-                },
-              ],
-            },
-          },
-          {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      _entities(representations: $representations) {
-        __typename
-        ... on User {
-          reviews {
-            __typename
-            ...Review
-            product {
-              __typename
-              ...Product
-              reviews {
-                __typename
-                ...Review
-                author {
-                  username
-                  __typename
-                  __typename
-                  ...User
-                  reviews {
-                    __typename
-                    ...Review
-                    product {
-                      ...Product
-                    }
-                    id
-                  }
-                  id
-                }
-                id
-              }
-              upc
-            }
-            id
-          }
-          id
-        }
-      }
-    }
-
-    fragment User on User {
-      __typename
-      id
-    }
-
-    fragment Product on Product {
-      __typename
-      upc
-    }
-
-    fragment Review on Review {
-      id
-      body
-    }",
-            "subgraphName": "reviews",
             "variables": {
               "representations": [
                 {

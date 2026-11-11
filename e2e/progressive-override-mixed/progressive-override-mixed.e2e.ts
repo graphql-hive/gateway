@@ -143,11 +143,14 @@ describe('Progressive Override', () => {
       const AReceivedQueries = ALogs.split('\n').filter((line) =>
         line.includes('received query'),
       );
-      expect(AReceivedQueries).toMatchInlineSnapshot(`
-              [
-                "[service-a] received query: {aFeed{__typename id}}",
-              ]
-            `);
+      // Field order differs between stitching (`id __typename`) and Hive Router
+      // QP (`__typename id`) - assert contents, not print order.
+      expect(AReceivedQueries).toHaveLength(1);
+      expect(AReceivedQueries[0]).toContain(
+        '[service-a] received query: {aFeed{',
+      );
+      expect(AReceivedQueries[0]).toContain('id');
+      expect(AReceivedQueries[0]).toContain('__typename');
       const BLogs = serviceB.getStd('out');
       const BReceivedQueries = BLogs.split('\n').filter((line) =>
         line.includes('received query'),
@@ -161,7 +164,8 @@ describe('Progressive Override', () => {
       expect(BReceivedQueries[1]).toContain(
         '[service-b] received query: query($representations:[_Any!]!){_entities(representations:',
       );
-      expect(BReceivedQueries[1]).toContain('...on Post{createdAt');
+      expect(BReceivedQueries[1]).toContain('...on Post{');
+      expect(BReceivedQueries[1]).toContain('createdAt');
     }
 
     {
@@ -224,16 +228,18 @@ describe('Progressive Override', () => {
       expect(AReceivedQueries[1]).toContain(
         '[service-a] received query: query($representations:[_Any!]!){_entities(representations:',
       );
-      expect(AReceivedQueries[1]).toContain('...on Post{createdAt');
+      expect(AReceivedQueries[1]).toContain('...on Post{');
+      expect(AReceivedQueries[1]).toContain('createdAt');
       const BLogs = serviceB.getStd('out');
       const BReceivedQueries = BLogs.split('\n').filter((line) =>
         line.includes('received query'),
       );
-      expect(BReceivedQueries).toMatchInlineSnapshot(`
-              [
-                "[service-b] received query: {bFeed{__typename id}}",
-              ]
-            `);
+      expect(BReceivedQueries).toHaveLength(1);
+      expect(BReceivedQueries[0]).toContain(
+        '[service-b] received query: {bFeed{',
+      );
+      expect(BReceivedQueries[0]).toContain('id');
+      expect(BReceivedQueries[0]).toContain('__typename');
     }
   });
 });
