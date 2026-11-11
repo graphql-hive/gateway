@@ -155,7 +155,11 @@ describe('OpenTelemetry', () => {
           expect(relevantTraces.length).toBe(1);
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace!.spans.length).toBe(20);
+          // Stitching backbone: 1 inventory + 1 reviews (multi-path coalesce).
+          // Classic stitch was 20; Hive router was inventoryx2 / reviewsx1.
+          expect(relevantTrace!.spans.length).toBe(
+            usingHiveRouterRuntime() ? 20 : 18,
+          );
 
           const resource = relevantTrace!.processes['p1'];
           expect(resource).toBeDefined();
@@ -226,7 +230,7 @@ describe('OpenTelemetry', () => {
             ['subgraph.execute (accounts)', 2],
             ['subgraph.execute (products)', 2],
             ['subgraph.execute (inventory)', usingHiveRouterRuntime() ? 2 : 1],
-            ['subgraph.execute (reviews)', usingHiveRouterRuntime() ? 1 : 2],
+            ['subgraph.execute (reviews)', 1],
           ] as const;
 
           for (const [operationName, count] of expectedExecuteChildren) {
@@ -277,7 +281,11 @@ describe('OpenTelemetry', () => {
           expect(relevantTraces.length).toBe(1);
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace!.spans.length).toBe(20);
+          // Stitching backbone: 1 inventory + 1 reviews (multi-path coalesce).
+          // Classic stitch was 20; Hive router was inventoryx2 / reviewsx1.
+          expect(relevantTrace!.spans.length).toBe(
+            usingHiveRouterRuntime() ? 20 : 18,
+          );
 
           const resource = relevantTrace!.processes['p1'];
           expect(resource).toBeDefined();
@@ -339,7 +347,7 @@ describe('OpenTelemetry', () => {
             ['subgraph.execute (accounts)', 2],
             ['subgraph.execute (products)', 2],
             ['subgraph.execute (inventory)', usingHiveRouterRuntime() ? 2 : 1],
-            ['subgraph.execute (reviews)', usingHiveRouterRuntime() ? 1 : 2],
+            ['subgraph.execute (reviews)', 1],
           ] as const;
 
           for (const [operationName, count] of expectedExecuteChildren) {
@@ -603,7 +611,10 @@ describe('OpenTelemetry', () => {
             expect(span.traceID).toBe(traceId);
           }
 
-          expect(upstreamHttpCalls.length).toBe(7);
+          // Backbone multi-path coalesce: one fewer upstream than classic (7).
+          expect(upstreamHttpCalls.length).toBe(
+            usingHiveRouterRuntime() ? 7 : 6,
+          );
 
           for (const call of upstreamHttpCalls) {
             const transparentHeader = (call.headers || {})['traceparent'];
