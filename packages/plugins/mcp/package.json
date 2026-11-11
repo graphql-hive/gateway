@@ -63,8 +63,8 @@
     "@graphql-hive/logger": "workspace:^",
     "@graphql-tools/graphql-file-loader": "^9.1.0",
     "@graphql-tools/load": "^9.1.0",
-    "@whatwg-node/promise-helpers": "^2.0.1",
-    "@whatwg-node/server": "^0.13.0",
+    "@whatwg-node/promise-helpers": "^2.0.2",
+    "@whatwg-node/server": "^0.13.3",
     "sofa-api": "0.18.10",
     "tslib": "^2.8.1"
   },
