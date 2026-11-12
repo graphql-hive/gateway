@@ -129,8 +129,8 @@ describe('Optimizations', () => {
     });
     expect(serviceCallCnt).toMatchObject({
       accounts: 2,
-      // inventory: 1, (when computed fields definition removed)
-      inventory: 2,
+      // Clone-less computed fields coalesce inventory @requires into one hop.
+      inventory: 1,
       products: 2,
       reviews: 2,
     });

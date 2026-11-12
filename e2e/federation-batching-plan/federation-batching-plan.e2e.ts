@@ -489,65 +489,6 @@ it('should consistently explain the query plan', async () => {
             "variables": {},
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!, $_v1_representations: [_Any!]!) {
-      _v0__entities: _entities(representations: $_v0_representations) {
-        __typename
-        ... on Product {
-          inStock
-        }
-      }
-      _v1__entities: _entities(representations: $_v1_representations) {
-        __typename
-        ... on Product {
-          shippingEstimate
-        }
-      }
-    }",
-            "subgraphName": "inventory",
-            "variables": {
-              "_v0_representations": [
-                {
-                  "__typename": "Product",
-                  "price": 899,
-                  "upc": "1",
-                  "weight": 100,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 1299,
-                  "upc": "2",
-                  "weight": 1000,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 54,
-                  "upc": "3",
-                  "weight": 50,
-                },
-              ],
-              "_v1_representations": [
-                {
-                  "__typename": "Product",
-                  "price": 899,
-                  "upc": "1",
-                  "weight": 100,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 1299,
-                  "upc": "2",
-                  "weight": 1000,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 54,
-                  "upc": "3",
-                  "weight": 50,
-                },
-              ],
-            },
-          },
-          {
             "query": "query TestQuery($first: Int) {
       topProducts(first: $first) {
         __typename
@@ -566,6 +507,40 @@ it('should consistently explain the query plan', async () => {
             "subgraphName": "products",
             "variables": {
               "first": 5,
+            },
+          },
+          {
+            "query": "query TestQuery($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        __typename
+        ... on Product {
+          inStock
+          shippingEstimate
+        }
+      }
+    }",
+            "subgraphName": "inventory",
+            "variables": {
+              "representations": [
+                {
+                  "__typename": "Product",
+                  "price": 899,
+                  "upc": "1",
+                  "weight": 100,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 1299,
+                  "upc": "2",
+                  "weight": 1000,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 54,
+                  "upc": "3",
+                  "weight": 50,
+                },
+              ],
             },
           },
           {

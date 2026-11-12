@@ -67,7 +67,7 @@ describe('splitMergedTypeEntryPointsTransformer', () => {
     }).toThrow();
   });
 
-  it('builds multiple subschemas for separate entryPoints', () => {
+  it('keeps multiple entryPoints on one subschema (no clones)', () => {
     const results = splitMergedTypeEntryPointsTransformer({
       schema,
       merge: {
@@ -86,20 +86,23 @@ describe('splitMergedTypeEntryPointsTransformer', () => {
       },
     });
 
-    expect(results.length).toEqual(2);
+    expect(results.length).toEqual(1);
     assertSome(results[0]?.merge);
     expect(results[0]?.merge['Product']).toEqual({
-      selectionSet: '{ id }',
-      fieldName: 'productById',
-    });
-    assertSome(results[1]?.merge);
-    expect(results[1]?.merge['Product']).toEqual({
-      selectionSet: '{ upc }',
-      fieldName: 'productByUpc',
+      entryPoints: [
+        {
+          selectionSet: '{ id }',
+          fieldName: 'productById',
+        },
+        {
+          selectionSet: '{ upc }',
+          fieldName: 'productByUpc',
+        },
+      ],
     });
   });
 
-  it('consolidates type permutations into shared subschemas', () => {
+  it('flattens single entryPoints and keeps multi-entry types together', () => {
     const results = splitMergedTypeEntryPointsTransformer({
       schema,
       merge: {
@@ -150,19 +153,39 @@ describe('splitMergedTypeEntryPointsTransformer', () => {
       },
     });
 
-    expect(results.length).toEqual(3);
+    expect(results.length).toEqual(1);
     expect(results[0]?.merge).toEqual({
       Product: {
-        selectionSet: '{ id }',
-        fieldName: 'productById',
+        entryPoints: [
+          {
+            selectionSet: '{ id }',
+            fieldName: 'productById',
+          },
+          {
+            selectionSet: '{ upc }',
+            fieldName: 'productByUpc',
+          },
+          {
+            selectionSet: '{ key }',
+            fieldName: 'productByKey',
+          },
+        ],
       },
       Video: {
-        selectionSet: '{ id }',
-        fieldName: 'videoById',
-        canonical: true,
+        entryPoints: [
+          {
+            selectionSet: '{ id }',
+            fieldName: 'videoById',
+          },
+          {
+            selectionSet: '{ key }',
+            fieldName: 'videoByKey',
+          },
+        ],
         fields: {
           duration: { canonical: true },
         },
+        canonical: true,
       },
       User: {
         selectionSet: '{ id }',
@@ -171,27 +194,6 @@ describe('splitMergedTypeEntryPointsTransformer', () => {
       Thing: {
         selectionSet: '{ id }',
         fieldName: 'thingById',
-      },
-    });
-
-    expect(results[1]?.merge).toEqual({
-      Product: {
-        selectionSet: '{ upc }',
-        fieldName: 'productByUpc',
-      },
-      Video: {
-        selectionSet: '{ key }',
-        fieldName: 'videoByKey',
-        fields: {
-          duration: {},
-        },
-      },
-    });
-
-    expect(results[2]?.merge).toEqual({
-      Product: {
-        selectionSet: '{ key }',
-        fieldName: 'productByKey',
       },
     });
   });

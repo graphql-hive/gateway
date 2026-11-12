@@ -1,72 +1,70 @@
-import {
-  cloneSubschemaConfig,
-  MergedTypeConfig,
-  SubschemaConfig,
-} from '@graphql-tools/delegate';
+import { MergedTypeConfig, SubschemaConfig } from '@graphql-tools/delegate';
 
+/**
+ * Normalize merged-type `entryPoints` without cloning the subschema.
+ *
+ * - 0 entryPoints → unchanged
+ * - 1 entryPoint → flatten onto the merge config (legacy single-key shape)
+ * - 2+ entryPoints → leave `entryPoints` on the single SubschemaConfig so
+ *   stitchingInfo / the delegation plan builder pick the matching key at hop time
+ *
+ * Previously this returned N cloned SubschemaConfigs (one per entry index),
+ * which multiplied Subschema identities in planner target maps. Clone-less
+ * multi-key merges keep one subschema and resolve the entry at runtime.
+ */
 export function splitMergedTypeEntryPointsTransformer(
   subschemaConfig: SubschemaConfig,
 ): Array<SubschemaConfig> {
   if (!subschemaConfig.merge) return [subschemaConfig];
 
-  const maxEntryPoints = Object.values(subschemaConfig.merge).reduce(
-    (max: number, mergedTypeConfig) => {
-      return Math.max(max, mergedTypeConfig?.entryPoints?.length ?? 0);
-    },
-    0,
-  );
+  let changed = false;
+  const merge: Record<string, MergedTypeConfig<any, any, any>> = {
+    ...subschemaConfig.merge,
+  };
 
-  if (maxEntryPoints === 0) return [subschemaConfig];
-
-  const subschemaPermutations = [];
-
-  for (let i = 0; i < maxEntryPoints; i += 1) {
-    const subschemaPermutation = cloneSubschemaConfig(subschemaConfig);
-    const mergedTypesCopy: Record<
-      string,
-      MergedTypeConfig<any, any, any>
-    > = subschemaPermutation.merge ?? Object.create(null);
-    let currentMerge = mergedTypesCopy;
-
-    if (i > 0) {
-      subschemaPermutation.merge = currentMerge = Object.create(null);
+  for (const typeName of Object.keys(merge)) {
+    const mergedTypeConfig = merge[typeName];
+    if (mergedTypeConfig == null) {
+      continue;
+    }
+    const entryPoints = mergedTypeConfig.entryPoints;
+    if (entryPoints == null || entryPoints.length === 0) {
+      continue;
     }
 
-    for (const typeName in mergedTypesCopy) {
-      const mergedTypeConfig = mergedTypesCopy[typeName];
-      const mergedTypeEntryPoint = mergedTypeConfig?.entryPoints?.[i];
-
-      if (mergedTypeEntryPoint) {
-        if (
-          mergedTypeConfig.selectionSet ??
-          mergedTypeConfig.fieldName ??
-          mergedTypeConfig.resolve
-        ) {
-          throw new Error(
-            `Merged type ${typeName} may not define entryPoints in addition to selectionSet, fieldName, or resolve`,
-          );
-        }
-
-        Object.assign(mergedTypeConfig, mergedTypeEntryPoint);
-        delete mergedTypeConfig.entryPoints;
-
-        if (i > 0) {
-          delete mergedTypeConfig.canonical;
-          if (mergedTypeConfig.fields != null) {
-            for (const mergedFieldName in mergedTypeConfig.fields) {
-              const mergedFieldConfig =
-                mergedTypeConfig.fields[mergedFieldName];
-              delete mergedFieldConfig?.canonical;
-            }
-          }
-        }
-
-        currentMerge[typeName] = mergedTypeConfig;
-      }
+    if (
+      mergedTypeConfig.selectionSet != null ||
+      mergedTypeConfig.fieldName != null ||
+      mergedTypeConfig.resolve != null
+    ) {
+      throw new Error(
+        `Merged type ${typeName} may not define entryPoints in addition to selectionSet, fieldName, or resolve`,
+      );
     }
 
-    subschemaPermutations.push(subschemaPermutation);
+    if (entryPoints.length === 1) {
+      const [entryPoint] = entryPoints;
+      merge[typeName] = {
+        ...mergedTypeConfig,
+        ...entryPoint,
+      };
+      delete merge[typeName]!.entryPoints;
+      changed = true;
+      continue;
+    }
+
+    // Multi-entry: keep entryPoints on this single subschema (no clone).
+    changed = true;
   }
 
-  return subschemaPermutations;
+  if (!changed) {
+    return [subschemaConfig];
+  }
+
+  return [
+    {
+      ...subschemaConfig,
+      merge,
+    },
+  ];
 }

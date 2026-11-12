@@ -7,8 +7,6 @@ import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
 import type {
-  OnDelegationPlanHook,
-  OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   SchemaGenerationLease,
 } from '@graphql-mesh/fusion-runtime';
@@ -107,7 +105,6 @@ import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
-import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
@@ -233,10 +230,6 @@ export function createGatewayRuntime<
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
   // TODO: Will be deleted after v0
   const onDelegateHooks: OnDelegateHook<unknown>[] = [];
-
-  const onDelegationPlanHooks: OnDelegationPlanHook<GatewayContext>[] = [];
-  const onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<GatewayContext>[] =
-    [];
 
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
@@ -697,8 +690,6 @@ export function createGatewayRuntime<
       transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
-      onDelegationPlanHooks,
-      onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
       instrumentation: () => instrumentation,
@@ -823,12 +814,6 @@ export function createGatewayRuntime<
         if (plugin.onDelegate) {
           // @ts-expect-error For backward compatibility
           onDelegateHooks.push(plugin.onDelegate);
-        }
-        if (plugin.onDelegationPlan) {
-          onDelegationPlanHooks.push(plugin.onDelegationPlan);
-        }
-        if (plugin.onDelegationStageExecute) {
-          onDelegationStageExecuteHooks.push(plugin.onDelegationStageExecute);
         }
         if (plugin.onCacheGet) {
           onCacheGetHooks.push(plugin.onCacheGet);
@@ -1172,7 +1157,6 @@ export function createGatewayRuntime<
   extraPlugins.push(
     useSubgraphExecuteDebug(),
     useFetchDebug(),
-    useMaybeDelegationPlanDebug({ log: configContext.log }),
     useCacheDebug({ log: configContext.log }),
   );
 
