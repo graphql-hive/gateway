@@ -269,12 +269,16 @@ export function createGatewayRuntime<
   }
   // the graph versions of the schemas fetched from the Hive CDN, reported with the usage
   const graphVersions = new WeakMap<GraphQLSchema, GraphVersionInfo>();
-  function getGraphVersion(artifact: {
-    graphId: string | null;
-    graphVersionId: string | null;
-  }): GraphVersionInfo | undefined {
-    const { graphId, graphVersionId } = artifact;
-    return graphId && graphVersionId ? { graphId, graphVersionId } : undefined;
+
+  function setGraphVersion(
+    schema: GraphQLSchema,
+    graphVersion: GraphVersionInfo | undefined,
+  ) {
+    if (graphVersion) {
+      graphVersions.set(schema, graphVersion);
+    } else {
+      graphVersions.delete(schema);
+    }
   }
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
@@ -440,16 +444,18 @@ export function createGatewayRuntime<
           initialFetch$ = handleMaybePromise(
             fetcher.fetch,
             ({ contents, ...artifact }): true => {
-              if (lastFetchedSdl == null || lastFetchedSdl !== contents) {
+              // the schema is unset when invalidated, it must be rebuilt then
+              if (!unifiedGraph || lastFetchedSdl !== contents) {
+                lastFetchedSdl = contents;
                 unifiedGraph = buildSchema(contents, {
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
-                const graphVersion = getGraphVersion(artifact);
-                if (graphVersion) {
-                  graphVersions.set(unifiedGraph, graphVersion);
-                }
+                setGraphVersion(unifiedGraph, getGraphVersion(artifact));
                 replaceSchema(unifiedGraph);
+              } else {
+                // the sdl did not change, but the graph version might have
+                setGraphVersion(unifiedGraph, getGraphVersion(artifact));
               }
               continuePolling();
               return true;
@@ -594,6 +600,9 @@ export function createGatewayRuntime<
   } /** 'supergraph' in config */ else {
     // the unified graph manager builds the schema after fetching
     let lastFetchedGraphVersion: GraphVersionInfo | undefined;
+    // the unified graph manager skips unchanged supergraphs without notifying,
+    // so the graph version of the current schema has to be updated on fetch
+    let lastFetchedSupergraph: string | undefined;
     let unifiedGraphFetcher: {
       fetch: (
         transportCtx: TransportContext,
@@ -629,6 +638,11 @@ export function createGatewayRuntime<
           fetch: () =>
             fetcher.fetch().then((result) => {
               lastFetchedGraphVersion = getGraphVersion(result);
+              if (unifiedGraph && result.contents === lastFetchedSupergraph) {
+                // the supergraph did not change, but the graph version might have
+                setGraphVersion(unifiedGraph, lastFetchedGraphVersion);
+              }
+              lastFetchedSupergraph = result.contents;
               return result.contents;
             }),
           dispose: () => fetcher.dispose(),
@@ -719,9 +733,7 @@ export function createGatewayRuntime<
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
-        if (lastFetchedGraphVersion) {
-          graphVersions.set(newUnifiedGraph, lastFetchedGraphVersion);
-        }
+        setGraphVersion(newUnifiedGraph, lastFetchedGraphVersion);
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
       },
@@ -1259,6 +1271,14 @@ export function createGatewayRuntime<
   });
 
   return yoga as GatewayRuntime<TContext>;
+}
+
+function getGraphVersion(artifact: {
+  graphId: string | null;
+  graphVersionId: string | null;
+}): GraphVersionInfo | undefined {
+  const { graphId, graphVersionId } = artifact;
+  return graphId && graphVersionId ? { graphId, graphVersionId } : undefined;
 }
 
 function createSdkRequesterForRuntime<TContext extends Record<string, any>>(

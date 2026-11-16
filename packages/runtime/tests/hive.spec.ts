@@ -352,6 +352,117 @@ describe('Hive CDN', () => {
     },
   );
 
+  it.each(['supergraph', 'proxy'] as const)(
+    'reports the updated graph version when only the graph version changes in %s mode',
+    async (mode) => {
+      const token = 'secret';
+      const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+      const firstGraphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+      const secondGraphVersionId = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+      let graphVersionId = firstGraphVersionId;
+      const upstreamSchema = createUpstreamSchema();
+      // the same sdl is served for both graph versions
+      const supergraphSdl = getUnifiedGraphGracefully([
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+          url: 'http://upstream/graphql',
+        },
+      ]);
+      const proxySdl = printSchemaWithDirectives(upstreamSchema);
+      let usageReq = createDeferredPromise<Request>();
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          if (req.url.endsWith('/supergraph') || req.url.endsWith('/sdl')) {
+            return new Response(
+              req.url.endsWith('/supergraph') ? supergraphSdl : proxySdl,
+              {
+                headers: {
+                  'x-hive-graph-id': graphId,
+                  'x-hive-graph-version-id': graphVersionId,
+                },
+              },
+            );
+          }
+          return handleMaybePromise(
+            () => cloneRequest(req),
+            (req) => {
+              usageReq.resolve(req);
+              return new Response();
+            },
+          );
+        }),
+      );
+      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      const cdn = {
+        type: 'hive',
+        endpoint: cdnServer.url,
+        key: 'key',
+      } as const;
+      await using gateway = createGatewayRuntime({
+        ...(mode === 'supergraph'
+          ? { supergraph: cdn }
+          : { proxy: { endpoint: 'http://upstream/graphql' }, schema: cdn }),
+        reporting: {
+          type: 'hive',
+          token,
+          printTokenInfo: false,
+          selfHosting: {
+            graphqlEndpoint: cdnServer.url + '/graphql',
+            applicationUrl: cdnServer.url,
+            usageEndpoint: cdnServer.url + '/usage',
+          },
+          agent: {
+            sendInterval: 0,
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, opts): MaybePromise<Response> => {
+            if (url === 'http://upstream/graphql') {
+              // @ts-expect-error - Fetch signature is not compatible
+              return upstreamServer.fetch(url, opts);
+            }
+            return fetch(url, opts);
+          }),
+        ],
+        logging: isDebug(),
+      });
+
+      async function executeAndGetReportedGraph() {
+        usageReq = createDeferredPromise<Request>();
+        await expect(
+          executeFetch(gateway, {
+            query: /* GraphQL */ `
+              {
+                foo
+              }
+            `,
+          }),
+        ).resolves.toEqual({ data: { foo: 'bar' } });
+        const body = await (await usageReq.promise).json();
+        expect(body.operations).toHaveLength(1);
+        return body.operations[0].metadata.graph;
+      }
+
+      await expect(executeAndGetReportedGraph()).resolves.toEqual({
+        graphId,
+        graphVersionId: firstGraphVersionId,
+      });
+
+      graphVersionId = secondGraphVersionId;
+      // refetches the unchanged sdl, now with the second graph version.
+      // the supergraph invalidation resolves once refetched, and the proxy
+      // schema getter waits for the refetch of the invalidated schema
+      await gateway.invalidateUnifiedGraph();
+      await gateway.getSchema();
+
+      await expect(executeAndGetReportedGraph()).resolves.toEqual({
+        graphId,
+        graphVersionId: secondGraphVersionId,
+      });
+    },
+  );
+
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(
