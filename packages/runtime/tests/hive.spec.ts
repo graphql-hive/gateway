@@ -460,6 +460,8 @@ describe('Hive CDN', () => {
         graphId,
         graphVersionId: secondGraphVersionId,
       });
+
+      await setTimeout(10); // allow hive client to flush before disposing
     },
   );
 
