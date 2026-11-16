@@ -1257,6 +1257,17 @@ describe('LOG_LEVEL env', () => {
     expect(new Logger({ level: 'debug' }).level).toBe('debug');
   });
 
+  it.each(['false', 'silent'])(
+    'should disable logging with LOG_LEVEL "%s"',
+    (val) => {
+      process.env['LOG_LEVEL'] = val;
+      const [log, writer] = createTLogger();
+      expect(log.level).toBe(false);
+      log.error('hello');
+      expect(writer.logs).toEqual([]);
+    },
+  );
+
   it.each(['fatal', 'toString', 'nope'])(
     'should ignore invalid LOG_LEVEL "%s"',
     (val) => {

@@ -38,6 +38,9 @@ export interface LoggerOptions {
    *
    * Provided function will always be invoked to get the current log level.
    *
+   * The `LOG_LEVEL` environment variable can also be `false` or `silent` to
+   * disable all logging. Invalid `LOG_LEVEL` values are ignored.
+   *
    * @default env.LOG_LEVEL || env.DEBUG ? 'debug' : 'info'
    */
   level?: MaybeLazy<LogLevel | false>;
@@ -83,11 +86,13 @@ export class Logger implements AsyncDisposable {
       const logLevelEnv = getEnvStr('LOG_LEVEL');
       // LOG_LEVEL may belong to another logger (like pino), unknown values are ignored
       this.#level =
-        logLevelEnv && Object.hasOwn(logLevel, logLevelEnv)
-          ? (logLevelEnv as LogLevel)
-          : getEnvBool('DEBUG')
-            ? 'debug'
-            : 'info';
+        logLevelEnv === 'false' || logLevelEnv === 'silent'
+          ? false
+          : logLevelEnv && Object.hasOwn(logLevel, logLevelEnv)
+            ? (logLevelEnv as LogLevel)
+            : getEnvBool('DEBUG')
+              ? 'debug'
+              : 'info';
     }
     this.#prefix = opts.prefix;
     this.#attrs = opts.attrs;
