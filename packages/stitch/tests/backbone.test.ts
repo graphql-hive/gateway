@@ -121,13 +121,13 @@ describe('stitching backbone', () => {
     const operation = document.definitions[0] as any;
     const plan = buildStitchPlan(schema, operation, {}, { id: '1' });
     expect(plan.incompleteReasons).toEqual([]);
-    // Shared root `userById` on both subschemas → Parallel root Fetches, or a
-    // Sequence of root + entity when only one owner is chosen first.
-    expect(
-      plan.root.kind === 'Sequence' ||
-        plan.root.kind === 'Fetch' ||
-        plan.root.kind === 'Parallel',
-    ).toBe(true);
+    // Final plans flatten Sequence barriers; schedule is cached when there is
+    // no Condition.
+    expect(plan.root.kind === 'Fetch' || plan.root.kind === 'Parallel').toBe(
+      true,
+    );
+    expect(plan.schedule).toBeDefined();
+    expect(plan.schedule!.waits.length).toBeGreaterThan(0);
   });
 
   it('executes a merged query via the backbone executor', async () => {
@@ -391,7 +391,7 @@ describe('stitching backbone', () => {
         n.kind === 'Island' &&
         n.parentTypeName === 'Book' &&
         n.fieldNode?.name?.value === 'author' &&
-        Array.isArray(n.flattenPath)
+        Array.isArray(n.flattenPaths)
       ) {
         return true;
       }

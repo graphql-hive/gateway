@@ -24,6 +24,12 @@ import {
   valueFromASTUntyped,
 } from 'graphql';
 import { isLocalField } from './localFields.js';
+import {
+  buildPlanSchedule,
+  collectExecutableHops,
+  planHasCondition,
+} from './planSchedule.js';
+import { flattenPlanControlFlow } from './planShape.js';
 import { preparePlanDocuments } from './preparePlanDocuments.js';
 import type {
   BuildStitchPlanOptions,
@@ -1401,7 +1407,7 @@ function planParentEntityNestedHop(
       subschema: target,
       entityTypeName,
       selectionSet: ensureTypename(selectionSetOf([fieldNode])),
-      flattenPath,
+      flattenPaths: [flattenPath],
     };
   }
   return null;
@@ -1765,7 +1771,7 @@ function planLocalFieldIsland(
     kind: 'Island',
     parentTypeName,
     fieldNode,
-    flattenPath,
+    flattenPaths: [flattenPath],
     continue: continuePlan,
   };
 }
@@ -1874,7 +1880,7 @@ function planMergedTypeFollowUps(
         subschema: targetSubschema,
         entityTypeName: typeName,
         selectionSet: ensureTypename(selectionSet),
-        flattenPath,
+        flattenPaths: [flattenPath],
       });
     }
     if (parallel.length === 1) {
@@ -2153,7 +2159,7 @@ function planMergedTypeFollowUps(
           subschema: target,
           entityTypeName: typeName,
           selectionSet: ensureTypename(selectionSetOf(fields)),
-          flattenPath,
+          flattenPaths: [flattenPath],
         });
       } else if (leftoverByTarget.size > 1) {
         stages.push({
@@ -2163,7 +2169,7 @@ function planMergedTypeFollowUps(
             subschema: target,
             entityTypeName: typeName,
             selectionSet: ensureTypename(selectionSetOf(fields)),
-            flattenPath,
+            flattenPaths: [flattenPath],
           })),
         });
       }
@@ -2216,7 +2222,7 @@ function planMergedTypeFollowUps(
             subschema: target,
             entityTypeName: typeName,
             selectionSet: ensureTypename(selectionSetOf(fields)),
-            flattenPath,
+            flattenPaths: [flattenPath],
           };
         }
         return {
@@ -2226,7 +2232,7 @@ function planMergedTypeFollowUps(
             subschema: target,
             entityTypeName: typeName,
             selectionSet: ensureTypename(selectionSetOf(fields)),
-            flattenPath,
+            flattenPaths: [flattenPath],
           })),
         };
       });
@@ -3294,7 +3300,7 @@ function planRootField(
             subschema: concreteOwner,
             entityTypeName: returnType.name,
             selectionSet: ensureTypename(selectionSetOf([])),
-            flattenPath: [responseKey],
+            flattenPaths: [[responseKey]],
           };
         }
       }
@@ -3321,7 +3327,7 @@ function planRootField(
             subschema: concreteOwner,
             entityTypeName: returnType.name,
             selectionSet: ensureTypename(selectionSetOf([])),
-            flattenPath: [responseKey],
+            flattenPaths: [[responseKey]],
           };
         }
       }
@@ -3558,8 +3564,7 @@ function coalesceFetchKey(
   node: Extract<StitchPlanNode, { kind: 'Fetch' }>,
 ): string | null {
   const sub = node.subschema.name ?? '';
-  const paths =
-    node.flattenPaths ?? (node.flattenPath != null ? [node.flattenPath] : null);
+  const paths = node.flattenPaths;
   if (node.entityTypeName && paths?.length) {
     return `e:${sub}:${node.entityTypeName}:${paths.map((p) => p.join('\0')).join('/')}`;
   }
@@ -3597,9 +3602,7 @@ function entityBatchKey(
   if (node.rootField || !node.entityTypeName) {
     return null;
   }
-  const paths =
-    node.flattenPaths ?? (node.flattenPath != null ? [node.flattenPath] : null);
-  if (!paths?.length) {
+  if (!node.flattenPaths?.length) {
     return null;
   }
   return `${node.subschema.name ?? ''}|${node.entityTypeName}|${selectionSetKey(node.selectionSet)}`;
@@ -3931,7 +3934,6 @@ function tryUnionEntityFetches(
     subschema,
     entityTypeName: template.entityTypeName,
     selectionSet,
-    flattenPath: paths[0],
     flattenPaths: paths,
   };
 }
@@ -4326,7 +4328,6 @@ function tryAbsorbFetches(
     }
     const united: Extract<StitchPlanNode, { kind: 'Fetch' }> = {
       ...earlier,
-      flattenPath: mergedPaths[0],
       flattenPaths: mergedPaths,
     };
     const laterNeedsMid = intervening.some((mid) =>
@@ -4362,12 +4363,10 @@ function tryAbsorbFetches(
 
   const aCommon: Extract<StitchPlanNode, { kind: 'Fetch' }> = {
     ...earlier,
-    flattenPath: common[0],
     flattenPaths: common,
   };
   const bCommon: Extract<StitchPlanNode, { kind: 'Fetch' }> = {
     ...later,
-    flattenPath: common[0],
     flattenPaths: common,
   };
   const united = tryUnionEntityFetches(stitchingInfo, [aCommon, bCommon]);
@@ -4410,7 +4409,6 @@ function tryAbsorbFetches(
       earlier: united,
       later: {
         ...later,
-        flattenPath: bRest[0],
         flattenPaths: bRest,
       },
     };
@@ -4842,13 +4840,19 @@ function sequenceContainsFetchDependingOn(
 function fetchFlattenPaths(
   node: Extract<StitchPlanNode, { kind: 'Fetch' }>,
 ): PathSegment[][] {
-  if (node.flattenPaths?.length) {
-    return node.flattenPaths.map((p) => [...p]);
+  if (!node.flattenPaths?.length) {
+    return [];
   }
-  if (node.flattenPath) {
-    return [[...node.flattenPath]];
+  return node.flattenPaths.map((p) => [...p]);
+}
+
+function islandFlattenPaths(
+  node: Extract<StitchPlanNode, { kind: 'Island' }>,
+): PathSegment[][] {
+  if (!node.flattenPaths?.length) {
+    return [];
   }
-  return [];
+  return node.flattenPaths.map((p) => [...p]);
 }
 
 function pathIsPrefix(shorter: PathSegment[], longer: PathSegment[]): boolean {
@@ -5034,7 +5038,6 @@ function tryCrossBatchSequences(
     subschema: template.subschema,
     entityTypeName: template.entityTypeName,
     selectionSet: template.selectionSet,
-    flattenPath: batchPaths[0],
     flattenPaths: batchPaths,
   };
 
@@ -5084,7 +5087,6 @@ function mergeMultiPathFetches(
     subschema: template.subschema,
     entityTypeName: template.entityTypeName,
     selectionSet: template.selectionSet,
-    flattenPath: paths[0],
     flattenPaths: paths,
   };
 }
@@ -5235,7 +5237,9 @@ function optimizeStitchPlanNode(
     const seenIslands = new Set<string>();
     for (const child of flat) {
       if (child.kind === 'Island') {
-        const ik = `${child.parentTypeName}.${child.fieldNode.name.value}::${(child.flattenPath ?? []).join('\0')}::${child.fieldNode.alias?.value ?? ''}`;
+        const ik = `${child.parentTypeName}.${child.fieldNode.name.value}::${islandFlattenPaths(child)
+          .map((p) => p.join('\0'))
+          .join('/')}::${child.fieldNode.alias?.value ?? ''}`;
         if (seenIslands.has(ik)) {
           continue;
         }
@@ -5379,7 +5383,6 @@ function tryBatchWithinSequence(
     subschema: template.subschema,
     entityTypeName: template.entityTypeName,
     selectionSet: template.selectionSet,
-    flattenPath: dedupedPaths[0],
     flattenPaths: dedupedPaths,
   };
 
@@ -5651,39 +5654,47 @@ function buildCompletePlan(
     optimizeStitchPlanNode(coalesced, stitchingInfo),
     stitchingInfo,
   );
+  const isMutation = operation.operation === 'mutation';
+  // Mutations: encode document order into dependsOn edges.
+  // Queries: peel/batch then continuous dataflow on those edges.
+  const annotated = annotateFetchDeps(
+    isMutation
+      ? packed
+      : groupParallelBatchFetches(
+          compressProductsIntoDeepWave(
+            peelLeadingEntityFetches(
+              peelRootParallelHeads(packed, stitchingInfo),
+              stitchingInfo,
+            ),
+            stitchingInfo,
+          ),
+          stitchingInfo,
+        ),
+    stitchingInfo,
+    { serializeSequences: isMutation },
+  );
+  const withDocs = isMutation
+    ? annotated
+    : preparePlanDocuments(annotated, {
+        operation,
+        fragments,
+        fieldNodesByField: stitchingInfo.fieldNodesByField,
+      });
+  // Final plan: no Sequence barriers — flat bag + dependsOn schedule.
+  const root = flattenPlanControlFlow(withDocs);
+  let schedule: StitchPlan['schedule'];
+  if (!planHasCondition(root)) {
+    const hops = [];
+    collectExecutableHops(root, hops, {});
+    if (hops.length) {
+      schedule = buildPlanSchedule(hops);
+    }
+  }
   return {
     operation,
     fragments,
-    // Peel/batch reshape the plan AST; execute schedules only from
-    // dependsOn/completesIds (Sequence/Parallel are not execution barriers).
-    root: (() => {
-      const isMutation = operation.operation === 'mutation';
-      // Mutations: encode document order into dependsOn edges.
-      // Queries: peel/batch then continuous dataflow on those edges.
-      const annotated = annotateFetchDeps(
-        isMutation
-          ? packed
-          : groupParallelBatchFetches(
-              compressProductsIntoDeepWave(
-                peelLeadingEntityFetches(
-                  peelRootParallelHeads(packed, stitchingInfo),
-                  stitchingInfo,
-                ),
-                stitchingInfo,
-              ),
-              stitchingInfo,
-            ),
-        stitchingInfo,
-        { serializeSequences: isMutation },
-      );
-      return isMutation
-        ? annotated
-        : preparePlanDocuments(annotated, {
-            operation,
-            fragments,
-            fieldNodesByField: stitchingInfo.fieldNodesByField,
-          });
-    })(),
+    root,
+    schedule,
     incomplete: incompleteReasons.length > 0,
     incompleteReasons,
   };
@@ -5706,7 +5717,6 @@ function collectExecutableFetches(
         entityTypeName: alias.entityTypeName,
         selectionSet: alias.selectionSet,
         flattenPaths: alias.flattenPaths,
-        flattenPath: alias.flattenPaths[0],
       });
     }
     return;
@@ -6150,7 +6160,6 @@ function groupParallelBatchFetches(
         }
         next.push({
           ...child,
-          flattenPath: mergedPaths[0],
           flattenPaths: mergedPaths,
         });
       }
@@ -6205,7 +6214,7 @@ function groupParallelBatchFetches(
 
 /**
  * Attach id/dependsOn for dataflow execute from `fetchDependsOn` (path /
- * @requires / keys). Sequence tree shape stays for readability.
+ * @requires / keys). Final plans flatten Sequence/Parallel afterward.
  *
  * `serializeSequences`: mutations - later Sequence siblings wait on every hop
  * completed by earlier siblings (document order / shared subgraph state).
@@ -6332,9 +6341,7 @@ function assignDepsOnly(
     }
     if (node.kind === 'Island') {
       const islandId = `is${islandSeq++}`;
-      const islandPaths =
-        node.flattenPaths ??
-        (node.flattenPath != null ? [node.flattenPath] : undefined);
+      const islandPaths = node.flattenPaths;
       const producers = pathProducersFor(islandPaths);
       return {
         ...node,
