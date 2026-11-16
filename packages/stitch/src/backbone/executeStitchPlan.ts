@@ -46,6 +46,12 @@ import {
 } from 'graphql';
 import { getBatchedMergeEntry } from './mergeEntry.js';
 import {
+  buildPlanSchedule,
+  collectExecutableHops,
+  freshWaits,
+  type ScheduledHop,
+} from './planSchedule.js';
+import {
   BACKBONE_EXECUTING,
   getOriginalRootResolve,
 } from './rootProxyingResolvers.js';
@@ -54,6 +60,7 @@ import type {
   PathSegment,
   StitchPlan,
   StitchPlanNode,
+  StitchPlanSchedule,
 } from './types.js';
 
 /** Same key as stitchSchemas wrap - skip classic mergeFields after plan hop. */
@@ -837,8 +844,7 @@ function executeFetchNode(
     );
   }
 
-  const flattenPaths =
-    node.flattenPaths ?? (node.flattenPath != null ? [node.flattenPath] : null);
+  const flattenPaths = node.flattenPaths;
   if (!node.entityTypeName || !flattenPaths?.length) {
     return;
   }
@@ -1145,8 +1151,7 @@ function executeIslandNode(
     (isRootIsland ? getOriginalRootResolve(field) : undefined) ?? field.resolve;
   const args = getArgumentValues(field, node.fieldNode, ctx.variableValues);
 
-  const flattenPaths =
-    node.flattenPaths ?? (node.flattenPath != null ? [node.flattenPath] : null);
+  const flattenPaths = node.flattenPaths;
 
   // Nested Island: resolve on every parent object at the flatten path(s).
   if (flattenPaths?.length) {
@@ -1215,58 +1220,7 @@ function executeIslandNode(
   );
 }
 
-type ExecutableHop =
-  | Extract<StitchPlanNode, { kind: 'Fetch' }>
-  | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
-  | Extract<StitchPlanNode, { kind: 'Island' }>;
-
-/**
- * Collect hops for one execution. Condition picks a single branch from
- * variables (never both). Island is a hop; its continue is queued after.
- */
-function collectExecutableHops(
-  node: StitchPlanNode,
-  out: ExecutableHop[],
-  variableValues: Record<string, any>,
-): void {
-  if (
-    node.kind === 'Fetch' ||
-    node.kind === 'BatchFetch' ||
-    node.kind === 'Island'
-  ) {
-    out.push(node);
-    if (node.kind === 'Island' && node.continue) {
-      collectExecutableHops(node.continue, out, variableValues);
-    }
-    return;
-  }
-  if (node.kind === 'Condition') {
-    const taken =
-      variableValues?.[node.condition] === true
-        ? node.ifClause
-        : node.elseClause;
-    if (taken) {
-      collectExecutableHops(taken, out, variableValues);
-    }
-    return;
-  }
-  if (node.kind === 'Sequence' || node.kind === 'Parallel') {
-    for (const child of node.nodes) {
-      collectExecutableHops(child, out, variableValues);
-    }
-  }
-}
-
-function hopCompletesIds(hop: ExecutableHop): string[] {
-  if (hop.completesIds?.length) {
-    return hop.completesIds;
-  }
-  return hop.id ? [hop.id] : [];
-}
-
-function hopDependsOn(hop: ExecutableHop): string[] {
-  return hop.dependsOn ?? [];
-}
+type ExecutableHop = ScheduledHop;
 
 function rootResponseKey(
   hop: Extract<StitchPlanNode, { kind: 'Fetch' }>,
@@ -1283,7 +1237,7 @@ function entityPathKey(
   if (!hop.entityTypeName) {
     return null;
   }
-  return JSON.stringify(hop.flattenPaths ?? hop.flattenPath ?? null);
+  return JSON.stringify(hop.flattenPaths ?? null);
 }
 
 function selectedEntityFields(
@@ -1416,15 +1370,15 @@ function runSameKeyRootFetches(
 /**
  * Continuous dataflow dispatch from `dependsOn` / `completesIds`.
  *
- * Sequence/Parallel in the plan AST are planner shape only - they do not
- * schedule work. Readiness is in-degree release on those edges. Same-key
- * root Fetches that become ready together still share isolated merge;
- * overlapping same-path entity field writes in one ready flush stay
- * serialized so leaf merges cannot clobber each other.
+ * Uses a cached {@link StitchPlanSchedule} when the hop set matches the plan
+ * (no Condition). Same-key root Fetches that become ready together still share
+ * isolated merge; overlapping same-path entity field writes in one ready flush
+ * stay serialized so leaf merges cannot clobber each other.
  */
 export function executeDataflowPlan(
   root: StitchPlanNode,
   ctx: BackboneExecutionContext,
+  cachedSchedule?: StitchPlanSchedule,
 ): MaybePromise<void> {
   const hops: ExecutableHop[] = [];
   collectExecutableHops(root, hops, ctx.variableValues ?? {});
@@ -1438,29 +1392,12 @@ export function executeDataflowPlan(
   }
 
   const n = hops.length;
-  // id -> hop index that completes it
-  const idOwner = new Map<string, number>();
-  for (let i = 0; i < n; i++) {
-    for (const id of hopCompletesIds(hops[i]!)) {
-      idOwner.set(id, i);
-    }
-  }
-
-  const waits = new Array<number>(n).fill(0);
-  const dependents: number[][] = Array.from({ length: n }, () => []);
-  for (let i = 0; i < n; i++) {
-    const preds = new Set<number>();
-    for (const dep of hopDependsOn(hops[i]!)) {
-      const j = idOwner.get(dep);
-      if (j != null && j !== i) {
-        preds.add(j);
-      }
-    }
-    waits[i] = preds.size;
-    for (const j of preds) {
-      dependents[j]!.push(i);
-    }
-  }
+  const schedule =
+    cachedSchedule && cachedSchedule.waits.length === n
+      ? cachedSchedule
+      : buildPlanSchedule(hops);
+  const waits = freshWaits(schedule);
+  const dependents = schedule.dependents;
 
   const ready: number[] = [];
   for (let i = 0; i < n; i++) {
@@ -1936,7 +1873,6 @@ function executeBatchFetchNode(
         entityTypeName: a.entityTypeName,
         selectionSet: a.selectionSet,
         flattenPaths: a.flattenPaths,
-        flattenPath: a.flattenPaths[0],
       },
       ctx,
     ),
@@ -1978,9 +1914,8 @@ export function executeStitchPlan(
     infoStub: {},
   };
 
-  // Dataflow only - Sequence/Parallel are plan shape; schedule is dependsOn.
   return handleMaybePromise(
-    () => executeDataflowPlan(plan.root, ctx),
+    () => executeDataflowPlan(plan.root, ctx, plan.schedule),
     () => {
       try {
         return finalizeRootResult(ctx);

@@ -27,13 +27,19 @@ export interface StitchBatchAlias {
   representationsVariable?: string;
 }
 
-/** Operation-level stitch plan node tree. */
+/**
+ * Operation-level stitch plan node tree.
+ *
+ * `Sequence` / `Parallel` are planner intermediate shape only. The final plan
+ * returned from `buildStitchPlan` collapses them to a flat `Parallel` bag (or
+ * a single hop); execute schedules solely from `dependsOn` / `completesIds`.
+ */
 export type StitchPlanNode =
   | { kind: 'Sequence'; nodes: StitchPlanNode[] }
   | { kind: 'Parallel'; nodes: StitchPlanNode[] }
   | {
       kind: 'Fetch';
-      /** Stable id for barrier-free dataflow execute. */
+      /** Stable id for dataflow execute. */
       id?: string;
       /**
        * When same-type multi-path Fetches were collapsed, all original ids
@@ -50,15 +56,13 @@ export type StitchPlanNode =
       entityTypeName?: string;
       /** Selections to request from the target subschema. */
       selectionSet: SelectionSetNode;
-      /** Path from operation root to the list/object being flattened into. */
-      flattenPath?: PathSegment[];
       /**
-       * Hive-QP BatchFetch: same entity selection applied at multiple flatten
-       * paths in one hop (one DataLoader / merge-field wave).
+       * Paths from operation root to the list/object(s) being flattened into.
+       * Multi-path when the same entity selection applies at several sites.
        */
       flattenPaths?: PathSegment[][];
       /**
-       * Prebuilt subgraph operation (Hive-style). When set, execute skips
+       * Prebuilt subgraph operation. When set, execute skips
        * prepareGatewayDocument / Transformer and calls the executor directly.
        */
       document?: DocumentNode;
@@ -80,20 +84,15 @@ export type StitchPlanNode =
     }
   | {
       kind: 'Island';
-      /** Stable id for barrier-free dataflow execute. */
+      /** Stable id for dataflow execute. */
       id?: string;
       completesIds?: string[];
       dependsOn?: string[];
       parentTypeName: string;
       fieldNode: FieldNode;
       /**
-       * Nested Island: resolve the local field on every object at this path
+       * Nested Island: resolve the local field on every object at these paths
        * (e.g. `Book.author` under `books`). Omit for root Islands.
-       */
-      flattenPath?: PathSegment[];
-      /**
-       * Same-selection Island applied at multiple flatten paths (list fan-out
-       * siblings). When set, overrides `flattenPath`.
        */
       flattenPaths?: PathSegment[][];
       /** Federated follow-up after the local resolver returns a merge key. */
@@ -101,8 +100,8 @@ export type StitchPlanNode =
     }
   | {
       /**
-       * Hive-style runtime `@skip`/`@include` branch. `condition` is the
-       * variable name; true -> ifClause, otherwise elseClause.
+       * Runtime `@skip`/`@include` branch. `condition` is the variable name;
+       * true -> ifClause, otherwise elseClause.
        */
       kind: 'Condition';
       condition: string;
@@ -110,10 +109,27 @@ export type StitchPlanNode =
       elseClause?: StitchPlanNode;
     };
 
+/**
+ * Cached in-degree schedule for continuous dispatch. Hop indices match
+ * {@link collectExecutableHops} order. Omitted when the plan has Condition
+ * nodes (branch set is request-variable dependent).
+ */
+export interface StitchPlanSchedule {
+  /** How many predecessor hops each hop waits for. */
+  waits: number[];
+  /** Hop indices that wait on each hop. */
+  dependents: number[][];
+}
+
 export interface StitchPlan {
   operation: OperationDefinitionNode;
   fragments: Record<string, FragmentDefinitionNode>;
   root: StitchPlanNode;
+  /**
+   * Precomputed schedule for `root` when it has no Condition. Execute rebuilds
+   * from the selected branch when Condition is present.
+   */
+  schedule?: StitchPlanSchedule;
   /** When true, executor must fall back to schema execute. */
   incomplete: boolean;
   /** Reasons the plan is incomplete (hooks, unsupported nodes, etc.). */

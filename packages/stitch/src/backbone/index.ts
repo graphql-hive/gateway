@@ -23,4 +23,11 @@ export {
   type BuildStitchPlanOptions,
   type StitchPlan,
   type StitchPlanNode,
+  type StitchPlanSchedule,
 } from './types.js';
+export {
+  buildPlanSchedule,
+  collectExecutableHops,
+  planHasCondition,
+} from './planSchedule.js';
+export { flattenPlanControlFlow } from './planShape.js';

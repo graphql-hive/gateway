@@ -67,11 +67,11 @@ function documentHasDeferOrStream(request: ExecutionRequest): boolean {
 }
 
 /**
- * Stitching backbone executor - plan once (cached) and run Fetch/Parallel/
- * Sequence/Island/Condition. Subscriptions, SDL introspection (`__schema` /
- * `__type`), and @defer/@stream still use schema execute (schema subscribe /
- * incremental) until those are planned end-to-end. Pure `{ __typename }` is an
- * Island on the backbone.
+ * Stitching backbone executor - plan once (cached) and run continuous
+ * dataflow on Fetch/BatchFetch/Island/Condition. Subscriptions, SDL
+ * introspection (`__schema` / `__type`), and @defer/@stream still use schema
+ * execute (schema subscribe / incremental) until those are planned end-to-end.
+ * Pure `{ __typename }` is an Island on the backbone.
  */
 export function createBackboneExecutor(
   schema: GraphQLSchema,
