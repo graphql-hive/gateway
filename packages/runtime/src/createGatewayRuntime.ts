@@ -268,16 +268,19 @@ export function createGatewayRuntime<
       config.persistedDocuments?.allowArbitraryOperations;
   }
   // the graph versions of the schemas fetched from the Hive CDN, reported with the usage
-  const graphVersions = new WeakMap<GraphQLSchema, GraphVersionInfo>();
+  const graphVersionInfoForSchema = new WeakMap<
+    GraphQLSchema,
+    GraphVersionInfo
+  >();
 
-  function setGraphVersion(
+  function setGraphVersionForSchema(
     schema: GraphQLSchema,
     graphVersion: GraphVersionInfo | undefined,
   ) {
     if (graphVersion) {
-      graphVersions.set(schema, graphVersion);
+      graphVersionInfoForSchema.set(schema, graphVersion);
     } else {
-      graphVersions.delete(schema);
+      graphVersionInfoForSchema.delete(schema);
     }
   }
   // when using hive reporting and hive persisted documents,
@@ -287,7 +290,7 @@ export function createGatewayRuntime<
     config,
     configContext,
     allowArbitraryDocumentsForPersistedDocuments,
-    (schema) => graphVersions.get(schema),
+    (schema) => graphVersionInfoForSchema.get(schema),
   );
   let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
@@ -451,11 +454,17 @@ export function createGatewayRuntime<
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
-                setGraphVersion(unifiedGraph, getGraphVersion(artifact));
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
                 replaceSchema(unifiedGraph);
               } else {
                 // the sdl did not change, but the graph version might have
-                setGraphVersion(unifiedGraph, getGraphVersion(artifact));
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
               }
               continuePolling();
               return true;
@@ -640,7 +649,7 @@ export function createGatewayRuntime<
               lastFetchedGraphVersion = getGraphVersion(result);
               if (unifiedGraph && result.contents === lastFetchedSupergraph) {
                 // the supergraph did not change, but the graph version might have
-                setGraphVersion(unifiedGraph, lastFetchedGraphVersion);
+                setGraphVersionForSchema(unifiedGraph, lastFetchedGraphVersion);
               }
               lastFetchedSupergraph = result.contents;
               return result.contents;
@@ -733,7 +742,7 @@ export function createGatewayRuntime<
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
-        setGraphVersion(newUnifiedGraph, lastFetchedGraphVersion);
+        setGraphVersionForSchema(newUnifiedGraph, lastFetchedGraphVersion);
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
       },
