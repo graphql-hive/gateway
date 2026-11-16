@@ -1,5 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
-import { expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Logger, LoggerOptions } from '../src/logger';
 import { MemoryLogWriter } from '../src/writers';
 import { stableError } from './utils';
@@ -1235,4 +1235,34 @@ it('should not redact when no attrs are provided', () => {
       },
     ]
   `);
+});
+
+describe('LOG_LEVEL env', () => {
+  const originalLogLevel = process.env['LOG_LEVEL'];
+  afterEach(() => {
+    if (originalLogLevel === undefined) {
+      delete process.env['LOG_LEVEL'];
+    } else {
+      process.env['LOG_LEVEL'] = originalLogLevel;
+    }
+  });
+
+  it('should use valid LOG_LEVEL when level is not provided', () => {
+    process.env['LOG_LEVEL'] = 'warn';
+    expect(new Logger().level).toBe('warn');
+  });
+
+  it('should ignore LOG_LEVEL when level is provided', () => {
+    process.env['LOG_LEVEL'] = 'warn';
+    expect(new Logger({ level: 'debug' }).level).toBe('debug');
+  });
+
+  it.each(['fatal', 'toString', 'nope'])(
+    'should ignore invalid LOG_LEVEL "%s"',
+    (val) => {
+      process.env['LOG_LEVEL'] = val;
+      expect(new Logger().level).toBe('info');
+      expect(new Logger({ level: 'trace' }).child('c').level).toBe('trace');
+    },
+  );
 });
