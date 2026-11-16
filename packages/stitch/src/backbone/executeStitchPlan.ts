@@ -894,9 +894,9 @@ function executeFetchNode(
     return;
   }
 
-  // Execute the planned target directly (router-style Fetch), instead of
-  // re-running delegationPlanBuilder which can mark the hop non-proxiable
-  // based on source *schema* keys even when the parent object already has them.
+  // Execute the planned target directly instead of re-running
+  // delegationPlanBuilder, which can mark the hop non-proxiable based on
+  // source *schema* keys even when the parent object already has them.
   const resolver = mergedTypeInfo.resolvers.get(node.subschema);
   if (!resolver) {
     // Fall back to mergeFields when no explicit merge resolver is registered.
@@ -1414,12 +1414,13 @@ function runSameKeyRootFetches(
 }
 
 /**
- * Barrier-free dataflow: fire every annotated hop as soon as its `dependsOn`
- * ids are complete. Preserves tree semantics for:
- * - shared-root Parallel merge (provides / abstract roots)
- * - overlapping same-path entity field writes
- * - Condition branch selection
- * - Island -> continue ordering
+ * Continuous dataflow dispatch from `dependsOn` / `completesIds`.
+ *
+ * Sequence/Parallel in the plan AST are planner shape only - they do not
+ * schedule work. Readiness is in-degree release on those edges. Same-key
+ * root Fetches that become ready together still share isolated merge;
+ * overlapping same-path entity field writes in one ready flush stay
+ * serialized so leaf merges cannot clobber each other.
  */
 export function executeDataflowPlan(
   root: StitchPlanNode,
@@ -1430,175 +1431,251 @@ export function executeDataflowPlan(
   if (!hops.length) {
     return;
   }
-  // Planner must annotate every hop - no tree-execute fallback.
   if (!hops.every((h) => h.id != null && h.dependsOn != null)) {
     throw new Error(
       'Stitch plan hops missing id/dependsOn; annotateFetchDeps required',
     );
   }
 
-  const done = new Set<string>();
-  const pending = new Set(hops);
-  let remaining = hops.length;
-
-  const markDone = (hop: ExecutableHop) => {
-    for (const id of hopCompletesIds(hop)) {
-      done.add(id);
+  const n = hops.length;
+  // id -> hop index that completes it
+  const idOwner = new Map<string, number>();
+  for (let i = 0; i < n; i++) {
+    for (const id of hopCompletesIds(hops[i]!)) {
+      idOwner.set(id, i);
     }
-    remaining--;
-  };
+  }
 
-  const runReady = (): MaybePromise<void> => {
-    if (remaining === 0) {
+  const waits = new Array<number>(n).fill(0);
+  const dependents: number[][] = Array.from({ length: n }, () => []);
+  for (let i = 0; i < n; i++) {
+    const preds = new Set<number>();
+    for (const dep of hopDependsOn(hops[i]!)) {
+      const j = idOwner.get(dep);
+      if (j != null && j !== i) {
+        preds.add(j);
+      }
+    }
+    waits[i] = preds.size;
+    for (const j of preds) {
+      dependents[j]!.push(i);
+    }
+  }
+
+  const ready: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (waits[i] === 0) {
+      ready.push(i);
+    }
+  }
+
+  let remaining = n;
+  let inFlight = 0;
+  let settled = false;
+  let sawAsync = false;
+  let pumping = false;
+  let resolveAll!: () => void;
+  let rejectAll!: (err: unknown) => void;
+  const allDone = new Promise<void>((resolve, reject) => {
+    resolveAll = resolve;
+    rejectAll = reject;
+  });
+
+  const tryFinish = () => {
+    if (settled) {
       return;
     }
-    const ready: ExecutableHop[] = [];
-    for (const hop of pending) {
-      if (hopDependsOn(hop).every((d) => done.has(d))) {
-        ready.push(hop);
-      }
+    if (remaining === 0 && inFlight === 0) {
+      settled = true;
+      resolveAll();
     }
-    if (!ready.length) {
-      // Missed edge - drain sequentially (still apply root-merge rules).
-      let chain: MaybePromise<void> = undefined;
-      const left = [...pending];
-      for (const hop of left) {
-        pending.delete(hop);
-        chain = handleMaybePromise(
-          () => chain,
-          () =>
-            handleMaybePromise(
-              () => runOneHop(hop, ctx),
-              () => {
-                markDone(hop);
-              },
-            ),
-        );
-      }
-      return chain;
-    }
-    for (const hop of ready) {
-      pending.delete(hop);
-    }
+  };
 
-    // Group same-key root Fetches -> isolated merge (tree Parallel sameKey).
-    const rootGroups = new Map<
-      string,
-      Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
-    >();
-    const rest: ExecutableHop[] = [];
-    for (const hop of ready) {
-      if (hop.kind === 'Fetch') {
-        const key = rootResponseKey(hop);
-        if (key != null) {
-          let list = rootGroups.get(key);
-          if (!list) {
-            list = [];
-            rootGroups.set(key, list);
-          }
-          list.push(hop);
-          continue;
+  const fail = (err: unknown) => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    rejectAll(err);
+  };
+
+  const release = (index: number) => {
+    remaining--;
+    for (const d of dependents[index]!) {
+      waits[d]!--;
+      if (waits[d] === 0) {
+        ready.push(d);
+      }
+    }
+  };
+
+  /** Start work; on settle release dependents and pump. Re-entrant safe. */
+  const track = (indices: number[], run: () => MaybePromise<void>) => {
+    inFlight++;
+    const result = handleMaybePromise(
+      run,
+      () => {
+        for (const i of indices) {
+          release(i);
         }
-      }
-      rest.push(hop);
+        inFlight--;
+        pump();
+        tryFinish();
+      },
+      (err) => {
+        inFlight--;
+        fail(err);
+      },
+    );
+    if (isPromise(result)) {
+      sawAsync = true;
     }
+  };
 
-    const jobs: Array<MaybePromise<void>> = [];
+  const pump = (): void => {
+    if (settled || pumping) {
+      return;
+    }
+    pumping = true;
+    try {
+      // Drain ready repeatedly so sync completions (via track -> release)
+      // that push while we are pumping are picked up without recursion.
+      for (;;) {
+        if (!ready.length) {
+          break;
+        }
+        // Snapshot current ready set as one flush so same-key root merges
+        // and overlapping entity writes can be batched / serialized.
+        const flush = ready.splice(0, ready.length);
 
-    for (const group of rootGroups.values()) {
-      if (group.length > 1) {
-        jobs.push(
-          handleMaybePromise(
-            () => runSameKeyRootFetches(group, ctx),
-            () => {
-              for (const hop of group) {
-                markDone(hop);
+        const rootGroups = new Map<
+          string,
+          Array<{
+            index: number;
+            hop: Extract<StitchPlanNode, { kind: 'Fetch' }>;
+          }>
+        >();
+        const rest: Array<{ index: number; hop: ExecutableHop }> = [];
+        for (const index of flush) {
+          const hop = hops[index]!;
+          if (hop.kind === 'Fetch') {
+            const key = rootResponseKey(hop);
+            if (key != null) {
+              let list = rootGroups.get(key);
+              if (!list) {
+                list = [];
+                rootGroups.set(key, list);
               }
-            },
-          ),
-        );
-      } else {
-        rest.push(group[0]!);
-      }
-    }
-
-    // Overlapping same-path entity Fetches must serialize (merge race).
-    const entityByPath = new Map<
-      string,
-      Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
-    >();
-    const nonEntity: ExecutableHop[] = [];
-    for (const hop of rest) {
-      if (hop.kind === 'Fetch') {
-        const pk = entityPathKey(hop);
-        if (pk != null) {
-          let list = entityByPath.get(pk);
-          if (!list) {
-            list = [];
-            entityByPath.set(pk, list);
+              list.push({ index, hop });
+              continue;
+            }
           }
-          list.push(hop);
-          continue;
+          rest.push({ index, hop });
         }
-      }
-      nonEntity.push(hop);
-    }
 
-    for (const group of entityByPath.values()) {
-      let overlapping = false;
-      if (group.length > 1) {
-        const fieldSets = group.map(selectedEntityFields);
-        outer: for (let i = 0; i < fieldSets.length; i++) {
-          for (let j = i + 1; j < fieldSets.length; j++) {
-            for (const name of fieldSets[i]!) {
-              if (fieldSets[j]!.has(name)) {
-                overlapping = true;
-                break outer;
+        for (const group of rootGroups.values()) {
+          if (group.length > 1) {
+            track(
+              group.map((g) => g.index),
+              () =>
+                runSameKeyRootFetches(
+                  group.map((g) => g.hop),
+                  ctx,
+                ),
+            );
+          } else {
+            rest.push(group[0]!);
+          }
+        }
+
+        const entityByPath = new Map<
+          string,
+          Array<{
+            index: number;
+            hop: Extract<StitchPlanNode, { kind: 'Fetch' }>;
+          }>
+        >();
+        const nonEntity: Array<{ index: number; hop: ExecutableHop }> = [];
+        for (const item of rest) {
+          if (item.hop.kind === 'Fetch') {
+            const pk = entityPathKey(item.hop);
+            if (pk != null) {
+              let list = entityByPath.get(pk);
+              if (!list) {
+                list = [];
+                entityByPath.set(pk, list);
+              }
+              list.push({
+                index: item.index,
+                hop: item.hop,
+              });
+              continue;
+            }
+          }
+          nonEntity.push(item);
+        }
+
+        for (const group of entityByPath.values()) {
+          let overlapping = false;
+          if (group.length > 1) {
+            const fieldSets = group.map((g) => selectedEntityFields(g.hop));
+            outer: for (let i = 0; i < fieldSets.length; i++) {
+              for (let j = i + 1; j < fieldSets.length; j++) {
+                for (const name of fieldSets[i]!) {
+                  if (fieldSets[j]!.has(name)) {
+                    overlapping = true;
+                    break outer;
+                  }
+                }
               }
             }
           }
+          if (overlapping) {
+            // Serialize overlapping same-path writers; release as one unit.
+            track(
+              group.map((g) => g.index),
+              () => {
+                let chain: MaybePromise<void> = undefined;
+                for (const item of group) {
+                  chain = handleMaybePromise(
+                    () => chain,
+                    () => executeFetchNode(item.hop, ctx),
+                  );
+                }
+                return chain;
+              },
+            );
+          } else {
+            for (const item of group) {
+              nonEntity.push(item);
+            }
+          }
+        }
+
+        for (const item of nonEntity) {
+          track([item.index], () => runOneHop(item.hop, ctx));
         }
       }
-      if (overlapping) {
-        let chain: MaybePromise<void> = undefined;
-        for (const hop of group) {
-          chain = handleMaybePromise(
-            () => chain,
-            () =>
-              handleMaybePromise(
-                () => executeFetchNode(hop, ctx),
-                () => {
-                  markDone(hop);
-                },
-              ),
-          );
-        }
-        jobs.push(chain);
-      } else {
-        for (const hop of group) {
-          nonEntity.push(hop);
-        }
+
+      if (remaining > 0 && inFlight === 0 && !ready.length) {
+        // Incomplete dependsOn / schedule bug - do not hang.
+        fail(
+          new Error(
+            'Stitch dataflow stalled: hops remain but none are ready (missing dependsOn edge?)',
+          ),
+        );
       }
+    } finally {
+      pumping = false;
     }
-
-    for (const hop of nonEntity) {
-      jobs.push(
-        handleMaybePromise(
-          () => runOneHop(hop, ctx),
-          () => {
-            markDone(hop);
-          },
-        ),
-      );
-    }
-
-    return handleMaybePromise(
-      () => awaitMaybePromises(jobs),
-      () => runReady(),
-    );
   };
 
-  return runReady();
+  pump();
+  tryFinish();
+  if (settled && !sawAsync) {
+    return;
+  }
+  return allDone;
 }
 
 function matchEntityParent(

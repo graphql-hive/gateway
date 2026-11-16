@@ -5654,13 +5654,12 @@ function buildCompletePlan(
   return {
     operation,
     fragments,
-    // Peel independent root heads + BatchFetch same-subschema entity hops
-    // inside Parallel waves. annotateFetchDeps + executeDataflowPlan run a
-    // barrier-free schedule from fetchDependsOn (path / requires / keys).
+    // Peel/batch reshape the plan AST; execute schedules only from
+    // dependsOn/completesIds (Sequence/Parallel are not execution barriers).
     root: (() => {
       const isMutation = operation.operation === 'mutation';
-      // Mutations stay document-ordered (Sequence barriers in dependsOn).
-      // Queries peel/batch then dataflow on fetchDependsOn edges only.
+      // Mutations: encode document order into dependsOn edges.
+      // Queries: peel/batch then continuous dataflow on those edges.
       const annotated = annotateFetchDeps(
         isMutation
           ? packed
