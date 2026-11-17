@@ -1,5 +1,11 @@
 # @graphql-mesh/transport-http
 
+## 1.2.7
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.1.3
+
 ## 1.2.6
 ### Patch Changes
 

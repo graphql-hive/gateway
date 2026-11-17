@@ -1,5 +1,20 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.14.0
+### Minor Changes
+
+
+
+- [#2657](https://github.com/graphql-hive/gateway/pull/2657) [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Unified graph manager supports metadata loaded together with the unified graph
+  
+  `getUnifiedGraph` can now return `{ graph, metadata }` in addition to the unified graph itself. The metadata is kept with the last successfully loaded unified graph and passed to `onUnifiedGraphChange(schema, metadata)`. When the loaded unified graph did not change but its metadata did (shallow comparison), `onUnifiedGraphMetadataChange(schema, metadata)` is called.
+
+### Patch Changes
+
+- Updated dependencies [[`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f), [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f)]:
+  - @graphql-hive/logger@1.2.0
+  - @graphql-mesh/transport-common@1.1.3
+
 ## 1.13.5
 ### Patch Changes
 
