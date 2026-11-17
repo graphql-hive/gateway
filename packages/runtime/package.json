@@ -99,7 +99,7 @@
     "graphql-sse": "^2.6.0",
     "html-minifier-terser": "7.2.0",
     "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",
-    "pkgroll": "2.27.1",
+    "pkgroll": "2.29.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tsx": "4.22.4"
