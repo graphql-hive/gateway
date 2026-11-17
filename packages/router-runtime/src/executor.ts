@@ -2442,10 +2442,9 @@ function projectRequires(
       case 'Field': {
         const fieldName = requiresSelection.name;
         const responseKey = requiresSelection.alias ?? fieldName;
-        let original = entity[fieldName];
-        if (original === undefined) {
-          original = entity[responseKey];
-        }
+        // only where the fetch wrote it, with `price: _internal_qp_alias_0` whatever sits under
+        // `price` is some other field, like the client's own `price(currency: USD)`
+        const original = entity[fieldName];
         const projectedValue = requiresSelection.selections
           ? projectRequires(
               requiresSelection.selections,
