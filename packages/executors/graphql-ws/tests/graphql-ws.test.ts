@@ -7,7 +7,7 @@ import { assertAsyncIterable } from '@internal/testing';
 import { parse } from 'graphql';
 import { useServer } from 'graphql-ws/use/ws';
 import { Repeater } from 'graphql-yoga';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { WebSocketServer } from 'ws'; // yarn add ws
 
 describe('GraphQL WS Executor', () => {
@@ -142,5 +142,123 @@ describe('GraphQL WS Executor', () => {
         );
       }
     }
+  });
+});
+
+describe('GraphQL WS Executor connectionParams', () => {
+  let server: Server;
+  let url: string;
+  const connectionInitPayloads: unknown[] = [];
+  beforeAll(async () => {
+    server = createServer();
+    const websocketServer = new WebSocketServer({
+      path: '/graphql',
+      server,
+    });
+    useServer(
+      {
+        schema: makeExecutableSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              token: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              token: (_, __, ctx) => ctx.connectionParams?.token ?? null,
+            },
+          },
+        }),
+        context: (ctx) => ({ connectionParams: ctx.connectionParams }),
+        onConnect(ctx) {
+          connectionInitPayloads.push(ctx.connectionParams);
+        },
+      },
+      websocketServer,
+    );
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    url = `ws://localhost:${(server.address() as AddressInfo).port}/graphql`;
+  });
+  afterAll(
+    () =>
+      new Promise<void>((done) => {
+        server.closeAllConnections();
+        server.close(() => done());
+      }),
+  );
+  beforeEach(() => {
+    connectionInitPayloads.length = 0;
+  });
+
+  const document = parse(/* GraphQL */ `
+    query {
+      token
+    }
+  `);
+
+  it('should not leak connectionParams to later executions', async () => {
+    await using executor = buildGraphQLWSExecutor({ url });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'a', extra: 'x' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'a' } });
+    await expect(executor({ document })).resolves.toEqual({
+      data: { token: null },
+    });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'b' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'b' } });
+    expect(connectionInitPayloads).toEqual([
+      { token: 'a', extra: 'x' },
+      {},
+      { token: 'b' },
+    ]);
+  });
+
+  it('should not mutate options connectionParams', async () => {
+    const connectionParams = { token: 'base' };
+    await using executor = buildGraphQLWSExecutor({ url, connectionParams });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'a' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'a' } });
+    expect(connectionParams).toEqual({ token: 'base' });
+    await expect(executor({ document })).resolves.toEqual({
+      data: { token: 'base' },
+    });
+    expect(connectionInitPayloads).toEqual([{ token: 'a' }, { token: 'base' }]);
+  });
+
+  it('should not share a socket between different connectionParams', async () => {
+    await using executor = buildGraphQLWSExecutor({
+      url,
+      lazyCloseTimeout: 1000,
+    });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'a' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'a' } });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'b' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'b' } });
+    await expect(
+      executor({
+        document,
+        extensions: { connectionParams: { token: 'a' } },
+      }),
+    ).resolves.toEqual({ data: { token: 'a' } });
+    expect(connectionInitPayloads).toEqual([{ token: 'a' }, { token: 'b' }]);
   });
 });
