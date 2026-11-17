@@ -1,5 +1,14 @@
 # @graphql-tools/executor-common
 
+## 1.1.1
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+
 ## 1.1.0
 ### Minor Changes
 
