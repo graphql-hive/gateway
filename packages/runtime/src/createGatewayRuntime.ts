@@ -16,6 +16,7 @@ import type {
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   SchemaGenerationLease,
+  UnifiedGraphWithMetadata,
 } from '@graphql-mesh/fusion-runtime';
 import {
   handleMaybePromiseMaybeAsyncIterableResult,
@@ -449,11 +450,11 @@ export function createGatewayRuntime<
             ({ contents, ...artifact }): true => {
               // the schema is unset when invalidated, it must be rebuilt then
               if (!unifiedGraph || lastFetchedSdl !== contents) {
-                lastFetchedSdl = contents;
                 unifiedGraph = buildSchema(contents, {
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
+                lastFetchedSdl = contents;
                 setGraphVersionForSchema(
                   unifiedGraph,
                   getGraphVersion(artifact),
@@ -607,15 +608,10 @@ export function createGatewayRuntime<
     unifiedGraphPlugin = result.unifiedGraphPlugin;
     contextBuilder = result.contextBuilder;
   } /** 'supergraph' in config */ else {
-    // the unified graph manager builds the schema after fetching
-    let lastFetchedGraphVersion: GraphVersionInfo | undefined;
-    // the unified graph manager skips unchanged supergraphs without notifying,
-    // so the graph version of the current schema has to be updated on fetch
-    let lastFetchedSupergraph: string | undefined;
     let unifiedGraphFetcher: {
       fetch: (
         transportCtx: TransportContext,
-      ) => MaybePromise<UnifiedGraphSchema>;
+      ) => MaybePromise<UnifiedGraphSchema | UnifiedGraphWithMetadata>;
       dispose?: () => void | PromiseLike<void>;
     };
 
@@ -645,15 +641,11 @@ export function createGatewayRuntime<
         });
         unifiedGraphFetcher = {
           fetch: () =>
-            fetcher.fetch().then((result) => {
-              lastFetchedGraphVersion = getGraphVersion(result);
-              if (unifiedGraph && result.contents === lastFetchedSupergraph) {
-                // the supergraph did not change, but the graph version might have
-                setGraphVersionForSchema(unifiedGraph, lastFetchedGraphVersion);
-              }
-              lastFetchedSupergraph = result.contents;
-              return result.contents;
-            }),
+            fetcher.fetch().then(({ contents, graphId, graphVersionId }) => ({
+              graph: contents,
+              // the manager keeps the metadata with the successfully loaded supergraph
+              metadata: { graphId, graphVersionId },
+            })),
           dispose: () => fetcher.dispose(),
         };
       } else if (config.supergraph.type === 'graphos') {
@@ -741,10 +733,13 @@ export function createGatewayRuntime<
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
-      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
-        setGraphVersionForSchema(newUnifiedGraph, lastFetchedGraphVersion);
+      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema, metadata) {
+        setGraphVersionForSchema(newUnifiedGraph, getGraphVersion(metadata));
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
+      },
+      onUnifiedGraphMetadataChange(unifiedGraph, metadata) {
+        setGraphVersionForSchema(unifiedGraph, getGraphVersion(metadata));
       },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
@@ -1282,12 +1277,17 @@ export function createGatewayRuntime<
   return yoga as GatewayRuntime<TContext>;
 }
 
-function getGraphVersion(artifact: {
-  graphId: string | null;
-  graphVersionId: string | null;
-}): GraphVersionInfo | undefined {
-  const { graphId, graphVersionId } = artifact;
-  return graphId && graphVersionId ? { graphId, graphVersionId } : undefined;
+function getGraphVersion(
+  artifact: Record<string, unknown> | undefined,
+): GraphVersionInfo | undefined {
+  const graphId = artifact?.['graphId'];
+  const graphVersionId = artifact?.['graphVersionId'];
+  return typeof graphId === 'string' &&
+    graphId &&
+    typeof graphVersionId === 'string' &&
+    graphVersionId
+    ? { graphId, graphVersionId }
+    : undefined;
 }
 
 function createSdkRequesterForRuntime<TContext extends Record<string, any>>(

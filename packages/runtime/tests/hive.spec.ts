@@ -465,6 +465,112 @@ describe('Hive CDN', () => {
     },
   );
 
+  it('reports the graph version of a cache loaded supergraph once refetched', async () => {
+    const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+    const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+    const upstreamSchema = createUpstreamSchema();
+    const supergraphSdl = getUnifiedGraphGracefully([
+      {
+        name: 'upstream',
+        schema: upstreamSchema,
+        url: 'http://upstream/graphql',
+      },
+    ]);
+    let usageReq = createDeferredPromise<Request>();
+    const fetchedSupergraph = vi.fn();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (req.url.endsWith('/supergraph')) {
+          fetchedSupergraph();
+          return new Response(supergraphSdl, {
+            headers: {
+              'x-hive-graph-id': graphId,
+              'x-hive-graph-version-id': graphVersionId,
+            },
+          });
+        }
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq.resolve(req);
+            return new Response();
+          },
+        );
+      }),
+    );
+    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    // warm cache, like after a restart with a shared cache
+    const cacheStore = new Map<string, unknown>([
+      ['hive-gateway:supergraph', supergraphSdl],
+    ]);
+    await using gateway = createGatewayRuntime({
+      supergraph: { type: 'hive', endpoint: cdnServer.url, key: 'key' },
+      cache: {
+        get: (key) => cacheStore.get(key),
+        set: (key, value) => {
+          cacheStore.set(key, value);
+        },
+        delete: (key) => cacheStore.delete(key),
+        getKeysByPrefix: (prefix) =>
+          [...cacheStore.keys()].filter((key) => key.startsWith(prefix)),
+      },
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          if (url === 'http://upstream/graphql') {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    async function executeAndGetReportedGraph() {
+      usageReq = createDeferredPromise<Request>();
+      await expect(
+        executeFetch(gateway, {
+          query: /* GraphQL */ `
+            {
+              foo
+            }
+          `,
+        }),
+      ).resolves.toEqual({ data: { foo: 'bar' } });
+      const body = await (await usageReq.promise).json();
+      expect(body.operations).toHaveLength(1);
+      return body.operations[0].metadata?.graph;
+    }
+
+    // the cached supergraph has no graph version
+    await expect(executeAndGetReportedGraph()).resolves.toBeUndefined();
+    expect(fetchedSupergraph).not.toHaveBeenCalled();
+
+    // refetching the identical supergraph assigns the graph version
+    await gateway.invalidateUnifiedGraph();
+    expect(fetchedSupergraph).toHaveBeenCalledTimes(1);
+
+    await expect(executeAndGetReportedGraph()).resolves.toEqual({
+      graphId,
+      graphVersionId,
+    });
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(
