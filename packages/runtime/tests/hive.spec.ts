@@ -571,6 +571,209 @@ describe('Hive CDN', () => {
     await setTimeout(10); // allow hive client to flush before disposing
   });
 
+  it('reports the graph version from cdn with the subscription usage', async () => {
+    const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+    const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          foo: String
+        }
+        type Subscription {
+          foo: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          foo: () => 'bar',
+        },
+        Subscription: {
+          foo: {
+            async *subscribe() {
+              yield { foo: 'bar' };
+            },
+          },
+        },
+      },
+    });
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<Request>();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (req.url.endsWith('/sdl')) {
+          return new Response(printSchemaWithDirectives(upstreamSchema), {
+            headers: {
+              'x-hive-graph-id': graphId,
+              'x-hive-graph-version-id': graphVersionId,
+            },
+          });
+        }
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        );
+      }),
+    );
+    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    await using gateway = createGatewayRuntime({
+      proxy: { endpoint: 'http://upstream/graphql' },
+      schema: { type: 'hive', endpoint: cdnServer.url, key: 'key' },
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          // subscriptions are sent as GET requests
+          if (url.startsWith('http://upstream/graphql')) {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    const res = await gateway.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: {
+        accept: 'text/event-stream',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          subscription {
+            foo
+          }
+        `,
+      }),
+    });
+    await expect(res.text()).resolves.toContain('"foo":"bar"');
+
+    const body = await (await waitForUsageReq).json();
+    expect(body.subscriptionOperations).toEqual([
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          graph: { graphId, graphVersionId },
+        }),
+      }),
+    ]);
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
+  it('injects the typenames for field level metrics', async () => {
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          node: Node
+        }
+        interface Node {
+          id: ID!
+        }
+        type User implements Node {
+          id: ID!
+        }
+      `,
+      resolvers: {
+        Query: {
+          node: () => ({ __typename: 'User', id: '1' }),
+        },
+      },
+    });
+    const upstreamQueries: string[] = [];
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<Request>();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) =>
+        handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        ),
+      ),
+    );
+    await using upstreamServer = createYoga({
+      schema: upstreamSchema,
+      plugins: [
+        {
+          onParams({ params }) {
+            upstreamQueries.push(params.query!);
+          },
+        },
+      ],
+    });
+    await using gateway = createGatewayRuntime({
+      proxy: { endpoint: 'http://upstream/graphql' },
+      schema: upstreamSchema,
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        usage: {
+          fieldLevelMetricsEnabled: true,
+        },
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          if (url === 'http://upstream/graphql') {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    await expect(
+      executeFetch(gateway, {
+        query: /* GraphQL */ `
+          {
+            node {
+              id
+            }
+          }
+        `,
+      }),
+    ).resolves.toEqual({ data: { node: { id: '1' } } });
+    expect(upstreamQueries.join()).toContain('__hive_typename__:__typename');
+
+    const body = await (await waitForUsageReq).json();
+    expect(body.operations).toEqual([
+      expect.objectContaining({
+        execution: expect.objectContaining({
+          fetches: [expect.objectContaining({ fields: expect.any(Object) })],
+        }),
+      }),
+    ]);
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(
