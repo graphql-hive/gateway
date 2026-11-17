@@ -141,7 +141,7 @@
     "@whatwg-node/promise-helpers": "^2.0.2",
     "@whatwg-node/server": "^0.13.3",
     "commander": "^14.0.3",
-    "graphql-ws": "^6.0.6",
+    "graphql-ws": "^6.4.3",
     "graphql-yoga": "^6.0.1",
     "tslib": "^2.8.1",
     "ws": "^8.22.0"
