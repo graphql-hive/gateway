@@ -1,5 +1,12 @@
 # @graphql-tools/executor-graphql-ws
 
+## 3.2.2
+### Patch Changes
+
+
+
+- [`2de8d6a`](https://github.com/graphql-hive/gateway/commit/2de8d6a244af2d6b8b3c5dee7cd362942dafd0e9) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Do not carry `extensions.connectionParams` over between executions and do not mutate the `connectionParams` option
+
 ## 3.2.1
 ### Patch Changes
 
