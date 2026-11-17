@@ -1366,7 +1366,8 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
       // Parse JSON-RPC body
       let body: JsonRpcRequest;
       try {
-        const bodyText = await request.text();
+        // read a clone, yoga's body size limit pipes the original body later and bun throws if it's already consumed
+        const bodyText = await request.clone().text();
         const parsed = JSON.parse(bodyText);
         if (
           typeof parsed !== 'object' ||

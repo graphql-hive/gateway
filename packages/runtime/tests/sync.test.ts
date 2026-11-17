@@ -32,6 +32,8 @@ it.skipIf(globalThis.Bun)(
     });
     await using upstreamYoga = createYoga({
       schema: upstreamSchema,
+      // the body size limit streams the request body which is always async
+      maxRequestBodySize: false,
     });
     const supergraph = await composeLocalSchemasWithApollo([
       {
@@ -74,15 +76,10 @@ it.skipIf(globalThis.Bun)(
       });
       await res.text();
     }
-    const res = gw.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-      }),
-    });
+    // the gateway streams request bodies through the body size limit too
+    const res = gw.fetch(
+      `http://localhost:4000/graphql?query=${encodeURIComponent(query)}`,
+    );
     assertSyncValue(res);
     const resJson = handleMaybePromise(
       () => res.json(),

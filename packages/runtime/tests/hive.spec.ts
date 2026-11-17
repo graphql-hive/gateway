@@ -252,6 +252,528 @@ describe('Hive CDN', () => {
     await setTimeout(10); // allow hive client to flush before disposing
     // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
+  it.each(['supergraph', 'proxy'] as const)(
+    'reports the graph version from cdn with the usage in %s mode',
+    async (mode) => {
+      const token = 'secret';
+      const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+      const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+      const upstreamSchema = createUpstreamSchema();
+      const { promise: waitForUsageReq, resolve: usageReq } =
+        createDeferredPromise<Request>();
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          const graphHeaders = {
+            'x-hive-graph-id': graphId,
+            'x-hive-graph-version-id': graphVersionId,
+          };
+          if (req.url.endsWith('/supergraph')) {
+            return new Response(
+              getUnifiedGraphGracefully([
+                {
+                  name: 'upstream',
+                  schema: upstreamSchema,
+                  url: 'http://upstream/graphql',
+                },
+              ]),
+              { headers: graphHeaders },
+            );
+          }
+          if (req.url.endsWith('/sdl')) {
+            return new Response(printSchemaWithDirectives(upstreamSchema), {
+              headers: graphHeaders,
+            });
+          }
+          return handleMaybePromise(
+            () => cloneRequest(req),
+            (req) => {
+              usageReq(req);
+              return new Response();
+            },
+          );
+        }),
+      );
+      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      const cdn = {
+        type: 'hive',
+        endpoint: cdnServer.url,
+        key: 'key',
+      } as const;
+      await using gateway = createGatewayRuntime({
+        ...(mode === 'supergraph'
+          ? { supergraph: cdn }
+          : { proxy: { endpoint: 'http://upstream/graphql' }, schema: cdn }),
+        reporting: {
+          type: 'hive',
+          token,
+          printTokenInfo: false,
+          selfHosting: {
+            graphqlEndpoint: cdnServer.url + '/graphql',
+            applicationUrl: cdnServer.url,
+            usageEndpoint: cdnServer.url + '/usage',
+          },
+          agent: {
+            sendInterval: 0,
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, opts): MaybePromise<Response> => {
+            if (url === 'http://upstream/graphql') {
+              // @ts-expect-error - Fetch signature is not compatible
+              return upstreamServer.fetch(url, opts);
+            }
+            return fetch(url, opts);
+          }),
+        ],
+        logging: isDebug(),
+      });
+
+      await expect(
+        executeFetch(gateway, {
+          query: /* GraphQL */ `
+            {
+              foo
+            }
+          `,
+        }),
+      ).resolves.toEqual({ data: { foo: 'bar' } });
+
+      const req = await waitForUsageReq;
+      const body = await req.json();
+      expect(body.operations).toEqual([
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            graph: { graphId, graphVersionId },
+          }),
+        }),
+      ]);
+
+      await setTimeout(10); // allow hive client to flush before disposing
+    },
+  );
+
+  it.each(['supergraph', 'proxy'] as const)(
+    'reports the updated graph version when only the graph version changes in %s mode',
+    async (mode) => {
+      const token = 'secret';
+      const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+      const firstGraphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+      const secondGraphVersionId = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+      let graphVersionId = firstGraphVersionId;
+      const upstreamSchema = createUpstreamSchema();
+      // the same sdl is served for both graph versions
+      const supergraphSdl = getUnifiedGraphGracefully([
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+          url: 'http://upstream/graphql',
+        },
+      ]);
+      const proxySdl = printSchemaWithDirectives(upstreamSchema);
+      let usageReq = createDeferredPromise<Request>();
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          if (req.url.endsWith('/supergraph') || req.url.endsWith('/sdl')) {
+            return new Response(
+              req.url.endsWith('/supergraph') ? supergraphSdl : proxySdl,
+              {
+                headers: {
+                  'x-hive-graph-id': graphId,
+                  'x-hive-graph-version-id': graphVersionId,
+                },
+              },
+            );
+          }
+          return handleMaybePromise(
+            () => cloneRequest(req),
+            (req) => {
+              usageReq.resolve(req);
+              return new Response();
+            },
+          );
+        }),
+      );
+      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      const cdn = {
+        type: 'hive',
+        endpoint: cdnServer.url,
+        key: 'key',
+      } as const;
+      await using gateway = createGatewayRuntime({
+        ...(mode === 'supergraph'
+          ? { supergraph: cdn }
+          : { proxy: { endpoint: 'http://upstream/graphql' }, schema: cdn }),
+        reporting: {
+          type: 'hive',
+          token,
+          printTokenInfo: false,
+          selfHosting: {
+            graphqlEndpoint: cdnServer.url + '/graphql',
+            applicationUrl: cdnServer.url,
+            usageEndpoint: cdnServer.url + '/usage',
+          },
+          agent: {
+            sendInterval: 0,
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, opts): MaybePromise<Response> => {
+            if (url === 'http://upstream/graphql') {
+              // @ts-expect-error - Fetch signature is not compatible
+              return upstreamServer.fetch(url, opts);
+            }
+            return fetch(url, opts);
+          }),
+        ],
+        logging: isDebug(),
+      });
+
+      async function executeAndGetReportedGraph() {
+        usageReq = createDeferredPromise<Request>();
+        await expect(
+          executeFetch(gateway, {
+            query: /* GraphQL */ `
+              {
+                foo
+              }
+            `,
+          }),
+        ).resolves.toEqual({ data: { foo: 'bar' } });
+        const body = await (await usageReq.promise).json();
+        expect(body.operations).toHaveLength(1);
+        return body.operations[0].metadata.graph;
+      }
+
+      await expect(executeAndGetReportedGraph()).resolves.toEqual({
+        graphId,
+        graphVersionId: firstGraphVersionId,
+      });
+
+      graphVersionId = secondGraphVersionId;
+      // refetches the unchanged sdl, now with the second graph version.
+      // the supergraph invalidation resolves once refetched, and the proxy
+      // schema getter waits for the refetch of the invalidated schema
+      await gateway.invalidateUnifiedGraph();
+      await gateway.getSchema();
+
+      await expect(executeAndGetReportedGraph()).resolves.toEqual({
+        graphId,
+        graphVersionId: secondGraphVersionId,
+      });
+
+      await setTimeout(10); // allow hive client to flush before disposing
+    },
+  );
+
+  it('reports the graph version of a cache loaded supergraph once refetched', async () => {
+    const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+    const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+    const upstreamSchema = createUpstreamSchema();
+    const supergraphSdl = getUnifiedGraphGracefully([
+      {
+        name: 'upstream',
+        schema: upstreamSchema,
+        url: 'http://upstream/graphql',
+      },
+    ]);
+    let usageReq = createDeferredPromise<Request>();
+    const fetchedSupergraph = vi.fn();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (req.url.endsWith('/supergraph')) {
+          fetchedSupergraph();
+          return new Response(supergraphSdl, {
+            headers: {
+              'x-hive-graph-id': graphId,
+              'x-hive-graph-version-id': graphVersionId,
+            },
+          });
+        }
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq.resolve(req);
+            return new Response();
+          },
+        );
+      }),
+    );
+    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    // warm cache, like after a restart with a shared cache
+    const cacheStore = new Map<string, unknown>([
+      ['hive-gateway:supergraph', supergraphSdl],
+    ]);
+    await using gateway = createGatewayRuntime({
+      supergraph: { type: 'hive', endpoint: cdnServer.url, key: 'key' },
+      cache: {
+        get: (key) => cacheStore.get(key),
+        set: (key, value) => {
+          cacheStore.set(key, value);
+        },
+        delete: (key) => cacheStore.delete(key),
+        getKeysByPrefix: (prefix) =>
+          [...cacheStore.keys()].filter((key) => key.startsWith(prefix)),
+      },
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          if (url === 'http://upstream/graphql') {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    async function executeAndGetReportedGraph() {
+      usageReq = createDeferredPromise<Request>();
+      await expect(
+        executeFetch(gateway, {
+          query: /* GraphQL */ `
+            {
+              foo
+            }
+          `,
+        }),
+      ).resolves.toEqual({ data: { foo: 'bar' } });
+      const body = await (await usageReq.promise).json();
+      expect(body.operations).toHaveLength(1);
+      return body.operations[0].metadata?.graph;
+    }
+
+    // the cached supergraph has no graph version
+    await expect(executeAndGetReportedGraph()).resolves.toBeUndefined();
+    expect(fetchedSupergraph).not.toHaveBeenCalled();
+
+    // refetching the identical supergraph assigns the graph version
+    await gateway.invalidateUnifiedGraph();
+    expect(fetchedSupergraph).toHaveBeenCalledTimes(1);
+
+    await expect(executeAndGetReportedGraph()).resolves.toEqual({
+      graphId,
+      graphVersionId,
+    });
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
+  it('reports the graph version from cdn with the subscription usage', async () => {
+    const graphId = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+    const graphVersionId = 'f0e1d2c3-b4a5-4f6e-8d7c-6b5a4f3e2d1c';
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          foo: String
+        }
+        type Subscription {
+          foo: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          foo: () => 'bar',
+        },
+        Subscription: {
+          foo: {
+            async *subscribe() {
+              yield { foo: 'bar' };
+            },
+          },
+        },
+      },
+    });
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<Request>();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (req.url.endsWith('/sdl')) {
+          return new Response(printSchemaWithDirectives(upstreamSchema), {
+            headers: {
+              'x-hive-graph-id': graphId,
+              'x-hive-graph-version-id': graphVersionId,
+            },
+          });
+        }
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        );
+      }),
+    );
+    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    await using gateway = createGatewayRuntime({
+      proxy: { endpoint: 'http://upstream/graphql' },
+      schema: { type: 'hive', endpoint: cdnServer.url, key: 'key' },
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          // subscriptions are sent as GET requests
+          if (url.startsWith('http://upstream/graphql')) {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    const res = await gateway.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: {
+        accept: 'text/event-stream',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          subscription {
+            foo
+          }
+        `,
+      }),
+    });
+    await expect(res.text()).resolves.toContain('"foo":"bar"');
+
+    const body = await (await waitForUsageReq).json();
+    expect(body.subscriptionOperations).toEqual([
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          graph: { graphId, graphVersionId },
+        }),
+      }),
+    ]);
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
+  it('injects the typenames for field level metrics', async () => {
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          node: Node
+        }
+        interface Node {
+          id: ID!
+        }
+        type User implements Node {
+          id: ID!
+        }
+      `,
+      resolvers: {
+        Query: {
+          node: () => ({ __typename: 'User', id: '1' }),
+        },
+      },
+    });
+    const upstreamQueries: string[] = [];
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<Request>();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) =>
+        handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        ),
+      ),
+    );
+    await using upstreamServer = createYoga({
+      schema: upstreamSchema,
+      plugins: [
+        {
+          onParams({ params }) {
+            upstreamQueries.push(params.query!);
+          },
+        },
+      ],
+    });
+    await using gateway = createGatewayRuntime({
+      proxy: { endpoint: 'http://upstream/graphql' },
+      schema: upstreamSchema,
+      reporting: {
+        type: 'hive',
+        token: 'secret',
+        printTokenInfo: false,
+        usage: {
+          fieldLevelMetricsEnabled: true,
+        },
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url + '/usage',
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      plugins: () => [
+        useCustomFetch((url, opts): MaybePromise<Response> => {
+          if (url === 'http://upstream/graphql') {
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
+          }
+          return fetch(url, opts);
+        }),
+      ],
+      logging: isDebug(),
+    });
+
+    await expect(
+      executeFetch(gateway, {
+        query: /* GraphQL */ `
+          {
+            node {
+              id
+            }
+          }
+        `,
+      }),
+    ).resolves.toEqual({ data: { node: { id: '1' } } });
+    expect(upstreamQueries.join()).toContain('__hive_typename__:__typename');
+
+    const body = await (await waitForUsageReq).json();
+    expect(body.operations).toEqual([
+      expect.objectContaining({
+        execution: expect.objectContaining({
+          fetches: [expect.objectContaining({ fields: expect.any(Object) })],
+        }),
+      }),
+    ]);
+
+    await setTimeout(10); // allow hive client to flush before disposing
+  });
+
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
     await using cdnServer = await createDisposableServer(

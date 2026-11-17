@@ -108,10 +108,22 @@ export interface UnifiedGraphHandlerResult {
   overrideLabels?: Iterable<string>;
 }
 
+/**
+ * A unified graph together with arbitrary metadata describing it (for example the
+ * version of the graph it was loaded from). The metadata is kept with the unified
+ * graph once it is successfully loaded.
+ */
+export interface UnifiedGraphWithMetadata {
+  graph: GraphQLSchema | string | DocumentNode;
+  metadata: Record<string, unknown>;
+}
+
 export interface UnifiedGraphManagerOptions<TContext> {
   getUnifiedGraph(
     ctx: TransportContext | undefined,
-  ): MaybePromise<GraphQLSchema | string | DocumentNode>;
+  ): MaybePromise<
+    GraphQLSchema | string | DocumentNode | UnifiedGraphWithMetadata
+  >;
   // Handle the unified graph by any specification
   handleUnifiedGraph?: UnifiedGraphHandler;
   transports?: Transports;
@@ -145,7 +157,22 @@ export interface UnifiedGraphManagerOptions<TContext> {
   subgraphDefer?: boolean | Record<string, boolean>;
 
   instrumentation?: () => Instrumentation | undefined;
-  onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
+  /**
+   * Called when a new unified graph has been successfully loaded. The metadata is the one
+   * returned together with the loaded unified graph from `getUnifiedGraph`, if any.
+   */
+  onUnifiedGraphChange?(
+    newUnifiedGraph: GraphQLSchema,
+    metadata: Record<string, unknown> | undefined,
+  ): void;
+  /**
+   * Called when the loaded unified graph has not changed, but the metadata returned
+   * together with it from `getUnifiedGraph` has (shallow comparison).
+   */
+  onUnifiedGraphMetadataChange?(
+    unifiedGraph: GraphQLSchema,
+    metadata: Record<string, unknown> | undefined,
+  ): void;
 
   handleProgressiveOverride?(
     label: string,
@@ -273,6 +300,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private handleUnifiedGraph: UnifiedGraphHandler;
   private unifiedGraph?: GraphQLSchema;
   private lastLoadedUnifiedGraph?: string | GraphQLSchema | DocumentNode;
+  /** The metadata loaded together with {@link lastLoadedUnifiedGraph}. */
+  private lastLoadedUnifiedGraphMetadata?: Record<string, unknown>;
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
   private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
   private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
@@ -388,6 +417,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private handleLoadedUnifiedGraph(
     loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
     doNotCache?: boolean,
+    metadata?: Record<string, unknown>,
   ): MaybePromise<GraphQLSchema> {
     if (loadedUnifiedGraph != null) {
       if (
@@ -400,6 +430,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         this.lastLoadTime = Date.now();
         if (!this.unifiedGraph) {
           throw new Error(`This should not happen!`);
+        }
+        if (!shallowEqual(metadata, this.lastLoadedUnifiedGraphMetadata)) {
+          this.opts.transportContext?.log.debug(
+            'Supergraph metadata has been changed, updating...',
+          );
+          this.lastLoadedUnifiedGraphMetadata = metadata;
+          this.opts.onUnifiedGraphMetadataChange?.(this.unifiedGraph, metadata);
         }
         return this.unifiedGraph;
       }
@@ -532,11 +569,12 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           this.currentGeneration = generation;
           this.generationBySchema.set(newUnifiedGraph, generation);
           this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
+          this.lastLoadedUnifiedGraphMetadata = metadata;
           this.unifiedGraph = newUnifiedGraph;
           this.inContextSDK = inContextSDK;
           this.lastLoadTime = Date.now();
           this._transportEntryMap = transportEntryMap;
-          this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
+          this.opts?.onUnifiedGraphChange?.(newUnifiedGraph, metadata);
 
           this.polling$ = undefined;
           if (previousGeneration && previousUnifiedGraph != null) {
@@ -736,8 +774,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private getAndSetUnifiedGraph(): MaybePromise<GraphQLSchema> {
     return handleMaybePromise(
       () => this.opts.getUnifiedGraph(this.opts.transportContext),
-      (loadedUnifiedGraph: string | GraphQLSchema | DocumentNode) =>
-        this.handleLoadedUnifiedGraph(loadedUnifiedGraph),
+      (loadedUnifiedGraph) =>
+        isUnifiedGraphWithMetadata(loadedUnifiedGraph)
+          ? this.handleLoadedUnifiedGraph(
+              loadedUnifiedGraph.graph,
+              false,
+              loadedUnifiedGraph.metadata,
+            )
+          : this.handleLoadedUnifiedGraph(loadedUnifiedGraph),
       (err) => {
         this.opts.transportContext?.log.error(err, 'Failed to load Supergraph');
         this.lastLoadTime = Date.now();
@@ -873,6 +917,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         this.unifiedGraph = undefined;
         this.initialUnifiedGraph$ = undefined;
         this.lastLoadedUnifiedGraph = undefined;
+        this.lastLoadedUnifiedGraphMetadata = undefined;
         this.inContextSDK = undefined;
         this.lastLoadTime = undefined;
         this.polling$ = undefined;
@@ -895,6 +940,41 @@ function disposeAll(disposables: unknown[]) {
     return disposalJobs[0];
   }
   return Promise.all(disposalJobs).then(() => {});
+}
+
+function isUnifiedGraphWithMetadata(
+  loadedUnifiedGraph:
+    | string
+    | GraphQLSchema
+    | DocumentNode
+    | UnifiedGraphWithMetadata
+    | null
+    | undefined,
+): loadedUnifiedGraph is UnifiedGraphWithMetadata {
+  return (
+    typeof loadedUnifiedGraph === 'object' &&
+    loadedUnifiedGraph != null &&
+    !isSchema(loadedUnifiedGraph) &&
+    !isDocumentNode(loadedUnifiedGraph) &&
+    'graph' in loadedUnifiedGraph
+  );
+}
+
+function shallowEqual(
+  a: Record<string, unknown> | undefined,
+  b: Record<string, unknown> | undefined,
+) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  const aKeys = Object.keys(a);
+  return (
+    aKeys.length === Object.keys(b).length &&
+    aKeys.every((key) => Object.hasOwn(b, key) && Object.is(a[key], b[key]))
+  );
 }
 
 function serializeLoadedUnifiedGraph(

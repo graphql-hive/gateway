@@ -5,13 +5,18 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
+import {
+  createCDNArtifactFetcher,
+  joinUrl,
+  type GraphVersionInfo,
+} from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   SchemaGenerationLease,
+  UnifiedGraphWithMetadata,
 } from '@graphql-mesh/fusion-runtime';
 import {
   handleMaybePromiseMaybeAsyncIterableResult,
@@ -263,6 +268,22 @@ export function createGatewayRuntime<
     allowArbitraryDocumentsForPersistedDocuments =
       config.persistedDocuments?.allowArbitraryOperations;
   }
+  // the graph versions of the schemas fetched from the Hive CDN, reported with the usage
+  const graphVersionInfoForSchema = new WeakMap<
+    GraphQLSchema,
+    GraphVersionInfo
+  >();
+
+  function setGraphVersionForSchema(
+    schema: GraphQLSchema,
+    graphVersion: GraphVersionInfo | undefined,
+  ) {
+    if (graphVersion) {
+      graphVersionInfoForSchema.set(schema, graphVersion);
+    } else {
+      graphVersionInfoForSchema.delete(schema);
+    }
+  }
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
   // documents plugin
@@ -270,6 +291,7 @@ export function createGatewayRuntime<
     config,
     configContext,
     allowArbitraryDocumentsForPersistedDocuments,
+    (schema) => graphVersionInfoForSchema.get(schema),
   );
   let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
@@ -425,13 +447,25 @@ export function createGatewayRuntime<
           pausePolling();
           initialFetch$ = handleMaybePromise(
             fetcher.fetch,
-            ({ contents }): true => {
-              if (lastFetchedSdl == null || lastFetchedSdl !== contents) {
+            ({ contents, ...artifact }): true => {
+              // the schema is unset when invalidated, it must be rebuilt then
+              if (!unifiedGraph || lastFetchedSdl !== contents) {
                 unifiedGraph = buildSchema(contents, {
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
+                lastFetchedSdl = contents;
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
                 replaceSchema(unifiedGraph);
+              } else {
+                // the sdl did not change, but the graph version might have
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
               }
               continuePolling();
               return true;
@@ -577,7 +611,7 @@ export function createGatewayRuntime<
     let unifiedGraphFetcher: {
       fetch: (
         transportCtx: TransportContext,
-      ) => MaybePromise<UnifiedGraphSchema>;
+      ) => MaybePromise<UnifiedGraphSchema | UnifiedGraphWithMetadata>;
       dispose?: () => void | PromiseLike<void>;
     };
 
@@ -606,7 +640,12 @@ export function createGatewayRuntime<
           version: globalThis.__VERSION__,
         });
         unifiedGraphFetcher = {
-          fetch: () => fetcher.fetch().then(({ contents }) => contents),
+          fetch: () =>
+            fetcher.fetch().then(({ contents, graphId, graphVersionId }) => ({
+              graph: contents,
+              // the manager keeps the metadata with the successfully loaded supergraph
+              metadata: { graphId, graphVersionId },
+            })),
           dispose: () => fetcher.dispose(),
         };
       } else if (config.supergraph.type === 'graphos') {
@@ -694,9 +733,13 @@ export function createGatewayRuntime<
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
-      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
+      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema, metadata) {
+        setGraphVersionForSchema(newUnifiedGraph, getGraphVersion(metadata));
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
+      },
+      onUnifiedGraphMetadataChange(unifiedGraph, metadata) {
+        setGraphVersionForSchema(unifiedGraph, getGraphVersion(metadata));
       },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
@@ -1232,6 +1275,19 @@ export function createGatewayRuntime<
   });
 
   return yoga as GatewayRuntime<TContext>;
+}
+
+function getGraphVersion(
+  artifact: Record<string, unknown> | undefined,
+): GraphVersionInfo | undefined {
+  const graphId = artifact?.['graphId'];
+  const graphVersionId = artifact?.['graphVersionId'];
+  return typeof graphId === 'string' &&
+    graphId &&
+    typeof graphVersionId === 'string' &&
+    graphVersionId
+    ? { graphId, graphVersionId }
+    : undefined;
 }
 
 function createSdkRequesterForRuntime<TContext extends Record<string, any>>(
