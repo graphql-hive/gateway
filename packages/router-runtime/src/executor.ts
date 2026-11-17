@@ -1,6 +1,7 @@
 import { documentStringMap } from '@envelop/core';
 import type {
   BatchFetchNode,
+  ConditionGroup,
   EntityBatchAlias,
   FetchNode,
   FetchNodePathSegment,
@@ -132,19 +133,22 @@ export function executeQueryPlan({
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
   const node = queryPlan.node;
-  if (!node) {
-    throw new Error('Query plan has no root node.');
-  }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
     executionRequest,
     onSubgraphExecute,
   });
   return handleMaybePromiseMaybeAsyncIterable(
-    () => executePlanNode(node, executionContext),
+    // the planner leaves the node out when no fetch can ever run, like when every
+    // field is under both `@skip(if: $a)` and `@include(if: $a)`
+    () => node && executePlanNode(node, executionContext),
     () => {
       const executionResult = {} as ExecutionResult;
-      if (Object.keys(executionContext.data).length > 0) {
+      // nothing fetched without errors means every field was skipped, which is still `data: {}`
+      if (
+        Object.keys(executionContext.data).length > 0 ||
+        !executionContext.errors.length
+      ) {
         executionResult.data = projectDataByOperation(executionContext);
       }
       if (executionContext.errors.length > 0) {
@@ -303,6 +307,27 @@ function normalizeFlattenNodePath(
     }
   }
   return normalized;
+}
+
+/**
+ * Whether a fetch or a batch alias with the given `runIf` runs. It runs when any of the
+ * condition groups holds, and always when there is no `runIf`. A group holds when every
+ * `includeIf` variable is `true` and no `skipIf` variable is.
+ */
+function shouldRun(
+  runIf: ConditionGroup[] | undefined,
+  variableValues: Record<string, any> | undefined,
+): boolean {
+  return (
+    !runIf ||
+    runIf.some(
+      (group) =>
+        (group.includeIf ?? []).every(
+          (name) => variableValues?.[name] === true,
+        ) &&
+        !(group.skipIf ?? []).some((name) => variableValues?.[name] === true),
+    )
+  );
 }
 
 function getContextGroupVariables(context: FetchContext): string[] {
@@ -697,6 +722,18 @@ function prepareBatchFetchContext(
   const collectedByVariableName = new Map<string, CollectedEntities>();
 
   for (const alias of batchFetchNode.entityBatch.aliases) {
+    if (!shouldRun(alias.runIf, executionContext.variableValues)) {
+      // an alias that's off collects no entities and sends `[]`, the planner shares a
+      // representations variable only between aliases with the same `runIf`
+      byAlias.set(alias.alias, {
+        groups: [],
+        offsets: [0],
+        entities: [],
+        entityPathsByIndex: new Map(),
+        alias,
+      });
+      continue;
+    }
     const requires = alias.requires;
     if (!requires || requires.length === 0) {
       continue;
@@ -1827,6 +1864,12 @@ function executePlanNode(
       return Promise.all(promises);
     }
     case 'Flatten': {
+      if (
+        planNode.node.kind === 'Fetch' &&
+        !shouldRun(planNode.node.runIf, executionContext.variableValues)
+      ) {
+        return;
+      }
       const flattenContext = prepareFlattenContext(planNode, executionContext);
       if (!flattenContext) {
         return;
@@ -1839,6 +1882,10 @@ function executePlanNode(
       );
     }
     case 'Fetch': {
+      // the `@include`/`@skip` around the fetch and on its fields decide whether it runs
+      if (!shouldRun(planNode.runIf, executionContext.variableValues)) {
+        return;
+      }
       return executeFetchPlanNode(planNode, executionContext, state);
     }
     case 'BatchFetch': {
@@ -1851,18 +1898,6 @@ function executePlanNode(
         executionContext,
         batchContext,
       );
-    }
-    case 'Condition': {
-      const conditionValue =
-        executionContext.variableValues?.[planNode.condition];
-      if (conditionValue === true) {
-        if (planNode.ifClause) {
-          return executePlanNode(planNode.ifClause, executionContext);
-        }
-      } else if (planNode.elseClause) {
-        return executePlanNode(planNode.elseClause, executionContext);
-      }
-      break;
     }
     case 'Subscription': {
       return executeFetchPlanNode(planNode.primary, executionContext);
