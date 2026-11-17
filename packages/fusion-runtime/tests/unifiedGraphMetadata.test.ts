@@ -51,10 +51,8 @@ describe('Unified graph metadata', () => {
       createManager({ getUnifiedGraph: () => sdlA });
     await using _ = manager;
     const schema = await manager.getUnifiedGraph();
-    expect(onUnifiedGraphChange).toHaveBeenCalledExactlyOnceWith(
-      schema,
-      undefined,
-    );
+    expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
+    expect(onUnifiedGraphChange).toHaveBeenCalledWith(schema, undefined);
     await manager.invalidateUnifiedGraph();
     expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
     expect(onUnifiedGraphMetadataChange).not.toHaveBeenCalled();
@@ -69,7 +67,8 @@ describe('Unified graph metadata', () => {
       });
     await using _ = manager;
     const schema = await manager.getUnifiedGraph();
-    expect(onUnifiedGraphChange).toHaveBeenCalledExactlyOnceWith(schema, {
+    expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
+    expect(onUnifiedGraphChange).toHaveBeenCalledWith(schema, {
       version: '1',
     });
 
@@ -118,17 +117,15 @@ describe('Unified graph metadata', () => {
       });
     await using _ = manager;
     const schema = await manager.getUnifiedGraph();
-    expect(onUnifiedGraphChange).toHaveBeenCalledExactlyOnceWith(
-      schema,
-      undefined,
-    );
+    expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
+    expect(onUnifiedGraphChange).toHaveBeenCalledWith(schema, undefined);
 
     await expect(reload(manager)).resolves.toBe(schema);
     expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
-    expect(onUnifiedGraphMetadataChange).toHaveBeenCalledExactlyOnceWith(
-      schema,
-      { version: '1' },
-    );
+    expect(onUnifiedGraphMetadataChange).toHaveBeenCalledTimes(1);
+    expect(onUnifiedGraphMetadataChange).toHaveBeenCalledWith(schema, {
+      version: '1',
+    });
   });
 
   it('keeps the metadata of the served graph when loading a new graph fails', async () => {
@@ -157,7 +154,8 @@ describe('Unified graph metadata', () => {
     loaded = { graph: sdlA, metadata: { version: 'A' } };
     await expect(reload(manager)).resolves.toBe(schemaA);
 
-    expect(onUnifiedGraphChange).toHaveBeenCalledExactlyOnceWith(schemaA, {
+    expect(onUnifiedGraphChange).toHaveBeenCalledTimes(1);
+    expect(onUnifiedGraphChange).toHaveBeenCalledWith(schemaA, {
       version: 'A',
     });
     expect(onUnifiedGraphMetadataChange).not.toHaveBeenCalled();
