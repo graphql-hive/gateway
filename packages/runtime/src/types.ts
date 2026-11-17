@@ -951,6 +951,9 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Configure the request ID for the gateway
    *
+   * The incoming request ID header is not trusted by default. Set `trustHeader` to `true`
+   * when the gateway is reachable only through a proxy that sets the header itself.
+   *
    * @default true
    */
   requestId?: boolean | RequestIdOptions<Partial<TContext>>;

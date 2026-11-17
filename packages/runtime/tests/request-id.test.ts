@@ -5,6 +5,9 @@ import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
 it.each([
+  // the incoming header is not trusted unless opted in
+  { trustHeader: undefined, hostId: undefined, expected: 'generated-id' },
+  { trustHeader: undefined, hostId: 'host-id', expected: 'host-id' },
   { trustHeader: true, hostId: undefined, expected: 'client-id' },
   { trustHeader: false, hostId: undefined, expected: 'generated-id' },
   { trustHeader: true, hostId: 'host-id', expected: 'host-id' },

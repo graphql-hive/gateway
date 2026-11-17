@@ -1221,7 +1221,17 @@ export function createGatewayRuntime<
     // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
     logging: log,
     // Delegate request-id correlation to Yoga (same option shape as createYoga).
-    requestId: config.requestId,
+    // the incoming request id header is not trusted unless opted in, clients reaching
+    // the gateway directly could otherwise pick ids that collide with other requests in the logs
+    requestId:
+      config.requestId === false
+        ? false
+        : typeof config.requestId === 'object'
+          ? {
+              ...config.requestId,
+              trustHeader: config.requestId.trustHeader ?? false,
+            }
+          : { trustHeader: false },
     plugins: [
       ...basePlugins,
       ...extraPlugins,
