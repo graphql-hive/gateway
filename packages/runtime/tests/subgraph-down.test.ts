@@ -52,6 +52,7 @@ describe('Error handling', () => {
       },
     });
     await using subgraph2server = createYoga({
+      logging: false,
       schema: subgraph2,
     });
     const supergraph = await composeLocalSchemasWithApollo([
@@ -67,6 +68,7 @@ describe('Error handling', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: false,
       plugins: () => [
@@ -173,6 +175,7 @@ describe('Error handling', () => {
       },
     });
     await using subgraph2server = createYoga({
+      logging: false,
       schema: subgraph2,
     });
     const supergraph = await composeLocalSchemasWithApollo([
@@ -188,6 +191,7 @@ describe('Error handling', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: false,
       plugins: () => [

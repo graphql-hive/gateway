@@ -87,9 +87,7 @@ describe('instrumentation', () => {
       },
     });
 
-    await using yoga = createYoga({
-      schema,
-    });
+    await using yoga = createYoga({ logging: false, schema });
 
     await using gateway = createGatewayRuntime({
       supergraph: () =>

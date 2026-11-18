@@ -91,6 +91,7 @@ describe('Subgraph Errors', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: true,
       plugins: () => [

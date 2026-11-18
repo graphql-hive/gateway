@@ -28,6 +28,7 @@ describe('Upstream Retry', () => {
       },
     });
     await using upstreamServer = createYoga({
+      logging: false,
       schema: upstreamSchema,
       plugins: [
         {
@@ -51,6 +52,7 @@ describe('Upstream Retry', () => {
       ],
     });
     await using gateway = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'upstream',
@@ -132,6 +134,7 @@ describe('Upstream Retry', () => {
       },
     });
     await using gateway = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'upstream',

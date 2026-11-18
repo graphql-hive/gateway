@@ -31,6 +31,7 @@ it.skipIf(globalThis.Bun)(
       },
     });
     await using upstreamYoga = createYoga({
+      logging: false,
       schema: upstreamSchema,
       // the body size limit streams the request body which is always async
       maxRequestBodySize: false,
@@ -43,6 +44,7 @@ it.skipIf(globalThis.Bun)(
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maxRequestBodySize: false, // needs to be disabled to get sync response
       transports(kind) {

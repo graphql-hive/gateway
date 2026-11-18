@@ -433,6 +433,7 @@ describe('Gateway Runtime', () => {
     let subgraphCallCnt = 0;
     const subgraphDeferred = Promise.withResolvers<GraphQLSchema>();
     await using subgraphRuntime = createGatewayRuntime({
+      logging: false,
       subgraph() {
         subgraphCallCnt++;
         return subgraphDeferred.promise;

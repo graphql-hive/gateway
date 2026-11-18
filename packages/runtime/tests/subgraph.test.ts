@@ -22,6 +22,7 @@ it('should delegate requests to the subgraph supporting aliases', async () => {
   });
 
   await using gw = createGatewayRuntime({
+    logging: false,
     subgraph,
     maskedErrors: false,
     transports: () => ({
