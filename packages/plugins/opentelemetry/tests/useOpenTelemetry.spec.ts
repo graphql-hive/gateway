@@ -70,6 +70,7 @@ import {
   getSampler,
   getSpanProcessors,
   getTracerProvider,
+  getTracerProviderConfig,
   MockLogRecordExporter,
   setupOtelForTests,
   spanExporter,
@@ -379,8 +380,7 @@ describe('useOpenTelemetry', () => {
         },
       });
 
-      // general limits are only span limits fallbacks, explicit span limits win
-      expect(getLimits()).toMatchObject({
+      expect(getTracerProviderConfig()).toMatchObject({
         spanLimits: {
           attributeCountLimit: 1,
           attributePerEventCountLimit: 2,

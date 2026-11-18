@@ -308,8 +308,7 @@ export const getPropagator = () => {
 };
 
 export const getTracerProviderConfig = (): TracerConfig => {
-  // the provider doesnt keep its config around, so we rebuild the bits we
-  // assert on from its private fields
+  // access to private fields for test purpose
   const provider = getTracerProvider() as any;
   return {
     resource: provider._resource,
@@ -332,7 +331,6 @@ export const getResource = () => {
 };
 
 export const getLimits = () => {
-  // general limits are only used as span limits fallbacks and are not kept by the provider
   const { spanLimits } = getTracerProviderConfig();
   return { spanLimits };
 };
