@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@types/lodash": "4.17.27",
-    "graphql": "^16.12.0",
+    "graphql": "^16.15.0",
     "pkgroll": "2.27.1"
   },
   "sideEffects": false
