@@ -13,30 +13,32 @@ const port = Opts(process.argv).getServicePort('products');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-        type Product @key(fields: "id") {
-          id: ID!
-          name: String!
-          price: Float!
-        }
-      `),
-      resolvers: {
-        Query: {
-          hello: () => 'world',
-        },
-        Product: {
-          __resolveReference: (ref) => ({
-            id: ref.id,
-            name: `Roomba X${ref.id}`,
-            price: 100,
-          }),
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String!
+          }
+          type Product @key(fields: "id") {
+            id: ID!
+            name: String!
+            price: Float!
+          }
+        `),
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
+          Product: {
+            __resolveReference: (ref) => ({
+              id: ref.id,
+              name: `Roomba X${ref.id}`,
+              price: 100,
+            }),
+          },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         async onRequest({ url, endResponse, fetchAPI: { fetch } }) {

@@ -8,48 +8,50 @@ const port = Opts(process.argv).getServicePort('nested-a');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.0"
-            import: ["@key", "@shareable"]
-          )
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.0"
+              import: ["@key", "@shareable"]
+            )
 
-        type Query {
-          _nestedAPlaceholder: Boolean
-        }
+          type Query {
+            _nestedAPlaceholder: Boolean
+          }
 
-        type Entity @key(fields: "id") {
-          id: ID!
-          nested: NestedField! @shareable
-        }
+          type Entity @key(fields: "id") {
+            id: ID!
+            nested: NestedField! @shareable
+          }
 
-        type NestedField @shareable {
-          nestedNested: NestedNestedField!
-        }
+          type NestedField @shareable {
+            nestedNested: NestedNestedField!
+          }
 
-        type NestedNestedField @shareable {
-          name: String!
-          description: String!
-        }
-      `),
-      resolvers: {
-        Entity: {
-          __resolveReference({ id }: { id: string }) {
-            return {
-              id,
-              nested: {
-                nestedNested: {
-                  name: `A:name`,
-                  description: `A:description`,
+          type NestedNestedField @shareable {
+            name: String!
+            description: String!
+          }
+        `),
+        resolvers: {
+          Entity: {
+            __resolveReference({ id }: { id: string }) {
+              return {
+                id,
+                nested: {
+                  nestedNested: {
+                    name: `A:name`,
+                    description: `A:description`,
+                  },
                 },
-              },
-            };
+              };
+            },
           },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         onParams({ params }) {

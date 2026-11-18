@@ -10,73 +10,77 @@ describe('handleFederationSubschema', () => {
     // TODO: this needs to work with the Hive Router Query Planner as well
     usingHiveRouterRuntime(),
   )('combine federation merging and custom merging', async () => {
-    const users = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        directive @merge(keyField: String) on FIELD_DEFINITION
+    const users = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          directive @merge(keyField: String) on FIELD_DEFINITION
 
-        type Query {
-          userById(id: ID!): User @merge(keyField: "id")
-        }
+          type Query {
+            userById(id: ID!): User @merge(keyField: "id")
+          }
 
-        type User {
-          id: ID!
-          name: String
-          posts: [Post]
-        }
+          type User {
+            id: ID!
+            name: String
+            posts: [Post]
+          }
 
-        type Post @key(fields: "id") {
-          id: ID!
-          author: User
-        }
-      `),
-      resolvers: {
-        Query: {
-          userById(_root, { id }) {
-            return { id, name: `User ${id}` };
+          type Post @key(fields: "id") {
+            id: ID!
+            author: User
+          }
+        `),
+        resolvers: {
+          Query: {
+            userById(_root, { id }) {
+              return { id, name: `User ${id}` };
+            },
           },
-        },
-        Post: {
-          __resolveReference(post) {
-            return { id: post.id };
+          Post: {
+            __resolveReference(post) {
+              return { id: post.id };
+            },
+            author(post) {
+              return { id: post.id, name: `User ${post.id}` };
+            },
           },
-          author(post) {
-            return { id: post.id, name: `User ${post.id}` };
-          },
-        },
-        User: {
-          posts() {
-            return [{ id: '1' }];
+          User: {
+            posts() {
+              return [{ id: '1' }];
+            },
           },
         },
       },
-    });
-    const posts = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          posts: [Post]
-        }
+    ]);
+    const posts = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            posts: [Post]
+          }
 
-        type Post @key(fields: "id") {
-          id: ID!
-          title: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          posts() {
-            return [{ id: '1', title: 'Post 1' }];
+          type Post @key(fields: "id") {
+            id: ID!
+            title: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            posts() {
+              return [{ id: '1', title: 'Post 1' }];
+            },
           },
-        },
-        Post: {
-          __resolveReference(post) {
-            return { id: post.id };
-          },
-          title(post) {
-            return `Post ${post.id}`;
+          Post: {
+            __resolveReference(post) {
+              return { id: post.id };
+            },
+            title(post) {
+              return `Post ${post.id}`;
+            },
           },
         },
       },
-    });
+    ]);
     const executor = composeAndGetExecutor([
       {
         schema: users,

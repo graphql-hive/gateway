@@ -73,8 +73,8 @@
   "resolutions": {
     "@apollo/composition": "2.14.4",
     "@apollo/server": "5.5.2",
-    "@apollo/subgraph": "2.14.4",
     "@babel/template@npm:^8.0.0": "patch:@babel/template@npm%3A8.0.0#~/.yarn/patches/@babel-template-npm-8.0.0-61679d7ac9.patch",
+    "@graphql-hive/federation-gateway-audit/@apollo/subgraph": "2.14.4",
     "@graphql-mesh/transport-rest": "^0.12.5",
     "@graphql-mesh/types": "^0.105.0",
     "@graphql-tools/delegate": "workspace:*",

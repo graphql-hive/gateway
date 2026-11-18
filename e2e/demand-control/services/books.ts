@@ -72,54 +72,56 @@ const books = [
   },
 ];
 
-const schema = buildSubgraphSchema({
-  typeDefs: parse(/* GraphQL */ `
-    type Query {
-      book(id: ID): Book
-      bestsellers: [Book] @listSize(assumedSize: 5)
-      newestAdditions(after: ID, limit: Int!): [Book]
-        @listSize(slicingArguments: ["limit"])
-    }
+const schema = buildSubgraphSchema([
+  {
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        book(id: ID): Book
+        bestsellers: [Book] @listSize(assumedSize: 5)
+        newestAdditions(after: ID, limit: Int!): [Book]
+          @listSize(slicingArguments: ["limit"])
+      }
 
-    type Book {
-      title: String
-      author: Author
-      publisher: Publisher
-    }
+      type Book {
+        title: String
+        author: Author
+        publisher: Publisher
+      }
 
-    type Author {
-      name: String
-    }
+      type Author {
+        name: String
+      }
 
-    type Publisher {
-      name: String
-      address: Address
-    }
+      type Publisher {
+        name: String
+        address: Address
+      }
 
-    type Address @cost(weight: 5) {
-      zipCode: Int!
-    }
-    extend schema
-      @link(
-        url: "https://specs.apollo.dev/federation/v2.9"
-        import: ["@cost", "@listSize"]
-      ) {
-      query: Query
-    }
-  `),
-  resolvers: {
-    Query: {
-      book: (_root, { id }) => books.find((book) => book.id === id),
-      bestsellers: () => books,
-      newestAdditions: (_root, { after, limit }) => {
-        const startIndex = after
-          ? books.findIndex((book) => book.id === after) + 1
-          : 0;
-        return books.slice(startIndex, startIndex + limit);
+      type Address @cost(weight: 5) {
+        zipCode: Int!
+      }
+      extend schema
+        @link(
+          url: "https://specs.apollo.dev/federation/v2.9"
+          import: ["@cost", "@listSize"]
+        ) {
+        query: Query
+      }
+    `),
+    resolvers: {
+      Query: {
+        book: (_root, { id }) => books.find((book) => book.id === id),
+        bestsellers: () => books,
+        newestAdditions: (_root, { after, limit }) => {
+          const startIndex = after
+            ? books.findIndex((book) => book.id === after) + 1
+            : 0;
+          return books.slice(startIndex, startIndex + limit);
+        },
       },
     },
   },
-});
+]);
 
 const yoga = createYoga({
   schema,

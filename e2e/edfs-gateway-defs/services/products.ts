@@ -24,47 +24,49 @@ async function main() {
 
   createServer(
     createYoga({
-      schema: buildSubgraphSchema({
-        typeDefs: parse(/* GraphQL */ `
-          type Query {
-            hello: String!
-          }
-          type Product @key(fields: "id") {
-            id: ID!
-            name: String!
-            price: Float!
-          }
+      schema: buildSubgraphSchema([
+        {
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              hello: String!
+            }
+            type Product @key(fields: "id") {
+              id: ID!
+              name: String!
+              price: Float!
+            }
 
-          type Mutation {
-            createProduct(name: String!, price: Float!): Product!
-          }
-        `),
-        resolvers: {
-          Query: {
-            hello: () => 'world',
-          },
-          Product: {
-            __resolveReference: (ref) => ({
-              id: ref.id,
-              name: `Roomba X${ref.id}`,
-              price: 100,
-            }),
-          },
-          Mutation: {
-            createProduct: (_parent, { name, price }) => {
-              const product = {
-                id: String(Math.floor(Math.random() * 1000)),
-                name,
-                price,
-              };
+            type Mutation {
+              createProduct(name: String!, price: Float!): Product!
+            }
+          `),
+          resolvers: {
+            Query: {
+              hello: () => 'world',
+            },
+            Product: {
+              __resolveReference: (ref) => ({
+                id: ref.id,
+                name: `Roomba X${ref.id}`,
+                price: 100,
+              }),
+            },
+            Mutation: {
+              createProduct: (_parent, { name, price }) => {
+                const product = {
+                  id: String(Math.floor(Math.random() * 1000)),
+                  name,
+                  price,
+                };
 
-              pubsub.publish('new_product', product);
+                pubsub.publish('new_product', product);
 
-              return product;
+                return product;
+              },
             },
           },
         },
-      }),
+      ]),
     }),
   ).listen(port, () => {
     console.log(
