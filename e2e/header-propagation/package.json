@@ -2,7 +2,7 @@
   "name": "@e2e/header-propagation",
   "private": true,
   "dependencies": {
-    "graphql": "^16.12.0",
+    "graphql": "^16.15.0",
     "tslib": "^2.9.1"
   },
   "devDependencies": {
