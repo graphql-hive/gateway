@@ -21,6 +21,7 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
+import LeakDetector from 'jest-leak-detector';
 import { describe, expect, it, vi } from 'vitest';
 import { useFakeTimers } from '../../../internal/testing/src/fake-timers';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
@@ -274,6 +275,46 @@ describe('Polling', () => {
 
     expect(disposedDuringPublish).toBe(true);
   });
+
+  it.skipIf(
+    // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
+    globalThis.Bun,
+  )(
+    'does not retain superseded schemas with a sync unified graph getter',
+    async () => {
+      let version = 0;
+      await using manager = new UnifiedGraphManager({
+        getUnifiedGraph: () =>
+          getUnifiedGraphGracefully([
+            {
+              name: 'Test',
+              schema: createSchema({
+                typeDefs: `type Query { v${version}: String }`,
+              }),
+            },
+          ]),
+      });
+
+      const detectors: LeakDetector[] = [];
+      // an in-flight operation still holding onto a superseded schema
+      let heldSchema: GraphQLSchema | undefined;
+      for (; version < 4; version++) {
+        const schema = await (version === 0
+          ? manager.getUnifiedGraph()
+          : manager.invalidateUnifiedGraph());
+        detectors.push(new LeakDetector(schema));
+        if (version === 1) {
+          heldSchema = schema;
+        }
+      }
+
+      // the last schema is the current one
+      const [first, , third] = detectors;
+      await expect(first!.isLeaking()).resolves.toBeFalsy();
+      await expect(third!.isLeaking()).resolves.toBeFalsy();
+      expect(heldSchema).toBeDefined();
+    },
+  );
 
   it('continues polling after failing initial fetch', async () => {
     const advanceTimersByTimeAsync = useFakeTimers();

@@ -127,7 +127,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
   pollingInterval?: number;
   additionalTypeDefs?: TypeSource;
   additionalResolvers?:
-    IResolvers<unknown, TContext> | IResolvers<unknown, TContext>[];
+    | IResolvers<unknown, TContext>
+    | IResolvers<unknown, TContext>[];
   transportContext?: TransportContext;
   onSubgraphExecuteHooks?: OnSubgraphExecuteHook<TContext>[];
   // TODO: Will be removed later once we get rid of v0
@@ -216,15 +217,22 @@ const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 const DEFAULT_MAX_CONCURRENT_GENERATIONS = 10;
 
 function createSchemaReloadError(): GraphQLError {
-  return new GraphQLError('operation has been aborted due to a schema reload', {
-    extensions: {
-      code: 'SCHEMA_RELOAD',
-      http: {
-        status: 503,
+  const err = new GraphQLError(
+    'operation has been aborted due to a schema reload',
+    {
+      extensions: {
+        code: 'SCHEMA_RELOAD',
+        http: {
+          status: 503,
+        },
+        [CRITICAL_ERROR]: true,
       },
-      [CRITICAL_ERROR]: true,
     },
-  });
+  );
+  // format the stack right away, until then v8 keeps the captured call frames
+  // alive and those reference the next schema generation being loaded
+  void err.stack;
+  return err;
 }
 
 /**
@@ -379,7 +387,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         } else {
           this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
         }
-        this.initialUnifiedGraph$ = handleMaybePromise(
+        const initialUnifiedGraph$ = handleMaybePromise(
           () => this.initialUnifiedGraph$!,
           (v) => {
             this.initialUnifiedGraph$ = undefined;
@@ -390,6 +398,12 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             return v;
           },
         );
+        // when loaded synchronously the callback above already cleared it,
+        // dont keep the first schema around forever by assigning it back
+        this.initialUnifiedGraph$ = isPromise(initialUnifiedGraph$)
+          ? initialUnifiedGraph$
+          : undefined;
+        return initialUnifiedGraph$;
       }
       return this.initialUnifiedGraph$ || this.unifiedGraph;
     }

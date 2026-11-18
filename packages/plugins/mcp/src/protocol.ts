@@ -7,6 +7,7 @@ import type {
 } from './plugin.js';
 import {
   getByPath,
+  getSchemaByPath,
   type RegisteredTool,
   type ToolRegistry,
 } from './registry.js';
@@ -725,22 +726,8 @@ function setSchemaDescriptionByPath(
   path: string,
   description: string,
 ): boolean {
-  const keys = path.split('.');
-  let current = schema;
-  for (const key of keys) {
-    if (current.type === 'object' && current.properties?.[key]) {
-      current = current.properties[key];
-    } else if (current.type === 'array' && current.items) {
-      const items = current.items;
-      if (items.type === 'object' && items.properties?.[key]) {
-        current = items.properties[key];
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-  current.description = description;
+  const target = getSchemaByPath(schema, path);
+  if (!target) return false;
+  target.description = description;
   return true;
 }
