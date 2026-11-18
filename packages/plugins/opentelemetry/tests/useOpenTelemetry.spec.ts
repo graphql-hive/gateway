@@ -69,6 +69,7 @@ import {
   getSampler,
   getSpanProcessors,
   getTracerProvider,
+  getTracerProviderConfig,
   MockLogRecordExporter,
   setupOtelForTests,
   spanExporter,
@@ -378,9 +379,7 @@ describe('useOpenTelemetry', () => {
         },
       });
 
-      // @ts-ignore access private field
-      const registeredConfig = getTracerProvider()._config;
-      expect(registeredConfig).toMatchObject({
+      expect(getTracerProviderConfig()).toMatchObject({
         spanLimits: {
           attributeCountLimit: 1,
           attributePerEventCountLimit: 2,
@@ -388,10 +387,6 @@ describe('useOpenTelemetry', () => {
           attributeValueLengthLimit: 4,
           eventCountLimit: 5,
           linkCountLimit: 6,
-        },
-        generalLimits: {
-          attributeCountLimit: 7,
-          attributeValueLengthLimit: 8,
         },
       });
     });
