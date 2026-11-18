@@ -35,60 +35,62 @@ function getInclusiveTimeStampsInRange(startTime: number, endTime: number) {
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend type Thing @key(fields: "id") {
-          id: Int! @external
-          metrics(input: MetricsRequest!): MetricsResponse!
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend type Thing @key(fields: "id") {
+            id: Int! @external
+            metrics(input: MetricsRequest!): MetricsResponse!
+          }
 
-        input MetricsRequest {
-          traces: [String!]!
-          startTime: Int!
-          endTime: Int!
-        }
+          input MetricsRequest {
+            traces: [String!]!
+            startTime: Int!
+            endTime: Int!
+          }
 
-        type MetricsResponse {
-          data: [MetricsData!]!
-        }
+          type MetricsResponse {
+            data: [MetricsData!]!
+          }
 
-        type MetricsData {
-          trace: String!
-          timeStamps: [Int!]!
-        }
-      `),
-      resolvers: {
-        Thing: {
-          metrics: async (
-            _parent: ThingParent,
-            { input: { traces, startTime, endTime } }: MetricsRequest,
-          ) => {
-            const requestId = ++REQUEST_COUNTER;
+          type MetricsData {
+            trace: String!
+            timeStamps: [Int!]!
+          }
+        `),
+        resolvers: {
+          Thing: {
+            metrics: async (
+              _parent: ThingParent,
+              { input: { traces, startTime, endTime } }: MetricsRequest,
+            ) => {
+              const requestId = ++REQUEST_COUNTER;
 
-            const timeStamps = getInclusiveTimeStampsInRange(
-              startTime,
-              endTime,
-            );
+              const timeStamps = getInclusiveTimeStampsInRange(
+                startTime,
+                endTime,
+              );
 
-            console.log(
-              `\n[REQ #${requestId}] Timestamps for range (${startTime} - ${endTime}):`,
-              timeStamps,
-            );
-
-            const response = traces.map((trace) => {
-              return {
-                trace,
+              console.log(
+                `\n[REQ #${requestId}] Timestamps for range (${startTime} - ${endTime}):`,
                 timeStamps,
-              };
-            });
+              );
 
-            return {
-              data: response,
-            };
+              const response = traces.map((trace) => {
+                return {
+                  trace,
+                  timeStamps,
+                };
+              });
+
+              return {
+                data: response,
+              };
+            },
           },
         },
       },
-    }),
+    ]),
   }),
 ).listen(servicePort, () => {
   console.log(

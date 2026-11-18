@@ -73,18 +73,20 @@ app.use(
 );
 
 const yoga = createYoga({
-  schema: buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        hello: String
-      }
-    `),
-    resolvers: {
-      Query: {
-        hello: () => 'world',
+  schema: buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          hello: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          hello: () => 'world',
+        },
       },
     },
-  }),
+  ]),
 });
 
 app.use(yoga.graphqlEndpoint, yoga);

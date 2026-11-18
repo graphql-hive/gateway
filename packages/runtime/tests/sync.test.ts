@@ -16,20 +16,22 @@ import { expect, it } from 'vitest';
 it.skipIf(globalThis.Bun)(
   'should be sync if there is no async operations',
   async () => {
-    const upstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          hello() {
-            return 'Hello world!';
+    const upstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            hello() {
+              return 'Hello world!';
+            },
           },
         },
       },
-    });
+    ]);
     await using upstreamYoga = createYoga({
       logging: false,
       schema: upstreamSchema,

@@ -8,49 +8,51 @@ const port = Opts(process.argv).getServicePort('nested-b');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.0"
-            import: ["@key", "@shareable", "@external", "@provides"]
-          )
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.0"
+              import: ["@key", "@shareable", "@external", "@provides"]
+            )
 
-        type Query {
-          entity: Entity
-            @provides(fields: "nested { nestedNested { name description } }")
-        }
+          type Query {
+            entity: Entity
+              @provides(fields: "nested { nestedNested { name description } }")
+          }
 
-        type Entity @key(fields: "id") {
-          id: ID!
-          nested: NestedField! @shareable
-        }
+          type Entity @key(fields: "id") {
+            id: ID!
+            nested: NestedField! @shareable
+          }
 
-        type NestedField @shareable {
-          nestedNested: NestedNestedField!
-        }
+          type NestedField @shareable {
+            nestedNested: NestedNestedField!
+          }
 
-        type NestedNestedField {
-          name: String! @external
-          description: String! @external
-        }
-      `),
-      resolvers: {
-        Query: {
-          entity() {
-            return {
-              id: '1',
-              nested: {
-                nestedNested: {
-                  name: 'B:name',
-                  description: 'B:description',
+          type NestedNestedField {
+            name: String! @external
+            description: String! @external
+          }
+        `),
+        resolvers: {
+          Query: {
+            entity() {
+              return {
+                id: '1',
+                nested: {
+                  nestedNested: {
+                    name: 'B:name',
+                    description: 'B:description',
+                  },
                 },
-              },
-            };
+              };
+            },
           },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         onParams({ params }) {

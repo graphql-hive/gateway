@@ -6,18 +6,20 @@ import { describe, expect, it } from 'vitest';
 
 describe('AWS Sigv4', () => {
   it('signs the request correctly', async () => {
-    const subgraphSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          hello: () => 'world',
+    const subgraphSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
         },
       },
-    });
+    ]);
     let receivedSubgraphRequest: Request | undefined;
     await using gw = createGatewayTester({
       subgraphs: [
