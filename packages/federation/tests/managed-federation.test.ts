@@ -98,14 +98,21 @@ describe('Managed Federation', () => {
       process.env['APOLLO_GRAPH_REF'] = 'test-graph-id';
       process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'] =
         'test-up-link1,test-up-link2';
-      await fetchSupergraphSdlFromManagedFederation({
-        fetch(url, bodyInit) {
-          expect(url).toBe('test-up-link1');
-          expect(bodyInit?.body).toContain('"graphRef":"test-graph-id"');
-          expect(bodyInit?.body).toContain('"apiKey":"test-api-key"');
-          return mockSDL();
-        },
-      });
+      try {
+        await fetchSupergraphSdlFromManagedFederation({
+          fetch(url, bodyInit) {
+            expect(url).toBe('test-up-link1');
+            expect(bodyInit?.body).toContain('"graphRef":"test-graph-id"');
+            expect(bodyInit?.body).toContain('"apiKey":"test-api-key"');
+            return mockSDL();
+          },
+        });
+      } finally {
+        // leaking these makes ApolloServer in later tests start usage reporting
+        delete process.env['APOLLO_KEY'];
+        delete process.env['APOLLO_GRAPH_REF'];
+        delete process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
+      }
 
       expect.assertions(3);
     });
