@@ -14,7 +14,7 @@
     "@types/ws": "^8",
     "express": "^5.3.0",
     "graphql-sse": "^2.6.3",
-    "graphql-ws": "^6.4.1",
+    "graphql-ws": "^6.4.3",
     "ws": "^8.22.0",
     "@graphql-hive/gateway": "^2.15.9"
   },
@@ -26,7 +26,8 @@
     "minimatch": "^10.2.5",
     "fast-uri": "^3.1.6",
     "protobufjs": "^8.2.1",
-    "esbuild": "^0.25.12"
+    "esbuild": "^0.25.12",
+    "@graphql-yoga/plugin-persisted-operations": "^4.0.1"
   },
   "scripts": {
     "service:products": "tsx services/products/index.ts",

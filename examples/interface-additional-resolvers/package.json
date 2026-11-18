@@ -15,7 +15,8 @@
     "minimatch": "^10.2.5",
     "fast-uri": "^3.1.6",
     "protobufjs": "^8.2.1",
-    "esbuild": "^0.25.12"
+    "esbuild": "^0.25.12",
+    "@graphql-yoga/plugin-persisted-operations": "^4.0.1"
   },
   "scripts": {
     "service:Test": "tsx services/Test.ts",
