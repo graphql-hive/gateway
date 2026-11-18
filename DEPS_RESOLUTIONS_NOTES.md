@@ -45,3 +45,8 @@ Here we collect reasons and write explanations about why some resolutions or pat
 
 1. Since `@apollo/subgraph` 2.15, `buildSubgraphSchema` accepts only a list of modules or a document, not a single `{ typeDefs, resolvers }` module.
 2. The audit still passes a single module, so it's kept on the last `@apollo/subgraph` version that accepts it.
+
+### got
+
+1. `@yarnpkg/core` 4.9.2 was published with a dependency on `patch:got@npm%3A11.8.2#~/.yarn/patches/got-npm-11.8.2-c1eb105458.patch`, a patch that only exists in the Yarn repository.
+2. `~/` resolves to this project's root, so the patch is copied as is from [yarnpkg/berry](https://github.com/yarnpkg/berry/blob/master/.yarn/patches/got-npm-11.8.2-c1eb105458.patch) to make the install work.
