@@ -120,7 +120,6 @@ const deps = {
     // Those are most used features.
     [
       // Common API base
-      ['api'],
       ['api-logs'],
       ['core'],
       ['resources', 'esm/'],
@@ -144,6 +143,8 @@ const deps = {
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
     ]),
   ),
+  'node_modules/@opentelemetry/api/index':
+    '../../node_modules/@opentelemetry/api/dist/index.mjs',
   'node_modules/@opentelemetry/semantic-conventions/index':
     '../../node_modules/@opentelemetry/semantic-conventions/dist/index.mjs',
   // sdk-trace-base's ESM entry is a shim re-exporting from @opentelemetry/sdk-trace
