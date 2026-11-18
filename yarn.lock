@@ -3027,10 +3027,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20260702.1":
-  version: 4.20260702.1
-  resolution: "@cloudflare/workers-types@npm:4.20260702.1"
-  checksum: 10c0/2dbd1d8d99285b49f90457321cc6f3668ac2fb89c9e24b36539e60f67925611078724093176bfbe06c8ab8d98eafd4902e4faa2e96a1378f96b14498c28ccdda
+"@cloudflare/workers-types@npm:^5.20261115.1":
+  version: 5.20261115.1
+  resolution: "@cloudflare/workers-types@npm:5.20261115.1"
+  checksum: 10c0/39887db39fa7d7e76b6fa64c34b5f5469e158d4b5e709316941b2c471b06b7f2908a0777232fc03255665afbe2074e6c9a0bae671d357957599d152b70a25646
   languageName: node
   linkType: hard
 
@@ -3125,7 +3125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
   dependencies:
-    "@cloudflare/workers-types": "npm:^4.20260702.1"
+    "@cloudflare/workers-types": "npm:^5.20261115.1"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.15.0"
     wrangler: "npm:^4.162.0"
