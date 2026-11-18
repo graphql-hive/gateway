@@ -48,7 +48,7 @@
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/utils": "^13.2.2",
     "@whatwg-node/disposablestack": "^0.0.6",
-    "graphql-yoga": "^6.0.1"
+    "graphql-yoga": "^6.1.0"
   },
   "devDependencies": {
     "graphql": "^16.12.0",
