@@ -7,7 +7,7 @@
     "@graphql-mesh/plugin-live-query": "^0.107.3",
     "@omnigraph/json-schema": "^0.112.6",
     "fets": "^0.8.14",
-    "graphql": "^16.12.0",
+    "graphql": "^16.15.0",
     "graphql-sse": "^2.6.3",
     "tslib": "^2.9.1"
   }
