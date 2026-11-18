@@ -377,7 +377,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
       if (maskedErrors != null) {
         // overwrite masked errors from loaded config only when provided
-        // @ts-expect-error maskedErrors is a boolean but incorrectly inferred
         config.maskedErrors = maskedErrors;
       }
       if (
