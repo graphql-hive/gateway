@@ -8,6 +8,6 @@
     "@cloudflare/workers-types": "^4.20260702.1",
     "@graphql-hive/gateway-runtime": "workspace:*",
     "graphql": "^16.12.0",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.162.0"
   }
 }

@@ -2,7 +2,7 @@
   "name": "@e2e/federation-example",
   "private": true,
   "devDependencies": {
-    "@apollo/server": "^5.5.1",
+    "@apollo/server": "^5.5.2",
     "@apollo/subgraph": "2.14.4",
     "graphql": "^16.12.0"
   }
