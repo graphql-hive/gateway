@@ -158,9 +158,9 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  // `@whatwg-node/fetch@0.12` no longer exports `crypto`; use the platform
-  // global. Keep it on the FetchAPI object so nested Yoga 5 peers that still
-  // type FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
+  // `@whatwg-node/fetch` does not export `crypto`; use the platform global.
+  // Keep it on the FetchAPI object so nested Yoga 5 peers that still type
+  // FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
   // those packages publish Yoga 6 builds.
   const fetchAPI = {
     fetch,
@@ -802,8 +802,7 @@ export function createGatewayRuntime<
     onRequest({ serverContext, request }) {
       // Prefer Node `req.headers` when present: `getHeadersObj` returns plain
       // IncomingMessage header maps as-is (no Proxy). Fetch `Headers` need the
-      // Proxy path. Keep that order for the hot path; other header tricks
-      // (WS upgrade without Request, connectionParams merge) stay unchanged.
+      // Proxy path. Keep that order for the hot path.
       const reqHeaders = (
         serverContext as {
           req?: { headers?: Headers | Record<string, string | string[]> };
@@ -1218,7 +1217,6 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
     logging: log,
     // Delegate request-id correlation to Yoga (same option shape as createYoga).
     // the incoming request id header is not trusted unless opted in, clients reaching

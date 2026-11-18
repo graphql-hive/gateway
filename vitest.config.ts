@@ -14,7 +14,7 @@ const inline = [
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
   /@graphql-hive\/yoga/,
-  // Yoga 6 depends on @graphql-hive/logger; inline so Vite applies tsconfig
+  // Yoga depends on @graphql-hive/logger; inline so Vite applies tsconfig
   // paths to the workspace package instead of requiring a prebuilt dist/.
   /@graphql-hive\/logger/,
   /graphql-yoga/,
