@@ -1,5 +1,12 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.14.1
+### Patch Changes
+
+
+
+- [#2755](https://github.com/graphql-hive/gateway/pull/2755) [`5e70bc4`](https://github.com/graphql-hive/gateway/commit/5e70bc4a40a265ef5750fcd4b695474627d3bc46) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix a memory leak where every supergraph reload retained the whole previous schema when the `supergraph` option is a synchronous function
+
 ## 1.14.0
 ### Minor Changes
 
