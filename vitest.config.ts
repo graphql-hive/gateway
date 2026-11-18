@@ -125,8 +125,6 @@ export default defineConfig({
           testTimeout,
           benchmark: {
             include: ['bench/**/*.bench.ts', 'e2e/**/*.bench.ts'],
-            reporters: ['verbose'],
-            outputJson: 'bench/results.json',
           },
         },
       },

@@ -50,3 +50,9 @@ Here we collect reasons and write explanations about why some resolutions or pat
 
 1. `@yarnpkg/core` 4.9.2 was published with a dependency on `patch:got@npm%3A11.8.2#~/.yarn/patches/got-npm-11.8.2-c1eb105458.patch`, a patch that only exists in the Yarn repository.
 2. `~/` resolves to this project's root, so the patch is copied as is from [yarnpkg/berry](https://github.com/yarnpkg/berry/blob/master/.yarn/patches/got-npm-11.8.2-c1eb105458.patch) to make the install work.
+
+### vitest
+
+1. Writes snapshot files with the Jest header instead of the Vitest one.
+2. Names snapshots like Jest does, joining the test name and the snapshot hint with `: ` and without `>` between nested test names. This keeps the snapshot files shared with `bun test`.
+3. Vitest 5 bundles `@vitest/snapshot`, so the patch is applied on `vitest` itself.

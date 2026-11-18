@@ -13,7 +13,7 @@ import {
 import { benchConfig } from '@internal/testing';
 import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getOperationAST, GraphQLSchema, parse } from 'graphql';
-import { bench, describe, expect, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import monolith from './monolith';
 
 function memoize1<T extends (...args: any) => any>(fn: T): T {
@@ -30,7 +30,23 @@ function memoize1<T extends (...args: any) => any>(fn: T): T {
   } as T;
 }
 
-describe('Federation', async () => {
+// Only if you want to see the latency that the gateway adds
+test.skip('Monolith', async ({ bench }) => {
+  const { query, operationName } = createExampleSetup(__dirname, 1000);
+  const memoizedParse = memoize1(parse);
+  await bench(
+    'Monolith',
+    () =>
+      normalizedExecutor({
+        schema: monolith,
+        document: memoizedParse(query),
+        operationName: operationName,
+        contextValue: {},
+      }) as Promise<void>,
+  ).run();
+});
+
+test('Federation', async ({ bench }) => {
   const { fs } = createTenv(__dirname);
   const { query, operationName, result, supergraph } = createExampleSetup(
     __dirname,
@@ -42,19 +58,6 @@ describe('Federation', async () => {
     products,
     reviews,
   };
-  const memoizedParse = memoize1(parse);
-
-  // Only if you want to see the latency that the gateway adds
-  bench.skip(
-    'Monolith',
-    () =>
-      normalizedExecutor({
-        schema: monolith,
-        document: memoizedParse(query),
-        operationName: operationName,
-        contextValue: {},
-      }) as Promise<void>,
-  );
 
   const supergraphPath = await supergraph();
   const supergraphSdl = await fs.read(supergraphPath);
@@ -98,35 +101,31 @@ describe('Federation', async () => {
     { __fauxpaque: 'SchemaHash' } as const,
   );
 
-  bench(
-    'Apollo Gateway',
-    () => {
-      return handleMaybePromise(
-        () =>
-          apolloGWExecutor({
-            document: parsedQuery,
-            operationName,
-            request: {
-              query: query,
-            },
-            operation: operationAST,
-            metrics: {},
-            overallCachePolicy: {},
-            schemaHash,
-            queryHash: query,
-            source: query,
-            cache: dummyCache,
-            schema: apolloGWSchema,
-            logger: dummyLogger,
-            context: {},
-          }),
-        (response) => {
-          expect(response).toEqual(result);
-        },
-      );
-    },
-    benchConfig,
-  );
+  const apolloGWBench = bench('Apollo Gateway', () => {
+    return handleMaybePromise(
+      () =>
+        apolloGWExecutor({
+          document: parsedQuery,
+          operationName,
+          request: {
+            query: query,
+          },
+          operation: operationAST,
+          metrics: {},
+          overallCachePolicy: {},
+          schemaHash,
+          queryHash: query,
+          source: query,
+          cache: dummyCache,
+          schema: apolloGWSchema,
+          logger: dummyLogger,
+          context: {},
+        }),
+      (response) => {
+        expect(response).toEqual(result);
+      },
+    );
+  });
 
   const stitchedSchema = getStitchedSchemaFromSupergraphSdl({
     supergraphSdl,
@@ -140,21 +139,20 @@ describe('Federation', async () => {
     },
   });
 
-  bench(
-    'Stitching',
-    () =>
-      handleMaybePromise(
-        () =>
-          normalizedExecutor({
-            schema: stitchedSchema,
-            document: parsedQuery,
-            operationName: operationName,
-            contextValue: {},
-          }),
-        (response) => {
-          expect(response).toEqual(result);
-        },
-      ),
-    benchConfig,
+  const stitchingBench = bench('Stitching', () =>
+    handleMaybePromise(
+      () =>
+        normalizedExecutor({
+          schema: stitchedSchema,
+          document: parsedQuery,
+          operationName: operationName,
+          contextValue: {},
+        }),
+      (response) => {
+        expect(response).toEqual(result);
+      },
+    ),
   );
+
+  await bench.compare(apolloGWBench, stitchingBench, benchConfig);
 });
