@@ -10,7 +10,7 @@
     "@whatwg-node/fetch": "^0.12.1",
     "dockerode": "^5.0.1",
     "get-tsconfig": "^4.14.3",
-    "glob": "^13.0.6",
+    "glob": "^14.0.6",
     "graphql": "^16.15.0",
     "terminate": "^2.8.0"
   }
