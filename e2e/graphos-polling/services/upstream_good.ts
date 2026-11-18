@@ -10,21 +10,23 @@ const port = opts.getServicePort('upstream_good');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          foo: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          foo() {
-            console.log('foo on upstreamGood');
-            return 'bar';
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            foo: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            foo() {
+              console.log('foo on upstreamGood');
+              return 'bar';
+            },
           },
         },
       },
-    }),
+    ]),
   }),
 ).listen(port, () => {
   console.log('Upstream good server running on port ' + port);
