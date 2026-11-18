@@ -59,7 +59,7 @@
     }
   },
   "dependencies": {
-    "@graphql-hive/core": "0.23.2",
+    "@graphql-hive/core": "0.24.0",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-tools/graphql-file-loader": "^9.1.2",
     "@graphql-tools/load": "^9.1.3",
