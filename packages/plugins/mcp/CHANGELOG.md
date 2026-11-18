@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-mcp
 
+## 0.2.4
+### Patch Changes
+
+
+
+- [#2757](https://github.com/graphql-hive/gateway/pull/2757) [`5bff6f5`](https://github.com/graphql-hive/gateway/commit/5bff6f566edf402558fc3dc84d34b4c4c5497ce2) Thanks [@RMHonor](https://github.com/RMHonor)! - Allow `null` in the generated tool `outputSchema` for nullable GraphQL fields
+  
+  **Behaviour change:** the `outputSchema` published in `tools/list` previously ignored nullability, so `T` and `T!` produced the same schema. GraphQL returns an explicit `null` for nullable fields, which violated that schema and made MCP hosts that validate `structuredContent` (such as Claude Desktop) reject the tool result.
+  
+  Nullable fields now allow `null` (e.g. `{ "type": ["string", "null"] }`, with `null` added to `enum` for nullable enums, or `anyOf` with `{ "type": "null" }` for types without a single `type` such as unions). `NonNull` fields stay strict and the root schema is still a plain `object`. Clients that inspect `outputSchema` programmatically will now see `type` as an array for nullable fields.
+
 ## 0.2.3
 ### Patch Changes
 
