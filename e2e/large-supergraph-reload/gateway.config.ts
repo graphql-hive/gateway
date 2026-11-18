@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import v8 from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { defineConfig } from '@graphql-hive/gateway';
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 
 const SUPERGRAPH_PATH = process.env['SUPERGRAPH_PATH']!;
 
@@ -49,6 +49,6 @@ export const gatewayConfig = defineConfig({
           last = performance.now();
         }
       },
-    },
+    } satisfies GatewayPlugin,
   ],
 });
