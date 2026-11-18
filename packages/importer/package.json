@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "get-tsconfig": "^4.14.3",
-    "glob": "^13.0.6",
+    "glob": "^14.0.6",
     "pkgroll": "2.27.1",
     "sucrase": "^3.35.1"
   },
