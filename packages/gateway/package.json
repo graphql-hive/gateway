@@ -89,7 +89,7 @@
     "graphql": "^16.9.0 || ^17.0.0"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^14.0.0",
+    "@commander-js/extra-typings": "^15.1.0",
     "@envelop/core": "^6.0.1",
     "@envelop/rate-limiter": "^11.0.1",
     "@escape.tech/graphql-armor-block-field-suggestions": "^3.0.1",
@@ -140,7 +140,7 @@
     "@opentelemetry/sdk-trace-base": "^2.10.0",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "@whatwg-node/server": "^0.13.3",
-    "commander": "^14.0.3",
+    "commander": "^15.1.0",
     "graphql-ws": "^6.4.3",
     "graphql-yoga": "^6.1.0",
     "tslib": "^2.9.1",
