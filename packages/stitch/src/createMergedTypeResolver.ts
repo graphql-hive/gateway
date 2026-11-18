@@ -38,8 +38,7 @@ function getMergeOperation(
 /**
  * Overlay a single entryPoint on the parent merge config so shared
  * `key` / `argsFromKeys` / `valuesFromResults` / `dataLoaderOptions` /
- * `args` / `fieldName` defaults are preserved (same as the old
- * isolation-clone transformer).
+ * `args` / `fieldName` defaults are preserved.
  */
 export type OverlayMergedTypeEntryPointResult<
   TContext extends Record<string, any> = any,

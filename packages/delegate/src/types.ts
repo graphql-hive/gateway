@@ -121,7 +121,7 @@ export type DelegationPlanBuilder = (
   context?: any,
   info?: GraphQLResolveInfo,
   /**
-   * ExternalObject being merged. Clone-less @requires planning seeds
+   * ExternalObject being merged. @requires planning seeds
    * already-present fields from this parent so resolve-time leftover can
    * see deps filled by earlier hops.
    */
@@ -143,7 +143,7 @@ export interface MergedTypeInfo<TContext = Record<string, any>> {
   >;
   selectionSets: Map<Subschema<any, any, any, TContext>, SelectionSetNode>;
   /**
-   * When a subschema keeps multiple `entryPoints` (no split clones), each
+   * When a subschema keeps multiple `entryPoints`, each
    * entry's key selectionSet. The delegation plan builder treats the
    * subschema as proxiable when *any* entry's keys are already available
    * on the sources.

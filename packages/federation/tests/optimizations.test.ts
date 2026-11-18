@@ -129,7 +129,7 @@ describe('Optimizations', () => {
     });
     expect(serviceCallCnt).toMatchObject({
       accounts: 2,
-      // Clone-less computed fields coalesce inventory @requires into one hop.
+      // Computed fields coalesce inventory @requires into one hop.
       inventory: 1,
       products: 2,
       reviews: 2,
