@@ -7,7 +7,7 @@
     "graphql-sse": "^2.6.3",
     "graphql-yoga": "^6.0.1",
     "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.15.9"
+    "@graphql-hive/gateway": "^2.15.10"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
