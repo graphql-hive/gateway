@@ -86,7 +86,7 @@
   },
   "dependencies": {
     "@repeaterjs/repeater": "^3.1.0",
-    "@whatwg-node/disposablestack": "^0.0.6",
+    "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/promise-helpers": "^2.0.2"
   },
   "devDependencies": {
