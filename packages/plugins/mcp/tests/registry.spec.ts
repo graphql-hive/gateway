@@ -107,7 +107,7 @@ describe('ToolRegistry', () => {
         type: 'object',
         properties: {
           getWeather: {
-            type: 'object',
+            type: ['object', 'null'],
             properties: {
               temperature: { type: 'number', format: 'float' },
             },
@@ -777,10 +777,38 @@ describe('ToolRegistry with overrides', () => {
       items: {
         type: 'object',
         properties: {
-          name: { type: 'string' },
-          score: { type: 'number', format: 'float' },
+          name: { type: ['string', 'null'] },
+          score: { type: ['number', 'null'], format: 'float' },
         },
       },
+    });
+  });
+
+  it('narrows output schema through nullable objects and lists', () => {
+    const nullableSchema = buildSchema(`
+      type Query {
+        search: Result
+      }
+      type Result {
+        items: [Item]
+      }
+      type Item {
+        name: String
+      }
+    `);
+    const registry = new ToolRegistry(
+      { log: logger },
+      [
+        {
+          name: 'search',
+          query: '{ search { items { name } } }',
+          output: { path: 'search.items.name' },
+        },
+      ],
+      nullableSchema,
+    );
+    expect(registry.getMCPTools()[0]!.outputSchema).toEqual({
+      type: ['string', 'null'],
     });
   });
 
@@ -807,7 +835,7 @@ describe('ToolRegistry with overrides', () => {
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.outputSchema).toEqual({
-      type: 'object',
+      type: ['object', 'null'],
       properties: {
         temperature: { type: 'number', format: 'float' },
       },
@@ -982,7 +1010,7 @@ describe('ToolRegistry with overrides', () => {
       type: 'object',
       properties: {
         getWeather: {
-          type: 'object',
+          type: ['object', 'null'],
           properties: {
             temperature: { type: 'number', format: 'float' },
           },

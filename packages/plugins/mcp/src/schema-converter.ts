@@ -43,15 +43,16 @@ function graphqlTypeToJsonSchema(
 }
 
 export interface JsonSchema {
-  type?: string;
+  type?: string | string[];
   format?: string;
   items?: JsonSchema;
   properties?: Record<string, JsonSchema>;
   required?: string[];
-  enum?: string[];
+  enum?: (string | null)[];
   description?: string;
   $ref?: string;
   oneOf?: JsonSchema[];
+  anyOf?: JsonSchema[];
 }
 
 export function operationToInputSchema(
@@ -205,9 +206,26 @@ function outputTypeToSchema(
   schema: GraphQLSchema,
 ): JsonSchema {
   if (isNonNullType(type)) {
-    return outputTypeToSchema(type.ofType, selectionSet, schema);
+    return nonNullOutputTypeToSchema(type.ofType, selectionSet, schema);
   }
 
+  // GraphQL nullable fields return an explicit null, so the schema must allow it.
+  const result = nonNullOutputTypeToSchema(type, selectionSet, schema);
+  if (typeof result.type !== 'string') {
+    return { anyOf: [result, { type: 'null' }] };
+  }
+  return {
+    ...result,
+    type: [result.type, 'null'],
+    ...(result.enum && { enum: [...result.enum, null] }),
+  };
+}
+
+function nonNullOutputTypeToSchema(
+  type: GraphQLOutputType,
+  selectionSet: SelectionSetNode | undefined,
+  schema: GraphQLSchema,
+): JsonSchema {
   if (isListType(type)) {
     return {
       type: 'array',

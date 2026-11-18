@@ -88,18 +88,20 @@ export function getByPath(obj: unknown, path: string): unknown {
 }
 
 /** Walk a dot-notation path through a JSON Schema, returning the sub-schema at that path. */
-function getSchemaByPath(
+export function getSchemaByPath(
   schema: JsonSchema,
   path: string,
 ): JsonSchema | undefined {
+  // nullable types are expressed as e.g. ['object', 'null']
+  const is = (s: JsonSchema, t: string) => [s.type].flat().includes(t);
   let current = schema;
   for (const key of path.split('.')) {
-    if (current.type === 'object' && current.properties?.[key]) {
+    if (is(current, 'object') && current.properties?.[key]) {
       current = current.properties[key];
-    } else if (current.type === 'array' && current.items) {
+    } else if (is(current, 'array') && current.items) {
       // Walk into array items, then look for the key
       const items = current.items;
-      if (items.type === 'object' && items.properties?.[key]) {
+      if (is(items, 'object') && items.properties?.[key]) {
         current = items.properties[key];
       } else {
         return undefined;
