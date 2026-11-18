@@ -17,33 +17,37 @@ describe('Schema reload', () => {
     }
   });
   it('retries automatically when the schema reloads', async () => {
-    const firstUpstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          foo: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          foo: () => new Promise(() => {}),
+    const firstUpstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            foo: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            foo: () => new Promise(() => {}),
+          },
         },
       },
-    });
+    ]);
     await using firstUpstreamYoga = createYoga({ schema: firstUpstreamSchema });
     await using firstUpstreamServer =
       await createDisposableServer(firstUpstreamYoga);
-    const secondUpstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          foo: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          foo: () => 'barFromSecond',
+    const secondUpstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            foo: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            foo: () => 'barFromSecond',
+          },
         },
       },
-    });
+    ]);
     await using secondUpstreamYoga = createYoga({
       schema: secondUpstreamSchema,
       logging: false,

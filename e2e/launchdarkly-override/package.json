@@ -2,7 +2,7 @@
   "name": "@e2e/launchdarkly-override-example",
   "private": true,
   "dependencies": {
-    "@apollo/subgraph": "2.14.0",
+    "@apollo/subgraph": "2.16.0",
     "@launchdarkly/node-server-sdk": "9.16.5",
     "graphql": "16.14.2",
     "graphql-yoga": "^6.1.0",

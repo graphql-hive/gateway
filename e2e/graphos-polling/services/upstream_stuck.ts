@@ -9,22 +9,24 @@ const port = opts.getServicePort('upstream_stuck');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          foo: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          foo: () =>
-            new Promise(() => {
-              console.log('foo on upstreamStuck');
-              // never resolves
-            }),
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            foo: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            foo: () =>
+              new Promise(() => {
+                console.log('foo on upstreamStuck');
+                // never resolves
+              }),
+          },
         },
       },
-    }),
+    ]),
   }),
 ).listen(port, () => {
   console.log('Upstream stuck server running on port ' + port);

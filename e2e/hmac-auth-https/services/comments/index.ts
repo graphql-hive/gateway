@@ -46,20 +46,24 @@ const extractJwtPlugin = {
 
 const server = new ApolloServer({
   plugins: [verifyHmacPlugin, extractJwtPlugin],
-  schema: buildSubgraphSchema({
-    typeDefs: parse(readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf-8')),
-    resolvers: {
-      Query: {
-        comments: () => comments,
-      },
-      User: {
-        comments(user, _args, context) {
-          console.log('User.comments resolver called, context:', context);
-          return comments.filter((comment) => comment.author.id === user.id);
+  schema: buildSubgraphSchema([
+    {
+      typeDefs: parse(
+        readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf-8'),
+      ),
+      resolvers: {
+        Query: {
+          comments: () => comments,
+        },
+        User: {
+          comments(user, _args, context) {
+            console.log('User.comments resolver called, context:', context);
+            return comments.filter((comment) => comment.author.id === user.id);
+          },
         },
       },
     },
-  }),
+  ]),
 });
 
 const opts = Opts(process.argv);

@@ -17,40 +17,44 @@ describe('Error handling', () => {
    * }
    */
   it('when a subgraph is down and Query.subgraph1 is nullable', async () => {
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph1: Subgraph1
-        }
-        type Subgraph1 {
-          subgraph1Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph1: () => ({
-            subgraph1Field: 'hello from subgraph1',
-          }),
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph1: Subgraph1
+          }
+          type Subgraph1 {
+            subgraph1Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph1: () => ({
+              subgraph1Field: 'hello from subgraph1',
+            }),
+          },
         },
       },
-    });
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph2: Subgraph2
-        }
-        type Subgraph2 {
-          subgraph2Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph2: () => ({
-            subgraph2Field: 'hello from subgraph2',
-          }),
+    ]);
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph2: Subgraph2
+          }
+          type Subgraph2 {
+            subgraph2Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph2: () => ({
+              subgraph2Field: 'hello from subgraph2',
+            }),
+          },
         },
       },
-    });
+    ]);
     await using subgraph2server = createYoga({
       logging: false,
       schema: subgraph2,
@@ -140,40 +144,44 @@ describe('Error handling', () => {
    * }
    */
   it('when a subgraph is down and Query.subgraph1 is non-nullable', async () => {
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph1: Subgraph1!
-        }
-        type Subgraph1 {
-          subgraph1Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph1: () => ({
-            subgraph1Field: 'hello from subgraph1',
-          }),
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph1: Subgraph1!
+          }
+          type Subgraph1 {
+            subgraph1Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph1: () => ({
+              subgraph1Field: 'hello from subgraph1',
+            }),
+          },
         },
       },
-    });
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph2: Subgraph2
-        }
-        type Subgraph2 {
-          subgraph2Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph2: () => ({
-            subgraph2Field: 'hello from subgraph2',
-          }),
+    ]);
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph2: Subgraph2
+          }
+          type Subgraph2 {
+            subgraph2Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph2: () => ({
+              subgraph2Field: 'hello from subgraph2',
+            }),
+          },
         },
       },
-    });
+    ]);
     await using subgraph2server = createYoga({
       logging: false,
       schema: subgraph2,

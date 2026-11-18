@@ -1,6 +1,5 @@
 import { ApolloServer } from '@apollo/server';
-import { buildSubgraphSchema } from '@apollo/subgraph';
-import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
+import { buildSubgraphSchema, GraphQLResolverMap } from '@apollo/subgraph';
 import {
   ExpressContextFunctionArgument,
   expressMiddleware,
@@ -24,19 +23,21 @@ const resolvers: GraphQLResolverMap<ExpressContextFunctionArgument> = {
 };
 
 const server = new ApolloServer<ExpressContextFunctionArgument>({
-  schema: buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        headers: Headers!
-      }
+  schema: buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          headers: Headers!
+        }
 
-      type Headers {
-        authorization: String
-        sessionCookieId: String
-      }
-    `),
-    resolvers: resolvers as GraphQLResolverMap<unknown>,
-  }),
+        type Headers {
+          authorization: String
+          sessionCookieId: String
+        }
+      `),
+      resolvers: resolvers as GraphQLResolverMap<unknown>,
+    },
+  ]),
 });
 
 async function main() {

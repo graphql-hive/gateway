@@ -40,3 +40,8 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### jest-leak-detector
 
 1. Triggers garbage collection with `%CollectGarbage(true)` on every tick instead of exposing `gc` once.
+
+### @graphql-hive/federation-gateway-audit/@apollo/subgraph
+
+1. Since `@apollo/subgraph` 2.15, `buildSubgraphSchema` accepts only a list of modules or a document, not a single `{ typeDefs, resolvers }` module.
+2. The audit still passes a single module, so it's kept on the last `@apollo/subgraph` version that accepts it.
