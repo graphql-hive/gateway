@@ -13,7 +13,7 @@
     "@graphql-mesh/compose-cli": "^1.8.4",
     "graphql": "16.14.2",
     "graphql-tag": "^2.12.7",
-    "graphql-yoga": "^6.0.1",
+    "graphql-yoga": "^6.1.0",
     "tslib": "^2.9.1"
   }
 }
