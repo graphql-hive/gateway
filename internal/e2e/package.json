@@ -6,7 +6,7 @@
     "@apollo/gateway": "^2.14.4",
     "@types/dockerode": "^4.0.2",
     "@types/node": "^26.6.6",
-    "@whatwg-node/disposablestack": "^0.0.6",
+    "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/fetch": "^0.12.1",
     "dockerode": "^5.0.1",
     "get-tsconfig": "^4.14.3",

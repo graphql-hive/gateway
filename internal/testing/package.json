@@ -15,7 +15,7 @@
     "@graphql-mesh/types": "^0.107.3",
     "@graphql-tools/utils": "^13.2.2",
     "@types/node": "^26.6.6",
-    "@whatwg-node/disposablestack": "^0.0.6",
+    "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/fetch": "^0.12.1",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "@whatwg-node/server": "^0.13.3",

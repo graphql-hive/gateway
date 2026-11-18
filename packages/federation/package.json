@@ -47,7 +47,7 @@
     "@graphql-tools/utils": "^13.2.2",
     "@graphql-tools/wrap": "workspace:^",
     "@graphql-yoga/typed-event-target": "^4.0.0",
-    "@whatwg-node/disposablestack": "^0.0.6",
+    "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/events": "^0.1.2",
     "@whatwg-node/fetch": "^0.12.1",
     "@whatwg-node/promise-helpers": "^2.0.2",
