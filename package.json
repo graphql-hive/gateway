@@ -25,7 +25,7 @@
     "format": "yarn check:format --write",
     "start": "yarn workspace @graphql-hive/gateway start",
     "sync-graphql-version-docker": "node ./scripts/sync-graphql-version-in-dockerfiles.mjs",
-    "test": "vitest --project unit",
+    "test": "vitest --project unit --silent=passed-only",
     "test:bun": "bun test --bail",
     "test:e2e": "vitest --project e2e --slowTestThreshold 1000",
     "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks",
