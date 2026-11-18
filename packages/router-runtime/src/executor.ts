@@ -220,11 +220,74 @@ export function executeQueryPlan({
         executionResult.data = projectDataByOperation(executionContext);
       }
       if (executionContext.errors.length > 0) {
-        executionResult.errors = executionContext.errors;
+        executionResult.errors = executionContext.errors.map((error) =>
+          trimErrorPath(error, executionContext),
+        );
       }
       return executionResult;
     },
   );
+}
+
+/**
+ * Cuts the error path at the first key the client didn't ask for. A subgraph's path can go into a
+ * field the gateway fetched for itself, like a `@requires` field or `_entities`, and that key means
+ * nothing to the client. The error points at the closest value it asked for then, and an error
+ * with no such value has no path.
+ */
+function trimErrorPath(
+  error: GraphQLError,
+  { operation, fragments }: QueryPlanExecutionContext,
+): GraphQLError {
+  const path = error.path;
+  if (!path?.length) {
+    return error;
+  }
+  // a response key can have a field per type, their selections all count
+  let selectionSets = [operation.selectionSet];
+  const cut = path.findIndex((segment) => {
+    if (typeof segment !== 'string') {
+      return false;
+    }
+    const fields: FieldNode[] = [];
+    const collect = (selectionSet: SelectionSetNode) => {
+      for (const selection of selectionSet.selections) {
+        if (selection.kind === Kind.FIELD) {
+          if ((selection.alias ?? selection.name).value === segment) {
+            fields.push(selection);
+          }
+        } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+          collect(selection.selectionSet);
+        } else {
+          const fragment = fragments[selection.name.value];
+          if (fragment) {
+            collect(fragment.selectionSet);
+          }
+        }
+      }
+    };
+    selectionSets.forEach(collect);
+    if (!fields.length) {
+      return true;
+    }
+    selectionSets = fields.flatMap((field) =>
+      field.selectionSet ? [field.selectionSet] : [],
+    );
+    return false;
+  });
+  if (cut === -1) {
+    return error;
+  }
+  if (cut > 0) {
+    return relocatedError(error, path.slice(0, cut));
+  }
+  return new GraphQLError(error.message, {
+    nodes: error.nodes,
+    source: error.source,
+    positions: error.positions,
+    originalError: error,
+    extensions: error.extensions,
+  });
 }
 
 interface CreateExecutionContextOpts {
