@@ -6,7 +6,7 @@
     "@apollo/subgraph": "^2.13.3",
     "@graphql-mesh/compose-cli": "^1.8.4",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^6.0.1",
+    "graphql-yoga": "^6.1.0",
     "tslib": "^2.9.1"
   }
 }

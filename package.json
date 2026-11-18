@@ -78,7 +78,7 @@
     "@graphql-mesh/transport-rest": "^0.12.5",
     "@graphql-mesh/types": "^0.105.0",
     "@graphql-tools/delegate": "workspace:*",
-    "@graphql-yoga/plugin-persisted-operations": "4.0.1",
+    "@graphql-yoga/plugin-persisted-operations": "4.1.0",
     "@isaacs/brace-expansion": "5.0.1",
     "@opentelemetry/otlp-exporter-base@npm:^0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A^0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A^16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
