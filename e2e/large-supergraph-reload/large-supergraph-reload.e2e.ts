@@ -17,7 +17,9 @@ interface ReloadStats {
   heapUsedMB: number;
 }
 
-it.each([
+// bun has no setFlagsFromString for exposing gc, and its gc keeps around one extra
+// schema generation anyway (heap plateaus one generation above the baseline)
+it.skipIf(gatewayRunner.includes('bun')).each([
   { supergraphFunction: 'sync', gracefulSchemaReload: false },
   { supergraphFunction: 'async', gracefulSchemaReload: false },
   { supergraphFunction: 'async', gracefulSchemaReload: true },
