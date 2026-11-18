@@ -307,11 +307,15 @@ export const getPropagator = () => {
   return propagation._getGlobalPropagator() as TextMapPropagator;
 };
 
-export const getTracerProviderConfig = () => {
-  return (
-    // @ts-expect-error Access to private method for test purpose
-    (getTracerProvider() as BasicTracerProvider)._config as TracerConfig
-  );
+export const getTracerProviderConfig = (): TracerConfig => {
+  // access to private fields for test purpose
+  const provider = getTracerProvider() as any;
+  return {
+    resource: provider._resource,
+    sampler: provider._tracerOptions.sampler,
+    spanLimits: provider._tracerOptions.spanLimits,
+    spanProcessors: provider._activeSpanProcessor._spanProcessors,
+  };
 };
 
 export const getSampler = () => {
@@ -327,8 +331,8 @@ export const getResource = () => {
 };
 
 export const getLimits = () => {
-  const { spanLimits, generalLimits } = getTracerProviderConfig();
-  return { spanLimits, generalLimits };
+  const { spanLimits } = getTracerProviderConfig();
+  return { spanLimits };
 };
 
 export const disableAll = () => {
