@@ -25901,7 +25901,7 @@ __metadata:
 
 "tsx@patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch":
   version: 4.20.3
-  resolution: "tsx@patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch::version=4.20.3&hash=4c4dd9"
+  resolution: "tsx@patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch::version=4.20.3&hash=3d707a"
   dependencies:
     esbuild: "npm:~0.25.0"
     fsevents: "npm:~2.3.3"
@@ -25911,7 +25911,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10c0/50f9b5f9b079b439ad5f3104efb4a086bb2a8b908069e83fe329f03962687dc31d51f1ccf2a7400e0d7e923e729682007cde431c61b712b47921f1a7d10c7ad6
+  checksum: 10c0/08aa45a520971d1ebde70f58bb134e76bba7c49f17a15fb2ebd567c684866377a7c7c7a9570212cce439cd50dbf73b572a28877fa742cd9479a6399c8e4802ad
   languageName: node
   linkType: hard
 
