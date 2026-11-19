@@ -132,8 +132,7 @@ export function createBackboneExecutor(
         overrideKey += `::ov:${enabled.sort().join(',')}`;
       }
     }
-    const reuseKey = options.entityReuse === true ? '::reuse' : '';
-    const cacheKey = (operation.name?.value ?? '') + overrideKey + reuseKey;
+    const cacheKey = (operation.name?.value ?? '') + overrideKey;
     let byName = planCache.get(request.document);
     if (byName) {
       const cached = byName.get(cacheKey);
@@ -149,7 +148,6 @@ export function createBackboneExecutor(
       plan = buildStitchPlan(schema, operation, fragments, coerced, {
         handleProgressiveOverride: options.handleProgressiveOverride,
         overrideLabels: options.overrideLabels,
-        entityReuse: options.entityReuse,
         context: request.context,
       });
     } catch (err) {

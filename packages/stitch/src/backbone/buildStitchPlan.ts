@@ -33,6 +33,7 @@ import { flattenPlanControlFlow } from './planShape.js';
 import { preparePlanDocuments } from './preparePlanDocuments.js';
 import {
   flattenConditionsToRunIf,
+  orRunIf,
   runIfKey,
   stampRunIf,
 } from './runIf.js';
@@ -3937,12 +3938,17 @@ function tryUnionEntityFetches(
     }
   }
   const subschema = resolveSubschemaForUnion(stitchingInfo, template, selected);
+  let runIf = fetches[0]!.runIf;
+  for (let i = 1; i < fetches.length; i++) {
+    runIf = orRunIf(runIf, fetches[i]!.runIf);
+  }
   return {
     kind: 'Fetch',
     subschema,
     entityTypeName: template.entityTypeName,
     selectionSet,
     flattenPaths: paths,
+    runIf,
   };
 }
 
@@ -5090,13 +5096,17 @@ function mergeMultiPathFetches(
 ): Extract<StitchPlanNode, { kind: 'Fetch' }> {
   const paths = fetches.flatMap(fetchFlattenPaths);
   const template = fetches[0]!;
+  let runIf = template.runIf;
+  for (let i = 1; i < fetches.length; i++) {
+    runIf = orRunIf(runIf, fetches[i]!.runIf);
+  }
   return {
     kind: 'Fetch',
     subschema: template.subschema,
     entityTypeName: template.entityTypeName,
     selectionSet: template.selectionSet,
     flattenPaths: paths,
-    runIf: template.runIf,
+    runIf,
   };
 }
 
@@ -5702,10 +5712,8 @@ function buildCompletePlan(
     stitchingInfo,
     { serializeSequences: isMutation },
   );
-  const withReuse =
-    options.entityReuse === true
-      ? annotateEntityReuse(annotated)
-      : annotated;
+  // Entity reuse is always planned for queries; mutations skip at execute.
+  const withReuse = isMutation ? annotated : annotateEntityReuse(annotated);
   const withDocs = isMutation
     ? withReuse
     : preparePlanDocuments(withReuse, {
@@ -5730,7 +5738,6 @@ function buildCompletePlan(
     schedule,
     incomplete: incompleteReasons.length > 0,
     incompleteReasons,
-    entityReuse: options.entityReuse === true,
   };
 }
 
@@ -6095,28 +6102,103 @@ function compressProductsIntoDeepWave(
 }
 
 /**
- * True when `typeName` is a concrete object on some known subschema. Interface
- * / union entity hops keep the stricter BatchFetch root rules (identity race).
+ * Resolve a type from any known subschema (prefer object/interface/union).
  */
-function isConcreteEntityObjectType(
+function resolveEntityGraphqlType(
   stitchingInfo: StitchingInfo,
   typeName: string,
-): boolean {
+) {
   for (const sub of allKnownSubschemas(stitchingInfo)) {
     const t = sub.schema.getType(typeName);
     if (t != null) {
-      return isObjectType(t);
+      return t;
     }
   }
-  return false;
+  return null;
+}
+
+/**
+ * Possible runtime object type names for an entity hop type. Concrete → self;
+ * interface/union → possible types from the first subschema that defines it.
+ */
+function possibleEntityTypeNames(
+  stitchingInfo: StitchingInfo,
+  typeName: string,
+): Set<string> {
+  const t = resolveEntityGraphqlType(stitchingInfo, typeName);
+  if (t == null) {
+    return new Set();
+  }
+  if (isObjectType(t)) {
+    return new Set([t.name]);
+  }
+  if (isInterfaceType(t) || isUnionType(t)) {
+    for (const sub of allKnownSubschemas(stitchingInfo)) {
+      const local = sub.schema.getType(typeName);
+      if (
+        local &&
+        (isInterfaceType(local) || isUnionType(local)) &&
+        'getPossibleTypes' in sub.schema
+      ) {
+        try {
+          const possibles = sub.schema.getPossibleTypes(local as any);
+          if (possibles?.length) {
+            return new Set(possibles.map((p: { name: string }) => p.name));
+          }
+        } catch {
+          // fall through
+        }
+      }
+    }
+    // Fallback: collect object types implementing the interface name
+    const out = new Set<string>();
+    for (const sub of allKnownSubschemas(stitchingInfo)) {
+      for (const typ of Object.values(sub.schema.getTypeMap())) {
+        if (!isObjectType(typ)) continue;
+        if (
+          isInterfaceType(t) &&
+          typ.getInterfaces().some((i) => i.name === typeName)
+        ) {
+          out.add(typ.name);
+        }
+      }
+    }
+    return out;
+  }
+  return new Set();
+}
+
+/**
+ * Same-root BatchFetch is safe when alias entity types cannot claim the same
+ * parent object (pairwise disjoint possible typenames). Book||Magazine OK;
+ * Product(interface)||Book not (Product covers Book).
+ */
+function entityTypesAreRuntimeDisjoint(
+  stitchingInfo: StitchingInfo,
+  typeNames: string[],
+): boolean {
+  const sets = typeNames.map((n) => possibleEntityTypeNames(stitchingInfo, n));
+  if (sets.some((s) => s.size === 0)) {
+    return false;
+  }
+  for (let i = 0; i < sets.length; i++) {
+    for (let j = i + 1; j < sets.length; j++) {
+      for (const name of sets[i]!) {
+        if (sets[j]!.has(name)) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
 }
 
 /**
  * Inside each Parallel, collapse same-subschema entity Fetches:
  * - same type -> multi-path / selection union when safe
- * - different concrete types -> one BatchFetch (including same root path;
- *   Book||Magazine under products). Interface hops still require distinct
- *   roots (corrupted-supergraph-node-id).
+ * - different runtime-disjoint types -> one BatchFetch (including same root
+ *   path; Book||Magazine under products). Overlapping abstract/concrete pairs
+ *   (Product||Book) still require distinct roots.
  */
 function groupParallelBatchFetches(
   node: StitchPlanNode,
@@ -6142,10 +6224,40 @@ function groupParallelBatchFetches(
     };
   }
   if (node.kind === 'Sequence') {
-    return {
-      kind: 'Sequence',
-      nodes: node.nodes.map((c) => groupParallelBatchFetches(c, stitchingInfo)),
-    };
+    const mapped = node.nodes.map((c) =>
+      groupParallelBatchFetches(c, stitchingInfo),
+    );
+    // Consecutive entity Fetches in a Sequence are parallel-ready after the
+    // shared prefix - BatchFetch them like a Parallel group.
+    const out: StitchPlanNode[] = [];
+    let i = 0;
+    const isEntity = (
+      n: StitchPlanNode,
+    ): n is Extract<StitchPlanNode, { kind: 'Fetch' }> =>
+      n.kind === 'Fetch' && Boolean(n.entityTypeName) && !n.rootField;
+    while (i < mapped.length) {
+      if (!isEntity(mapped[i]!)) {
+        out.push(mapped[i]!);
+        i++;
+        continue;
+      }
+      const run: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
+      while (i < mapped.length && isEntity(mapped[i]!)) {
+        run.push(mapped[i]!);
+        i++;
+      }
+      if (run.length < 2) {
+        out.push(...run);
+      } else {
+        out.push(
+          groupParallelBatchFetches(
+            { kind: 'Parallel', nodes: run },
+            stitchingInfo,
+          ),
+        );
+      }
+    }
+    return out.length === 1 ? out[0]! : { kind: 'Sequence', nodes: out };
   }
   if (node.kind !== 'Parallel') {
     return node;
@@ -6274,14 +6386,13 @@ function groupParallelBatchFetches(
       }
       seenRoots.add(root);
     }
-    const allConcrete = collapsed.every((g) =>
-      isConcreteEntityObjectType(stitchingInfo, g.entityTypeName!),
+    const disjoint = entityTypesAreRuntimeDisjoint(
+      stitchingInfo,
+      collapsed.map((g) => g.entityTypeName!),
     );
-    // Distinct roots (users||topProducts) always OK. Same-root OK when every
-    // alias is a concrete object type (Book||Magazine under products) - parents
-    // are typename-disjoint so key ranges do not race. Interface/abstract
-    // same-root stays split (corrupted-supergraph-node-id).
-    if (rootClash && !allConcrete) {
+    // Distinct roots always OK. Same-root OK when alias types cannot claim the
+    // same parent (Book||Magazine). Product||Book stays split.
+    if (rootClash && !disjoint) {
       next.push(...collapsed);
       continue;
     }
@@ -6296,11 +6407,10 @@ function groupParallelBatchFetches(
         flattenPaths: fetchFlattenPaths(g),
         runIf: g.runIf,
       })),
-      runIf: collapsed.every(
-        (g) => runIfKey(g.runIf) === runIfKey(collapsed[0]!.runIf),
-      )
-        ? collapsed[0]!.runIf
-        : undefined,
+      runIf: collapsed.reduce(
+        (acc: ReturnType<typeof orRunIf>, g) => orRunIf(acc, g.runIf),
+        collapsed[0]!.runIf as ReturnType<typeof orRunIf>,
+      ),
     });
   }
   return next.length === 1 ? next[0]! : { kind: 'Parallel', nodes: next };
@@ -6308,10 +6418,10 @@ function groupParallelBatchFetches(
 
 
 /**
- * When entityReuse is on: annotate entity hops that can copy fields from an
- * earlier hop they already wait on (same entity type, covering selection).
- * Also adds a same-subgraph wait when a covering predecessor would otherwise
- * race the copy (Hive Router #1799).
+ * Annotate entity hops that can copy fields from an earlier hop they already
+ * wait on (same entity type, covering selection). Always on for queries.
+ * Adds a same-subgraph wait when a covering predecessor would otherwise race
+ * the copy (Hive Router #1799).
  */
 function selectionLeafKeys(ss: import('graphql').SelectionSetNode): Set<string> {
   const keys = new Set<string>();

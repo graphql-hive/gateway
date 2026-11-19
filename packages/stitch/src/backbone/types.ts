@@ -11,15 +11,20 @@ import type {
 export type PathSegment = string | number;
 
 /**
- * Variable predicate for hop `runIf` (AND of clauses). Missing `runIf` means
- * the hop always runs. Mirrors Hive Router Fetch/BatchFetch `runIf` so
- * `@skip`/`@include` hops stay in one schedule and can BatchFetch together.
+ * One variable predicate inside a `runIf` AND-group.
  */
 export interface StitchRunIfClause {
   variable: string;
-  /** Required boolean value of `variable` for the hop/alias to run. */
+  /** Required boolean value of `variable` for this clause to hold. */
   equals: boolean;
 }
+
+/**
+ * Hop `runIf` in DNF: OR of AND-groups. Missing/`undefined` means always run.
+ * Example: `[[{a,true},{b,false}],[{c,true}]]` ⇒ `(a && !b) || c`.
+ * Mirrors Hive Router Fetch/BatchFetch `runIf` (`||` / `&&`).
+ */
+export type StitchRunIf = StitchRunIfClause[][];
 
 /**
  * One hop inside a multi-type BatchFetch. The batched document uses a single
@@ -37,7 +42,7 @@ export interface StitchBatchAlias {
   /** Shared merge-arg variable name from argsFromKeys (e.g. `reps`). */
   representationsVariable?: string;
   /** Per-alias `@skip`/`@include` gate; off aliases send no representations. */
-  runIf?: StitchRunIfClause[];
+  runIf?: StitchRunIf;
 }
 
 /**
@@ -80,13 +85,13 @@ export type StitchPlanNode =
        */
       document?: DocumentNode;
       /**
-       * When set, hop runs only if every clause matches `variableValues`.
+       * When set, hop runs only if any DNF AND-group matches `variableValues`.
        * Used for root `@skip`/`@include` instead of Condition nodes.
        */
-      runIf?: StitchRunIfClause[];
+      runIf?: StitchRunIf;
       /**
-       * When `entityReuse` is on: hop ids whose results may already cover this
-       * entity selection (execute may skip HTTP for matching parents).
+       * Hop ids whose results may already cover this entity selection.
+       * Execute may copy by representation hash and skip HTTP (Router #1799).
        */
       reuseFrom?: string[];
     }
@@ -104,8 +109,8 @@ export type StitchPlanNode =
       aliases: StitchBatchAlias[];
       /** Prebuilt single merge-field document for one HTTP round-trip. */
       document?: DocumentNode;
-      /** Hop-level gate (AND); also checked before any alias work. */
-      runIf?: StitchRunIfClause[];
+      /** Hop-level gate (DNF); also checked before any alias work. */
+      runIf?: StitchRunIf;
       reuseFrom?: string[];
     }
   | {
@@ -124,7 +129,7 @@ export type StitchPlanNode =
       /** Federated follow-up after the local resolver returns a merge key. */
       continue?: StitchPlanNode;
       /** When set, Island runs only if every clause matches. */
-      runIf?: StitchRunIfClause[];
+      runIf?: StitchRunIf;
     }
   | {
       /**
@@ -165,11 +170,6 @@ export interface StitchPlan {
   incomplete: boolean;
   /** Reasons the plan is incomplete (hooks, unsupported nodes, etc.). */
   incompleteReasons: string[];
-  /**
-   * Opt-in entity reuse (Hive Router traffic_shaping.entity_reuse). When true,
-   * execute may skip entity HTTP when parents already hold needed fields.
-   */
-  entityReuse?: boolean;
 }
 
 /**
@@ -194,11 +194,6 @@ export interface BackboneExecutorOptions {
    * Falls back to `schema.extensions.overrideLabels` when omitted.
    */
   overrideLabels?: Iterable<string>;
-  /**
-   * Opt-in: skip redundant entity HTTP when an earlier hop already projected
-   * needed fields (Hive Router entity reuse). Off by default.
-   */
-  entityReuse?: boolean;
 }
 
 /** `schema.extensions` key for last-attached {@link BackboneExecutorOptions}. */
@@ -225,6 +220,9 @@ export interface BackboneExecutionContext {
   data: Record<string, any>;
   errors: Error[];
   infoStub: Partial<GraphQLResolveInfo>;
-  /** Copied from plan / executor options for entity-reuse skips. */
-  entityReuse?: boolean;
+  /**
+   * Representation-hash → entity object for reuse across hops (always on for
+   * queries; skipped for mutations / after errors).
+   */
+  entityByRepHash?: Map<string, Record<string, any>>;
 }

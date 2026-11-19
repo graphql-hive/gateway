@@ -92,7 +92,6 @@ export function resolveBackboneExecutorOptions(
       options.overrideLabels ??
       stored?.overrideLabels ??
       (schema.extensions?.['overrideLabels'] as Iterable<string> | undefined),
-    entityReuse: options.entityReuse ?? stored?.entityReuse,
   };
 }
 
