@@ -47,8 +47,19 @@ export default defineConfig({
   ],
   resolve: {
     alias: [
-      { find: 'graphql', replacement: 'graphql/index.js' }, // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
+      // graphql 16 has no exports map, vite would pick the esm build from the `module`
+      // field while node loads the cjs one for externalized deps. graphql 17 resolves
+      // this path through its exports map using the conditions below
+      { find: /^graphql$/, replacement: 'graphql/index.js' },
     ],
+  },
+  ssr: {
+    resolve: {
+      // node resolves graphql 17 through `module-sync` to its esm build, vite has to
+      // pick the same build or there will be two graphql instances. vitest also passes
+      // these conditions to node for externalized deps
+      conditions: ['module-sync', 'node', 'development|production'],
+    },
   },
   test: {
     server: { deps: { inline } },
