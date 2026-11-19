@@ -89,10 +89,11 @@ function makeInterfaceType(
   const config = {
     name: node.name.value,
     description: node.description?.value,
+    // graphql expects the thunk to always return a list
     interfaces: () =>
-      (node as unknown as ObjectTypeDefinitionNode).interfaces?.map((iface) =>
+      node.interfaces?.map((iface) =>
         createNamedStub(iface.name.value, 'interface'),
-      ),
+      ) || [],
     fields: () => (node.fields != null ? makeFields(node.fields) : {}),
     astNode: node,
   };
