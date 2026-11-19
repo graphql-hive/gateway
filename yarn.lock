@@ -3244,7 +3244,7 @@ __metadata:
   resolution: "@e2e/federation-mixed@workspace:e2e/federation-mixed"
   dependencies:
     "@apollo/server": "npm:^5.5.2"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:2.14.4"
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
     "@omnigraph/openapi": "npm:^0.112.7"
     fets: "npm:^0.8.14"
@@ -7580,6 +7580,7 @@ __metadata:
   resolution: "@internal/e2e@workspace:internal/e2e"
   dependencies:
     "@apollo/gateway": "npm:^2.14.4"
+    "@apollo/subgraph": "npm:2.14.4"
     "@types/dockerode": "npm:^4.0.2"
     "@types/node": "npm:^26.6.6"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
