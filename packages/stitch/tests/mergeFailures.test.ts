@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { assertSome, ExecutionResult } from '@graphql-tools/utils';
+import { serialized } from '@internal/testing';
 import { graphql, GraphQLError, GraphQLSchema } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 
@@ -90,7 +91,7 @@ describe('merge failures', () => {
       ],
     };
 
-    expect(result).toEqual(expectedResult);
+    expect(serialized(result)).toEqual(serialized(expectedResult));
   });
 
   test('proxies merged error arrays', async () => {
