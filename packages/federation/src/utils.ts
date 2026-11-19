@@ -340,7 +340,7 @@ export function parseJoinDirective(
   }
   const args: ConstArgumentNode[] | undefined = directiveArgsAst
     ? directiveArgsAst.fields.map((field) => ({
-        kind: Kind.ARGUMENT as const,
+        kind: Kind.ARGUMENT,
         name: field.name,
         value: field.value,
       }))
