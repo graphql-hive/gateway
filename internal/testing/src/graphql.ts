@@ -75,3 +75,13 @@ export function initForExecuteFetchArgs(
     body: JSON.stringify(args),
   };
 }
+
+/**
+ * Serializes the value, like a GraphQL execution result, to JSON and parses it back.
+ *
+ * Useful when comparing results as they are sent over the wire. GraphQL v17 sets the
+ * `cause` of errors and some test runners, like Bun, compare it too.
+ */
+export function serialized<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
