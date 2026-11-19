@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, '..');
-const graphqlPackageJson = require('graphql/package.json');
-const graphqlVersion = graphqlPackageJson.version;
+// graphql 17 does not export its package.json, so read the version from the module
+const graphqlVersion = require('graphql').version;
 
 const repoDockerfiles = [];
 
