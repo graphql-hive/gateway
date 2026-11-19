@@ -11,7 +11,12 @@ import {
   Maybe,
   transformInputValue,
 } from '@graphql-tools/utils';
-import { GraphQLEnumValueConfig, GraphQLSchema } from 'graphql';
+import {
+  ConstValueNode,
+  GraphQLEnumValueConfig,
+  GraphQLSchema,
+  valueFromASTUntyped,
+} from 'graphql';
 import { EnumValueTransformer, LeafValueTransformer } from '../types.js';
 import MapLeafValues, {
   MapLeafValuesTransformationContext,
@@ -59,6 +64,35 @@ export default class TransformEnumValues<
         externalValue,
       ) => this.transformEnumValue(typeName, externalValue, valueConfig),
       [MapperKind.ARGUMENT]: (argConfig) => {
+        // graphql 17 keeps sdl defaults as a literal with the original enum names. map
+        // them and use the internal default value instead because enum values in the
+        // wrapping schema have no internal values and use their names
+        const defaultLiteral = (
+          argConfig as { default?: { literal?: ConstValueNode } }
+        ).default?.literal;
+        if (defaultLiteral != null) {
+          let changed = false;
+          const newValue = transformInputValue(
+            argConfig.type,
+            valueFromASTUntyped(defaultLiteral),
+            (type, value) => {
+              const newValue = this.mapping[type.name]?.[value];
+              if (newValue == null) {
+                return value;
+              }
+              changed = true;
+              return newValue;
+            },
+          );
+          if (!changed) {
+            return undefined;
+          }
+          return {
+            ...argConfig,
+            default: undefined,
+            defaultValue: newValue,
+          };
+        }
         if (argConfig.defaultValue != null) {
           const newValue = transformInputValue(
             argConfig.type,
