@@ -122,7 +122,9 @@ export default defineConfig({
         test: {
           name: 'bench',
           hookTimeout: testTimeout,
-          testTimeout,
+          // benches run inside the test body and every bench takes benchConfig's warmup + time
+          // (35s in ci), so the test needs way more than the e2e timeout. this just guards hangs
+          testTimeout: 10 * 60 * 1000,
           benchmark: {
             include: ['bench/**/*.bench.ts', 'e2e/**/*.bench.ts'],
           },
