@@ -67,36 +67,128 @@ import type {
 /** Same key as stitchSchemas wrap - skip classic mergeFields after plan hop. */
 const BACKBONE_HYDRATED = Symbol.for('graphql-tools.stitch.backboneHydrated');
 
-/** Leaf response keys an entity selection needs (no nested fields). */
-function neededLeafKeys(selectionSet: SelectionSetNode): string[] {
-  const keys: string[] = [];
-  for (const sel of selectionSet.selections) {
-    if (sel.kind !== Kind.FIELD || sel.name.value === '__typename') {
-      continue;
-    }
-    if (sel.selectionSet) {
-      // Nested: reuse cannot prove completeness from parent alone.
-      return [];
-    }
-    keys.push(sel.alias?.value ?? sel.name.value);
-  }
-  return keys;
-}
-
-function parentHasNeededLeaves(
-  parent: Record<string, any>,
+/**
+ * True when `value` already holds every field in `selectionSet` (nested trees
+ * and matching inline fragments included). Fragment spreads → false.
+ */
+function selectionSatisfiedBy(
+  value: Record<string, any> | null | undefined,
   selectionSet: SelectionSetNode,
 ): boolean {
-  const keys = neededLeafKeys(selectionSet);
-  if (!keys.length) {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     return false;
   }
-  for (const k of keys) {
-    if (parent[k] === undefined) {
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      if (sel.name.value === '__typename') {
+        continue;
+      }
+      const key = sel.alias?.value ?? sel.name.value;
+      if (value[key] === undefined) {
+        return false;
+      }
+      if (!sel.selectionSet) {
+        continue;
+      }
+      const child = value[key];
+      if (child == null) {
+        continue; // null is a complete answer for the nested selection
+      }
+      if (Array.isArray(child)) {
+        for (const item of child) {
+          if (
+            item != null &&
+            typeof item === 'object' &&
+            !selectionSatisfiedBy(item, sel.selectionSet)
+          ) {
+            return false;
+          }
+        }
+      } else if (typeof child === 'object') {
+        if (!selectionSatisfiedBy(child, sel.selectionSet)) {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT) {
+      if (sel.typeCondition) {
+        const tn = value['__typename'];
+        if (tn != null && tn !== sel.typeCondition.name.value) {
+          continue;
+        }
+      }
+      if (!selectionSatisfiedBy(value, sel.selectionSet)) {
+        return false;
+      }
+    } else {
       return false;
     }
   }
   return true;
+}
+
+/** Copy missing selection fields (incl. nested) from cached entity onto parent. */
+function copySelectionFromCached(
+  parent: Record<string, any>,
+  cached: Record<string, any>,
+  selectionSet: SelectionSetNode,
+): void {
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      if (sel.name.value === '__typename') {
+        if (parent['__typename'] == null && cached['__typename'] != null) {
+          parent['__typename'] = cached['__typename'];
+        }
+        continue;
+      }
+      const key = sel.alias?.value ?? sel.name.value;
+      if (cached[key] === undefined) {
+        continue;
+      }
+      if (sel.selectionSet) {
+        if (parent[key] === undefined) {
+          parent[key] = cached[key];
+          continue;
+        }
+        const pv = parent[key];
+        const cv = cached[key];
+        if (
+          pv != null &&
+          typeof pv === 'object' &&
+          !Array.isArray(pv) &&
+          cv != null &&
+          typeof cv === 'object' &&
+          !Array.isArray(cv)
+        ) {
+          copySelectionFromCached(pv, cv, sel.selectionSet);
+        } else if (Array.isArray(pv) && Array.isArray(cv) && pv.length === cv.length) {
+          for (let i = 0; i < pv.length; i++) {
+            if (
+              pv[i] != null &&
+              typeof pv[i] === 'object' &&
+              cv[i] != null &&
+              typeof cv[i] === 'object'
+            ) {
+              copySelectionFromCached(pv[i], cv[i], sel.selectionSet);
+            } else if (pv[i] === undefined && cv[i] !== undefined) {
+              pv[i] = cv[i];
+            }
+          }
+        }
+      } else if (parent[key] === undefined) {
+        parent[key] = cached[key];
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT) {
+      if (sel.typeCondition) {
+        const tn = parent['__typename'] ?? cached['__typename'];
+        if (tn != null && tn !== sel.typeCondition.name.value) {
+          continue;
+        }
+      }
+      copySelectionFromCached(parent, cached, sel.selectionSet);
+    }
+  }
 }
 
 /** Entity reuse is always on for queries; hard skips match Router #1799. */
@@ -188,10 +280,10 @@ function tryReuseEntityIntoParent(
   selectionSet: SelectionSetNode,
 ): boolean {
   if (!entityReuseAllowed(ctx) || !ctx.entityByRepHash?.size) {
-    // Fall back: parent already has leaves from an earlier merge into itself.
-    return parentHasNeededLeaves(parent, selectionSet);
+    // Fall back: parent already has the needed selection from an earlier merge.
+    return selectionSatisfiedBy(parent, selectionSet);
   }
-  if (parentHasNeededLeaves(parent, selectionSet)) {
+  if (selectionSatisfiedBy(parent, selectionSet)) {
     return true;
   }
   const hash = representationHash(parent, hopSubschema, entityTypeName);
@@ -199,18 +291,11 @@ function tryReuseEntityIntoParent(
     return false;
   }
   const cached = ctx.entityByRepHash.get(hash);
-  if (!cached || !parentHasNeededLeaves(cached, selectionSet)) {
+  if (!cached || !selectionSatisfiedBy(cached, selectionSet)) {
     return false;
   }
-  for (const k of neededLeafKeys(selectionSet)) {
-    if (parent[k] === undefined && cached[k] !== undefined) {
-      parent[k] = cached[k];
-    }
-  }
-  if (cached['__typename'] != null && parent['__typename'] == null) {
-    parent['__typename'] = cached['__typename'];
-  }
-  return parentHasNeededLeaves(parent, selectionSet);
+  copySelectionFromCached(parent, cached, selectionSet);
+  return selectionSatisfiedBy(parent, selectionSet);
 }
 
 /**

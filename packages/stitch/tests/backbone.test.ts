@@ -869,7 +869,10 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     expect(plan.schedule).toBeDefined();
   });
 
-  it('does not same-root BatchFetch overlapping abstract Product||Book', () => {
+  function createProductBookSchema(calls: {
+    product: number;
+    book: number;
+  }) {
     const catalog = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         interface Product {
@@ -913,20 +916,27 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
           __resolveType: () => 'Book',
         },
         Query: {
-          _product: (_: unknown, { id }: { id: string }) => ({
-            __typename: 'Book',
-            id,
-            inStock: true,
-          }),
-          _book: (_: unknown, { id }: { id: string }) => ({
-            id,
-            inStock: true,
-            pages: 10,
-          }),
+          _product: (_: unknown, { id }: { id: string }) => {
+            calls.product++;
+            return {
+              __typename: 'Book',
+              id,
+              inStock: true,
+              pages: 10,
+            };
+          },
+          _book: (_: unknown, { id }: { id: string }) => {
+            calls.book++;
+            return {
+              id,
+              inStock: true,
+              pages: 10,
+            };
+          },
         },
       },
     });
-    const schema = stitchSchemas({
+    return stitchSchemas({
       subschemas: [
         {
           schema: catalog,
@@ -952,6 +962,10 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
         },
       ],
     });
+  }
+
+  it('coalesces overlapping abstract Product||Book under the same root', () => {
+    const schema = createProductBookSchema({ product: 0, book: 0 });
     const plan = buildStitchPlan(
       schema,
       parse(/* GraphQL */ `
@@ -971,10 +985,234 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     expect(plan.incompleteReasons).toEqual([]);
     const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
     walkBatches(plan.root, batches);
-    // Product covers Book — same-root BatchFetch would double-claim parents.
-    for (const b of batches) {
+    const entityFetches: Array<
+      Extract<StitchPlanNode, { kind: 'Fetch' }>
+    > = [];
+    const walkFetches = (n: StitchPlanNode) => {
+      if (n.kind === 'Fetch' && n.entityTypeName && !n.rootField) {
+        entityFetches.push(n);
+      } else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
+        for (const c of n.nodes) walkFetches(c);
+      } else if (n.kind === 'Island' && n.continue) walkFetches(n.continue);
+    };
+    walkFetches(plan.root);
+    const fieldNames = (f: Extract<StitchPlanNode, { kind: 'Fetch' }>) => {
+      const names = new Set<string>();
+      const visit = (ss: (typeof f)['selectionSet']) => {
+        for (const s of ss.selections) {
+          if (s.kind === 'Field' && s.name.value !== '__typename') {
+            names.add(s.name.value);
+          } else if (s.kind === 'InlineFragment') {
+            visit(s.selectionSet);
+          }
+        }
+      };
+      visit(f.selectionSet);
+      return names;
+    };
+    const coveringProduct = entityFetches.find(
+      (f) =>
+        f.entityTypeName === 'Product' &&
+        f.selectionSet.selections.some(
+          (s) =>
+            s.kind === 'InlineFragment' &&
+            s.typeCondition?.name.value === 'Book',
+        ),
+    );
+    const unifiedConcrete = entityFetches.find((f) => {
+      const n = fieldNames(f);
+      return n.has('inStock') && n.has('pages');
+    });
+    const multiBatch = batches.find((b) => {
       const types = new Set(b.aliases.map((a) => a.entityTypeName));
-      expect(types.has('Product') && types.has('Book')).toBe(false);
+      return types.has('Product') && types.has('Book');
+    });
+    // One hop (covering Product, unified Book, or Product||Book BatchFetch) —
+    // not a lingering Product Fetch beside a Book Fetch under products.
+    expect(
+      coveringProduct != null ||
+        unifiedConcrete != null ||
+        multiBatch != null,
+    ).toBe(true);
+    if (unifiedConcrete || coveringProduct) {
+      expect(entityFetches.length).toBe(1);
+    }
+  });
+
+  it('executes coalesced Product||Book and returns interface + concrete fields', async () => {
+    const calls = { product: 0, book: 0 };
+    const schema = createProductBookSchema(calls);
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
+      document: parse(/* GraphQL */ `
+        {
+          products {
+            id
+            inStock
+            ... on Book {
+              pages
+            }
+          }
+        }
+      `),
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      products: [{ id: 'b1', inStock: true, pages: 10 }],
+    });
+    // Covering Product hop (or one BatchFetch wave) — not both merge fields.
+    expect(calls.product + calls.book).toBe(1);
+  });
+
+  it('BatchFetches or covering-coalesces Product||Book||Magazine under products', () => {
+    const catalog = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Product {
+          id: ID!
+        }
+        type Book implements Product {
+          id: ID!
+        }
+        type Magazine implements Product {
+          id: ID!
+        }
+        type Query {
+          products: [Product]
+        }
+      `,
+      resolvers: {
+        Product: {
+          __resolveType: (o: { __typename?: string }) =>
+            o.__typename ?? 'Book',
+        },
+        Query: {
+          products: () => [
+            { __typename: 'Book', id: 'b1' },
+            { __typename: 'Magazine', id: 'm1' },
+          ],
+        },
+      },
+    });
+    const inventory = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Product {
+          id: ID!
+          inStock: Boolean
+        }
+        type Book implements Product {
+          id: ID!
+          inStock: Boolean
+          pages: Int
+        }
+        type Magazine implements Product {
+          id: ID!
+          inStock: Boolean
+          issue: Int
+        }
+        type Query {
+          _product(id: ID!): Product
+          _book(id: ID!): Book
+          _magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Product: {
+          __resolveType: (o: { __typename?: string }) =>
+            o.__typename ?? 'Book',
+        },
+        Query: {
+          _product: () => ({ __typename: 'Book', id: 'x', inStock: true }),
+          _book: () => ({ id: 'b1', inStock: true, pages: 1 }),
+          _magazine: () => ({ id: 'm1', inStock: false, issue: 2 }),
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: catalog,
+          executor: createDefaultExecutor(catalog),
+          batch: true,
+        },
+        {
+          schema: inventory,
+          executor: createDefaultExecutor(inventory),
+          merge: {
+            Product: {
+              fieldName: '_product',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Book: {
+              fieldName: '_book',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Magazine: {
+              fieldName: '_magazine',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const plan = buildStitchPlan(
+      schema,
+      parse(/* GraphQL */ `
+        {
+          products {
+            id
+            inStock
+            ... on Book {
+              pages
+            }
+            ... on Magazine {
+              issue
+            }
+          }
+        }
+      `).definitions[0] as any,
+      {},
+      {},
+    );
+    expect(plan.incompleteReasons).toEqual([]);
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> =
+      [];
+    walkBatches(plan.root, batches);
+    const entityFetches: Array<
+      Extract<StitchPlanNode, { kind: 'Fetch' }>
+    > = [];
+    const walkFetches = (n: StitchPlanNode) => {
+      if (n.kind === 'Fetch' && n.entityTypeName && !n.rootField) {
+        entityFetches.push(n);
+      } else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
+        for (const c of n.nodes) walkFetches(c);
+      } else if (n.kind === 'Island' && n.continue) walkFetches(n.continue);
+    };
+    walkFetches(plan.root);
+    const covering = entityFetches.find(
+      (f) =>
+        f.entityTypeName === 'Product' &&
+        f.selectionSet.selections.some(
+          (s) =>
+            s.kind === 'InlineFragment' &&
+            (s.typeCondition?.name.value === 'Book' ||
+              s.typeCondition?.name.value === 'Magazine'),
+        ),
+    );
+    const multi = batches.find((b) => b.aliases.length >= 2);
+    // Must not leave three independent same-root entity Fetches.
+    expect(covering != null || multi != null || entityFetches.length <= 1).toBe(
+      true,
+    );
+    if (!covering && !multi) {
+      expect(entityFetches.length).toBeLessThanOrEqual(1);
+    } else {
+      expect(entityFetches.length + (multi ? 0 : 0)).toBeLessThan(3);
     }
   });
 
@@ -1225,6 +1463,110 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
       review: { author: { id: '1', name: 'U-1' } },
     });
     // Same rep under two parents: at most one merge fetch (batch or reuse).
+    expect(userCalls).toBe(1);
+  });
+
+  it('reuses nested entity selections across parents with the same rep hash', async () => {
+    let userCalls = 0;
+    const accounts = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Profile {
+          bio: String
+        }
+        type User {
+          id: ID!
+          profile: Profile
+        }
+        type Query {
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          user: (_: unknown, { id }: { id: string }) => {
+            userCalls++;
+            return { id, profile: { bio: `bio-${id}` } };
+          },
+        },
+      },
+    });
+    const catalog = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+        }
+        type Product {
+          id: ID!
+          author: User
+        }
+        type Review {
+          id: ID!
+          author: User
+        }
+        type Query {
+          product: Product
+          review: Review
+        }
+      `,
+      resolvers: {
+        Query: {
+          product: () => ({ id: 'p1', author: { id: '1' } }),
+          review: () => ({ id: 'r1', author: { id: '1' } }),
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: catalog,
+          executor: createDefaultExecutor(catalog),
+          batch: true,
+        },
+        {
+          schema: accounts,
+          name: 'accounts',
+          executor: createDefaultExecutor(accounts),
+          merge: {
+            User: {
+              fieldName: 'user',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
+      document: parse(/* GraphQL */ `
+        {
+          product {
+            author {
+              id
+              profile {
+                bio
+              }
+            }
+          }
+          review {
+            author {
+              id
+              profile {
+                bio
+              }
+            }
+          }
+        }
+      `),
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      product: { author: { id: '1', profile: { bio: 'bio-1' } } },
+      review: { author: { id: '1', profile: { bio: 'bio-1' } } },
+    });
     expect(userCalls).toBe(1);
   });
 });
