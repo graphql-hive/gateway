@@ -39,7 +39,7 @@ async function createNestApp(
       },
     },
   });
-  const upstreamYoga = createYoga({ schema: upstreamSchema });
+  const upstreamYoga = createYoga({ logging: false, schema: upstreamSchema });
   disposableStack.use(upstreamYoga);
   const upstreamServer = await createDisposableServer(upstreamYoga);
   disposableStack.use(upstreamServer);

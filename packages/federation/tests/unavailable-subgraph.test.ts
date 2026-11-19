@@ -62,6 +62,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
         },
       });
       const subgraph1Yoga = createYoga({
+        logging: false,
         schema: subgraph1Schema,
       });
       disposableStack.use(subgraph1Yoga);
@@ -112,6 +113,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
         },
       });
       const subgraph2Yoga = createYoga({
+        logging: false,
         schema: subgraph2Schema,
       });
       disposableStack.use(subgraph2Yoga);
@@ -129,6 +131,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
         },
       ]);
       const gatewayYoga = createYoga({
+        logging: false,
         schema: getStitchedSchemaFromSupergraphSdl({ supergraphSdl }),
         maskedErrors: false,
       });

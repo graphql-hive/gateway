@@ -162,7 +162,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     const relevantTrace = relevantTraces[0];
     expect(relevantTrace).toBeDefined();
     // Exact span count can race with OTEL export batching under wrangler;
-    // assert the GraphQL path spans we care about instead.
+    // assert only the GraphQL path spans we care about.
     expect(relevantTrace?.spans.length).toBeGreaterThanOrEqual(7);
 
     expect(relevantTrace?.spans).toContainEqual(

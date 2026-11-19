@@ -73,7 +73,7 @@ function calculateDelegationStage(
 
   // Type-level merge-key only; field @requires checked per field below.
   // Multi-entryPoints: proxiable when *any* entry's keys are already available
-  // (not require-all - that would regress multi-key federation).
+  // (not all - that would break multi-key federation).
   const proxiableSubschemas: Array<Subschema> = [];
   const nonProxiableSubschemas: Array<Subschema> = [];
 
@@ -139,7 +139,7 @@ function calculateDelegationStage(
 
   /**
    * Schedule @requires selections for a deferred computed field so the next
-   * stage can re-enter once deps are fetched (clone-less multi-stage).
+   * stage can re-enter once deps are fetched (multi-stage).
    */
   function scheduleRequiresFetch(target: Subschema, fieldName: string): void {
     const req = fieldSelectionSets.get(target)?.[fieldName];
@@ -737,7 +737,7 @@ export function createDelegationPlanBuilder(
   // Always memoize. Types without @requires/computed ignore parent (seed key
   // ''). Types with fieldSelectionSets include a parent field-presence
   // fingerprint so list entities with the same shape still hit the cache
-  // while clone-less requires stay correct. Progressive override still
+  // while requires stay correct. Progressive override still
   // forces non-memoized via stitchingInfo.
   const dependsOnParent = mergedTypePlanDependsOnParent(mergedTypeInfo);
   return memoizeDelegationPlanBuilder(
@@ -962,7 +962,7 @@ function typesContainSelectionSet(
 }
 
 /**
- * Clone-less @requires availability: fields on the *initial* source schemas
+ * @requires availability: fields on the *initial* source schemas
  * count as present (object came from there), plus fields prior plan stages
  * actually selected. Later-stage sibling fields on the same Subschema do not
  * count until fetched.

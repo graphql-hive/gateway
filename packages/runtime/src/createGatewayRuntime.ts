@@ -5,10 +5,15 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
+import {
+  createCDNArtifactFetcher,
+  joinUrl,
+  type GraphVersionInfo,
+} from '@graphql-hive/core';
 import type {
   OnSubgraphExecuteHook,
   SchemaGenerationLease,
+  UnifiedGraphWithMetadata,
 } from '@graphql-mesh/fusion-runtime';
 import {
   handleMaybePromiseMaybeAsyncIterableResult,
@@ -153,9 +158,9 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  // `@whatwg-node/fetch@0.12` no longer exports `crypto`; use the platform
-  // global. Keep it on the FetchAPI object so nested Yoga 5 peers that still
-  // type FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
+  // `@whatwg-node/fetch` does not export `crypto`; use the platform global.
+  // Keep it on the FetchAPI object so nested Yoga 5 peers that still type
+  // FetchAPI with crypto (e.g. `@graphql-hive/yoga`) keep working until
   // those packages publish Yoga 6 builds.
   const fetchAPI = {
     fetch,
@@ -249,6 +254,22 @@ export function createGatewayRuntime<
   const allowArbitraryDocumentsForPersistedDocuments:
     boolean | ((request: Request) => MaybePromise<boolean>) =
     config.persistedDocuments?.allowArbitraryDocuments ?? false;
+  // the graph versions of the schemas fetched from the Hive CDN, reported with the usage
+  const graphVersionInfoForSchema = new WeakMap<
+    GraphQLSchema,
+    GraphVersionInfo
+  >();
+
+  function setGraphVersionForSchema(
+    schema: GraphQLSchema,
+    graphVersion: GraphVersionInfo | undefined,
+  ) {
+    if (graphVersion) {
+      graphVersionInfoForSchema.set(schema, graphVersion);
+    } else {
+      graphVersionInfoForSchema.delete(schema);
+    }
+  }
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
   // documents plugin
@@ -256,6 +277,7 @@ export function createGatewayRuntime<
     config,
     configContext,
     allowArbitraryDocumentsForPersistedDocuments,
+    (schema) => graphVersionInfoForSchema.get(schema),
   );
   let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
@@ -411,13 +433,25 @@ export function createGatewayRuntime<
           pausePolling();
           initialFetch$ = handleMaybePromise(
             fetcher.fetch,
-            ({ contents }): true => {
-              if (lastFetchedSdl == null || lastFetchedSdl !== contents) {
+            ({ contents, ...artifact }): true => {
+              // the schema is unset when invalidated, it must be rebuilt then
+              if (!unifiedGraph || lastFetchedSdl !== contents) {
                 unifiedGraph = buildSchema(contents, {
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
+                lastFetchedSdl = contents;
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
                 replaceSchema(unifiedGraph);
+              } else {
+                // the sdl did not change, but the graph version might have
+                setGraphVersionForSchema(
+                  unifiedGraph,
+                  getGraphVersion(artifact),
+                );
               }
               continuePolling();
               return true;
@@ -563,7 +597,7 @@ export function createGatewayRuntime<
     let unifiedGraphFetcher: {
       fetch: (
         transportCtx: TransportContext,
-      ) => MaybePromise<UnifiedGraphSchema>;
+      ) => MaybePromise<UnifiedGraphSchema | UnifiedGraphWithMetadata>;
       dispose?: () => void | PromiseLike<void>;
     };
 
@@ -592,7 +626,12 @@ export function createGatewayRuntime<
           version: globalThis.__VERSION__,
         });
         unifiedGraphFetcher = {
-          fetch: () => fetcher.fetch().then(({ contents }) => contents),
+          fetch: () =>
+            fetcher.fetch().then(({ contents, graphId, graphVersionId }) => ({
+              graph: contents,
+              // the manager keeps the metadata with the successfully loaded supergraph
+              metadata: { graphId, graphVersionId },
+            })),
           dispose: () => fetcher.dispose(),
         };
       } else if (config.supergraph.type === 'graphos') {
@@ -680,9 +719,13 @@ export function createGatewayRuntime<
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher.fetch,
-      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
+      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema, metadata) {
+        setGraphVersionForSchema(newUnifiedGraph, getGraphVersion(metadata));
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
+      },
+      onUnifiedGraphMetadataChange(unifiedGraph, metadata) {
+        setGraphVersionForSchema(unifiedGraph, getGraphVersion(metadata));
       },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
@@ -759,8 +802,7 @@ export function createGatewayRuntime<
     onRequest({ serverContext, request }) {
       // Prefer Node `req.headers` when present: `getHeadersObj` returns plain
       // IncomingMessage header maps as-is (no Proxy). Fetch `Headers` need the
-      // Proxy path. Keep that order for the hot path; other header tricks
-      // (WS upgrade without Request, connectionParams merge) stay unchanged.
+      // Proxy path. Keep that order for the hot path.
       const reqHeaders = (
         serverContext as {
           req?: { headers?: Headers | Record<string, string | string[]> };
@@ -1175,10 +1217,19 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    // Yoga 6 `logging` expects `@graphql-hive/logger` Logger (not LegacyLogger).
     logging: log,
     // Delegate request-id correlation to Yoga (same option shape as createYoga).
-    requestId: config.requestId,
+    // the incoming request id header is not trusted unless opted in, clients reaching
+    // the gateway directly could otherwise pick ids that collide with other requests in the logs
+    requestId:
+      config.requestId === false
+        ? false
+        : typeof config.requestId === 'object'
+          ? {
+              ...config.requestId,
+              trustHeader: config.requestId.trustHeader ?? false,
+            }
+          : { trustHeader: false },
     plugins: [
       ...basePlugins,
       ...extraPlugins,
@@ -1238,6 +1289,19 @@ export function createGatewayRuntime<
   });
 
   return yoga as GatewayRuntime<TContext>;
+}
+
+function getGraphVersion(
+  artifact: Record<string, unknown> | undefined,
+): GraphVersionInfo | undefined {
+  const graphId = artifact?.['graphId'];
+  const graphVersionId = artifact?.['graphVersionId'];
+  return typeof graphId === 'string' &&
+    graphId &&
+    typeof graphVersionId === 'string' &&
+    graphVersionId
+    ? { graphId, graphVersionId }
+    : undefined;
 }
 
 function createSdkRequesterForRuntime<TContext extends Record<string, any>>(

@@ -1,5 +1,8 @@
 import { LegacyLogger } from '@graphql-hive/logger';
-import { UnifiedGraphManagerOptions } from '@graphql-mesh/fusion-runtime';
+import type {
+  UnifiedGraphManagerOptions,
+  UnifiedGraphWithMetadata,
+} from '@graphql-mesh/fusion-runtime';
 import { defaultImportFn, isUrl, readFileOrUrl } from '@graphql-mesh/utils';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
@@ -11,8 +14,9 @@ import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { isSchema } from 'graphql';
 import type { GatewayConfigContext } from './types';
 
-export type UnifiedGraphSchema = Awaited<
-  ReturnType<UnifiedGraphManagerOptions<unknown>['getUnifiedGraph']>
+export type UnifiedGraphSchema = Exclude<
+  Awaited<ReturnType<UnifiedGraphManagerOptions<unknown>['getUnifiedGraph']>>,
+  UnifiedGraphWithMetadata
 >;
 
 export type UnifiedGraphConfig =

@@ -290,6 +290,7 @@ describe('buildHTTPExecutor', () => {
   it('should abort stream when SSE gets cancelled while waiting for next event', async () => {
     // we use yoga intentionally here because simulating the proper response object locally is tricky
     await using yoga = createYoga({
+      logging: false,
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           scalar Upload # intentionally not "File" to test scalar name independence

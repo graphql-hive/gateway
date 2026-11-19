@@ -265,7 +265,7 @@ describe('resolveLocalFieldResult', () => {
   });
 
   it('prefers multi-entryPoint owners over computed-only single-key peers', () => {
-    // Clone-less Product@key(id)+@key(name) lives in entryPointSelectionSets;
+    // Product@key(id)+@key(name) lives in entryPointSelectionSets;
     // inventory @requires stays in selectionSets with the same { id } key.
     const inventory = {
       name: 'inventory',

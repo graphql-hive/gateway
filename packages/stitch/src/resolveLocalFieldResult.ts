@@ -246,7 +246,7 @@ function resolveOne<TContext extends Record<string, any>>(
   // Single-key selectionSets and multi-entryPoint key sets must compete in one
   // list. Otherwise a computed-only owner (e.g. inventory `@requires`) that
   // shares `{ id }` wins before the real Product owner living only in
-  // entryPointSelectionSets after clone-less multi-entry.
+  // entryPointSelectionSets.
   const candidates: Array<
     [Subschema<any, any, any, TContext>, SelectionSetNode[]]
   > = [];

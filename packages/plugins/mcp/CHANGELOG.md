@@ -1,5 +1,27 @@
 # @graphql-hive/plugin-mcp
 
+## 0.2.4
+### Patch Changes
+
+
+
+- [#2757](https://github.com/graphql-hive/gateway/pull/2757) [`5bff6f5`](https://github.com/graphql-hive/gateway/commit/5bff6f566edf402558fc3dc84d34b4c4c5497ce2) Thanks [@RMHonor](https://github.com/RMHonor)! - Allow `null` in the generated tool `outputSchema` for nullable GraphQL fields
+  
+  **Behaviour change:** the `outputSchema` published in `tools/list` previously ignored nullability, so `T` and `T!` produced the same schema. GraphQL returns an explicit `null` for nullable fields, which violated that schema and made MCP hosts that validate `structuredContent` (such as Claude Desktop) reject the tool result.
+  
+  Nullable fields now allow `null` (e.g. `{ "type": ["string", "null"] }`, with `null` added to `enum` for nullable enums, or `anyOf` with `{ "type": "null" }` for types without a single `type` such as unions). `NonNull` fields stay strict and the root schema is still a plain `object`. Clients that inspect `outputSchema` programmatically will now see `type` as an array for nullable fields.
+
+## 0.2.3
+### Patch Changes
+
+
+
+- [#2657](https://github.com/graphql-hive/gateway/pull/2657) [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Fix MCP tool calls failing on Bun with GraphQL Yoga v5.24+
+  
+  The JSON-RPC body is now read from a clone of the request, leaving the original body untouched for Yoga's request body size limit.
+- Updated dependencies [[`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f), [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f)]:
+  - @graphql-hive/logger@1.2.0
+
 ## 0.2.2
 ### Patch Changes
 

@@ -4,13 +4,9 @@ import { MergedTypeConfig, SubschemaConfig } from '@graphql-tools/delegate';
  * Normalize merged-type `entryPoints` without cloning the subschema.
  *
  * - 0 entryPoints → unchanged
- * - 1 entryPoint → flatten onto the merge config (legacy single-key shape)
+ * - 1 entryPoint → flatten onto the merge config (single-key shape)
  * - 2+ entryPoints → leave `entryPoints` on the single SubschemaConfig so
  *   stitchingInfo / the delegation plan builder pick the matching key at hop time
- *
- * Previously this returned N cloned SubschemaConfigs (one per entry index),
- * which multiplied Subschema identities in planner target maps. Clone-less
- * multi-key merges keep one subschema and resolve the entry at runtime.
  */
 export function splitMergedTypeEntryPointsTransformer(
   subschemaConfig: SubschemaConfig,
@@ -53,7 +49,7 @@ export function splitMergedTypeEntryPointsTransformer(
       continue;
     }
 
-    // Multi-entry: keep entryPoints on this single subschema (no clone).
+    // Multi-entry: keep entryPoints on this single subschema.
     changed = true;
   }
 

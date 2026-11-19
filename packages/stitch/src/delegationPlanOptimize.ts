@@ -35,7 +35,6 @@ function selectionRequiresOnSubschema(
 
 /**
  * Absorb selections onto a subschema that already covers them.
- * Isolation-clone union was removed with isolateComputedFieldsTransformer.
  */
 export function optimizeDelegationMap(
   delegationMap: Map<Subschema, SelectionSetNode>,
@@ -48,7 +47,7 @@ export function optimizeDelegationMap(
       if (subschema === subschema2) {
         continue;
       }
-      // Schema coverage alone is not enough under clone-less computed fields:
+      // Schema coverage alone is not enough for computed fields:
       // do not move fields onto a destination that gates them behind @requires.
       if (
         selectionRequiresOnSubschema(
@@ -303,7 +302,7 @@ function cloneDelegationMap(
 }
 
 /**
- * Clone-less inventory pattern: when stage N has a non-`@requires` selection
+ * Inventory pattern: when stage N has a non-`@requires` selection
  * on subgraph S and stage N+1 has a `@requires` selection on the same S,
  * move the non-requires fields into the requires hop so resolve-time merging
  * does one `_entities` (e.g. `inStock` ∪ `shippingEstimate`) after PRODUCTS

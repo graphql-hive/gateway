@@ -1,5 +1,66 @@
 # @graphql-hive/gateway-runtime
 
+## 2.14.1
+### Patch Changes
+
+- Updated dependencies [[`5e70bc4`](https://github.com/graphql-hive/gateway/commit/5e70bc4a40a265ef5750fcd4b695474627d3bc46)]:
+  - @graphql-mesh/fusion-runtime@1.14.1
+
+## 2.14.0
+### Minor Changes
+
+
+
+- [#2657](https://github.com/graphql-hive/gateway/pull/2657) [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Report the graph version along with the usage to Hive Console
+  
+  When the supergraph (or the proxied schema) is loaded from the Hive CDN, the graph and graph version ids provided by the CDN are now sent with the usage reports of the operations executed against that schema.
+
+### Patch Changes
+
+
+
+- [#2657](https://github.com/graphql-hive/gateway/pull/2657) [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be) Thanks [@n1ru4l](https://github.com/n1ru4l)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.24.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.24.0) (from `^0.22.1`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.50.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.50.1) (from `^0.48.2`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.24.4` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.24.4) (from `^5.21.1`, in `dependencies`)
+- Updated dependencies [[`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f), [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f), [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be)]:
+  - @graphql-hive/logger@1.2.0
+  - @graphql-mesh/fusion-runtime@1.14.0
+  - @graphql-mesh/transport-common@1.1.3
+
+## 2.13.5
+### Patch Changes
+
+- Updated dependencies [[`3e0a896`](https://github.com/graphql-hive/gateway/commit/3e0a896cf110d8a6290e20b10b6865813301f5ca)]:
+  - @graphql-tools/delegate@12.3.4
+  - @graphql-tools/executor-http@3.6.2
+  - @graphql-tools/batch-delegate@10.1.6
+  - @graphql-tools/federation@4.6.5
+  - @graphql-mesh/fusion-runtime@1.13.5
+  - @graphql-tools/stitch@10.4.4
+  - @graphql-tools/wrap@11.2.6
+
+## 2.13.4
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/batch-delegate@10.1.5
+  - @graphql-tools/delegate@12.3.3
+  - @graphql-tools/executor-common@1.1.1
+  - @graphql-tools/executor-http@3.6.1
+  - @graphql-tools/federation@4.6.4
+  - @graphql-mesh/fusion-runtime@1.13.4
+  - @graphql-mesh/hmac-upstream-signature@2.1.2
+  - @graphql-tools/stitch@10.4.3
+  - @graphql-mesh/transport-common@1.1.2
+  - @graphql-tools/wrap@11.2.5
+
 ## 2.13.3
 ### Patch Changes
 

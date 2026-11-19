@@ -266,7 +266,7 @@ export function defaultMergedResolver(
           }
           // mergeFields may have staged @requires deps and left this field in
           // plan leftover. Wait on a deferred instead of returning undefined,
-          // otherwise clone-less multi-stage requires never settle (e.g.
+          // otherwise multi-stage requires never settle (e.g.
           // requires-with-fragments from the owning subgraph).
           const leftOverAfter = getPlanLeftOverFromParent(parent);
           if (leftOverAfter) {
@@ -731,7 +731,7 @@ function handleLeftOver<TContext extends Record<string, any>>(
       if (mainSelectionSet) {
         selectionSets.add(mainSelectionSet);
       }
-      // Clone-less multi-entry keys live only in entryPointSelectionSets.
+      // Multi-entry keys live only in entryPointSelectionSets.
       // Without them leftover never sees a merge key for multi-@key targets.
       const entryPointSels =
         mergedTypeInfo?.entryPointSelectionSets?.get(possibleSubschema);

@@ -96,10 +96,12 @@ describe('Auth Directives', () => {
         },
       });
       const subgraphAServer = createYoga({
+        logging: false,
         schema: subgraphASchema,
       });
       const signingKey = 'secret';
       await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
+        logging: false,
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -228,9 +230,11 @@ describe('Auth Directives', () => {
         },
       });
       const subgraphAServer = createYoga({
+        logging: false,
         schema: subgraphASchema,
       });
       await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
+        logging: false,
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -365,6 +369,7 @@ describe('Auth Directives', () => {
         },
       });
       const productServer = createYoga({
+        logging: false,
         schema: productSchema,
       });
       const inventorySchema = buildSubgraphSchema({
@@ -388,12 +393,14 @@ describe('Auth Directives', () => {
         },
       });
       const inventoryServer = createYoga({
+        logging: false,
         schema: inventorySchema,
       });
       const signingKey = 'secret';
       it('succeeds', async () => {
         await using serveRuntime =
           createGatewayRuntime<JWTAuthContextExtension>({
+            logging: false,
             supergraph: () =>
               composeLocalSchemasWithApollo([
                 {
@@ -471,6 +478,7 @@ describe('Auth Directives', () => {
       it('fails', async () => {
         await using serveRuntime =
           createGatewayRuntime<JWTAuthContextExtension>({
+            logging: false,
             supergraph: () =>
               composeLocalSchemasWithApollo([
                 {
@@ -610,10 +618,12 @@ describe('Auth Directives', () => {
         },
       });
       const subgraphServer = createYoga({
+        logging: false,
         schema: subgraphSchema,
       });
       const signingKey = 'secret';
       await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
+        logging: false,
         supergraph: () =>
           composeServices([
             {
@@ -750,11 +760,10 @@ describe('Auth Directives', () => {
           },
         },
       });
-      const subgraphServer = createYoga({
-        schema: subgraph,
-      });
+      const subgraphServer = createYoga({ logging: false, schema: subgraph });
       const signingKey = 'secret';
       await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
+        logging: false,
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {

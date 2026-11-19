@@ -1,5 +1,26 @@
 # @graphql-tools/stitch
 
+## 10.4.4
+### Patch Changes
+
+- Updated dependencies [[`3e0a896`](https://github.com/graphql-hive/gateway/commit/3e0a896cf110d8a6290e20b10b6865813301f5ca)]:
+  - @graphql-tools/delegate@12.3.4
+  - @graphql-tools/batch-delegate@10.1.6
+  - @graphql-tools/wrap@11.2.6
+
+## 10.4.3
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/batch-delegate@10.1.5
+  - @graphql-tools/delegate@12.3.3
+  - @graphql-tools/wrap@11.2.5
+
 ## 10.4.2
 ### Patch Changes
 
