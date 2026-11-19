@@ -46,6 +46,13 @@ Here we collect reasons and write explanations about why some resolutions or pat
 1. Since `@apollo/subgraph` 2.15, `buildSubgraphSchema` accepts only a list of modules or a document, not a single `{ typeDefs, resolvers }` module.
 2. The audit still passes a single module, so it's kept on the last `@apollo/subgraph` version that accepts it.
 
+### @internal/e2e/@apollo/subgraph and @e2e/federation-mixed/@apollo/subgraph
+
+1. The example services in `internal/e2e/src/services` are Federation 1 subgraphs that declare entities only with `extend type`, like `extend type Product @key(fields: "upc")`.
+2. Since `@apollo/subgraph` 2.16, `_service { sdl }` of a Federation 1 subgraph also contains a fieldless `type Product` for every type that is only extended. This is valid GraphQL, Apollo composition accepts it.
+3. `@graphql-mesh/compose-cli` (`loadGraphQLHTTPSubgraph`) turns every `extend type` into `type ... @extends` before building the subgraph schema. The fieldless `type Product` then replaces the extended one and composition fails with "Type Product must define one or more fields".
+4. The services are kept on the last `@apollo/subgraph` version that publishes only the `extend type` until `@graphql-mesh/compose-cli` handles it. `@e2e/federation-mixed` is pinned too because the generated example installs the services' dependencies from its `package.json`.
+
 ### got
 
 1. `@yarnpkg/core` 4.9.2 was published with a dependency on `patch:got@npm%3A11.8.2#~/.yarn/patches/got-npm-11.8.2-c1eb105458.patch`, a patch that only exists in the Yarn repository.
