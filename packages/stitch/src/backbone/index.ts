@@ -24,6 +24,7 @@ export {
   type StitchPlan,
   type StitchPlanNode,
   type StitchPlanSchedule,
+  type StitchRunIfClause,
 } from './types.js';
 export {
   buildPlanSchedule,
@@ -31,3 +32,4 @@ export {
   planHasCondition,
 } from './planSchedule.js';
 export { flattenPlanControlFlow } from './planShape.js';
+export { evaluateRunIf, flattenConditionsToRunIf } from './runIf.js';

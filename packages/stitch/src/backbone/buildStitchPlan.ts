@@ -31,11 +31,17 @@ import {
 } from './planSchedule.js';
 import { flattenPlanControlFlow } from './planShape.js';
 import { preparePlanDocuments } from './preparePlanDocuments.js';
+import {
+  flattenConditionsToRunIf,
+  runIfKey,
+  stampRunIf,
+} from './runIf.js';
 import type {
   BuildStitchPlanOptions,
   PathSegment,
   StitchPlan,
   StitchPlanNode,
+  StitchRunIfClause,
 } from './types.js';
 
 function selectionSetOf(
@@ -3534,6 +3540,7 @@ export function buildStitchPlan(
           fragments,
           coercedVariables,
           incompleteReasons,
+          options,
         );
       } catch {
         return {
@@ -3553,6 +3560,7 @@ export function buildStitchPlan(
       fragments,
       coercedVariables,
       incompleteReasons,
+      options,
     );
   } finally {
     planningContext = previousPlanningContext;
@@ -3605,7 +3613,7 @@ function entityBatchKey(
   if (!node.flattenPaths?.length) {
     return null;
   }
-  return `${node.subschema.name ?? ''}|${node.entityTypeName}|${selectionSetKey(node.selectionSet)}`;
+  return `${node.subschema.name ?? ''}|${node.entityTypeName}|${selectionSetKey(node.selectionSet)}|${runIfKey(node.runIf)}`;
 }
 
 /** Same subgraph entity (selection/path ignored) - candidate for field union. */
@@ -3618,7 +3626,7 @@ function entityTypeKey(
   if (!fetchFlattenPaths(node).length) {
     return null;
   }
-  return `${node.subschema.name ?? ''}|${node.entityTypeName}`;
+  return `${node.subschema.name ?? ''}|${node.entityTypeName}|${runIfKey(node.runIf)}`;
 }
 
 function fieldResponseKey(field: FieldNode): string {
@@ -5088,6 +5096,7 @@ function mergeMultiPathFetches(
     entityTypeName: template.entityTypeName,
     selectionSet: template.selectionSet,
     flattenPaths: paths,
+    runIf: template.runIf,
   };
 }
 
@@ -5157,11 +5166,12 @@ function optimizeStitchPlanNode(
     }
   }
 
-  // Parallel: same-path field union (inStock∥shippingEstimate), then multi-path
-  // BatchFetch for identical selections across flatten paths.
+  // Parallel: union same-subgraph entity types across paths/selections first
+  // (inStock∥shippingEstimate, multi-path inventory), then multi-path merge
+  // for identical selections that did not union.
   const coalesced: StitchPlanNode[] = [];
   if (kind === 'Parallel') {
-    const byTypePath = new Map<
+    const byType = new Map<
       string,
       Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
     >();
@@ -5171,25 +5181,47 @@ function optimizeStitchPlanNode(
         nonEntity.push(child);
         continue;
       }
-      const pk = fetchFlattenPaths(child)
-        .map((p) => p.join('\0'))
-        .sort()
-        .join('/');
-      const key = `${entityTypeKey(child)}::${pk}`;
-      let list = byTypePath.get(key);
+      const key = entityTypeKey(child)!;
+      let list = byType.get(key);
       if (!list) {
         list = [];
-        byTypePath.set(key, list);
+        byType.set(key, list);
       }
       list.push(child);
     }
     const afterUnion: StitchPlanNode[] = [...nonEntity];
-    for (const group of byTypePath.values()) {
+    for (const group of byType.values()) {
       const united = tryUnionEntityFetches(stitchingInfo, group);
       if (united) {
         afterUnion.push(united);
+      } else if (group.length === 1) {
+        afterUnion.push(group[0]!);
       } else {
-        afterUnion.push(...group);
+        // Union refused (requires / arg conflict) - still merge identical
+        // selections across paths within this type.
+        const bySel = new Map<
+          string,
+          Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
+        >();
+        for (const f of group) {
+          const sk = selectionSetKey(f.selectionSet);
+          let list = bySel.get(sk);
+          if (!list) {
+            list = [];
+            bySel.set(sk, list);
+          }
+          list.push(f);
+        }
+        for (const selGroup of bySel.values()) {
+          if (
+            selGroup.length > 1 &&
+            !pathsHaveNesting(selGroup.flatMap(fetchFlattenPaths))
+          ) {
+            afterUnion.push(mergeMultiPathFetches(selGroup));
+          } else {
+            afterUnion.push(...selGroup);
+          }
+        }
       }
     }
     const batchGroups = new Map<
@@ -5514,31 +5546,24 @@ function stripOwnSkipIncludeDirectives(field: FieldNode): FieldNode {
 }
 
 /**
- * Wrap a root-field plan in Hive-style Condition nodes for variable-driven
- * `@skip` / `@include`. `ifClause` runs when the variable is `true`.
+ * Stamp root-field `@skip`/`@include` as `runIf` on every hop (Hive Router
+ * style). Keeps the hop set variable-independent so schedules cache and
+ * conditional entity hops can BatchFetch together.
  */
-function wrapRootFieldWithConditions(
+function wrapRootFieldWithRunIf(
   field: FieldNode,
   plan: StitchPlanNode,
 ): StitchPlanNode {
-  let node = plan;
+  const clauses: StitchRunIfClause[] = [];
   const includeVar = skipIncludeVariableName(field, 'include');
   if (includeVar) {
-    node = {
-      kind: 'Condition',
-      condition: includeVar,
-      ifClause: node,
-    };
+    clauses.push({ variable: includeVar, equals: true });
   }
   const skipVar = skipIncludeVariableName(field, 'skip');
   if (skipVar) {
-    node = {
-      kind: 'Condition',
-      condition: skipVar,
-      elseClause: node,
-    };
+    clauses.push({ variable: skipVar, equals: false });
   }
-  return node;
+  return stampRunIf(plan, clauses);
 }
 
 /**
@@ -5595,10 +5620,11 @@ function buildCompletePlan(
   fragments: Record<string, FragmentDefinitionNode>,
   variableValues: Record<string, any>,
   incompleteReasons: string[],
+  options: BuildStitchPlanOptions = {},
 ): StitchPlan {
   const rootNodes: StitchPlanNode[] = [];
 
-  // One plan per document: Condition nodes for `@skip`/`@include`. Include all
+  // One plan per document: `runIf` for `@skip`/`@include`. Include all
   // conditional selections while planning; subgraphs still see the directives.
   const planVars = variablesForcingSkipIncludePresent(
     operation,
@@ -5619,7 +5645,7 @@ function buildCompletePlan(
     if (isUnconditionallyOmittedBySkipInclude(fieldNode)) {
       continue;
     }
-    // Condition decides the root field; strip only own directives so nested
+    // runIf decides the root field; strip only own directives so nested
     // @skip/@include remain for subgraph evaluation / provides-scope.
     const cleaned = stripOwnSkipIncludeDirectives(fieldNode);
     const planned = planRootField(
@@ -5631,7 +5657,7 @@ function buildCompletePlan(
       planVars,
       incompleteReasons,
     );
-    rootNodes.push(wrapRootFieldWithConditions(fieldNode, planned));
+    rootNodes.push(wrapRootFieldWithRunIf(fieldNode, planned));
   }
 
   if (!rootNodes.length && incompleteReasons.length === 0) {
@@ -5648,7 +5674,10 @@ function buildCompletePlan(
           nodes: rootNodes,
         };
 
-  const optimized = optimizeStitchPlanNode(rootRaw, stitchingInfo);
+  // Flatten any leftover Condition trees so both branches participate in
+  // coalesce / BatchFetch with per-hop runIf (schedule stays cacheable).
+  const withoutConditions = flattenConditionsToRunIf(rootRaw);
+  const optimized = optimizeStitchPlanNode(withoutConditions, stitchingInfo);
   const coalesced = coalesceSamePathEntityFields(optimized, stitchingInfo);
   const packed = packIndependentWaves(
     optimizeStitchPlanNode(coalesced, stitchingInfo),
@@ -5673,9 +5702,13 @@ function buildCompletePlan(
     stitchingInfo,
     { serializeSequences: isMutation },
   );
+  const withReuse =
+    options.entityReuse === true
+      ? annotateEntityReuse(annotated)
+      : annotated;
   const withDocs = isMutation
-    ? annotated
-    : preparePlanDocuments(annotated, {
+    ? withReuse
+    : preparePlanDocuments(withReuse, {
         operation,
         fragments,
         fieldNodesByField: stitchingInfo.fieldNodesByField,
@@ -5697,6 +5730,7 @@ function buildCompletePlan(
     schedule,
     incomplete: incompleteReasons.length > 0,
     incompleteReasons,
+    entityReuse: options.entityReuse === true,
   };
 }
 
@@ -6061,8 +6095,28 @@ function compressProductsIntoDeepWave(
 }
 
 /**
- * Inside each Parallel, collapse same-subschema entity Fetches with different
- * types (or selections) into one BatchFetch - Hive multi-type reviews.
+ * True when `typeName` is a concrete object on some known subschema. Interface
+ * / union entity hops keep the stricter BatchFetch root rules (identity race).
+ */
+function isConcreteEntityObjectType(
+  stitchingInfo: StitchingInfo,
+  typeName: string,
+): boolean {
+  for (const sub of allKnownSubschemas(stitchingInfo)) {
+    const t = sub.schema.getType(typeName);
+    if (t != null) {
+      return isObjectType(t);
+    }
+  }
+  return false;
+}
+
+/**
+ * Inside each Parallel, collapse same-subschema entity Fetches:
+ * - same type -> multi-path / selection union when safe
+ * - different concrete types -> one BatchFetch (including same root path;
+ *   Book||Magazine under products). Interface hops still require distinct
+ *   roots (corrupted-supergraph-node-id).
  */
 function groupParallelBatchFetches(
   node: StitchPlanNode,
@@ -6107,10 +6161,24 @@ function groupParallelBatchFetches(
     return { kind: 'Parallel', nodes: children };
   }
 
-  // Group by subgraph name so same-upstream hops collapse together.
+  // Group by subschema identity (name when set, else object identity) so
+  // unnamed schemas still BatchFetch Book||Magazine together.
+  const anonIds = new WeakMap<object, string>();
+  let anonSeq = 0;
+  const subKey = (s: Subschema): string => {
+    if (s.name) {
+      return `n:${s.name}`;
+    }
+    let id = anonIds.get(s);
+    if (!id) {
+      id = `a:${anonSeq++}`;
+      anonIds.set(s, id);
+    }
+    return id;
+  };
   const bySub = new Map<string, typeof entityFetches>();
   for (const f of entityFetches) {
-    const key = f.subschema.name ?? String(entityTypeKey(f));
+    const key = subKey(f.subschema);
     let list = bySub.get(key);
     if (!list) {
       list = [];
@@ -6121,6 +6189,7 @@ function groupParallelBatchFetches(
 
   const consumed = new Set<StitchPlanNode>();
   const next: StitchPlanNode[] = [];
+
   for (const child of children) {
     if (consumed.has(child)) {
       continue;
@@ -6129,49 +6198,67 @@ function groupParallelBatchFetches(
       next.push(child);
       continue;
     }
-    const group = bySub.get(
-      child.subschema.name ?? String(entityTypeKey(child)),
-    );
+    const group = bySub.get(subKey(child.subschema));
     if (!group || group.length < 2) {
       next.push(child);
       continue;
     }
-    // Distinct entity types or selections -> BatchFetch once per group.
-    const typeKeys = new Set(
-      group.map(
-        (g) => `${g.entityTypeName}\0${selectionSetKey(g.selectionSet)}`,
-      ),
-    );
-    if (typeKeys.size < 2) {
-      // Same type+selection: collapse to one multi-path Fetch (duplicate
-      // inventory hops from topProducts vs nested reviews->product).
-      if (group.length >= 2 && group[0] === child) {
-        const pathKeys = new Set<string>();
-        const mergedPaths: PathSegment[][] = [];
-        for (const g of group) {
-          for (const p of fetchFlattenPaths(g)) {
-            const key = p.join('\0');
-            if (!pathKeys.has(key)) {
-              pathKeys.add(key);
-              mergedPaths.push(p);
-            }
-          }
-          consumed.add(g);
-        }
-        next.push({
-          ...child,
-          flattenPaths: mergedPaths,
-        });
-      }
+    if (group[0] !== child) {
+      // Emitted when we visited group[0].
       continue;
     }
-    // Only BatchFetch when every alias lives under a distinct root field
-    // (users vs topProducts). Same-root multi-type batches race on entity
-    // identity (corrupted-supergraph-node-id).
-    const rootKeys = group.map((g) => {
+
+    // 1) Same entity type: union selections / multi-path when safe.
+    const byEntityType = new Map<
+      string,
+      Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
+    >();
+    for (const g of group) {
+      const tk = g.entityTypeName!;
+      let list = byEntityType.get(tk);
+      if (!list) {
+        list = [];
+        byEntityType.set(tk, list);
+      }
+      list.push(g);
+    }
+    const collapsed: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
+    for (const typeGroup of byEntityType.values()) {
+      const united = tryUnionEntityFetches(stitchingInfo, typeGroup);
+      if (united) {
+        collapsed.push(united);
+        continue;
+      }
+      if (typeGroup.length === 1) {
+        collapsed.push(typeGroup[0]!);
+        continue;
+      }
+      const sameSel =
+        typeGroup.every(
+          (g) =>
+            selectionSetKey(g.selectionSet) ===
+            selectionSetKey(typeGroup[0]!.selectionSet),
+        ) && !pathsHaveNesting(typeGroup.flatMap(fetchFlattenPaths));
+      if (sameSel) {
+        collapsed.push(mergeMultiPathFetches(typeGroup));
+      } else {
+        collapsed.push(...typeGroup);
+      }
+    }
+
+    for (const g of group) {
+      consumed.add(g);
+    }
+
+    if (collapsed.length === 1) {
+      next.push(collapsed[0]!);
+      continue;
+    }
+
+    // 2) Multi-type (or uncollapsed same-type): BatchFetch when safe.
+    const rootKeys = collapsed.map((g) => {
       const paths = fetchFlattenPaths(g);
-      const roots = new Set(paths.map((p) => String(p[0] ?? '')));
-      return roots;
+      return new Set(paths.map((p) => String(p[0] ?? '')));
     });
     const seenRoots = new Set<string>();
     let rootClash = false;
@@ -6187,29 +6274,176 @@ function groupParallelBatchFetches(
       }
       seenRoots.add(root);
     }
-    if (rootClash) {
-      next.push(child);
+    const allConcrete = collapsed.every((g) =>
+      isConcreteEntityObjectType(stitchingInfo, g.entityTypeName!),
+    );
+    // Distinct roots (users||topProducts) always OK. Same-root OK when every
+    // alias is a concrete object type (Book||Magazine under products) - parents
+    // are typename-disjoint so key ranges do not race. Interface/abstract
+    // same-root stays split (corrupted-supergraph-node-id).
+    if (rootClash && !allConcrete) {
+      next.push(...collapsed);
       continue;
     }
-    if (group[0] !== child) {
-      // Batched when we visited group[0].
-      continue;
-    }
-    for (const g of group) {
-      consumed.add(g);
-    }
+
     next.push({
       kind: 'BatchFetch',
-      subschema: child.subschema,
-      aliases: group.map((g, i) => ({
+      subschema: collapsed[0]!.subschema,
+      aliases: collapsed.map((g, i) => ({
         alias: `_e${i}`,
         entityTypeName: g.entityTypeName!,
         selectionSet: g.selectionSet,
         flattenPaths: fetchFlattenPaths(g),
+        runIf: g.runIf,
       })),
+      runIf: collapsed.every(
+        (g) => runIfKey(g.runIf) === runIfKey(collapsed[0]!.runIf),
+      )
+        ? collapsed[0]!.runIf
+        : undefined,
     });
   }
   return next.length === 1 ? next[0]! : { kind: 'Parallel', nodes: next };
+}
+
+
+/**
+ * When entityReuse is on: annotate entity hops that can copy fields from an
+ * earlier hop they already wait on (same entity type, covering selection).
+ * Also adds a same-subgraph wait when a covering predecessor would otherwise
+ * race the copy (Hive Router #1799).
+ */
+function selectionLeafKeys(ss: import('graphql').SelectionSetNode): Set<string> {
+  const keys = new Set<string>();
+  for (const sel of ss.selections) {
+    if (sel.kind === Kind.FIELD && sel.name.value !== '__typename') {
+      keys.add(sel.alias?.value ?? sel.name.value);
+    }
+  }
+  return keys;
+}
+
+function selectionCoversLeaves(
+  source: import('graphql').SelectionSetNode,
+  needed: import('graphql').SelectionSetNode,
+): boolean {
+  // Nested selections: refuse reuse (conservative; router projects deeply).
+  for (const sel of needed.selections) {
+    if (sel.kind === Kind.FIELD && sel.selectionSet) {
+      return false;
+    }
+    if (sel.kind !== Kind.FIELD) {
+      return false;
+    }
+  }
+  const have = selectionLeafKeys(source);
+  for (const k of selectionLeafKeys(needed)) {
+    if (!have.has(k)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
+  const hops: Array<
+    | Extract<StitchPlanNode, { kind: 'Fetch' }>
+    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
+    | Extract<StitchPlanNode, { kind: 'Island' }>
+  > = [];
+  collectExecutableHops(root, hops, {});
+  const byId = new Map<string, (typeof hops)[number]>();
+  for (const h of hops) {
+    for (const id of h.completesIds?.length ? h.completesIds : h.id ? [h.id] : []) {
+      byId.set(id, h);
+    }
+  }
+
+  const coveringSources = (
+    hop: Extract<StitchPlanNode, { kind: 'Fetch' }>,
+  ): string[] => {
+    if (!hop.entityTypeName || hop.rootField) {
+      return [];
+    }
+    const needed = hop.selectionSet;
+    const seen = new Set<string>();
+    const out: string[] = [];
+    const stack = [...(hop.dependsOn ?? [])];
+    while (stack.length) {
+      const id = stack.pop()!;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const src = byId.get(id);
+      if (!src) continue;
+      for (const d of src.dependsOn ?? []) {
+        stack.push(d);
+      }
+      if (src.kind === 'Fetch' && src.entityTypeName === hop.entityTypeName) {
+        if (selectionCoversLeaves(src.selectionSet, needed)) {
+          out.push(src.id ?? id);
+        }
+      } else if (src.kind === 'Fetch' && src.rootField) {
+        // Root may embed entity fields under flatten path - leaf cover only
+        // when root selectionSet matches entity type fields directly.
+        if (
+          src.selectionSet &&
+          selectionCoversLeaves(src.selectionSet, needed)
+        ) {
+          out.push(src.id ?? id);
+        }
+      } else if (src.kind === 'BatchFetch') {
+        for (const a of src.aliases) {
+          if (
+            a.entityTypeName === hop.entityTypeName &&
+            selectionCoversLeaves(a.selectionSet, needed)
+          ) {
+            out.push(src.id ?? id);
+            break;
+          }
+        }
+      }
+    }
+    return out;
+  };
+
+  const rewrite = (node: StitchPlanNode): StitchPlanNode => {
+    if (node.kind === 'Fetch' && node.entityTypeName && !node.rootField) {
+      const reuseFrom = coveringSources(node);
+      if (!reuseFrom.length) {
+        return node;
+      }
+      const deps = new Set(node.dependsOn ?? []);
+      for (const id of reuseFrom) {
+        deps.add(id);
+      }
+      return {
+        ...node,
+        reuseFrom,
+        dependsOn: [...deps],
+      };
+    }
+    if (node.kind === 'BatchFetch') {
+      return node;
+    }
+    if (node.kind === 'Island') {
+      return {
+        ...node,
+        continue: node.continue ? rewrite(node.continue) : undefined,
+      };
+    }
+    if (node.kind === 'Condition') {
+      return {
+        ...node,
+        ifClause: node.ifClause ? rewrite(node.ifClause) : undefined,
+        elseClause: node.elseClause ? rewrite(node.elseClause) : undefined,
+      };
+    }
+    if (node.kind === 'Sequence' || node.kind === 'Parallel') {
+      return { kind: node.kind, nodes: node.nodes.map(rewrite) };
+    }
+    return node;
+  };
+  return rewrite(root);
 }
 
 /**

@@ -55,6 +55,7 @@ import {
   BACKBONE_EXECUTING,
   getOriginalRootResolve,
 } from './rootProxyingResolvers.js';
+import { evaluateRunIf } from './runIf.js';
 import type {
   BackboneExecutionContext,
   PathSegment,
@@ -65,6 +66,38 @@ import type {
 
 /** Same key as stitchSchemas wrap - skip classic mergeFields after plan hop. */
 const BACKBONE_HYDRATED = Symbol.for('graphql-tools.stitch.backboneHydrated');
+
+/** Leaf response keys an entity selection needs (no nested fields). */
+function neededLeafKeys(selectionSet: SelectionSetNode): string[] {
+  const keys: string[] = [];
+  for (const sel of selectionSet.selections) {
+    if (sel.kind !== Kind.FIELD || sel.name.value === '__typename') {
+      continue;
+    }
+    if (sel.selectionSet) {
+      // Nested: reuse cannot prove completeness from parent alone.
+      return [];
+    }
+    keys.push(sel.alias?.value ?? sel.name.value);
+  }
+  return keys;
+}
+
+function parentHasNeededLeaves(
+  parent: Record<string, any>,
+  selectionSet: SelectionSetNode,
+): boolean {
+  const keys = neededLeafKeys(selectionSet);
+  if (!keys.length) {
+    return false;
+  }
+  for (const k of keys) {
+    if (parent[k] === undefined) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * Subgraph executor as configured on the Subschema. Gateway/fusion already
@@ -873,7 +906,7 @@ function executeFetchNode(
       runtime.getInterfaces().some((i) => i.name === node.entityTypeName)
     );
   };
-  const parents: Array<Record<string, any>> = [];
+  let parents: Array<Record<string, any>> = [];
   const seen = new Set<Record<string, any>>();
   for (const path of flattenPaths) {
     for (const p of collectEntitiesAtPath(ctx.data, path)) {
@@ -885,6 +918,22 @@ function executeFetchNode(
   }
   if (!parents.length) {
     return;
+  }
+
+  // Opt-in entity reuse: skip HTTP when every parent already has needed leaves.
+  if (
+    ctx.entityReuse &&
+    parents.every((p) => parentHasNeededLeaves(p, node.selectionSet))
+  ) {
+    return;
+  }
+  if (ctx.entityReuse) {
+    parents = parents.filter(
+      (p) => !parentHasNeededLeaves(p, node.selectionSet),
+    );
+    if (!parents.length) {
+      return;
+    }
   }
 
   const stitchingInfo = ctx.schema.extensions?.['stitchingInfo'] as
@@ -1256,6 +1305,9 @@ function runOneHop(
   hop: ExecutableHop,
   ctx: BackboneExecutionContext,
 ): MaybePromise<void> {
+  if (!evaluateRunIf(hop.runIf, ctx.variableValues)) {
+    return;
+  }
   if (hop.kind === 'BatchFetch') {
     return executeBatchFetchNode(hop, ctx);
   }
@@ -1748,6 +1800,12 @@ function executeBatchFetchNode(
   if (!node.aliases.length) {
     return;
   }
+  const activeAliases = node.aliases.filter((a) =>
+    evaluateRunIf(a.runIf ?? node.runIf, ctx.variableValues),
+  );
+  if (!activeAliases.length) {
+    return;
+  }
 
   // Prefer one concatenated merge-field HTTP whenever the plan attached a
   // document. Alias selectionSets stay unfiltered for the parallel-Fetch
@@ -1758,13 +1816,20 @@ function executeBatchFetchNode(
     let canRawBatch = true;
     let mergeEntry: ReturnType<typeof getBatchedMergeEntry> = null;
 
-    for (let i = 0; i < node.aliases.length; i++) {
-      const a = node.aliases[i]!;
-      const parents = collectAliasParents(
+    for (let i = 0; i < activeAliases.length; i++) {
+      const a = activeAliases[i]!;
+      let parents = collectAliasParents(
         ctx,
         a.entityTypeName,
         a.flattenPaths,
       );
+      if (
+        ctx.entityReuse &&
+        parents.length &&
+        parents.every((p) => parentHasNeededLeaves(p, a.selectionSet))
+      ) {
+        parents = [];
+      }
       if (!parents.length) {
         prepared.push({
           alias: a.alias,
@@ -1865,7 +1930,7 @@ function executeBatchFetchNode(
 
   // Nested / abstract aliases: parallel Fetch (gateway batch executor merges
   // same-tick merge fields when `batch` is enabled).
-  const jobs = node.aliases.map((a) =>
+  const jobs = activeAliases.map((a) =>
     executeFetchNode(
       {
         kind: 'Fetch',
@@ -1873,6 +1938,7 @@ function executeBatchFetchNode(
         entityTypeName: a.entityTypeName,
         selectionSet: a.selectionSet,
         flattenPaths: a.flattenPaths,
+        runIf: a.runIf,
       },
       ctx,
     ),
@@ -1912,6 +1978,7 @@ export function executeStitchPlan(
     data: {},
     errors: [],
     infoStub: {},
+    entityReuse: plan.entityReuse === true,
   };
 
   return handleMaybePromise(
