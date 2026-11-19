@@ -30,6 +30,9 @@ const ESM_PACKAGES = [
   'fetch-blob',
   'formdata-polyfill',
   'data-uri-to-buffer',
+  // commander v15 and its extra typings are esm only and imported by the gateway cli
+  'commander',
+  '@commander-js',
 ];
 
 export default {
