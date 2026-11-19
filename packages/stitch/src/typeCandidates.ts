@@ -20,7 +20,6 @@ import {
   GraphQLObjectType,
   GraphQLSchema,
   isDirective,
-  isInterfaceType,
   isIntrospectionType,
   isNamedType,
   isSpecifiedScalarType,
@@ -157,17 +156,6 @@ export function buildTypeCandidates<
         throw new Error(`Expected to get named typed but got ${inspect(def)}`);
       }
       if (type != null) {
-        // There is a bug in interface types that causes them to not have _interfaces
-        // if they are not used in a schema. This is a workaround for that.
-        if (isInterfaceType(type)) {
-          try {
-            type.getInterfaces();
-          } catch {
-            Object.defineProperty(type, '_interfaces', {
-              value: [],
-            });
-          }
-        }
         addTypeCandidate(typeCandidates, type.name, { type });
       }
     }
