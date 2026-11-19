@@ -1,4 +1,6 @@
+import { printWithComments } from '@graphql-tools/utils';
 import { createTenv } from '@internal/e2e';
+import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
 describe('Additional Type Definitions with Naming Convention', () => {
@@ -8,7 +10,8 @@ describe('Additional Type Definitions with Naming Convention', () => {
       services: [await tenv.service('authors'), await tenv.service('books')],
       maskServicePorts: true,
     });
-    expect(composeResult.result).toMatchSnapshot();
+    // the graphql-tools printer prints the same with graphql 16 and 17
+    expect(printWithComments(parse(composeResult.result))).toMatchSnapshot();
   });
   it('executes the additional field correctly', async () => {
     const composeResult = await tenv.composeWithMesh({
