@@ -82,12 +82,20 @@ function createWrappingSchema(
       if (isSpecifiedScalarType(type)) {
         return type;
       }
-      return new GraphQLScalarType({
+      // the subschema coerces scalars, so drop all coercion functions. graphql 17 has
+      // the `coerce*` and `valueToLiteral` variants, kept off the literal to type
+      // check against graphql 16 too
+      const config = {
         ...type.toConfig(),
         serialize: undefined,
         parseValue: undefined,
         parseLiteral: undefined,
-      });
+        coerceOutputValue: undefined,
+        coerceInputValue: undefined,
+        coerceInputLiteral: undefined,
+        valueToLiteral: undefined,
+      };
+      return new GraphQLScalarType(config);
     },
   });
 }
