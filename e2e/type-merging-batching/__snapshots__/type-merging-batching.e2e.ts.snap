@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`should execute 'Author' 1`] = `
+exports[`should execute Author 1`] = `
 {
   "data": {
     "author": {
@@ -21,7 +21,7 @@ exports[`should execute 'Author' 1`] = `
 }
 `;
 
-exports[`should execute 'Authors' 1`] = `
+exports[`should execute Authors 1`] = `
 {
   "data": {
     "authors": [
@@ -58,7 +58,7 @@ exports[`should execute 'Authors' 1`] = `
 }
 `;
 
-exports[`should execute 'Book' 1`] = `
+exports[`should execute Book 1`] = `
 {
   "data": {
     "book": {
@@ -79,7 +79,7 @@ exports[`should execute 'Book' 1`] = `
 }
 `;
 
-exports[`should execute 'Books' 1`] = `
+exports[`should execute Books 1`] = `
 {
   "data": {
     "books": [
