@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildStitchPlan,
   createBackboneExecutor,
+  evaluateRunIf,
+  orRunIf,
   type StitchPlanNode,
 } from '../src/backbone/index';
 import { stitchSchemas } from '../src/stitchSchemas';
@@ -199,8 +201,9 @@ describe('stitching backbone', () => {
           ? planSkip.root.nodes.find((n) => n.kind === 'Fetch')
           : undefined;
     expect(hop?.kind).toBe('Fetch');
+    // DNF: OR of AND-groups (single skip clause → one group).
     expect((hop as any).runIf).toEqual([
-      { variable: 'skipEmail', equals: false },
+      [{ variable: 'skipEmail', equals: false }],
     ]);
     // Same structure regardless of variable map (one cached plan shape).
     expect(planInclude.root.kind).toBe(planSkip.root.kind);
@@ -733,6 +736,17 @@ describe('backbone plan quality', () => {
 });
 
 describe('backbone aggressive BatchFetch + entityReuse', () => {
+  function walkBatches(n: StitchPlanNode, out: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>>) {
+    if (n.kind === 'BatchFetch') out.push(n);
+    else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
+      for (const c of n.nodes) walkBatches(c, out);
+    } else if (n.kind === 'Island' && n.continue) walkBatches(n.continue, out);
+    else if (n.kind === 'Condition') {
+      if (n.ifClause) walkBatches(n.ifClause, out);
+      if (n.elseClause) walkBatches(n.elseClause, out);
+    }
+  }
+
   function createBookMagazineSchema(inventoryCalls: { n: number }) {
     const products = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
@@ -843,20 +857,125 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     );
     expect(plan.incompleteReasons).toEqual([]);
     const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
-    const walk = (n: StitchPlanNode) => {
-      if (n.kind === 'BatchFetch') batches.push(n);
-      else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
-        for (const c of n.nodes) walk(c);
-      } else if (n.kind === 'Island' && n.continue) walk(n.continue);
-    };
-    walk(plan.root);
+    walkBatches(plan.root, batches);
     expect(batches.length).toBeGreaterThanOrEqual(1);
-    const types = new Set(batches.flatMap((b) => b.aliases.map((a) => a.entityTypeName)));
+    const types = new Set(
+      batches.flatMap((b) => b.aliases.map((a) => a.entityTypeName)),
+    );
     expect(types.has('Book')).toBe(true);
     expect(types.has('Magazine')).toBe(true);
     // One HTTP hop for both concrete types under products.
     expect(batches[0]!.aliases.length).toBeGreaterThanOrEqual(2);
     expect(plan.schedule).toBeDefined();
+  });
+
+  it('does not same-root BatchFetch overlapping abstract Product||Book', () => {
+    const catalog = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Product {
+          id: ID!
+        }
+        type Book implements Product {
+          id: ID!
+          title: String
+        }
+        type Query {
+          products: [Product]
+        }
+      `,
+      resolvers: {
+        Product: {
+          __resolveType: () => 'Book',
+        },
+        Query: {
+          products: () => [{ __typename: 'Book', id: 'b1', title: 'B' }],
+        },
+      },
+    });
+    const inventory = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Product {
+          id: ID!
+          inStock: Boolean
+        }
+        type Book implements Product {
+          id: ID!
+          inStock: Boolean
+          pages: Int
+        }
+        type Query {
+          _product(id: ID!): Product
+          _book(id: ID!): Book
+        }
+      `,
+      resolvers: {
+        Product: {
+          __resolveType: () => 'Book',
+        },
+        Query: {
+          _product: (_: unknown, { id }: { id: string }) => ({
+            __typename: 'Book',
+            id,
+            inStock: true,
+          }),
+          _book: (_: unknown, { id }: { id: string }) => ({
+            id,
+            inStock: true,
+            pages: 10,
+          }),
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: catalog,
+          executor: createDefaultExecutor(catalog),
+          batch: true,
+        },
+        {
+          schema: inventory,
+          executor: createDefaultExecutor(inventory),
+          merge: {
+            Product: {
+              fieldName: '_product',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Book: {
+              fieldName: '_book',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const plan = buildStitchPlan(
+      schema,
+      parse(/* GraphQL */ `
+        {
+          products {
+            id
+            inStock
+            ... on Book {
+              pages
+            }
+          }
+        }
+      `).definitions[0] as any,
+      {},
+      {},
+    );
+    expect(plan.incompleteReasons).toEqual([]);
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
+    walkBatches(plan.root, batches);
+    // Product covers Book — same-root BatchFetch would double-claim parents.
+    for (const b of batches) {
+      const types = new Set(b.aliases.map((a) => a.entityTypeName));
+      expect(types.has('Product') && types.has('Book')).toBe(false);
+    }
   });
 
   it('executes BatchFetch Book||Magazine and returns stock fields', async () => {
@@ -889,7 +1008,67 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     });
   });
 
-  it('entityReuse skips a redundant entity hop when fields are already present', async () => {
+  it('runIf DNF supports || of AND-groups (Router-style)', () => {
+    const bookOnly = [[{ variable: 'wantBook', equals: true }]];
+    const magOnly = [[{ variable: 'wantMag', equals: true }]];
+    const either = orRunIf(bookOnly, magOnly)!;
+    expect(either).toHaveLength(2);
+    expect(evaluateRunIf(either, { wantBook: true, wantMag: false })).toBe(
+      true,
+    );
+    expect(evaluateRunIf(either, { wantBook: false, wantMag: true })).toBe(
+      true,
+    );
+    expect(evaluateRunIf(either, { wantBook: false, wantMag: false })).toBe(
+      false,
+    );
+    // Complementary single-var OR simplifies to always.
+    expect(
+      orRunIf(
+        [[{ variable: 'v', equals: true }]],
+        [[{ variable: 'v', equals: false }]],
+      ),
+    ).toBeUndefined();
+  });
+
+  it('OR-merges alias runIf onto BatchFetch when complementary root gates coalesce', () => {
+    const schema = createBookMagazineSchema({ n: 0 });
+    // Root-level skip/include stamps hop runIf; Book||Magazine still BatchFetch.
+    const document = parse(/* GraphQL */ `
+      query ($wantProducts: Boolean!) {
+        products @include(if: $wantProducts) {
+          id
+          ... on Book {
+            inStock
+          }
+          ... on Magazine {
+            inStock
+          }
+        }
+      }
+    `);
+    const plan = buildStitchPlan(
+      schema,
+      document.definitions[0] as any,
+      {},
+      { wantProducts: true },
+    );
+    expect(plan.incompleteReasons).toEqual([]);
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
+    walkBatches(plan.root, batches);
+    const multi = batches.find(
+      (b) =>
+        b.aliases.some((a) => a.entityTypeName === 'Book') &&
+        b.aliases.some((a) => a.entityTypeName === 'Magazine'),
+    );
+    expect(multi).toBeDefined();
+    // Shared include gate stamped as DNF AND-group on the batch.
+    expect(multi!.runIf).toEqual([
+      [{ variable: 'wantProducts', equals: true }],
+    ]);
+  });
+
+  it('always-on entity reuse skips redundant hop when root already has leaves', async () => {
     let entityCalls = 0;
     const accounts = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
@@ -939,25 +1118,114 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
         }
       }
     `);
-    // With reuse on, root already projected name - entity follow-up (if any)
-    // should not add another call beyond the root.
-    const withReuse = createBackboneExecutor(schema, { entityReuse: true });
-    const before = entityCalls;
-    const result = await exec(withReuse, {
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
       document,
       variables: {},
       context: {},
     });
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({ me: { id: '1', name: 'Ada' } });
-    const reusedCalls = entityCalls - before;
+    // Root already projected name — reuse must not fire a second user() hop.
+    expect(entityCalls).toBe(1);
+  });
 
-    entityCalls = 0;
-    const without = createBackboneExecutor(schema, { entityReuse: false });
-    await exec(without, { document, variables: {}, context: {} });
-    // Reuse path must not call more than the baseline single-subgraph root.
-    expect(reusedCalls).toBeLessThanOrEqual(entityCalls);
-    expect(reusedCalls).toBeGreaterThanOrEqual(1);
+  it('reuses entity fields across parents with the same representation hash', async () => {
+    let userCalls = 0;
+    const accounts = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          name: String
+        }
+        type Query {
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          user: (_: unknown, { id }: { id: string }) => {
+            userCalls++;
+            return { id, name: `U-${id}` };
+          },
+        },
+      },
+    });
+    const catalog = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+        }
+        type Product {
+          id: ID!
+          author: User
+        }
+        type Review {
+          id: ID!
+          author: User
+        }
+        type Query {
+          product: Product
+          review: Review
+        }
+      `,
+      resolvers: {
+        Query: {
+          product: () => ({ id: 'p1', author: { id: '1' } }),
+          review: () => ({ id: 'r1', author: { id: '1' } }),
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: catalog,
+          executor: createDefaultExecutor(catalog),
+          batch: true,
+        },
+        {
+          schema: accounts,
+          name: 'accounts',
+          executor: createDefaultExecutor(accounts),
+          merge: {
+            User: {
+              fieldName: 'user',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
+      document: parse(/* GraphQL */ `
+        {
+          product {
+            author {
+              id
+              name
+            }
+          }
+          review {
+            author {
+              id
+              name
+            }
+          }
+        }
+      `),
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      product: { author: { id: '1', name: 'U-1' } },
+      review: { author: { id: '1', name: 'U-1' } },
+    });
+    // Same rep under two parents: at most one merge fetch (batch or reuse).
+    expect(userCalls).toBe(1);
   });
 });
 

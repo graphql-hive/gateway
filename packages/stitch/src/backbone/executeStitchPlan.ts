@@ -99,6 +99,120 @@ function parentHasNeededLeaves(
   return true;
 }
 
+/** Entity reuse is always on for queries; hard skips match Router #1799. */
+function entityReuseAllowed(ctx: BackboneExecutionContext): boolean {
+  if (ctx.operation.operation === 'mutation') {
+    return false;
+  }
+  // Never copy once the request already has an error (nulls must not be reused).
+  if (ctx.errors.length) {
+    return false;
+  }
+  return true;
+}
+
+function representationHash(
+  parent: Record<string, any>,
+  hopSubschema: Subschema,
+  entityTypeName: string,
+): string | null {
+  const sub = hopSubschema.name ?? `anon:${entityTypeName}`;
+  const entry = getBatchedMergeEntry(hopSubschema, entityTypeName);
+  if (entry) {
+    const key = entry.key(parent);
+    if (key == null) {
+      return null;
+    }
+    const cacheKeyFn = entry.dataLoaderOptions?.cacheKeyFn;
+    const identity =
+      cacheKeyFn != null ? String(cacheKeyFn(key)) : JSON.stringify(key);
+    // Scope by subgraph + type + key (Router entity-reuse rep hash shape).
+    return `${sub}::${entityTypeName}::${identity}`;
+  }
+  // Classic stitching merge (`args` / selectionSet) — hash the merge args
+  // or key fields so same-rep parents share one fetch (Router #1799).
+  const mergeConfig = hopSubschema.merge?.[entityTypeName];
+  if (!mergeConfig) {
+    return null;
+  }
+  if (typeof mergeConfig.args === 'function') {
+    try {
+      const args = mergeConfig.args(parent);
+      if (args == null) {
+        return null;
+      }
+      return `${sub}::${entityTypeName}::args:${JSON.stringify(args)}`;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof mergeConfig.key === 'function') {
+    const key = mergeConfig.key(parent);
+    if (key == null) {
+      return null;
+    }
+    return `${sub}::${entityTypeName}::key:${JSON.stringify(key)}`;
+  }
+  return null;
+}
+
+function rememberEntityForReuse(
+  ctx: BackboneExecutionContext,
+  hopSubschema: Subschema,
+  entityTypeName: string,
+  parent: Record<string, any>,
+): void {
+  if (!entityReuseAllowed(ctx)) {
+    return;
+  }
+  const hash = representationHash(parent, hopSubschema, entityTypeName);
+  if (!hash) {
+    return;
+  }
+  if (!ctx.entityByRepHash) {
+    ctx.entityByRepHash = new Map();
+  }
+  // Store a shallow snapshot of current parent fields for later copy.
+  ctx.entityByRepHash.set(hash, { ...parent });
+}
+
+/**
+ * Copy reused fields onto parent when a prior hop already produced the same
+ * representation with the needed leaves. Returns true when parent is complete.
+ */
+function tryReuseEntityIntoParent(
+  ctx: BackboneExecutionContext,
+  hopSubschema: Subschema,
+  entityTypeName: string,
+  parent: Record<string, any>,
+  selectionSet: SelectionSetNode,
+): boolean {
+  if (!entityReuseAllowed(ctx) || !ctx.entityByRepHash?.size) {
+    // Fall back: parent already has leaves from an earlier merge into itself.
+    return parentHasNeededLeaves(parent, selectionSet);
+  }
+  if (parentHasNeededLeaves(parent, selectionSet)) {
+    return true;
+  }
+  const hash = representationHash(parent, hopSubschema, entityTypeName);
+  if (!hash) {
+    return false;
+  }
+  const cached = ctx.entityByRepHash.get(hash);
+  if (!cached || !parentHasNeededLeaves(cached, selectionSet)) {
+    return false;
+  }
+  for (const k of neededLeafKeys(selectionSet)) {
+    if (parent[k] === undefined && cached[k] !== undefined) {
+      parent[k] = cached[k];
+    }
+  }
+  if (cached['__typename'] != null && parent['__typename'] == null) {
+    parent['__typename'] = cached['__typename'];
+  }
+  return parentHasNeededLeaves(parent, selectionSet);
+}
+
 /**
  * Subgraph executor as configured on the Subschema. Gateway/fusion already
  * wraps with getBatchingExecutor when `batch` is enabled - do not re-wrap.
@@ -920,16 +1034,17 @@ function executeFetchNode(
     return;
   }
 
-  // Opt-in entity reuse: skip HTTP when every parent already has needed leaves.
-  if (
-    ctx.entityReuse &&
-    parents.every((p) => parentHasNeededLeaves(p, node.selectionSet))
-  ) {
-    return;
-  }
-  if (ctx.entityReuse) {
+  // Always-on entity reuse (queries): copy by rep-hash / parent leaves, skip HTTP.
+  if (entityReuseAllowed(ctx)) {
     parents = parents.filter(
-      (p) => !parentHasNeededLeaves(p, node.selectionSet),
+      (p) =>
+        !tryReuseEntityIntoParent(
+          ctx,
+          node.subschema,
+          node.entityTypeName!,
+          p,
+          node.selectionSet,
+        ),
     );
     if (!parents.length) {
       return;
@@ -997,6 +1112,12 @@ function executeFetchNode(
       () => {
         for (const parent of parents) {
           stampSubschema(parent, node.subschema);
+          rememberEntityForReuse(
+            ctx,
+            node.subschema,
+            node.entityTypeName!,
+            parent,
+          );
         }
       },
     );
@@ -1034,7 +1155,29 @@ function executeFetchNode(
     return batched;
   }
 
-  const jobs: MaybePromise<any>[] = parents.map((parent) =>
+  // Dedupe same-rep parents within this hop (classic args merges have no
+  // argsFromKeys batch path). Resolve once per representation hash, fan out.
+  const groups = new Map<string, Array<Record<string, any>>>();
+  const unhashed: Array<Record<string, any>> = [];
+  for (const parent of parents) {
+    const hash = representationHash(
+      parent,
+      hopSubschema,
+      node.entityTypeName!,
+    );
+    if (!hash) {
+      unhashed.push(parent);
+      continue;
+    }
+    let list = groups.get(hash);
+    if (!list) {
+      list = [];
+      groups.set(hash, list);
+    }
+    list.push(parent);
+  }
+
+  const resolveInto = (parent: Record<string, any>, siblings: Array<Record<string, any>>) =>
     handleMaybePromise(
       () =>
         resolver(
@@ -1054,16 +1197,26 @@ function executeFetchNode(
           ctx.errors.push(resolverResult);
           return;
         }
-        // mutate parent in place so siblings sharing the tree see updates
-        mergeEntityIntoParent(
-          parent,
-          resolverResult as Record<string, any>,
-          ctx.schema,
-          node.subschema,
-        );
+        const entity = resolverResult as Record<string, any>;
+        for (const p of siblings) {
+          mergeEntityIntoParent(p, entity, ctx.schema, node.subschema);
+          rememberEntityForReuse(
+            ctx,
+            node.subschema,
+            node.entityTypeName!,
+            p,
+          );
+        }
       },
-    ),
-  );
+    );
+
+  const jobs: MaybePromise<any>[] = [];
+  for (const group of groups.values()) {
+    jobs.push(resolveInto(group[0]!, group));
+  }
+  for (const parent of unhashed) {
+    jobs.push(resolveInto(parent, [parent]));
+  }
 
   return handleMaybePromise(
     () => awaitMaybePromises(jobs),
@@ -1138,6 +1291,12 @@ function tryExecuteEntitiesBatch(
         entity as Record<string, any>,
         ctx.schema,
         node.subschema,
+      );
+      rememberEntityForReuse(
+        ctx,
+        node.subschema,
+        node.entityTypeName!,
+        parents[i]!,
       );
     }
   };
@@ -1760,9 +1919,10 @@ function projectRepresentations(
 
 type BatchAliasPrep = {
   alias: string;
+  entityTypeName: string;
   parents: Array<Record<string, any>>;
   parentKeyIndex: number[];
-  /** Offset of this alias's keys inside the concatenated `representations` array. */
+  /** Offset of this alias's keys inside the concatenated representations array. */
   keyOffset: number;
   keyCount: number;
 };
@@ -1823,16 +1983,22 @@ function executeBatchFetchNode(
         a.entityTypeName,
         a.flattenPaths,
       );
-      if (
-        ctx.entityReuse &&
-        parents.length &&
-        parents.every((p) => parentHasNeededLeaves(p, a.selectionSet))
-      ) {
-        parents = [];
+      if (entityReuseAllowed(ctx) && parents.length) {
+        parents = parents.filter(
+          (p) =>
+            !tryReuseEntityIntoParent(
+              ctx,
+              node.subschema,
+              a.entityTypeName,
+              p,
+              a.selectionSet,
+            ),
+        );
       }
       if (!parents.length) {
         prepared.push({
           alias: a.alias,
+          entityTypeName: a.entityTypeName,
           parents: [],
           parentKeyIndex: [],
           keyOffset: allKeys.length,
@@ -1856,6 +2022,7 @@ function executeBatchFetchNode(
       }
       prepared.push({
         alias: a.alias,
+        entityTypeName: a.entityTypeName,
         parents,
         parentKeyIndex: projected.parentKeyIndex,
         keyOffset,
@@ -1911,6 +2078,12 @@ function executeBatchFetchNode(
                 entity as Record<string, any>,
                 ctx.schema,
                 node.subschema,
+              );
+              rememberEntityForReuse(
+                ctx,
+                node.subschema,
+                prep.entityTypeName,
+                prep.parents[i]!,
               );
             }
           }
@@ -1978,7 +2151,7 @@ export function executeStitchPlan(
     data: {},
     errors: [],
     infoStub: {},
-    entityReuse: plan.entityReuse === true,
+    entityByRepHash: new Map(),
   };
 
   return handleMaybePromise(
