@@ -5,6 +5,6 @@
     "@envelop/core": "^6.0.1",
     "@envelop/operation-field-permissions": "^10.0.1",
     "@graphql-mesh/compose-cli": "^1.8.4",
-    "graphql": "^16.15.0"
+    "graphql": "^17.1.0"
   }
 }

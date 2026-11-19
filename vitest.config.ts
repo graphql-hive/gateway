@@ -19,6 +19,8 @@ const inline = [
   /@graphql-hive\/logger/,
   /graphql-yoga/,
   /@whatwg-node\/server/,
+  // the audit runs its subgraphs with yoga, inline it so that yoga is inlined too
+  /@graphql-hive\/federation-gateway-audit/,
 ];
 
 // vite's native resolve.tsconfigPaths skips importers outside the project (like

@@ -96,7 +96,7 @@
     "@types/react-dom": "^19",
     "@whatwg-node/fetch": "^0.12.1",
     "fets": "^0.8.14",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "graphql-sse": "^2.6.3",
     "html-minifier-terser": "7.2.0",
     "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",

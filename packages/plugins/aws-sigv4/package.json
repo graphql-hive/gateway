@@ -52,7 +52,7 @@
     "@apollo/subgraph": "2.16.0",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@types/aws4": "^1.11.6",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "graphql-yoga": "^6.1.0",
     "pkgroll": "2.27.1"
   },

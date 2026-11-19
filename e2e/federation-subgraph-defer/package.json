@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@graphql-hive/gateway": "workspace:*",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "meros": "^1.3.2"
   },
   "devDependencies": {

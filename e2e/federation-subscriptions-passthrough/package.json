@@ -4,7 +4,7 @@
   "dependencies": {
     "@graphql-mesh/transport-ws": "workspace:^",
     "@whatwg-node/fetch": "^0.12.1",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "tslib": "^2.9.1"
   },
   "devDependencies": {
