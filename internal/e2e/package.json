@@ -4,6 +4,7 @@
   "main": "./src/index.ts",
   "devDependencies": {
     "@apollo/gateway": "^2.14.4",
+    "@apollo/subgraph": "2.14.4",
     "@types/dockerode": "^4.0.2",
     "@types/node": "^26.6.6",
     "@whatwg-node/disposablestack": "^0.1.0",
