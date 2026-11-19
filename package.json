@@ -23,6 +23,7 @@
     "check:missing-peer-deps": "yarn install | grep YN0002 && exit 1 || exit 0",
     "check:types": "yarn tsc",
     "format": "yarn check:format --write",
+    "match-graphql": "node ./scripts/match-graphql.mjs",
     "start": "yarn workspace @graphql-hive/gateway start",
     "sync-graphql-version-docker": "node ./scripts/sync-graphql-version-in-dockerfiles.mjs",
     "test": "vitest --project unit",
