@@ -111,6 +111,7 @@ describe('Defer/Stream', () => {
     },
   });
   const usersServer = createYoga({
+    logging: false,
     schema: usersSubgraph,
     plugins: [useDeferStream()],
   });
@@ -165,6 +166,7 @@ describe('Defer/Stream', () => {
     },
   });
   const postsServer = createYoga({
+    logging: false,
     schema: postsSubgraph,
     plugins: [useDeferStream()],
   });
@@ -487,10 +489,12 @@ describe('Defer/Stream - entity-level defer on merged types', () => {
     },
   });
   const menusServer = createYoga({
+    logging: false,
     schema: menusSubgraph,
     plugins: [useDeferStream()],
   });
   const kitchenServer = createYoga({
+    logging: false,
     schema: kitchenSubgraph,
     plugins: [useDeferStream()],
   });
@@ -679,6 +683,7 @@ describe('Defer/Stream - scalar streaming via HTTP', () => {
   });
 
   const alphabetServer = createYoga({
+    logging: false,
     schema: alphabetSubgraph,
     plugins: [useDeferStream()],
   });

@@ -1,5 +1,54 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.14.1
+### Patch Changes
+
+
+
+- [#2755](https://github.com/graphql-hive/gateway/pull/2755) [`5e70bc4`](https://github.com/graphql-hive/gateway/commit/5e70bc4a40a265ef5750fcd4b695474627d3bc46) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fix a memory leak where every supergraph reload retained the whole previous schema when the `supergraph` option is a synchronous function
+
+## 1.14.0
+### Minor Changes
+
+
+
+- [#2657](https://github.com/graphql-hive/gateway/pull/2657) [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be) Thanks [@n1ru4l](https://github.com/n1ru4l)! - Unified graph manager supports metadata loaded together with the unified graph
+  
+  `getUnifiedGraph` can now return `{ graph, metadata }` in addition to the unified graph itself. The metadata is kept with the last successfully loaded unified graph and passed to `onUnifiedGraphChange(schema, metadata)`. When the loaded unified graph did not change but its metadata did (shallow comparison), `onUnifiedGraphMetadataChange(schema, metadata)` is called.
+
+### Patch Changes
+
+- Updated dependencies [[`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f), [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f)]:
+  - @graphql-hive/logger@1.2.0
+  - @graphql-mesh/transport-common@1.1.3
+
+## 1.13.5
+### Patch Changes
+
+- Updated dependencies [[`3e0a896`](https://github.com/graphql-hive/gateway/commit/3e0a896cf110d8a6290e20b10b6865813301f5ca)]:
+  - @graphql-tools/delegate@12.3.4
+  - @graphql-tools/federation@4.6.5
+  - @graphql-tools/stitch@10.4.4
+  - @graphql-tools/stitching-directives@4.1.6
+  - @graphql-tools/wrap@11.2.6
+
+## 1.13.4
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/batch-execute@10.3.2
+  - @graphql-tools/delegate@12.3.3
+  - @graphql-tools/federation@4.6.4
+  - @graphql-tools/stitch@10.4.3
+  - @graphql-tools/stitching-directives@4.1.5
+  - @graphql-mesh/transport-common@1.1.2
+  - @graphql-tools/wrap@11.2.5
+
 ## 1.13.3
 ### Patch Changes
 

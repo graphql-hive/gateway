@@ -1,5 +1,23 @@
 # @graphql-hive/logger
 
+## 1.2.0
+### Minor Changes
+
+
+
+- [#2743](https://github.com/graphql-hive/gateway/pull/2743) [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support `false` and `silent` values for the `LOG_LEVEL` environment variable which disable all logging
+
+
+### Patch Changes
+
+
+
+- [#2743](https://github.com/graphql-hive/gateway/pull/2743) [`5267e90`](https://github.com/graphql-hive/gateway/commit/5267e90a49891730ffb29ab599badd11dc01ce4f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Ignore the `LOG_LEVEL` environment variable when an explicit `level` is provided, and fall back to the default level instead of throwing when `LOG_LEVEL` is not a valid log level
+  
+  This allows using the logger in environments where `LOG_LEVEL` belongs to another logger (like pino with `LOG_LEVEL=fatal`).
+  
+  Closes [#2742](https://github.com/graphql-hive/gateway/issues/2742)
+
 ## 1.1.1
 ### Patch Changes
 

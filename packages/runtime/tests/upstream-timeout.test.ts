@@ -77,6 +77,7 @@ describe('Upstream Timeout', () => {
       },
     });
     await using upstreamYoga = createYoga({
+      logging: false,
       schema: upstreamSchema,
     });
     await using upstreamHttpServer = await createDisposableServer(upstreamYoga);

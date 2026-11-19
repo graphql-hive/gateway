@@ -164,9 +164,8 @@ describe('handleEventStreamResponse', () => {
   });
 
   // Stream failures must surface as GraphQLError. Use controller.error() - that
-  // is what makes reader.read() reject. The old version of this test called
-  // stream.cancel(Oops!) instead; cancel is not an error (pending read settles
-  // as done), and cancel while locked is invalid per WHATWG anyway.
+  // is what makes reader.read() reject. Cancel is not an error (pending read
+  // settles as done), and cancel while locked is invalid per WHATWG anyway.
   it('should gracefully report stream errors', async () => {
     const originalError = new Error('Oops!');
     const readableStream = new ReadableStream<Uint8Array>({

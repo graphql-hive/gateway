@@ -24,41 +24,16 @@ export function createBatchingExecutor(
   defer = false,
 ): Executor {
   const loadFn = createLoadFn(executor, extensionsReducer, defer);
-  type Loaders = {
-    query: DataLoader<ExecutionRequest, MaybeAsyncIterable<any>>;
-    mutation: DataLoader<ExecutionRequest, MaybeAsyncIterable<any>>;
-  };
-  // merged requests execute under a single context, so batch per context
-  const loadersByObjectContext = new WeakMap<object, Loaders>();
-  const loadersByPrimitiveContext = new Map<unknown, Loaders>();
-  function getLoaders(context: unknown): Loaders {
-    const isObject =
-      (typeof context === 'object' && context !== null) ||
-      typeof context === 'function';
-    let loaders = isObject
-      ? loadersByObjectContext.get(context as object)
-      : loadersByPrimitiveContext.get(context);
-    if (!loaders) {
-      loaders = {
-        query: new DataLoader(loadFn, dataLoaderOptions),
-        mutation: new DataLoader(loadFn, dataLoaderOptions),
-      };
-      if (isObject) {
-        loadersByObjectContext.set(context as object, loaders);
-      } else {
-        loadersByPrimitiveContext.set(context, loaders);
-      }
-    }
-    return loaders;
-  }
+  const queryLoader = new DataLoader(loadFn, dataLoaderOptions);
+  const mutationLoader = new DataLoader(loadFn, dataLoaderOptions);
   return function batchingExecutor(request: ExecutionRequest) {
     const operationType =
       request.operationType ?? getOperationASTFromRequest(request)?.operation;
     switch (operationType) {
       case 'query':
-        return getLoaders(request.context).query.load(request);
+        return queryLoader.load(request);
       case 'mutation':
-        return getLoaders(request.context).mutation.load(request);
+        return mutationLoader.load(request);
       case 'subscription':
         return executor(request);
       default:

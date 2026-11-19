@@ -178,8 +178,8 @@ export function getFieldsNotInSubschema(
           subFieldNode,
           (fieldType, selection) => {
             // If this subschema participates in type-merge for the nested
-            // type, older planning assumed merge will fetch every nested
-            // selection. That is wrong when no merge target actually owns
+            // type, merge does not necessarily fetch every nested
+            // selection. It cannot when no merge target actually owns
             // the field (parent-entity-call: Category.details only exists
             // on a Product-keyed subgraph with no Category @key). Only
             // suppress when some Category/Product/... merge target can

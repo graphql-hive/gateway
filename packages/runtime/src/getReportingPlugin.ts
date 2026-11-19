@@ -1,5 +1,7 @@
+import type { GraphVersionInfo } from '@graphql-hive/core';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
 import { MaybePromise } from '@whatwg-node/promise-helpers';
+import type { GraphQLSchema } from 'graphql';
 import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import useHiveConsole, {
   HiveConsolePluginOptions,
@@ -15,6 +17,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
   configContext: GatewayConfigContext,
   allowArbitraryDocuments:
     boolean | ((request: Request) => MaybePromise<boolean>) = false,
+  getGraphVersion?: (schema: GraphQLSchema) => GraphVersionInfo | undefined,
 ): GatewayPlugin<TContext> {
   if (config.reporting?.type === 'hive') {
     const { target, ...reporting } = config.reporting;
@@ -66,6 +69,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       log: configContext.log.child('[useHiveConsole] '),
       fetch: configContext.fetch,
       enabled: true,
+      getGraphVersion,
       ...reporting,
       ...(usage ? { usage } : {}),
       ...(config.persistedDocuments &&

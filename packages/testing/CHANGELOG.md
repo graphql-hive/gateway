@@ -1,5 +1,36 @@
 # @graphql-hive/gateway-testing
 
+## 13.0.1
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.14.1
+
+## 13.0.0
+### Patch Changes
+
+- Updated dependencies [[`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be), [`c3d7794`](https://github.com/graphql-hive/gateway/commit/c3d77944aea67b53a18cd3688dc3a5dd6aae75be)]:
+  - @graphql-hive/gateway-runtime@2.14.0
+
+## 12.0.5
+### Patch Changes
+
+- Updated dependencies [[`3e0a896`](https://github.com/graphql-hive/gateway/commit/3e0a896cf110d8a6290e20b10b6865813301f5ca)]:
+  - @graphql-tools/executor-http@3.6.2
+  - @graphql-hive/gateway-runtime@2.13.5
+
+## 12.0.4
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/executor-http@3.6.1
+  - @graphql-hive/gateway-runtime@2.13.4
+
 ## 12.0.3
 ### Patch Changes
 

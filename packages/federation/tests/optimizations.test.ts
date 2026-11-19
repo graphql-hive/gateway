@@ -129,7 +129,7 @@ describe('Optimizations', () => {
     });
     expect(serviceCallCnt).toMatchObject({
       accounts: 2,
-      // Clone-less computed fields coalesce inventory @requires into one hop.
+      // Computed fields coalesce inventory @requires into one hop.
       inventory: 1,
       products: 2,
       reviews: 2,
@@ -1067,13 +1067,11 @@ it('does not resolve stub types', async () => {
       Query: { _reviewsPlaceholder: () => null },
       Rating: {
         __resolveReference: (ref: { id: string }) => {
-          console.log('[reviews] Rating.__resolveReference:', ref.id);
           return { id: ref.id, score: 4, maxScore: 5 };
         },
       },
       Comment: {
         __resolveReference: (ref: { id: string }) => {
-          console.log('[reviews] Comment.__resolveReference:', ref.id);
           return { id: ref.id, text: 'Great post!' };
         },
       },
@@ -1154,16 +1152,7 @@ it('does not resolve stub types', async () => {
     resolvers: {
       Query: { _postsPlaceholder: () => null },
       User: {
-        posts: (
-          user: { id: string; isMe?: boolean; userVisibility?: string },
-          _args: { input?: { limit?: number } },
-        ) => {
-          console.log(
-            '[posts] User.posts, isMe:',
-            user.isMe,
-            'userVisibility:',
-            user.userVisibility,
-          );
+        posts: () => {
           return {
             items: [
               {
@@ -1193,9 +1182,6 @@ it('does not resolve stub types', async () => {
   };
   const schema = await getStitchedSchemaFromLocalSchemas({
     localSchemas: subgraphs,
-    onSubgraphExecute(subgraphName, executionRequest) {
-      console.log(subgraphName, print(executionRequest.document));
-    },
   });
 
   const document = parse(/* GraphQL */ `

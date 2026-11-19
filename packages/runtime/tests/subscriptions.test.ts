@@ -131,8 +131,7 @@ describe('Subscriptions', () => {
 
     const msgs: unknown[] = [];
     // Await after the subscription ends so `await using` does not dispose the
-    // gateway before this query runs (Bun aborts the subscription on reload
-    // before a fire-and-forget 1s timer).
+    // gateway before this query runs (Bun aborts the subscription on reload).
     const queryAfterReload = new Promise((resolve, reject) => {
       globalThis.setTimeout(() => {
         serve

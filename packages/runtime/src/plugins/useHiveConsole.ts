@@ -1,7 +1,15 @@
-import type { HivePluginOptions } from '@graphql-hive/core';
+import {
+  addHiveTypenames,
+  hideInjectedTypenames,
+  type CollectUsageOptions,
+  type GraphVersionInfo,
+  type HivePluginOptions,
+} from '@graphql-hive/core';
 import type { Logger } from '@graphql-hive/logger';
-import { useHive } from '@graphql-hive/yoga';
+import { createHive, useHive } from '@graphql-hive/yoga';
 import { MeshFetch } from '@graphql-mesh/types';
+import { isAsyncIterable } from '@graphql-tools/utils';
+import type { DocumentNode, GraphQLSchema } from 'graphql';
 import { GatewayContext, GatewayPlugin } from '../types';
 
 export interface HiveConsolePluginOptions extends Omit<
@@ -73,11 +81,16 @@ export default function useHiveConsole<
 >({
   enabled,
   token,
+  getGraphVersion,
   ...options
-}: HiveConsolePluginOptions & { log: Logger; fetch: MeshFetch }): GatewayPlugin<
-  TPluginContext,
-  TContext
-> {
+}: HiveConsolePluginOptions & {
+  log: Logger;
+  fetch: MeshFetch;
+  /**
+   * The graph version of the executed schema, reported along with the usage.
+   */
+  getGraphVersion?: (schema: GraphQLSchema) => GraphVersionInfo | undefined;
+}): GatewayPlugin<TPluginContext, TContext> {
   const agent = {
     name: 'hive-gateway',
     version: globalThis.__VERSION__,
@@ -101,8 +114,7 @@ export default function useHiveConsole<
     throw new Error('Hive plugin is enabled but the token is not provided');
   }
 
-  // @ts-expect-error TODO: useHive plugin should inhert the TContext
-  return useHive({
+  const hive = createHive({
     logger: options.log,
     printTokenInfo: false,
     ...options,
@@ -111,4 +123,78 @@ export default function useHiveConsole<
     agent,
     usage,
   });
+  if (getGraphVersion) {
+    // the gateway knows which graph version it serves, the yoga plugin does not
+    const { collectUsage, collectSubscriptionUsage } = hive;
+    hive.collectUsage = (collectOptions) => {
+      // the executed schema is known only once the operation finishes
+      const options: CollectUsageOptions = { ...collectOptions };
+      const collector = collectUsage(options);
+      return {
+        ...collector,
+        finish(args, ...rest) {
+          options.graph ??= getGraphVersion(args.schema);
+          return collector.finish(args, ...rest);
+        },
+      };
+    };
+    hive.collectSubscriptionUsage = (args) =>
+      collectSubscriptionUsage({
+        ...args,
+        graph: getGraphVersion(args.args.schema),
+      });
+  }
+
+  const hivePlugin = useHive(hive);
+  if (typeof usage !== 'object' || !usage.fieldLevelMetricsEnabled) {
+    // @ts-expect-error TODO: useHive plugin should inhert the TContext
+    return hivePlugin;
+  }
+
+  // useHive does not inject the typenames needed for field level metrics when given
+  // a client instead of options, so the gateway injects (and hides) them instead
+  const typenamedDocuments = new WeakMap<
+    GraphQLSchema,
+    WeakMap<DocumentNode, DocumentNode>
+  >();
+  return {
+    onPluginInit({ addPlugin }) {
+      addPlugin({
+        onExecute({ args, executeFn, setExecuteFn }) {
+          let documents = typenamedDocuments.get(args.schema);
+          if (!documents) {
+            documents = new WeakMap();
+            typenamedDocuments.set(args.schema, documents);
+          }
+          let document = documents.get(args.document);
+          if (!document) {
+            document = addHiveTypenames(args.document, args.schema);
+            documents.set(args.document, document);
+          }
+          if (document === args.document) {
+            return;
+          }
+          setExecuteFn((executionArgs) =>
+            executeFn({ ...executionArgs, document }),
+          );
+          return {
+            // runs before the hive plugin reports the result, like useHive does
+            onExecuteDone({ result }) {
+              if (!isAsyncIterable(result)) {
+                hideInjectedTypenames(result.data);
+                return;
+              }
+              return {
+                onNext({ result }) {
+                  hideInjectedTypenames(result.data);
+                },
+              };
+            },
+          };
+        },
+      });
+      // @ts-expect-error TODO: useHive plugin should inhert the TContext
+      addPlugin(hivePlugin);
+    },
+  };
 }

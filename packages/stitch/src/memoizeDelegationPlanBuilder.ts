@@ -77,10 +77,10 @@ export function memoizeDelegationPlanBuilder(
 }
 
 /**
- * Shallow+nested field-presence fingerprint for clone-less parent seeding.
+ * Shallow+nested field-presence fingerprint for parent seeding.
  * Values are ignored - only which keys exist (and nested object shapes).
  * Lists use the first object item only - fingerprinting every item would
- * regress plan-cache hits on large homogeneous federation result sets.
+ * hurt plan-cache hits on large homogeneous federation result sets.
  */
 export function parentFieldPresenceKey(parent: any, depth = 0): string {
   if (parent == null || typeof parent !== 'object' || depth > 4) {

@@ -78,6 +78,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
 
   function createUpstreamServer() {
     return createYoga({
+      logging: false,
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           type Query {

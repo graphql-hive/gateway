@@ -1,5 +1,24 @@
 # @graphql-mesh/transport-ws
 
+## 2.1.3
+### Patch Changes
+
+- Updated dependencies [[`2de8d6a`](https://github.com/graphql-hive/gateway/commit/2de8d6a244af2d6b8b3c5dee7cd362942dafd0e9)]:
+  - @graphql-tools/executor-graphql-ws@3.2.2
+  - @graphql-mesh/transport-common@1.1.3
+
+## 2.1.2
+### Patch Changes
+
+
+
+- [`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^12.1.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/12.1.0) (from `^12.0.1`, in `dependencies`)
+- Updated dependencies [[`e288224`](https://github.com/graphql-hive/gateway/commit/e28822460e2189e3b1e112bf2ad9072d68c01f90)]:
+  - @graphql-tools/executor-graphql-ws@3.2.1
+  - @graphql-mesh/transport-common@1.1.2
+
 ## 2.1.1
 ### Patch Changes
 

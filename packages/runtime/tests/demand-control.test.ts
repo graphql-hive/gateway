@@ -34,9 +34,7 @@ describe('Demand Control', () => {
     },
     introspectFromEndpoint = false,
   ) {
-    const subgraphServer = createYoga({
-      schema: subgraph,
-    });
+    const subgraphServer = createYoga({ logging: false, schema: subgraph });
     const plugins = () => [
       // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
       useCustomFetch(subgraphServer.fetch),
@@ -44,6 +42,7 @@ describe('Demand Control', () => {
     ];
     return mode === 'proxy'
       ? createGatewayRuntime({
+          logging: false,
           proxy: {
             endpoint: 'http://upstream/graphql',
           },
@@ -51,6 +50,7 @@ describe('Demand Control', () => {
           plugins,
         })
       : createGatewayRuntime({
+          logging: false,
           supergraph: composeLocalSchemasWithApollo([
             {
               name: 'subgraph',
@@ -641,9 +641,11 @@ describe('Demand Control', () => {
           },
         });
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -750,9 +752,11 @@ describe('Demand Control', () => {
           },
         });
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -829,9 +833,11 @@ describe('Demand Control', () => {
           },
         });
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -980,9 +986,11 @@ describe('Demand Control', () => {
           `),
         });
         await using subgraphServer = createYoga({
+          logging: false,
           schema: subgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'subgraph',
@@ -1049,9 +1057,11 @@ describe('Demand Control', () => {
           },
         });
         await using subgraphServer = createYoga({
+          logging: false,
           schema: subgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'subgraph',

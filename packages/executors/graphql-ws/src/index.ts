@@ -88,7 +88,11 @@ export function buildGraphQLWSExecutor(
   clientOptionsOrClient: GraphQLWSExecutorOptions | Client,
 ): DisposableAsyncExecutor {
   let graphqlWSClient: Client;
-  let executorConnectionParams = {};
+  // per-execution connectionParams get their own client so callers never share an authenticated socket
+  // shortcut: clients are kept until dispose, one per distinct extensions.connectionParams, evict them if that ever grows unbounded
+  const clientsByConnectionParams = new Map<string, Client>();
+  let getClient = (_extensionsConnectionParams?: Record<string, unknown>) =>
+    graphqlWSClient;
   let printFn = defaultPrintFn;
   if (isClient(clientOptionsOrClient)) {
     graphqlWSClient = clientOptionsOrClient;
@@ -117,23 +121,41 @@ export function buildGraphQLWSExecutor(
         }
       : WebSocket;
 
-    graphqlWSClient = createClient({
-      url: clientOptionsOrClient.url,
-      webSocketImpl,
-      lazy: clientOptionsOrClient.lazy !== false,
-      lazyCloseTimeout: clientOptionsOrClient.lazyCloseTimeout || 0,
-      connectionParams: () => {
-        const optionsConnectionParams =
-          (typeof clientOptionsOrClient.connectionParams === 'function'
-            ? clientOptionsOrClient.connectionParams()
-            : clientOptionsOrClient.connectionParams) || {};
-        return Object.assign(optionsConnectionParams, executorConnectionParams);
-      },
-      on: clientOptionsOrClient.on,
-    });
-    if (clientOptionsOrClient.onClient) {
-      clientOptionsOrClient.onClient(graphqlWSClient);
-    }
+    const clientOptions = clientOptionsOrClient;
+    const createWSClient = (
+      extensionsConnectionParams?: Record<string, unknown>,
+    ) => {
+      const client = createClient({
+        url: clientOptions.url,
+        webSocketImpl,
+        lazy: clientOptions.lazy !== false,
+        lazyCloseTimeout: clientOptions.lazyCloseTimeout || 0,
+        connectionParams: () => ({
+          ...(typeof clientOptions.connectionParams === 'function'
+            ? clientOptions.connectionParams()
+            : clientOptions.connectionParams),
+          ...extensionsConnectionParams,
+        }),
+        on: clientOptions.on,
+      });
+      if (clientOptions.onClient) {
+        clientOptions.onClient(client);
+      }
+      return client;
+    };
+    graphqlWSClient = createWSClient();
+    getClient = (extensionsConnectionParams) => {
+      if (!extensionsConnectionParams) {
+        return graphqlWSClient;
+      }
+      const key = JSON.stringify(extensionsConnectionParams);
+      let client = clientsByConnectionParams.get(key);
+      if (!client) {
+        client = createWSClient({ ...extensionsConnectionParams });
+        clientsByConnectionParams.set(key, client);
+      }
+      return client;
+    };
   }
   const executor = function GraphQLWSExecutor<
     TData,
@@ -149,18 +171,15 @@ export function buildGraphQLWSExecutor(
     } = executionRequest;
     // additional connection params can be supplied through the "connectionParams" field in extensions.
     // TODO: connection params only from the FIRST operation in lazy mode will be used (detect connectionParams changes and reconnect, too implicit?)
-    if (
+    const extensionsConnectionParams =
       extensions?.['connectionParams'] &&
       typeof extensions?.['connectionParams'] === 'object'
-    ) {
-      executorConnectionParams = Object.assign(
-        executorConnectionParams,
-        extensions['connectionParams'],
-      );
-    }
-    const iterableIterator = graphqlWSClient.iterate<TData, TExtensions>(
-      serializeExecutionRequest({ executionRequest, printFn }),
-    );
+        ? extensions['connectionParams']
+        : undefined;
+    const iterableIterator = getClient(extensionsConnectionParams).iterate<
+      TData,
+      TExtensions
+    >(serializeExecutionRequest({ executionRequest, printFn }));
     if (iterableIterator.return && signal) {
       signal.addEventListener(
         'abort',
@@ -177,7 +196,11 @@ export function buildGraphQLWSExecutor(
   };
   Object.defineProperty(executor, DisposableSymbols.asyncDispose, {
     value: function disposeWS() {
-      return graphqlWSClient.dispose();
+      const clients = [graphqlWSClient, ...clientsByConnectionParams.values()];
+      clientsByConnectionParams.clear();
+      return Promise.all(clients.map((client) => client.dispose())).then(
+        () => {},
+      );
     },
   });
   return executor as DisposableAsyncExecutor;

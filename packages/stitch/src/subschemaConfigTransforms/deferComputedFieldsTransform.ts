@@ -24,7 +24,7 @@ import {
 } from 'graphql';
 
 /**
- * Clone-less computed-field deferral: keep computed fields on the single
+ * Computed-field deferral: keep computed fields on the single
  * subschema schema (so merge hops can select them), but strip them from
  * outbound requests that are not an internal merge hop. Internal merge hops
  * set `skipTypeMerging` and use a merge entry `fieldName`; a client query that
@@ -200,9 +200,9 @@ function filterComputedSelections(
   if (!strippedComputed) {
     return selections as SelectionNode[];
   }
-  // Isolation's schema-strip makes prepareGatewayDocument inject key +
-  // __typename deps. We kept the field on the schema (fast path skips that),
-  // so restore identity fields here when a computed leaf was the only pick.
+  // The computed field stays on the schema so prepareGatewayDocument does not
+  // inject key + __typename deps for it, restore identity fields here when a
+  // computed leaf was the only pick.
   if (!presentUnaliased.has('__typename')) {
     next.unshift({
       kind: Kind.FIELD,
@@ -297,8 +297,7 @@ function mergeKeyFieldNodes(into: Map<string, FieldNode>, nodes: FieldNode[]) {
 }
 
 /**
- * Replace isolation cloning with a single-subschema request deferral for
- * computed fields (`computed: true` + `selectionSet`).
+ * Single-subschema request deferral for computed fields (`computed: true` + `selectionSet`).
  */
 export function deferComputedFieldsTransformer(
   subschemaConfig: SubschemaConfig,
