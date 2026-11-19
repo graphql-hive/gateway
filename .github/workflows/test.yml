@@ -26,7 +26,10 @@ jobs:
         hive-router-runtime:
           - 0
           - 1
-    name: Unit / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
+        graphql-version:
+          - 16
+          - 17
+    name: Unit / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,13 +38,16 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - name: Test
         run: yarn test
         env:
           HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
 
   unit-bun:
-    name: Unit / Bun / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
+    name: Unit / Bun / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,6 +55,9 @@ jobs:
         hive-router-runtime:
           - 0
           - 1
+        graphql-version:
+          - 16
+          - 17
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -56,6 +65,9 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - name: Test with Stitching Runtime
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         env:
