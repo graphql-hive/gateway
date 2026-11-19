@@ -3516,6 +3516,7 @@ __metadata:
   resolution: "@e2e/naming-convention-additional-typedefs@workspace:e2e/naming-convention-additional-typedefs"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
+    "@graphql-tools/utils": "npm:^13.2.2"
     "@omnigraph/openapi": "npm:^0.112.7"
     fets: "npm:^0.8.14"
     graphql: "npm:17.1.0"

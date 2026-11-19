@@ -49,16 +49,17 @@ describe('Usage Reporting with Persisted Operations', () => {
       );
       expect(req.headers['user-agent']).toContain('hive-gateway/');
 
-      expect(req.body.map).toMatchInlineSnapshot(`
-        {
-          "689bc7cf717434803078dcc7c56d549d14fc79a8": {
+      // the operation hash keys differ between graphql versions
+      expect(Object.values(req.body.map)).toMatchInlineSnapshot(`
+        [
+          {
             "fields": [
               "Query.__typename",
             ],
             "operation": "{__typename}",
             "operationName": "anonymous",
           },
-        }
+        ]
       `);
 
       break; // we only make one request
@@ -116,16 +117,17 @@ describe('Usage Reporting with Persisted Operations', () => {
       );
       expect(req.headers['user-agent']).toContain('hive-gateway/');
 
-      expect(req.body.map).toMatchInlineSnapshot(`
-        {
-          "689bc7cf717434803078dcc7c56d549d14fc79a8": {
+      // the operation hash keys differ between graphql versions
+      expect(Object.values(req.body.map)).toMatchInlineSnapshot(`
+        [
+          {
             "fields": [
               "Query.__typename",
             ],
             "operation": "{__typename}",
             "operationName": "anonymous",
           },
-        }
+        ]
       `);
 
       break; // we only make one request
