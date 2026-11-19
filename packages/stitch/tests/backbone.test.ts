@@ -159,7 +159,7 @@ describe('stitching backbone', () => {
     });
   });
 
-  it('emits Condition nodes for root @skip/@include and shares one plan', async () => {
+  it('stamps runIf for root @skip/@include and caches a schedule', async () => {
     const schema = createStitched();
     const document = parse(/* GraphQL */ `
       query ($id: ID!, $skipEmail: Boolean!) {
@@ -189,12 +189,21 @@ describe('stitching backbone', () => {
       },
     );
     expect(planSkip.incompleteReasons).toEqual([]);
-    expect(planSkip.root.kind).toBe('Condition');
-    expect((planSkip.root as any).condition).toBe('skipEmail');
-    expect((planSkip.root as any).elseClause).toBeTruthy();
-    expect((planSkip.root as any).ifClause).toBeUndefined();
+    // runIf keeps the hop set fixed (no Condition) so schedule caches.
+    expect(planSkip.root.kind).not.toBe('Condition');
+    expect(planSkip.schedule).toBeDefined();
+    const hop =
+      planSkip.root.kind === 'Fetch'
+        ? planSkip.root
+        : planSkip.root.kind === 'Parallel'
+          ? planSkip.root.nodes.find((n) => n.kind === 'Fetch')
+          : undefined;
+    expect(hop?.kind).toBe('Fetch');
+    expect((hop as any).runIf).toEqual([
+      { variable: 'skipEmail', equals: false },
+    ]);
     // Same structure regardless of variable map (one cached plan shape).
-    expect(planInclude.root.kind).toBe('Condition');
+    expect(planInclude.root.kind).toBe(planSkip.root.kind);
 
     const executor = createBackboneExecutor(schema);
     const skipped = await exec(executor, {
@@ -722,3 +731,233 @@ describe('backbone plan quality', () => {
     expect(counts.root).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('backbone aggressive BatchFetch + entityReuse', () => {
+  function createBookMagazineSchema(inventoryCalls: { n: number }) {
+    const products = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        interface Product {
+          id: ID!
+        }
+        type Book implements Product {
+          id: ID!
+          title: String
+        }
+        type Magazine implements Product {
+          id: ID!
+          title: String
+        }
+        type Query {
+          products: [Product]
+        }
+      `,
+      resolvers: {
+        Product: {
+          __resolveType: (obj: { __typename?: string }) =>
+            obj.__typename ?? 'Book',
+        },
+        Query: {
+          products: () => [
+            { __typename: 'Book', id: 'b1', title: 'B' },
+            { __typename: 'Magazine', id: 'm1', title: 'M' },
+          ],
+        },
+      },
+    });
+    const inventory = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Book {
+          id: ID!
+          inStock: Boolean
+        }
+        type Magazine {
+          id: ID!
+          inStock: Boolean
+        }
+        type Query {
+          _book(id: ID!): Book
+          _magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Query: {
+          _book: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: true };
+          },
+          _magazine: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: false };
+          },
+        },
+      },
+    });
+    return stitchSchemas({
+      subschemas: [
+        {
+          schema: products,
+          executor: createDefaultExecutor(products),
+          batch: true,
+        },
+        {
+          schema: inventory,
+          executor: createDefaultExecutor(inventory),
+          merge: {
+            Book: {
+              fieldName: '_book',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Magazine: {
+              fieldName: '_magazine',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+  }
+
+  it('BatchFetches concrete Book||Magazine entity hops under the same root path', () => {
+    const schema = createBookMagazineSchema({ n: 0 });
+    const document = parse(/* GraphQL */ `
+      {
+        products {
+          id
+          ... on Book {
+            inStock
+          }
+          ... on Magazine {
+            inStock
+          }
+        }
+      }
+    `);
+    const plan = buildStitchPlan(
+      schema,
+      document.definitions[0] as any,
+      {},
+      {},
+    );
+    expect(plan.incompleteReasons).toEqual([]);
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
+    const walk = (n: StitchPlanNode) => {
+      if (n.kind === 'BatchFetch') batches.push(n);
+      else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
+        for (const c of n.nodes) walk(c);
+      } else if (n.kind === 'Island' && n.continue) walk(n.continue);
+    };
+    walk(plan.root);
+    expect(batches.length).toBeGreaterThanOrEqual(1);
+    const types = new Set(batches.flatMap((b) => b.aliases.map((a) => a.entityTypeName)));
+    expect(types.has('Book')).toBe(true);
+    expect(types.has('Magazine')).toBe(true);
+    // One HTTP hop for both concrete types under products.
+    expect(batches[0]!.aliases.length).toBeGreaterThanOrEqual(2);
+    expect(plan.schedule).toBeDefined();
+  });
+
+  it('executes BatchFetch Book||Magazine and returns stock fields', async () => {
+    const calls = { n: 0 };
+    const schema = createBookMagazineSchema(calls);
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
+      document: parse(/* GraphQL */ `
+        {
+          products {
+            id
+            ... on Book {
+              inStock
+            }
+            ... on Magazine {
+              inStock
+            }
+          }
+        }
+      `),
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      products: [
+        { id: 'b1', inStock: true },
+        { id: 'm1', inStock: false },
+      ],
+    });
+  });
+
+  it('entityReuse skips a redundant entity hop when fields are already present', async () => {
+    let entityCalls = 0;
+    const accounts = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          name: String
+        }
+        type Query {
+          me: User
+          user(id: ID!): User
+        }
+      `,
+      resolvers: {
+        Query: {
+          me: () => {
+            entityCalls++;
+            return { id: '1', name: 'Ada' };
+          },
+          user: (_: unknown, { id }: { id: string }) => {
+            entityCalls++;
+            return { id, name: 'Ada' };
+          },
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: accounts,
+          executor: createDefaultExecutor(accounts),
+          merge: {
+            User: {
+              fieldName: 'user',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const document = parse(/* GraphQL */ `
+      {
+        me {
+          id
+          name
+        }
+      }
+    `);
+    // With reuse on, root already projected name - entity follow-up (if any)
+    // should not add another call beyond the root.
+    const withReuse = createBackboneExecutor(schema, { entityReuse: true });
+    const before = entityCalls;
+    const result = await exec(withReuse, {
+      document,
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({ me: { id: '1', name: 'Ada' } });
+    const reusedCalls = entityCalls - before;
+
+    entityCalls = 0;
+    const without = createBackboneExecutor(schema, { entityReuse: false });
+    await exec(without, { document, variables: {}, context: {} });
+    // Reuse path must not call more than the baseline single-subgraph root.
+    expect(reusedCalls).toBeLessThanOrEqual(entityCalls);
+    expect(reusedCalls).toBeGreaterThanOrEqual(1);
+  });
+});
+

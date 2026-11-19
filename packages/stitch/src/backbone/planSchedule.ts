@@ -17,8 +17,9 @@ function hopDependsOn(hop: ScheduledHop): string[] {
 }
 
 /**
- * Collect executable hops for one run. Condition keeps a single branch from
- * `variableValues` (never both). Island is a hop; its continue is queued after.
+ * Collect executable hops for one run. Prefer `runIf` (all hops stay in the
+ * set; off hops no-op at execute). Legacy Condition keeps a single branch from
+ * `variableValues`. Island is a hop; its continue is queued after.
  */
 export function collectExecutableHops(
   node: StitchPlanNode,
