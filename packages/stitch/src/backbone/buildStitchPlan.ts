@@ -6169,36 +6169,111 @@ function possibleEntityTypeNames(
 }
 
 /**
- * Same-root BatchFetch is safe when alias entity types cannot claim the same
- * parent object (pairwise disjoint possible typenames). Book||Magazine OK;
- * Product(interface)||Book not (Product covers Book).
+ * When entity types nest (Book possibles ⊆ Product possibles) under the same
+ * flatten paths, merge into one Fetch on the covering type with inline
+ * fragments for more-specific selections (Product||Book → one hop).
  */
-function entityTypesAreRuntimeDisjoint(
+function tryCoalesceOverlappingEntityFetches(
   stitchingInfo: StitchingInfo,
-  typeNames: string[],
-): boolean {
-  const sets = typeNames.map((n) => possibleEntityTypeNames(stitchingInfo, n));
-  if (sets.some((s) => s.size === 0)) {
-    return false;
+  fetches: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>,
+): Extract<StitchPlanNode, { kind: 'Fetch' }> | null {
+  if (fetches.length < 2) {
+    return null;
   }
-  for (let i = 0; i < sets.length; i++) {
-    for (let j = i + 1; j < sets.length; j++) {
-      for (const name of sets[i]!) {
-        if (sets[j]!.has(name)) {
+  const annotated = fetches.map((f) => ({
+    f,
+    set: possibleEntityTypeNames(stitchingInfo, f.entityTypeName!),
+  }));
+  if (annotated.some((a) => a.set.size === 0)) {
+    return null;
+  }
+  // Covering type: possibles ⊇ every other type's possibles (widest abstract).
+  let cover: (typeof annotated)[number] | null = null;
+  for (const cand of annotated) {
+    const coversAll = annotated.every((o) => {
+      for (const n of o.set) {
+        if (!cand.set.has(n)) {
           return false;
         }
       }
+      return true;
+    });
+    if (!coversAll) {
+      continue;
+    }
+    if (!cover || cand.set.size > cover.set.size) {
+      cover = cand;
     }
   }
-  return true;
+  if (!cover) {
+    return null;
+  }
+  // Same flatten-path set (same-root Product||Book). Multi-path unions stay
+  // on BatchFetch / mergeMultiPathFetches.
+  const pathKey = (f: Extract<StitchPlanNode, { kind: 'Fetch' }>) =>
+    fetchFlattenPaths(f)
+      .map((p) => p.join('\0'))
+      .sort()
+      .join('/');
+  const pk0 = pathKey(fetches[0]!);
+  if (!pk0 || fetches.some((f) => pathKey(f) !== pk0)) {
+    return null;
+  }
+  if (pathsHaveNesting(fetchFlattenPaths(cover.f))) {
+    return null;
+  }
+  // Covering type must own a merge config on this subschema.
+  if (!cover.f.subschema.merge?.[cover.f.entityTypeName!]) {
+    return null;
+  }
+
+  let selectionSet = cover.f.selectionSet;
+  for (const o of annotated) {
+    if (o === cover) {
+      continue;
+    }
+    const typeName = o.f.entityTypeName!;
+    selectionSet = unionSelectionSets(selectionSet, {
+      kind: Kind.SELECTION_SET,
+      selections: [
+        {
+          kind: Kind.INLINE_FRAGMENT,
+          typeCondition: {
+            kind: Kind.NAMED_TYPE,
+            name: { kind: Kind.NAME, value: typeName },
+          },
+          selectionSet: o.f.selectionSet,
+        },
+      ],
+    });
+  }
+
+  let runIf = cover.f.runIf;
+  for (const o of annotated) {
+    if (o === cover) continue;
+    runIf = orRunIf(runIf, o.f.runIf);
+  }
+
+  return {
+    kind: 'Fetch',
+    subschema: cover.f.subschema,
+    entityTypeName: cover.f.entityTypeName,
+    selectionSet,
+    flattenPaths: fetchFlattenPaths(cover.f),
+    path: cover.f.path,
+    runIf,
+    id: cover.f.id,
+    dependsOn: cover.f.dependsOn,
+    completesIds: cover.f.completesIds,
+  };
 }
 
 /**
  * Inside each Parallel, collapse same-subschema entity Fetches:
  * - same type -> multi-path / selection union when safe
- * - different runtime-disjoint types -> one BatchFetch (including same root
- *   path; Book||Magazine under products). Overlapping abstract/concrete pairs
- *   (Product||Book) still require distinct roots.
+ * - overlapping abstract/concrete (Product||Book) -> covering Fetch when
+ *   possibles nest; else BatchFetch (including same root)
+ * - disjoint concretes (Book||Magazine) -> BatchFetch
  */
 function groupParallelBatchFetches(
   node: StitchPlanNode,
@@ -6367,33 +6442,15 @@ function groupParallelBatchFetches(
       continue;
     }
 
-    // 2) Multi-type (or uncollapsed same-type): BatchFetch when safe.
-    const rootKeys = collapsed.map((g) => {
-      const paths = fetchFlattenPaths(g);
-      return new Set(paths.map((p) => String(p[0] ?? '')));
-    });
-    const seenRoots = new Set<string>();
-    let rootClash = false;
-    for (const roots of rootKeys) {
-      if (roots.size !== 1) {
-        rootClash = true;
-        break;
-      }
-      const root = [...roots][0]!;
-      if (!root || seenRoots.has(root)) {
-        rootClash = true;
-        break;
-      }
-      seenRoots.add(root);
-    }
-    const disjoint = entityTypesAreRuntimeDisjoint(
+    // 2) Multi-type (or uncollapsed same-type): prefer covering-type union
+    // (Product||Book → one Product Fetch with inline fragments), else BatchFetch
+    // even when possibles overlap under the same root.
+    const covering = tryCoalesceOverlappingEntityFetches(
       stitchingInfo,
-      collapsed.map((g) => g.entityTypeName!),
+      collapsed,
     );
-    // Distinct roots always OK. Same-root OK when alias types cannot claim the
-    // same parent (Book||Magazine). Product||Book stays split.
-    if (rootClash && !disjoint) {
-      next.push(...collapsed);
+    if (covering) {
+      next.push(covering);
       continue;
     }
 
@@ -6418,43 +6475,98 @@ function groupParallelBatchFetches(
 
 
 /**
- * Annotate entity hops that can copy fields from an earlier hop they already
- * wait on (same entity type, covering selection). Always on for queries.
- * Adds a same-subgraph wait when a covering predecessor would otherwise race
- * the copy (Hive Router #1799).
+ * Field response-key → nested selection (null = leaf). Inline fragments are
+ * flattened into the map (union). Fragment spreads → null (unprovable).
  */
-function selectionLeafKeys(ss: import('graphql').SelectionSetNode): Set<string> {
-  const keys = new Set<string>();
+function collectFieldTrees(
+  ss: import('graphql').SelectionSetNode,
+): Map<string, import('graphql').SelectionSetNode | null> | null {
+  const m = new Map<string, import('graphql').SelectionSetNode | null>();
   for (const sel of ss.selections) {
-    if (sel.kind === Kind.FIELD && sel.name.value !== '__typename') {
-      keys.add(sel.alias?.value ?? sel.name.value);
+    if (sel.kind === Kind.FIELD) {
+      if (sel.name.value === '__typename') {
+        continue;
+      }
+      const key = sel.alias?.value ?? sel.name.value;
+      const nested = sel.selectionSet ?? null;
+      const prior = m.get(key);
+      if (nested != null && prior != null) {
+        m.set(key, unionSelectionSets(prior, nested));
+      } else if (nested != null && (prior === undefined || prior === null)) {
+        m.set(key, nested);
+      } else if (!m.has(key)) {
+        m.set(key, nested);
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT) {
+      const inner = collectFieldTrees(sel.selectionSet);
+      if (!inner) {
+        return null;
+      }
+      for (const [k, v] of inner) {
+        const prior = m.get(k);
+        if (v != null && prior != null) {
+          m.set(k, unionSelectionSets(prior, v));
+        } else if (v != null && (prior === undefined || prior === null)) {
+          m.set(k, v);
+        } else if (!m.has(k)) {
+          m.set(k, v);
+        }
+      }
+    } else {
+      return null;
     }
   }
-  return keys;
+  return m;
 }
 
-function selectionCoversLeaves(
+/**
+ * True when `source` selection covers every field (incl. nested trees) that
+ * `needed` asks for. Inline fragments on `needed` are treated as always-needed
+ * (plan-time; no runtime typename).
+ */
+function selectionCovers(
   source: import('graphql').SelectionSetNode,
   needed: import('graphql').SelectionSetNode,
 ): boolean {
-  // Nested selections: refuse reuse (conservative; router projects deeply).
-  for (const sel of needed.selections) {
-    if (sel.kind === Kind.FIELD && sel.selectionSet) {
-      return false;
-    }
-    if (sel.kind !== Kind.FIELD) {
-      return false;
-    }
+  const have = collectFieldTrees(source);
+  if (!have) {
+    return false;
   }
-  const have = selectionLeafKeys(source);
-  for (const k of selectionLeafKeys(needed)) {
-    if (!have.has(k)) {
+  for (const sel of needed.selections) {
+    if (sel.kind === Kind.FIELD) {
+      if (sel.name.value === '__typename') {
+        continue;
+      }
+      const key = sel.alias?.value ?? sel.name.value;
+      if (!have.has(key)) {
+        return false;
+      }
+      if (sel.selectionSet) {
+        const srcNested = have.get(key);
+        if (!srcNested) {
+          return false;
+        }
+        if (!selectionCovers(srcNested, sel.selectionSet)) {
+          return false;
+        }
+      }
+    } else if (sel.kind === Kind.INLINE_FRAGMENT) {
+      if (!selectionCovers(source, sel.selectionSet)) {
+        return false;
+      }
+    } else {
       return false;
     }
   }
   return true;
 }
 
+/**
+ * Annotate entity hops that can copy fields from an earlier hop they already
+ * wait on (same entity type, covering selection — nested trees included).
+ * Always on for queries. Adds a same-subgraph wait when a covering predecessor
+ * would otherwise race the copy (Hive Router #1799).
+ */
 function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
   const hops: Array<
     | Extract<StitchPlanNode, { kind: 'Fetch' }>
@@ -6489,7 +6601,7 @@ function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
         stack.push(d);
       }
       if (src.kind === 'Fetch' && src.entityTypeName === hop.entityTypeName) {
-        if (selectionCoversLeaves(src.selectionSet, needed)) {
+        if (selectionCovers(src.selectionSet, needed)) {
           out.push(src.id ?? id);
         }
       } else if (src.kind === 'Fetch' && src.rootField) {
@@ -6497,7 +6609,7 @@ function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
         // when root selectionSet matches entity type fields directly.
         if (
           src.selectionSet &&
-          selectionCoversLeaves(src.selectionSet, needed)
+          selectionCovers(src.selectionSet, needed)
         ) {
           out.push(src.id ?? id);
         }
@@ -6505,7 +6617,7 @@ function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
         for (const a of src.aliases) {
           if (
             a.entityTypeName === hop.entityTypeName &&
-            selectionCoversLeaves(a.selectionSet, needed)
+            selectionCovers(a.selectionSet, needed)
           ) {
             out.push(src.id ?? id);
             break;
