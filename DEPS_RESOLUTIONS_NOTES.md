@@ -10,6 +10,7 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### tsx
 
 1. https://github.com/privatenumber/tsx/issues/159#issuecomment-2473632866 (did what was suggested)
+2. `require()` of `.mjs` files is left to Node when it supports requiring ES modules. Otherwise tsx compiles them to CommonJS and loads a second instance next to the one loaded with `import`. GraphQL v17 resolves to its `.mjs` build for both `require()` and `import`, so CommonJS packages like `graphql-compose` and `@apollo/subgraph` would get a different `graphql` instance than ES modules.
 
 ### @opentelemetry/otlp-exporter-base
 
