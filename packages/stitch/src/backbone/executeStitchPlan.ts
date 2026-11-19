@@ -68,16 +68,72 @@ import type {
 const BACKBONE_HYDRATED = Symbol.for('graphql-tools.stitch.backboneHydrated');
 
 /**
- * True when `value` already holds every field in `selectionSet` (nested trees
- * and matching inline fragments included). Fragment spreads → false.
+ * Cached shape of an entity selection for reuse checks. Leaf-only hops use the
+ * cheap key loop (pre-1d597494); nested/fragment selections pay the deep walk
+ * only after a top-level key precheck passes.
  */
-function selectionSatisfiedBy(
-  value: Record<string, any> | null | undefined,
+type ReuseSelectionInfo = {
+  leafOnly: boolean;
+  /** Top-level response keys (excl. __typename); deep nests still listed. */
+  topKeys: string[];
+};
+
+const reuseSelectionInfoCache = new WeakMap<
+  SelectionSetNode,
+  ReuseSelectionInfo
+>();
+
+function getReuseSelectionInfo(
   selectionSet: SelectionSetNode,
+): ReuseSelectionInfo {
+  const cached = reuseSelectionInfoCache.get(selectionSet);
+  if (cached) {
+    return cached;
+  }
+  let leafOnly = true;
+  const topKeys: string[] = [];
+  for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.FIELD) {
+      if (sel.name.value === '__typename') {
+        continue;
+      }
+      topKeys.push(sel.alias?.value ?? sel.name.value);
+      if (sel.selectionSet) {
+        leafOnly = false;
+      }
+    } else {
+      // Inline fragments / spreads: not a pure leaf key list.
+      leafOnly = false;
+    }
+  }
+  const info: ReuseSelectionInfo = { leafOnly, topKeys };
+  reuseSelectionInfoCache.set(selectionSet, info);
+  return info;
+}
+
+function leafKeysSatisfied(
+  value: Record<string, any>,
+  keys: readonly string[],
 ): boolean {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (!keys.length) {
     return false;
   }
+  for (const k of keys) {
+    if (value[k] === undefined) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Deep walk: nested trees + matching inline fragments. Fragment spreads → false.
+ * Callers should prefer {@link selectionSatisfiedBy} which fast-paths leaves.
+ */
+function selectionSatisfiedByDeep(
+  value: Record<string, any>,
+  selectionSet: SelectionSetNode,
+): boolean {
   for (const sel of selectionSet.selections) {
     if (sel.kind === Kind.FIELD) {
       if (sel.name.value === '__typename') {
@@ -128,12 +184,47 @@ function selectionSatisfiedBy(
   return true;
 }
 
+/**
+ * True when `value` already holds every field in `selectionSet`.
+ * Leaf-only: O(keys) like pre-nested-reuse. Nested: top-level miss rejects
+ * before any deep/list walk (federation TestQuery hot path).
+ */
+function selectionSatisfiedBy(
+  value: Record<string, any> | null | undefined,
+  selectionSet: SelectionSetNode,
+): boolean {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const info = getReuseSelectionInfo(selectionSet);
+  if (info.leafOnly) {
+    return leafKeysSatisfied(value, info.topKeys);
+  }
+  // Nested / fragments: cheap reject when any top-level field is missing.
+  if (info.topKeys.length && !leafKeysSatisfied(value, info.topKeys)) {
+    return false;
+  }
+  return selectionSatisfiedByDeep(value, selectionSet);
+}
+
 /** Copy missing selection fields (incl. nested) from cached entity onto parent. */
 function copySelectionFromCached(
   parent: Record<string, any>,
   cached: Record<string, any>,
   selectionSet: SelectionSetNode,
 ): void {
+  const info = getReuseSelectionInfo(selectionSet);
+  if (info.leafOnly) {
+    for (const k of info.topKeys) {
+      if (parent[k] === undefined && cached[k] !== undefined) {
+        parent[k] = cached[k];
+      }
+    }
+    if (cached['__typename'] != null && parent['__typename'] == null) {
+      parent['__typename'] = cached['__typename'];
+    }
+    return;
+  }
   for (const sel of selectionSet.selections) {
     if (sel.kind === Kind.FIELD) {
       if (sel.name.value === '__typename') {
@@ -162,7 +253,11 @@ function copySelectionFromCached(
           !Array.isArray(cv)
         ) {
           copySelectionFromCached(pv, cv, sel.selectionSet);
-        } else if (Array.isArray(pv) && Array.isArray(cv) && pv.length === cv.length) {
+        } else if (
+          Array.isArray(pv) &&
+          Array.isArray(cv) &&
+          pv.length === cv.length
+        ) {
           for (let i = 0; i < pv.length; i++) {
             if (
               pv[i] != null &&
@@ -294,8 +389,9 @@ function tryReuseEntityIntoParent(
   if (!cached || !selectionSatisfiedBy(cached, selectionSet)) {
     return false;
   }
+  // Cached already satisfied the selection — copy is sufficient (no re-walk).
   copySelectionFromCached(parent, cached, selectionSet);
-  return selectionSatisfiedBy(parent, selectionSet);
+  return true;
 }
 
 /**
