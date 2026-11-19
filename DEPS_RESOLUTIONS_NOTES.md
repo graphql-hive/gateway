@@ -63,3 +63,8 @@ Here we collect reasons and write explanations about why some resolutions or pat
 1. Writes snapshot files with the Jest header instead of the Vitest one.
 2. Names snapshots like Jest does, joining the test name and the snapshot hint with `: ` and without `>` between nested test names. This keeps the snapshot files shared with `bun test`.
 3. Vitest 5 bundles `@vitest/snapshot`, so the patch is applied on `vitest` itself.
+
+### @graphql-hive/federation-gateway-audit/graphql-yoga
+
+1. The audit serves its subgraphs with `graphql-yoga` v5, which does not work with GraphQL v17.
+2. It's resolved to the same `graphql-yoga` major the rest of the repository uses, which supports GraphQL v16 and v17.
