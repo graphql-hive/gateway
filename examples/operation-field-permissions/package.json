@@ -2,21 +2,21 @@
   "name": "@example/operation-field-permissions",
   "private": true,
   "dependencies": {
-    "@envelop/core": "^6.0.0",
-    "@envelop/operation-field-permissions": "^10.0.0",
+    "@envelop/core": "^6.0.1",
+    "@envelop/operation-field-permissions": "^10.0.1",
     "@graphql-mesh/compose-cli": "^1.8.4",
-    "graphql": "^16.12.0",
+    "graphql": "^16.15.0",
     "@graphql-hive/gateway": "^2.15.10"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "minimatch": "^10.2.5",
-    "fast-uri": "^3.1.6",
-    "protobufjs": "^8.2.1",
+    "minimatch": "^10.2.6",
+    "fast-uri": "^3.1.9",
+    "protobufjs": "^8.8.1",
     "esbuild": "^0.25.12",
-    "@graphql-yoga/plugin-persisted-operations": "^4.0.1"
+    "@graphql-yoga/plugin-persisted-operations": "^4.1.0"
   },
   "scripts": {
     "service:users": "tsx services/users.ts",
