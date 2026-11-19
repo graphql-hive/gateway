@@ -6,6 +6,7 @@ import {
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLScalarType,
   GraphQLString,
   parse,
 } from 'graphql';
@@ -584,5 +585,72 @@ describe('getToolDescriptionFromSchema', () => {
     const operation = `query($id: ID!) { noDescription(id: $id) }`;
     const desc = getToolDescriptionFromSchema(operation, schema);
     expect(desc).toBeUndefined();
+  });
+});
+
+describe('customScalars', () => {
+  const schema = buildSchema(`
+    scalar DateTime
+    scalar Decimal
+    input Filter { from: DateTime!, amount: Decimal }
+    type Item { id: Int!, name: String!, startDate: DateTime!, endDate: DateTime, price: Decimal }
+    type Query { items(since: DateTime!, filter: Filter): [Item!]! }
+  `);
+  const query = `query($since: DateTime!, $filter: Filter) { items(since: $since, filter: $filter) { id name startDate endDate price } }`;
+  const dateTime = { type: 'string', format: 'date-time' };
+
+  it('applies mapped scalars to outputSchema and inputSchema', () => {
+    const customScalars = { DateTime: dateTime, Decimal: { type: 'string' } };
+    const input = operationToInputSchema(query, schema, customScalars);
+    expect(input.properties!['since']).toEqual(dateTime);
+    expect(input.properties!['filter']!.properties).toMatchObject({
+      from: dateTime,
+      amount: { type: 'string' },
+    });
+
+    const output = selectionSetToOutputSchema(
+      parse(query),
+      schema,
+      customScalars,
+    );
+    expect(output.properties!['items']!.items!.properties).toMatchObject({
+      startDate: dateTime,
+      endDate: { type: ['string', 'null'], format: 'date-time' },
+      price: { type: ['string', 'null'] },
+    });
+  });
+
+  it('keeps {type:"object"} for unmapped scalars', () => {
+    const input = operationToInputSchema(query, schema);
+    expect(input.properties!['since']).toEqual({ type: 'object' });
+    const output = selectionSetToOutputSchema(parse(query), schema);
+    expect(
+      output.properties!['items']!.items!.properties!['startDate'],
+    ).toEqual({ type: 'object' });
+  });
+
+  it('does not allow overriding built-in scalars', () => {
+    const output = selectionSetToOutputSchema(parse(query), schema, {
+      Int: { type: 'string' },
+      String: { type: 'number' },
+    });
+    expect(output.properties!['items']!.items!.properties).toMatchObject({
+      id: { type: 'integer', format: 'int32' },
+      name: { type: 'string' },
+    });
+  });
+
+  it('still honours extensions.jsonSchema, with customScalars taking precedence', () => {
+    const extSchema = new GraphQLScalarType({
+      name: 'DateTime',
+      extensions: { jsonSchema: { type: 'string', format: 'date' } },
+    });
+    expect(resolveFieldType(extSchema, { customScalars: {} })).toEqual({
+      type: 'string',
+      format: 'date',
+    });
+    expect(
+      resolveFieldType(extSchema, { customScalars: { DateTime: dateTime } }),
+    ).toEqual(dateTime);
   });
 });

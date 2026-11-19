@@ -552,9 +552,29 @@ The same precedence applies to per-field descriptions via `input.schema.properti
 | `resourceTemplates`    | `MCPResourceTemplateConfig[]` | `[]`           | Dynamic resource templates                                      |
 | `providers`            | `object`                      |                | Description provider instances (e.g. `{ langfuse: {} }`)        |
 | `suppressOutputSchema` | `boolean`                     | `false`        | Suppress outputSchema in `tools/list`                           |
+| `customScalars`        | `Record<string, JsonSchema>`  | `{}`           | Maps custom scalar names to JSON Schema (see below)             |
 | `loader`               | `MCPOperationsLoader`         |                | Dynamic operations source with optional live updates            |
 | `instructions`         | `string`                      |                | Free-text instructions included in `initialize` for LLM context |
 | `protocolVersion`      | `string`                      | `"2025-11-25"` | MCP protocol version to advertise                               |
+
+### Custom scalars
+
+Custom GraphQL scalars (`DateTime`, `JSON`, `Decimal`, ...) are not known to the plugin, so by default they are described as `{ "type": "object" }` in both `inputSchema` and `outputSchema`. MCP clients that validate tool results against `outputSchema` reject responses that do not match. Map them explicitly:
+
+```ts
+useMCP(ctx, {
+  name: 'my-server',
+  customScalars: {
+    DateTime: { type: 'string', format: 'date-time' },
+    Decimal: { type: 'string' },
+    JSON: {}, // any value
+  },
+});
+```
+
+- Built-in scalars (`Int`, `Float`, `String`, `Boolean`, `ID`) cannot be overridden.
+- A mapping takes precedence over `extensions.jsonSchema` on the scalar type, which is still honoured for unmapped scalars.
+- Unmapped custom scalars keep resolving to `{ "type": "object" }`.
 
 ## Features
 
