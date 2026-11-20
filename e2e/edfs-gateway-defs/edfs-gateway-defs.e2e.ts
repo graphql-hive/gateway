@@ -26,7 +26,8 @@ beforeAll(async () => {
 
 it('should receive subscription published event on all distributed gateways', async () => {
   const products = await service('products', {
-    env: natsEnv,
+    // services always run on the host, never in docker
+    env: { ...natsEnv, NATS_HOST: '0.0.0.0' },
   });
   const gws = await Promise.all(
     Array.from({ length: 3 }, () =>
@@ -109,7 +110,8 @@ it('should receive subscription published event on all distributed gateways', as
 
 it('should send a payload from a mutation to another gateway using NATS', async () => {
   const products = await service('products', {
-    env: natsEnv,
+    // services always run on the host, never in docker
+    env: { ...natsEnv, NATS_HOST: '0.0.0.0' },
   });
   const consumer = await gateway({
     supergraph: {

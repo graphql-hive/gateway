@@ -15,7 +15,6 @@ import type {
   TypeSource,
 } from '@graphql-tools/utils';
 import {
-  createGraphQLError,
   isDocumentNode,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
@@ -29,16 +28,14 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { usingHiveRouterRuntime } from '~internal/env';
-import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
-import { buildASTSchema, buildSchema, isSchema } from 'graphql';
+import type { DocumentNode, GraphQLSchema } from 'graphql';
+import { buildASTSchema, buildSchema, GraphQLError, isSchema } from 'graphql';
 import { handleFederationSupergraph as stitchingUnifiedGraphHandler } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
   getTransportEntryMapUsingFusionAndFederationDirectives,
   millisecondsToStr,
-  OnDelegationPlanHook,
-  OnDelegationStageExecuteHook,
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
@@ -81,8 +78,6 @@ export interface UnifiedGraphHandlerOpts {
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
   handleProgressiveOverride?(label: string, context: any): boolean;
-  onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
-  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
   /**
    * Configure the batch delegation options for all merged types in all subschemas.
@@ -132,14 +127,11 @@ export interface UnifiedGraphManagerOptions<TContext> {
   pollingInterval?: number;
   additionalTypeDefs?: TypeSource;
   additionalResolvers?:
-    | IResolvers<unknown, TContext>
-    | IResolvers<unknown, TContext>[];
+    IResolvers<unknown, TContext> | IResolvers<unknown, TContext>[];
   transportContext?: TransportContext;
   onSubgraphExecuteHooks?: OnSubgraphExecuteHook<TContext>[];
   // TODO: Will be removed later once we get rid of v0
   onDelegateHooks?: OnDelegateHook<unknown>[];
-  onDelegationPlanHooks?: OnDelegationPlanHook<TContext>[];
-  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<TContext>[];
   /**
    * Whether to batch the subgraph executions.
    * @default true
@@ -224,7 +216,7 @@ const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 const DEFAULT_MAX_CONCURRENT_GENERATIONS = 10;
 
 function createSchemaReloadError(): GraphQLError {
-  const err = createGraphQLError(
+  const err = new GraphQLError(
     'operation has been aborted due to a schema reload',
     {
       extensions: {
@@ -307,8 +299,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   /** The metadata loaded together with {@link lastLoadedUnifiedGraph}. */
   private lastLoadedUnifiedGraphMetadata?: Record<string, unknown>;
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
-  private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
-  private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<GraphQLSchema>;
   private polling$?: MaybePromise<void>;
@@ -337,9 +327,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         : stitchingUnifiedGraphHandler);
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
-    this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
-    this.onDelegationStageExecuteHooks =
-      opts?.onDelegationStageExecuteHooks || [];
     if (opts.pollingInterval != null) {
       opts.transportContext?.log.debug(
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
@@ -516,8 +503,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             onSubgraphExecute(subgraphName, execReq) {
               return onSubgraphExecute(subgraphName, execReq);
             },
-            onDelegationPlanHooks: this.onDelegationPlanHooks,
-            onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
             onDelegateHooks: this.opts.onDelegateHooks,
             batchDelegateOptions: this.opts.batchDelegateOptions,
             subgraphDefer: this.opts.subgraphDefer,
@@ -888,7 +873,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   [DisposableSymbols.asyncDispose]() {
-    this.disposeReason = createGraphQLError(
+    this.disposeReason = new GraphQLError(
       'operation has been aborted because the server is shutting down',
       {
         extensions: {

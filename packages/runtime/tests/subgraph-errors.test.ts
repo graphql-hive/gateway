@@ -8,8 +8,8 @@ import {
   createDisposableServer,
 } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
-import { parse } from 'graphql';
-import { createGraphQLError, createYoga } from 'graphql-yoga';
+import { GraphQLError, parse } from 'graphql';
+import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
 describe('Subgraph Errors', () => {
@@ -25,7 +25,7 @@ describe('Subgraph Errors', () => {
       resolvers: {
         Query: {
           hello() {
-            return createGraphQLError(randomErrorMessage);
+            return new GraphQLError(randomErrorMessage);
           },
         },
       },
@@ -91,6 +91,7 @@ describe('Subgraph Errors', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: true,
       plugins: () => [

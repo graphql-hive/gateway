@@ -39,9 +39,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         opentelemetryExporterType,
         hiveCdnEndpoint,
         hiveCdnKey,
-        hiveRegistryToken,
         hiveTarget,
-        hiveUsageTarget,
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,
@@ -119,9 +117,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       const registryConfig: Pick<ProxyConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
-        hiveRegistryToken,
         hiveTarget,
-        hiveUsageTarget,
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,

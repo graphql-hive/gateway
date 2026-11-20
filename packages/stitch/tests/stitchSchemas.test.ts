@@ -12,7 +12,6 @@ import {
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import {
   assertSome,
-  createGraphQLError,
   ExecutionResult,
   getResolversFromSchema,
   IResolvers,
@@ -34,6 +33,7 @@ import {
   buildASTSchema,
   buildSchema,
   graphql,
+  GraphQLError,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLScalarType,
@@ -2632,34 +2632,34 @@ bookingById(id: "b1") {
         const errorsWithoutLocations = result.errors.map(removeLocations);
 
         const expectedErrors = [
-          createGraphQLError('Property.error error', {
+          new GraphQLError('Property.error error', {
             path: ['propertyById', 'error'],
             extensions: {
               code: 'SOME_CUSTOM_CODE',
             },
           }),
-          createGraphQLError('Property.error error', {
+          new GraphQLError('Property.error error', {
             path: ['propertyById', 'errorAlias'],
             extensions: {
               code: 'SOME_CUSTOM_CODE',
             },
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 0, 'error'],
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 0, 'bookingErrorAlias'],
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 1, 'error'],
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 1, 'bookingErrorAlias'],
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 2, 'error'],
           }),
-          createGraphQLError('Booking.error error', {
+          new GraphQLError('Booking.error error', {
             path: ['propertyById', 'bookings', 2, 'bookingErrorAlias'],
           }),
         ].map(removeLocations);

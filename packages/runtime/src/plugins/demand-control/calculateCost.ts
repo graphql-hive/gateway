@@ -1,6 +1,5 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
-  createGraphQLError,
   getDirective,
   getDirectiveExtensions,
   memoize1,
@@ -11,6 +10,7 @@ import {
   FieldNode,
   getArgumentValues,
   getNamedType,
+  GraphQLError,
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
@@ -165,7 +165,7 @@ export function createCalculateCost({
                             listSizeAnnotation.requireOneSlicingArgument !==
                               false
                           ) {
-                            throw createGraphQLError(
+                            throw new GraphQLError(
                               `Only one slicing argument is allowed on field "${field.name}"; found multiple slicing arguments "${slicingArguments.join(', ')}"`,
                               {
                                 extensions: {

@@ -127,7 +127,6 @@ const deps = {
       ['sdk-trace-base'],
       ['sdk-metrics'],
       ['sdk-logs'],
-      ['semantic-conventions'],
       ['instrumentation'],
 
       // Exporters
@@ -145,6 +144,8 @@ const deps = {
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
     ]),
   ),
+  'node_modules/@opentelemetry/semantic-conventions/index':
+    '../../node_modules/@opentelemetry/semantic-conventions/dist/index.mjs',
   // sdk-trace-base's ESM entry is a shim re-exporting from @opentelemetry/sdk-trace
   // this will override the common api base for OTEL declared above
   'node_modules/@opentelemetry/sdk-trace-base/index':

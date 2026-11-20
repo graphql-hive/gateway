@@ -1,4 +1,4 @@
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import {
   getUnifiedGraphGracefully,
   type SubgraphConfig,
@@ -50,7 +50,6 @@ export function composeAndGetExecutor<TContext>(
     getUnifiedGraph: () => getUnifiedGraphGracefully(subgraphs),
     transportContext: {
       log,
-      logger: LegacyLogger.from(log),
     },
     transports() {
       return {

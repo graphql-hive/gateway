@@ -1,6 +1,6 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import type { MaybePromise } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 
 export function useDeduplicateRequest(): GatewayPlugin {

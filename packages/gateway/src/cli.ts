@@ -88,13 +88,13 @@ export interface GatewayCLIHiveReportingOptions extends Omit<
   /**
    * The target to which the usage data should be reported to.
    *
-   * @default env.HIVE_USAGE_TARGET
+   * @default env.HIVE_TARGET
    */
   target?: GatewayHiveReportingOptions['target'];
   /**
    * Hive registry access token for usage metrics reporting.
    *
-   * @default env.HIVE_USAGE_ACCESS_TOKEN || env.HIVE_REGISTRY_TOKEN
+   * @default env.HIVE_ACCESS_TOKEN || env.HIVE_USAGE_ACCESS_TOKEN
    */
   token?: GatewayHiveReportingOptions['token'];
 }
@@ -155,7 +155,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
    */
-  rateLimiting?: boolean | RateLimitingOptions['config'] | RateLimitingOptions; // deprecated
+  rateLimiting?: boolean | Omit<RateLimitingOptions, 'cache'>;
   /**
    * Enable and configure AWS Sigv4 signing
    */
@@ -404,18 +404,6 @@ let cli = new Command()
       .choices(['otlp-http', 'otlp-grpc'])
       .default('otlp-http')
       .env('OPENTELEMETRY_EXPORTER_TYPE'),
-  )
-  .addOption(
-    new Option(
-      '--hive-registry-token <token>',
-      '[DEPRECATED] please use "--hive-target" and "--hive-access-token"',
-    ).env('HIVE_REGISTRY_TOKEN'),
-  )
-  .addOption(
-    new Option(
-      '--hive-usage-target <target>',
-      '[DEPRECATED] please use --hive-target instead.',
-    ).env('HIVE_USAGE_TARGET'),
   )
   .addOption(
     new Option(

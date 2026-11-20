@@ -10,14 +10,10 @@ import {
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
-import {
-  createGraphQLError,
-  type ExecutionRequest,
-} from '@graphql-tools/utils';
+import { type ExecutionRequest } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
-import { crypto } from '@whatwg-node/fetch';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { ExecutionResult, GraphQLError } from 'graphql';
+import { ExecutionResult, GraphQLError } from 'graphql';
 
 export interface HTTPCallbackTransportOptions {
   /**
@@ -61,7 +57,7 @@ type HTTPCallbackMessage =
     };
 
 function createTimeoutError() {
-  return createGraphQLError('Subscription timed out', {
+  return new GraphQLError('Subscription timed out', {
     extensions: {
       code: 'TIMEOUT_ERROR',
       http: {
@@ -220,12 +216,12 @@ export default {
               if (resJson.errors) {
                 if (resJson.errors.length === 1 && resJson.errors[0]) {
                   const error = resJson.errors[0];
-                  stopSubscription(createGraphQLError(error.message, error));
+                  stopSubscription(new GraphQLError(error.message, error));
                 } else {
                   stopSubscription(
                     new AggregateError(
-                      resJson.errors.map((err) =>
-                        createGraphQLError(err.message, err),
+                      resJson.errors.map(
+                        (err) => new GraphQLError(err.message, err),
                       ),
                       resJson.errors.map((err) => err.message).join('\n'),
                     ),

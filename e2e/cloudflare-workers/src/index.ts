@@ -35,13 +35,15 @@ const useOnFetchTracer = (): GatewayPlugin => {
 };
 
 let runtime: ReturnType<typeof createGatewayRuntime>;
+let exporter: OTLPTraceExporter;
 function getRuntime(env: Env) {
   if (!runtime) {
+    exporter = new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] });
     openTelemetrySetup({
       contextManager: null,
       resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
       traces: {
-        exporter: new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] }),
+        exporter,
         batching: false, // Disable batching to speedup tests
       },
     });
@@ -61,6 +63,9 @@ function getRuntime(env: Env) {
 export default {
   async fetch(req, env, ctx) {
     const res = await getRuntime(env)(req, env, ctx);
+    // workerd cancels in-flight subrequests once the response is returned, so keep
+    // the request alive until the span exports started during it are sent
+    ctx.waitUntil(exporter.forceFlush());
     return res as unknown as Response;
   },
 } satisfies ExportedHandler<Env>;

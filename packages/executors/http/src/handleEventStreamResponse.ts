@@ -1,10 +1,7 @@
-import {
-  createGraphQLError,
-  ExecutionResult,
-  inspect,
-} from '@graphql-tools/utils';
+import { ExecutionResult, inspect } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { TextDecoder } from '@whatwg-node/fetch';
+import { GraphQLError } from 'graphql';
 import { createResultForAbort } from './utils';
 
 const DELIM = '\n\n';
@@ -35,8 +32,23 @@ export function handleEventStreamResponse(
     reader.closed
       .then(() => (closed = true))
       .catch((reason) => (closed = reason)); // we don't use `finally` because we want to catch errors
+
+    // Abort must wake a pending reader.read() via reader.cancel() (WHATWG).
+    // Calling stream.cancel() while locked is invalid; only this reader may cancel.
+    const onAbort = () => {
+      reader.cancel(signal?.reason).catch(() => {});
+    };
+    if (signal) {
+      if (signal.aborted) {
+        onAbort();
+      } else {
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
+    }
+
     stop
       .then(() => {
+        signal?.removeEventListener('abort', onAbort);
         subscriptionCtrl?.abort();
         if (body.locked) {
           // cancel, not releaseLock: releasing the lock detaches the reader but
@@ -46,6 +58,7 @@ export function handleEventStreamResponse(
         }
       })
       .catch((err) => {
+        signal?.removeEventListener('abort', onAbort);
         reader.cancel(err);
       });
 
@@ -70,10 +83,15 @@ export function handleEventStreamResponse(
         }
         const errErr = err instanceof Error ? err : new Error(String(err));
         await push({
-          errors: [
-            createGraphQLError(errErr.message, { originalError: errErr }),
-          ],
+          errors: [new GraphQLError(errErr.message, { originalError: errErr })],
         });
+        return stop();
+      }
+      // reader.cancel() (e.g. from AbortSignal above) fulfills pending read() as
+      // { done: true }. Prefer the abort error over a silent end when the client
+      // cancelled the operation.
+      if (signal?.aborted) {
+        await push(createResultForAbort(signal.reason));
         return stop();
       }
       if (done) {

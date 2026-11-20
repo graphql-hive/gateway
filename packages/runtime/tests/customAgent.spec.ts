@@ -21,6 +21,7 @@ describe('Custom Agent', () => {
   skipIfBun('should work', async () => {
     await using upstreamServer = await createDisposableServer(
       createYoga<any>({
+        logging: false,
         schema: createSchema({
           typeDefs: /* GraphQL */ `
             type Query {
@@ -38,6 +39,7 @@ describe('Custom Agent', () => {
     using disposableAgent = createDisposableAgent();
     const spy = vi.spyOn(disposableAgent.agent, 'createConnection');
     await using gateway = createGatewayRuntime({
+      logging: false,
       proxy: {
         endpoint: `${upstreamServer.url}/graphql`,
       },

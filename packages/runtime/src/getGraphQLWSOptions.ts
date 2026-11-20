@@ -1,13 +1,11 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
-import { MaybePromise } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   DocumentNode,
   Kind,
   OperationTypeNode,
   type ExecutionArgs,
-  type ExecutionResult,
 } from 'graphql';
 import type {
   ConnectionInitMessage,
@@ -77,14 +75,22 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
   function handleRegularArgs(args: ExecutionArgs) {
     // We know that contextValue is YogaInitialContext
     const context = args.contextValue as YogaInitialContext & TContext;
-    // yoga always produces a result here, its return type is just wider
-    return yoga.getResultForParams(
-      {
-        params: context.params,
-        request: context.request,
+    return handleMaybePromise(
+      () =>
+        yoga.getResultForParams(
+          {
+            params: context.params,
+            request: context.request,
+          },
+          context,
+        ),
+      (result) => {
+        if (result == null) {
+          throw new Error('Yoga returned no GraphQL execution result');
+        }
+        return result;
       },
-      context,
-    ) as MaybePromise<ExecutionResult | AsyncIterable<ExecutionResult>>;
+    );
   }
   return {
     execute: handleRegularArgs,

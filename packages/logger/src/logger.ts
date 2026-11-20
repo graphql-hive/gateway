@@ -24,9 +24,7 @@ export type RedactOptions =
   | {
       paths: string[];
       censor?:
-        | string
-        | ((value: unknown, path: string[]) => unknown)
-        | undefined;
+        string | ((value: unknown, path: string[]) => unknown) | undefined;
       remove?: boolean;
     };
 

@@ -3,7 +3,7 @@ import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest, Executor } from '@graphql-tools/utils';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
-import { GraphQLSchema, parse, print, versionInfo } from 'graphql';
+import { GraphQLSchema, parse, print } from 'graphql';
 import { kebabCase } from 'lodash';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -129,8 +129,8 @@ describe('Optimizations', () => {
     });
     expect(serviceCallCnt).toMatchObject({
       accounts: 2,
-      // inventory: 1, (when computed fields definition removed)
-      inventory: 2,
+      // Computed fields coalesce inventory @requires into one hop.
+      inventory: 1,
       products: 2,
       reviews: 2,
     });
@@ -138,12 +138,6 @@ describe('Optimizations', () => {
 });
 
 describe('awareness-of-other-fields', () => {
-  if (versionInfo.major < 16) {
-    it('Skip test for older versions of GraphQL-js', () => {
-      expect(true).toBe(true);
-    });
-    return;
-  }
   let supergraphSdl: string;
   let gwSchema: GraphQLSchema;
   let subgraphCalls: { [subgraph: string]: number } = {};
@@ -1073,13 +1067,11 @@ it('does not resolve stub types', async () => {
       Query: { _reviewsPlaceholder: () => null },
       Rating: {
         __resolveReference: (ref: { id: string }) => {
-          console.log('[reviews] Rating.__resolveReference:', ref.id);
           return { id: ref.id, score: 4, maxScore: 5 };
         },
       },
       Comment: {
         __resolveReference: (ref: { id: string }) => {
-          console.log('[reviews] Comment.__resolveReference:', ref.id);
           return { id: ref.id, text: 'Great post!' };
         },
       },
@@ -1160,16 +1152,7 @@ it('does not resolve stub types', async () => {
     resolvers: {
       Query: { _postsPlaceholder: () => null },
       User: {
-        posts: (
-          user: { id: string; isMe?: boolean; userVisibility?: string },
-          _args: { input?: { limit?: number } },
-        ) => {
-          console.log(
-            '[posts] User.posts, isMe:',
-            user.isMe,
-            'userVisibility:',
-            user.userVisibility,
-          );
+        posts: () => {
           return {
             items: [
               {
@@ -1199,9 +1182,6 @@ it('does not resolve stub types', async () => {
   };
   const schema = await getStitchedSchemaFromLocalSchemas({
     localSchemas: subgraphs,
-    onSubgraphExecute(subgraphName, executionRequest) {
-      console.log(subgraphName, print(executionRequest.document));
-    },
   });
 
   const document = parse(/* GraphQL */ `

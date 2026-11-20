@@ -3,8 +3,10 @@ import { envelop, useEngine, useSchema } from '@envelop/core';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { mergeIncrementalResult } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
-import { DeferredPromise } from '@whatwg-node/promise-helpers';
-import { createDeferredPromise } from '@whatwg-node/server';
+import {
+  createDeferredPromise,
+  DeferredPromise,
+} from '@whatwg-node/promise-helpers';
 import { execute as graphqlExecute, parse } from 'graphql';
 import { ExecutionResult } from 'graphql-ws';
 import { createSchema, createYoga } from 'graphql-yoga';
@@ -446,6 +448,7 @@ async function getFinalResult(
 describe('useInboundInflightReqDedupeForYoga', () => {
   it('deduplicates identical requests from Yoga', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [useInboundInflightReqDedupeForYoga()],
     });
@@ -488,6 +491,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('does not deduplicate requests with different headers', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [useInboundInflightReqDedupeForYoga()],
     });
@@ -532,6 +536,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('filters headers with shouldIncludeHeader', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [
         useInboundInflightReqDedupeForYoga({
@@ -583,6 +588,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('respects custom enabled function', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [
         useInboundInflightReqDedupeForYoga({
@@ -654,6 +660,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('uses custom deduplication keys from getDeduplicationKeys', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [
         useInboundInflightReqDedupeForYoga({
@@ -703,6 +710,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('does not deduplicate mutations', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [useInboundInflightReqDedupeForYoga()],
     });
@@ -761,6 +769,7 @@ describe('useInboundInflightReqDedupeForYoga', () => {
 
   it('does not serialize multiple times for the same inflight request', async () => {
     await using yoga = createYoga({
+      logging: false,
       schema,
       plugins: [useInboundInflightReqDedupeForYoga()],
     });
