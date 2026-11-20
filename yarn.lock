@@ -408,7 +408,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.16.0, @apollo/subgraph@npm:^2.16.0":
+"@apollo/subgraph@npm:^2.16.0":
   version: 2.16.0
   resolution: "@apollo/subgraph@npm:2.16.0"
   dependencies:
@@ -3097,7 +3097,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/aws-sigv4@workspace:e2e/aws-sigv4"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     aws4-express: "npm:^0.14.2"
     express: "npm:^5.3.0"
     graphql: "npm:^17.1.0"
@@ -3237,7 +3237,7 @@ __metadata:
   resolution: "@e2e/federation-example@workspace:e2e/federation-example"
   dependencies:
     "@apollo/server": "npm:^5.5.2"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     graphql: "npm:^17.1.0"
   languageName: unknown
   linkType: soft
@@ -3260,7 +3260,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-provides@workspace:e2e/federation-provides"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     graphql: "npm:17.1.0"
     graphql-yoga: "npm:^6.1.0"
     tslib: "npm:^2.9.1"
@@ -3277,7 +3277,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-stream@workspace:e2e/federation-stream"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-yoga/plugin-defer-stream": "npm:^4.1.0"
     graphql: "npm:^17.1.0"
@@ -3290,7 +3290,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-subgraph-defer@workspace:e2e/federation-subgraph-defer"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-yoga/plugin-defer-stream": "npm:^4.1.0"
     graphql: "npm:^17.1.0"
@@ -3304,7 +3304,7 @@ __metadata:
   resolution: "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough"
   dependencies:
     "@apollo/server": "npm:^5.5.2"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@as-integrations/express5": "npm:^1.1.2"
     "@graphql-mesh/transport-ws": "workspace:^"
     "@repeaterjs/repeater": "npm:^3.1.0"
@@ -3369,7 +3369,7 @@ __metadata:
   resolution: "@e2e/header-propagation@workspace:e2e/header-propagation"
   dependencies:
     "@apollo/server": "npm:^5.5.2"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@as-integrations/express5": "npm:^1.1.2"
     "@graphql-mesh/compose-cli": "npm:^1.8.4"
     "@omnigraph/openapi": "npm:^0.112.7"
@@ -3464,7 +3464,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/launchdarkly-override-example@workspace:e2e/launchdarkly-override"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@launchdarkly/node-server-sdk": "npm:9.16.5"
     graphql: "npm:17.1.0"
     graphql-yoga: "npm:^6.1.0"
@@ -3698,7 +3698,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/progressive-override-example@workspace:e2e/progressive-override"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     graphql: "npm:17.1.0"
     graphql-yoga: "npm:^6.1.0"
     tslib: "npm:^2.9.1"
@@ -3709,7 +3709,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/progressive-override-mixed@workspace:e2e/progressive-override-mixed"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     graphql: "npm:17.1.0"
     graphql-yoga: "npm:^6.1.0"
     tslib: "npm:^2.9.1"
@@ -3721,7 +3721,7 @@ __metadata:
   resolution: "@e2e/progressive-override-percent@workspace:e2e/progressive-override-percent"
   dependencies:
     "@apollo/server": "npm:^5.5.2"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@as-integrations/express5": "npm:^1.1.2"
     express: "npm:^5.3.0"
     graphql: "npm:17.1.0"
@@ -4985,7 +4985,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@envelop/core": "npm:^6.0.1"
     "@envelop/disable-introspection": "npm:^10.0.1"
     "@envelop/generic-auth": "npm:^12.0.1"
@@ -5250,7 +5250,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4"
   dependencies:
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@aws-sdk/client-sts": "npm:^3.1169.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -6221,7 +6221,7 @@ __metadata:
     "@apollo/gateway": "npm:^2.14.4"
     "@apollo/server": "npm:^5.5.2"
     "@apollo/server-gateway-interface": "npm:^2.1.0"
-    "@apollo/subgraph": "npm:2.16.0"
+    "@apollo/subgraph": "npm:^2.16.0"
     "@graphql-hive/federation-gateway-audit": "npm:0.0.2"
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/executor": "npm:^4.1.8"
