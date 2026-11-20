@@ -403,6 +403,14 @@ async function* streamListIterable<TContext extends Record<string, any>>(
       }
       continue;
     }
+    // A part with neither data nor errors carries no list item: the closing
+    // `{ hasNext: false }`, or `{ completed, hasNext }` in incrementalSpec v0.2.
+    if (result.data === undefined && !result.errors?.length) {
+      if (result.hasNext === false) {
+        return;
+      }
+      continue;
+    }
     const transformedResult = await transformer.transformResult(result);
     if (Array.isArray(transformedResult)) {
       for (let i = pushedCount; i < transformedResult.length; i++) {

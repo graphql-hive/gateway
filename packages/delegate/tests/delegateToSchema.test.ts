@@ -864,15 +864,6 @@ describe('delegateToSchema', () => {
         ],
       },
       {
-        hasNext: true,
-        incremental: [
-          {
-            items: [null],
-            path: ['test', 3],
-          },
-        ],
-      },
-      {
         hasNext: false,
       },
     ]);
