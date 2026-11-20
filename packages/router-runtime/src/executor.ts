@@ -438,6 +438,8 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
     }
     throw new Error(`Invalid plan node: ${JSON.stringify(node)}`);
   }
+  // the planner leaves the node out when no fetch can ever run, like when every
+  // field is under both `@skip(if: $a)` and `@include(if: $a)`
   if (queryPlan.node) {
     collect(queryPlan.node);
   }
