@@ -1,8 +1,13 @@
+import { createRequire } from 'node:module';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { QueryPlanner } from '@graphql-hive/router-query-planner';
 import type { KeyValueCache } from '@graphql-mesh/types';
 import { afterEach, expect, it, vi } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
+
+const { version: queryPlannerVersion } = createRequire(import.meta.url)(
+  '@graphql-hive/router-query-planner/package.json',
+);
 
 function createMockCache() {
   const store = new Map<string, unknown>();
@@ -18,7 +23,7 @@ function createMockCache() {
       [...store.keys()].filter((key) => key.startsWith(prefix)),
     ),
   } satisfies KeyValueCache;
-  return { cache, get, set };
+  return { cache, get, set, store };
 }
 
 afterEach(() => {
@@ -118,6 +123,78 @@ it('reuses a query plan cached by another gateway instance through the shared ca
   // gwB found the plan gwA cached, so it never recomputed/re-cached it.
   expect(getQueryPlanCacheSetCalls(set)).toHaveLength(1);
   expect(get).toHaveBeenCalledWith(cachedKey);
+});
+
+it('does not reuse a query plan cached by another version of the query planner', async () => {
+  const { cache, get, set, store } = createMockCache();
+  const subgraphs = [
+    {
+      name: 'upstream',
+      schema: {
+        typeDefs: /* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
+        },
+      },
+    },
+  ];
+
+  await using gwA = createGatewayTester({
+    unifiedGraphHandler,
+    cache,
+    subgraphs,
+  });
+  await expect(gwA.execute({ query: '{ hello }' })).resolves.toMatchObject({
+    data: { hello: 'world' },
+  });
+  const [cachedKey] = getQueryPlanCacheSetCalls(set)[0]!;
+  // the key must change whenever the planner does, plans of other versions have another shape
+  expect(cachedKey).toContain(`:${queryPlannerVersion}:`);
+
+  // plans an older planner cached, with the key before it had the version and with another
+  // version. they have no fetch ids nor projection
+  const stalePlan = {
+    kind: 'QueryPlan',
+    node: {
+      kind: 'Fetch',
+      serviceName: 'upstream',
+      operationKind: 'query',
+      operation: '{hello}',
+    },
+  };
+  const staleKeys = [
+    cachedKey.replace(`${queryPlannerVersion}:`, ''),
+    cachedKey.replace(queryPlannerVersion, '0.0.53'),
+  ];
+  store.clear();
+  for (const key of staleKeys) {
+    store.set(key, stalePlan);
+  }
+  set.mockClear();
+  get.mockClear();
+
+  await using gwB = createGatewayTester({
+    unifiedGraphHandler,
+    cache,
+    subgraphs,
+  });
+  await expect(gwB.execute({ query: '{ hello }' })).resolves.toEqual({
+    data: { hello: 'world' },
+  });
+
+  for (const key of staleKeys) {
+    expect(get).not.toHaveBeenCalledWith(key);
+  }
+  expect(get).toHaveBeenCalledWith(cachedKey);
+  expect(getQueryPlanCacheSetCalls(set).map(([key]) => key)).toEqual([
+    cachedKey,
+  ]);
 });
 
 it('reuses the in-memory query plan for the same document', async () => {
