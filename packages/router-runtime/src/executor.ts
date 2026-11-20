@@ -807,49 +807,51 @@ function shouldRun(
 }
 
 /**
- * Selects the value at `path` in `value`, keeping the shape of lists along the way.
- * Returns `undefined` when the path doesn't apply to the value.
+ * Selects the value at `path`, from `index` on, in `value`, keeping the shape of lists along the
+ * way. Returns `undefined` when the path doesn't apply to the value.
  */
 function selectContextValue(
   value: unknown,
   path: FetchNodePathSegment[],
+  index: number,
   possibleTypes: PossibleTypes,
 ): unknown {
-  if (!path.length || value == null) {
+  if (index === path.length || value == null) {
     return value;
   }
   if (Array.isArray(value)) {
     return value.map(
-      (item) => selectContextValue(item, path, possibleTypes) ?? null,
+      (item) => selectContextValue(item, path, index, possibleTypes) ?? null,
     );
   }
   if (typeof value !== 'object') {
     return undefined;
   }
-  const [segment, ...rest] = path;
+  const segment = path[index]!;
   if (segment === 'Parent') {
     return undefined;
   }
-  if ('Key' in segment!) {
+  if ('Key' in segment) {
     if (!Object.hasOwn(value, segment.Key)) {
       return undefined;
     }
     return selectContextValue(
       (value as Record<string, unknown>)[segment.Key],
-      rest,
+      path,
+      index + 1,
       possibleTypes,
     );
   }
   const typename = (value as Record<string, unknown>)['__typename'];
   if (
     typeof typename !== 'string' ||
-    !segment!.TypenameEquals.some((typeCondition) =>
+    !segment.TypenameEquals.some((typeCondition) =>
       satisfiesTypeCondition(possibleTypes, typename, typeCondition),
     )
   ) {
     return undefined;
   }
-  return selectContextValue(value, rest, possibleTypes);
+  return selectContextValue(value, path, index + 1, possibleTypes);
 }
 
 /**
@@ -896,7 +898,7 @@ function collectEntities(
         if (from === undefined) {
           continue;
         }
-        const value = selectContextValue(from, source.path, possibleTypes);
+        const value = selectContextValue(from, source.path, 0, possibleTypes);
         if (value !== undefined) {
           return value;
         }
@@ -965,6 +967,7 @@ function collectEntities(
     traverseFlattenPath(
       data,
       path,
+      0,
       possibleTypes,
       [],
       [],
@@ -999,12 +1002,13 @@ function collectEntities(
 }
 
 /**
- * Calls `callback` for every value at `remainingPath`, along with its path and the objects
- * holding the fields walked to get there (nearest last).
+ * Calls `callback` for every value at `flattenPath`, from `index` on, along with its path and the
+ * objects holding the fields walked to get there (nearest last).
  */
 function traverseFlattenPath(
   current: unknown,
-  remainingPath: NormalizedFlattenNodePathSegment[],
+  flattenPath: NormalizedFlattenNodePathSegment[],
+  index: number,
   possibleTypes: PossibleTypes,
   path: (string | number)[],
   ancestors: object[],
@@ -1017,8 +1021,8 @@ function traverseFlattenPath(
   if (current == null) {
     return;
   }
-  const [segment, ...rest] = remainingPath;
-  if (!segment /* same as remainingPath.length === 0 */) {
+  const segment = flattenPath[index];
+  if (!segment /* same as index === flattenPath.length */) {
     callback(current, path, ancestors);
     return;
   }
@@ -1028,7 +1032,8 @@ function traverseFlattenPath(
         for (const item of current) {
           traverseFlattenPath(
             item,
-            remainingPath,
+            flattenPath,
+            index,
             possibleTypes,
             path,
             ancestors,
@@ -1043,7 +1048,8 @@ function traverseFlattenPath(
         const next = (current as Record<string, any>)[segment.name];
         traverseFlattenPath(
           next,
-          rest,
+          flattenPath,
+          index + 1,
           possibleTypes,
           path,
           ancestors,
@@ -1056,11 +1062,12 @@ function traverseFlattenPath(
     }
     case 'List': {
       if (Array.isArray(current)) {
-        for (let index = 0; index < current.length; index++) {
-          path.push(index);
+        for (let item = 0; item < current.length; item++) {
+          path.push(item);
           traverseFlattenPath(
-            current[index],
-            rest,
+            current[item],
+            flattenPath,
+            index + 1,
             possibleTypes,
             path,
             ancestors,
@@ -1076,7 +1083,8 @@ function traverseFlattenPath(
         for (const item of current) {
           traverseFlattenPath(
             item,
-            remainingPath,
+            flattenPath,
+            index,
             possibleTypes,
             path,
             ancestors,
@@ -1096,7 +1104,8 @@ function traverseFlattenPath(
         ) {
           traverseFlattenPath(
             current,
-            rest,
+            flattenPath,
+            index + 1,
             possibleTypes,
             path,
             ancestors,
@@ -1865,6 +1874,7 @@ function mergeRootFetchResult(
   traverseFlattenPath(
     executionContext.data,
     rootFetch.target.paths[0]!,
+    0,
     executionContext.possibleTypes,
     [],
     [],
