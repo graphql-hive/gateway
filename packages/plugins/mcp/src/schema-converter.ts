@@ -58,6 +58,7 @@ export interface JsonSchema {
 export function operationToInputSchema(
   operationSource: string,
   schema: GraphQLSchema,
+  customScalars: Record<string, JsonSchema> = {},
 ): JsonSchema {
   const document = parse(operationSource);
   const operationDef = document.definitions.find(
@@ -84,9 +85,7 @@ export function operationToInputSchema(
       required.push(varName);
     }
 
-    properties[varName] = graphqlTypeToJsonSchema(varType, {
-      customScalars: {},
-    });
+    properties[varName] = graphqlTypeToJsonSchema(varType, { customScalars });
   }
 
   // Look up field arguments for descriptions
@@ -154,6 +153,7 @@ export function getToolDescriptionFromSchema(
 export function selectionSetToOutputSchema(
   document: DocumentNode,
   schema: GraphQLSchema,
+  customScalars: Record<string, JsonSchema> = {},
 ): JsonSchema {
   const operationDef = document.definitions.find(
     (def) => def.kind === Kind.OPERATION_DEFINITION,
@@ -189,7 +189,7 @@ export function selectionSetToOutputSchema(
   const fieldSchema = outputTypeToSchema(
     rootField.type,
     rootSelection.selectionSet,
-    schema,
+    customScalars,
   );
 
   return {
@@ -203,14 +203,14 @@ export function selectionSetToOutputSchema(
 function outputTypeToSchema(
   type: GraphQLOutputType,
   selectionSet: SelectionSetNode | undefined,
-  schema: GraphQLSchema,
+  customScalars: Record<string, JsonSchema>,
 ): JsonSchema {
   if (isNonNullType(type)) {
-    return nonNullOutputTypeToSchema(type.ofType, selectionSet, schema);
+    return nonNullOutputTypeToSchema(type.ofType, selectionSet, customScalars);
   }
 
   // GraphQL nullable fields return an explicit null, so the schema must allow it.
-  const result = nonNullOutputTypeToSchema(type, selectionSet, schema);
+  const result = nonNullOutputTypeToSchema(type, selectionSet, customScalars);
   if (typeof result.type !== 'string') {
     return { anyOf: [result, { type: 'null' }] };
   }
@@ -224,12 +224,12 @@ function outputTypeToSchema(
 function nonNullOutputTypeToSchema(
   type: GraphQLOutputType,
   selectionSet: SelectionSetNode | undefined,
-  schema: GraphQLSchema,
+  customScalars: Record<string, JsonSchema>,
 ): JsonSchema {
   if (isListType(type)) {
     return {
       type: 'array',
-      items: outputTypeToSchema(type.ofType, selectionSet, schema),
+      items: outputTypeToSchema(type.ofType, selectionSet, customScalars),
     };
   }
 
@@ -248,7 +248,7 @@ function nonNullOutputTypeToSchema(
       const fieldSchema = outputTypeToSchema(
         field.type,
         selection.selectionSet,
-        schema,
+        customScalars,
       );
       if (field.description) {
         fieldSchema.description = field.description;
@@ -259,5 +259,5 @@ function nonNullOutputTypeToSchema(
     return { type: 'object', properties };
   }
 
-  return resolveFieldType(type, { customScalars: {} });
+  return resolveFieldType(type, { customScalars });
 }
