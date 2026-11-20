@@ -154,6 +154,8 @@ it('sends an object inside a representation that misses a selected field as null
           serviceName: 'a',
           operationKind: 'query',
           operation: '{products{__typename id size{width} sizes{width}}}',
+          id: 1,
+          dependsOn: [],
         },
         {
           kind: 'Flatten',
@@ -190,7 +192,19 @@ it('sends an object inside a representation that misses a selected field as null
                 ],
               },
             ],
+            id: 2,
+            dependsOn: [1],
           },
+        },
+      ],
+    },
+    projection: {
+      rootType: 'Query',
+      fields: [
+        {
+          name: 'products',
+          itemNonNull: [false],
+          selections: [{ name: 'shipping' }],
         },
       ],
     },
