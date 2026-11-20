@@ -248,6 +248,77 @@ it('sends an object inside a representation that misses a selected field as null
   ]);
 });
 
+it('sends an entity by its __typename alone when the subgraph has no keys for its type', async () => {
+  const supergraphSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      page: Page
+    }
+
+    type Page {
+      title: String
+    }
+  `);
+  const queryPlan: QueryPlan = {
+    kind: 'QueryPlan',
+    node: {
+      kind: 'Sequence',
+      nodes: [
+        {
+          kind: 'Fetch',
+          serviceName: 'a',
+          operationKind: 'query',
+          operation: '{page{__typename}}',
+          id: 1,
+          dependsOn: [],
+        },
+        {
+          kind: 'Flatten',
+          path: [{ Field: 'page' }],
+          node: {
+            kind: 'Fetch',
+            serviceName: 'b',
+            operationKind: 'query',
+            operation:
+              'query($representations:[_Any!]!){_entities(representations: $representations){...on Page{title}}}',
+            requires: [
+              {
+                kind: 'InlineFragment',
+                typeCondition: 'Page',
+                selections: [{ kind: 'Field', name: '__typename' }],
+              },
+            ],
+            id: 2,
+            dependsOn: [1],
+          },
+        },
+      ],
+    },
+    projection: {
+      rootType: 'Query',
+      fields: [{ name: 'page', selections: [{ name: 'title' }] }],
+    },
+  };
+
+  const representations: unknown[] = [];
+  const result = await executeQueryPlan({
+    queryPlan,
+    supergraphSchema,
+    entityKeys: { b: {} },
+    possibleTypes: {},
+    executionRequest: { document: parse('{ page { title } }') },
+    onSubgraphExecute(subgraphName, { variables }) {
+      if (subgraphName === 'a') {
+        return { data: { page: { __typename: 'Page' } } };
+      }
+      representations.push(...variables!['representations']);
+      return { data: { _entities: [{ title: 'Home' }] } };
+    },
+  });
+
+  expect(representations).toEqual([{ __typename: 'Page' }]);
+  expect(result).toEqual({ data: { page: { title: 'Home' } } });
+});
+
 it('cuts error paths at the first field the client did not ask for', async () => {
   await using gw = createGatewayTester({
     unifiedGraphHandler,
