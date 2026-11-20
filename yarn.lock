@@ -5228,7 +5228,7 @@ __metadata:
   peerDependencies:
     "@nestjs/common": ^12
     "@nestjs/graphql": ^14
-    graphql: ^16.9.0 || ^17.0.0
+    graphql: ^16.11.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
