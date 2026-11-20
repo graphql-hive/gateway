@@ -18,7 +18,7 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
-import { executeQueryPlan } from './executor';
+import { executeQueryPlan, getEntityKeys } from './executor';
 import {
   addEntityResolutionFieldsForPubsubPublish,
   getEntityResolutionMap,
@@ -99,6 +99,7 @@ export async function unifiedGraphHandler(
     opts.unifiedGraph,
     entityResolutionMap,
   );
+  const entityKeys = getEntityKeys(opts.unifiedGraph);
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
@@ -227,6 +228,7 @@ export async function unifiedGraphHandler(
           );
           return executeQueryPlan({
             supergraphSchema,
+            entityKeys,
             executionRequest,
             onSubgraphExecute: (subgraphName, executionRequest) =>
               handlePubsubOperationField(
