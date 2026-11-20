@@ -79,6 +79,8 @@ it('replaces a custom scalar object instead of merging it with what another fetc
   const result = await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
     executionRequest: { document: parse('{ products { meta } }') },
     onSubgraphExecute(subgraphName) {
       if (subgraphName === 'a') {
