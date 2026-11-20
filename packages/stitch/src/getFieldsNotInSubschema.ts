@@ -185,14 +185,9 @@ export function getFieldsNotInSubschema(
               return false;
             }
             // field is already provided by this subgraph via @provides
-            if (
-              providedTypeFieldPairs?.has(
-                `${fieldType.name}.${selection.name.value}`,
-              )
-            ) {
-              return false;
-            }
-            return true;
+            return !providedTypeFieldPairs?.has(
+              `${fieldType.name}.${selection.name.value}`,
+            );
           },
           fragments,
         );
@@ -211,23 +206,64 @@ export function getFieldsNotInSubschema(
     const isComputedField =
       subschema.merge?.[gatewayType.name]?.fields?.[fieldName]?.computed;
     let addedSubFieldNodes = false;
-    if ((isComputedField || fieldNotInSchema) && fieldNodesByFieldForType) {
-      const visitedFieldNames = new Set<string>();
-      addMissingRequiredFields({
-        fieldName,
-        fields,
-        fieldsNotInSchema,
-        visitedFieldNames,
-        onAdd: () => {
-          if (!addedSubFieldNodes) {
-            for (const subFieldNode of subFieldNodes) {
-              fieldsNotInSchema.add(subFieldNode);
+    const onAddMissingRequiredFields = () => {
+      if (!addedSubFieldNodes) {
+        for (const subFieldNode of subFieldNodes) {
+          fieldsNotInSchema.add(subFieldNode);
+        }
+        addedSubFieldNodes = true;
+      }
+    };
+    if (isComputedField || fieldNotInSchema) {
+      if (fieldNodesByFieldForType) {
+        const visitedFieldNames = new Set<string>();
+        addMissingRequiredFields({
+          fieldName,
+          fields,
+          fieldsNotInSchema,
+          visitedFieldNames,
+          onAdd: onAddMissingRequiredFields,
+          fieldNodesByField: fieldNodesByFieldForType,
+        });
+      }
+
+      // Function selectionSets are stored in dynamicSelectionSetsByField and applied
+      // during visitSelectionSet for direct delegation. Type-merge planning only
+      // consulted fieldNodesByField (string selectionSets), so gateway fields with
+      // request-time dependencies never injected those deps into the merge fetch.
+      // Evaluate them here against the actual field nodes so arg-forwarding
+      // selectionSets participate in the plan.
+      const dynamicSelectionSets =
+        stitchingInfo?.dynamicSelectionSetsByField?.[gatewayType.name]?.[
+          fieldName
+        ];
+      if (dynamicSelectionSets) {
+        for (const subFieldNode of subFieldNodes) {
+          for (const dynamicSelectionSetFn of dynamicSelectionSets) {
+            const selectionSet = dynamicSelectionSetFn(subFieldNode);
+            for (const selection of selectionSet.selections) {
+              if (
+                selection.kind === Kind.FIELD &&
+                selection.name.value !== '__typename' &&
+                !fields[selection.name.value]
+              ) {
+                onAddMissingRequiredFields();
+                fieldsNotInSchema.add(selection);
+                if (fieldNodesByFieldForType) {
+                  addMissingRequiredFields({
+                    fieldName: selection.name.value,
+                    fields,
+                    fieldsNotInSchema,
+                    visitedFieldNames: new Set([fieldName]),
+                    onAdd: onAddMissingRequiredFields,
+                    fieldNodesByField: fieldNodesByFieldForType,
+                  });
+                }
+              }
             }
-            addedSubFieldNodes = true;
           }
-        },
-        fieldNodesByField: fieldNodesByFieldForType,
-      });
+        }
+      }
     }
   }
   return Array.from(fieldsNotInSchema);
