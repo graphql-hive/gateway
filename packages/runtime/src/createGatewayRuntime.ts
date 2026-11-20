@@ -743,6 +743,7 @@ export function createGatewayRuntime<
           ? config.deferStream.subgraph
           : undefined,
       handleProgressiveOverride: config.progressiveOverride,
+      maxAliasesPerRequest: config.maxAliasesPerRequest,
       // Public `gracefulSchemaReload` maps onto the manager's
       // schemaReloadDrainTimeout / maxConcurrentSchemaGenerations opts.
       schemaReloadDrainTimeout: gracefulSchemaReload?.drainTimeout,

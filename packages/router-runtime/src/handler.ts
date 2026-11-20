@@ -1,4 +1,7 @@
-import { QueryPlan } from '@graphql-hive/router-query-planner';
+import type {
+  QueryPlan,
+  QueryPlannerOptions,
+} from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -95,7 +98,25 @@ export async function unifiedGraphHandler(
   const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
     await import(moduleName);
   const supergraphSdl = opts.getUnifiedGraphSDL();
-  const queryPlanner = new QueryPlanner(supergraphSdl);
+  // the planner validates the limits and throws on invalid ones
+  let plannerOptions: QueryPlannerOptions | undefined;
+  if (typeof opts.maxAliasesPerRequest === 'object') {
+    const { '*': all, ...subgraphs } = opts.maxAliasesPerRequest;
+    plannerOptions = {
+      maxAliasesPerRequest: all,
+      subgraphMaxAliasesPerRequest: subgraphs,
+    };
+  } else if (opts.maxAliasesPerRequest != null) {
+    plannerOptions = { maxAliasesPerRequest: opts.maxAliasesPerRequest };
+  }
+  // TODO: drop after bumping @graphql-hive/router-query-planner to 0.0.56, the cast only adds
+  // the options argument of its constructor
+  const queryPlanner = new (
+    QueryPlanner as new (
+      supergraphSdl: string,
+      options?: QueryPlannerOptions,
+    ) => InstanceType<typeof QueryPlanner>
+  )(supergraphSdl, plannerOptions);
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
   const pubsubOperationMetadataMap = getPubsubOperationRootFields(
     opts.unifiedGraph,
@@ -115,9 +136,18 @@ export async function unifiedGraphHandler(
   // Scoping the key by the supergraph itself means a schema reload (or a
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
-  // the planner version keeps plans of other versions out, their shape may differ
+  // the planner version keeps plans of other versions out, their shape may differ.
+  // plans carry the alias limits they were planned with, so gateways with other limits can't
+  // share them either
   const remotePlanCacheKeyPrefix = opts.cache
-    ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:`
+    ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:${await sha256(
+        JSON.stringify([
+          plannerOptions?.maxAliasesPerRequest ?? null,
+          Object.entries(
+            plannerOptions?.subgraphMaxAliasesPerRequest ?? {},
+          ).sort(),
+        ]),
+      )}:`
     : undefined;
 
   const documentOperationPlanCache = new WeakMap<
