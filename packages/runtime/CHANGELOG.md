@@ -1,5 +1,21 @@
 # @graphql-hive/gateway-runtime
 
+## 2.14.2
+### Patch Changes
+
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@theguild/federation-composition@^0.27.2` ↗︎](https://www.npmjs.com/package/@theguild/federation-composition/v/0.27.2) (from `^0.26.1`, in `dependencies`)
+- Updated dependencies [[`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2)]:
+  - @graphql-tools/delegate@12.3.5
+  - @graphql-tools/stitch@10.4.5
+  - @graphql-tools/batch-delegate@10.1.7
+  - @graphql-tools/federation@4.6.6
+  - @graphql-mesh/fusion-runtime@1.14.2
+  - @graphql-tools/wrap@11.2.7
+
 ## 2.14.1
 ### Patch Changes
 
