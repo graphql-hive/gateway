@@ -514,7 +514,10 @@ function runFetches(
   let running = 0;
   let deferred: DeferredPromise<void> | undefined;
   let syncError: { error: unknown } | undefined;
+  // once the plan failed nothing new starts, the result is thrown away anyway
+  let failed = false;
   const fail = (error: unknown) => {
+    failed = true;
     if (deferred) {
       deferred.reject(error);
     } else {
@@ -529,6 +532,9 @@ function runFetches(
     }
   };
   const start = (index: number) => {
+    if (failed) {
+      return;
+    }
     let result: MaybePromise<unknown>;
     try {
       result = executeFetch(schedule.fetches[index]!, executionContext);
@@ -541,11 +547,10 @@ function runFetches(
     running++;
     result.then(() => {
       running--;
-      try {
-        release(index);
-      } catch (error) {
-        return fail(error);
+      if (failed) {
+        return;
       }
+      release(index);
       if (!running) {
         deferred?.resolve();
       }
