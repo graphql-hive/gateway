@@ -60,3 +60,5 @@ Scalars have the `coerceOutputValue`, `coerceInputValue`, `coerceInputLiteral` a
 ### Printing and introspection
 
 `print` formats object values with spaces, like `{ a: 1 }` instead of `{a: 1}`, and breaks long ones over several lines. The `reason` argument of `@deprecated` and the `includeDeprecated` argument of introspection fields are non-nullable. Update snapshots or string comparisons of printed documents and introspection results.
+
+Closes #2750
