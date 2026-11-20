@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.8.4",
-    "graphql": "16.15.0",
+    "graphql": "^16.15.0",
     "graphql-sse": "^2.6.3",
     "graphql-yoga": "^6.1.0",
     "tslib": "^2.9.1",
