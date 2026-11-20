@@ -220,16 +220,62 @@ describe('@interfaceObject', () => {
         },
       },
     });
+    // merge target of both the implementation and the interface
+    const rater = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key"]
+          )
+
+        interface Location @key(fields: "id") {
+          id: ID!
+          rating: Int
+        }
+
+        type Store implements Location @key(fields: "id") {
+          id: ID!
+          rating: Int
+        }
+
+        type Spa implements Location @key(fields: "id") {
+          id: ID!
+          rating: Int
+        }
+
+        type Query {
+          raterPing: String
+        }
+      `),
+      resolvers: {
+        Location: {
+          __resolveReference: ({ id }: { id: string }) => ({
+            __typename: kinds[id],
+            id,
+          }),
+        },
+        Store: {
+          __resolveReference: (reference: unknown) => reference,
+          rating: () => 5,
+        },
+        Spa: {
+          __resolveReference: (reference: unknown) => reference,
+          rating: () => 5,
+        },
+      },
+    });
 
     for (const id of ['store1', 'spa1']) {
       const { result, subgraphCalls } = await execute(
-        { owner, contributor, extender },
+        { owner, contributor, extender, rater },
         /* GraphQL */ `
           {
             location(id: "${id}") {
               __typename
               id
               plain
+              rating
               ... on Store {
                 feed
               }
@@ -243,14 +289,15 @@ describe('@interfaceObject', () => {
             __typename: kinds[id],
             id,
             plain: `plain-${id}`,
+            rating: 5,
             ...(id === 'store1' && { feed: 'feed-store1' }),
           },
         },
       });
       expect(subgraphCalls.map(({ subgraph }) => subgraph).sort()).toEqual(
         id === 'store1'
-          ? ['contributor', 'extender', 'owner']
-          : ['contributor', 'owner'],
+          ? ['contributor', 'extender', 'owner', 'rater']
+          : ['contributor', 'owner', 'rater'],
       );
     }
   });

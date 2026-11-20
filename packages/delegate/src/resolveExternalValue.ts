@@ -202,13 +202,12 @@ function resolveExternalObject<TContext extends Record<string, any>>(
     mergedTypeInfo.typeName === type.name
       ? undefined
       : stitchingInfo.mergedTypes[type.name];
+  const knowsConcreteType = (targetSubschema: Subschema) =>
+    !!targetSubschema.transformedSchema.getType(object.__typename);
   if (
     abstractMergedTypeInfo?.targetSubschemas
       .get(subschema as Subschema)
-      ?.some(
-        (targetSubschema) =>
-          !targetSubschema.transformedSchema.getType(object.__typename),
-      )
+      ?.some((targetSubschema) => !knowsConcreteType(targetSubschema))
   ) {
     return handleMaybePromise(
       () =>
@@ -226,6 +225,9 @@ function resolveExternalObject<TContext extends Record<string, any>>(
           subschema as Subschema,
           context,
           info,
+          undefined,
+          // the concrete merge above already covered these
+          knowsConcreteType,
         ),
     );
   }
