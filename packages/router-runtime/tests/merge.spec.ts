@@ -1,5 +1,5 @@
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
-import { buildSchema, parse } from 'graphql';
+import { buildSchema, GraphQLError, parse, print } from 'graphql';
 import { expect, it } from 'vitest';
 import { executeQueryPlan } from '../src/executor';
 
@@ -181,4 +181,108 @@ it('keeps the value of an earlier fetch when a later one returns null for it', a
   });
 
   expect(result).toEqual({ data: { products: [{ name: 'Chair' }] } });
+});
+
+it('merges a root type re-entry into every object its flatten path reaches', async () => {
+  const supergraphSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      a: String
+      x: String
+    }
+
+    type Mutation {
+      do: [Payload]
+    }
+
+    type Payload {
+      query: Query
+    }
+  `);
+  const queryPlan: QueryPlan = {
+    kind: 'QueryPlan',
+    node: {
+      kind: 'Sequence',
+      nodes: [
+        {
+          kind: 'Fetch',
+          serviceName: 'a',
+          operationKind: 'mutation',
+          operation: 'mutation{do{query{__typename a}}}',
+          id: 2,
+          dependsOn: [],
+        },
+        {
+          kind: 'Flatten',
+          path: [{ Field: 'do' }, '@', { Field: 'query' }],
+          node: {
+            kind: 'Fetch',
+            serviceName: 'b',
+            operationKind: 'query',
+            operation: '{x}',
+            id: 3,
+            dependsOn: [2],
+          },
+        },
+      ],
+    },
+    projection: {
+      rootType: 'Mutation',
+      fields: [
+        {
+          name: 'do',
+          itemNonNull: [false],
+          selections: [
+            {
+              name: 'query',
+              selections: [{ name: 'a' }, { name: 'x' }],
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  const requests: { operationType: unknown; document: string }[] = [];
+  const result = await executeQueryPlan({
+    queryPlan,
+    supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
+    executionRequest: { document: parse('mutation { do { query { a x } } }') },
+    onSubgraphExecute(subgraphName, { operationType, document }) {
+      requests.push({ operationType, document: print(document) });
+      if (subgraphName === 'a') {
+        return {
+          data: {
+            do: [
+              { query: { __typename: 'Query', a: '1' } },
+              { query: null },
+              { query: { __typename: 'Query', a: '2' } },
+            ],
+          },
+        };
+      }
+      return {
+        data: { x: 'x' },
+        errors: [new GraphQLError('x is partial')],
+      };
+    },
+  });
+
+  expect(requests).toEqual([
+    { operationType: 'mutation', document: print(parse('mutation{do{query{__typename a}}}')) },
+    { operationType: 'query', document: print(parse('{x}')) },
+  ]);
+  expect(result).toEqual({
+    data: {
+      do: [
+        { query: { a: '1', x: 'x' } },
+        { query: null },
+        { query: { a: '2', x: 'x' } },
+      ],
+    },
+    errors: [
+      expect.objectContaining({ message: 'x is partial', path: ['do', 'query'] }),
+    ],
+  });
 });

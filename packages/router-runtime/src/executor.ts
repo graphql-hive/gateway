@@ -585,9 +585,10 @@ function executeFetch(
       if (!shouldRun(fetch.node.runIf, executionContext.variableValues)) {
         return;
       }
-      // a flattened fetch without requires has no entities to send
-      if (!fetch.target.requires.length) {
-        return;
+      // a flattened fetch without requires re-enters a root type, like `query` in
+      // `mutation { do { query { x } } }`
+      if (!fetch.node.requires) {
+        return executeRootFetch(fetch, executionContext);
       }
       const collected = collectEntities(
         executionContext.data,
@@ -1801,7 +1802,7 @@ function unaliasContextResult(
 }
 
 function executeRootFetch(
-  rootFetch: RootFetch,
+  rootFetch: RootFetch | FlattenFetch,
   executionContext: QueryPlanExecutionContext,
 ): MaybePromise<any> {
   return handleMaybePromiseMaybeAsyncIterable(
@@ -1827,8 +1828,12 @@ function executeRootFetch(
   );
 }
 
+/**
+ * Merges the result of a root fetch into the data. The data of a root type re-entry, a flattened
+ * fetch without requires, is merged into every object its flatten path reaches instead.
+ */
 function mergeRootFetchResult(
-  rootFetch: RootFetch,
+  rootFetch: RootFetch | FlattenFetch,
   executionContext: QueryPlanExecutionContext,
   fetchResult: ExecutionResult,
 ) {
@@ -1848,11 +1853,40 @@ function mergeRootFetchResult(
       executionContext.possibleTypes,
     );
   }
-  deepMerge(
+  if (rootFetch.kind === 'Fetch') {
+    deepMerge(
+      executionContext.data,
+      responseData,
+      rootFetch.node.customScalarPaths,
+    );
+    return;
+  }
+  const targets: object[] = [];
+  traverseFlattenPath(
     executionContext.data,
-    responseData,
-    rootFetch.node.customScalarPaths,
+    rootFetch.target.paths[0]!,
+    executionContext.possibleTypes,
+    [],
+    [],
+    (value) => {
+      for (const target of Array.isArray(value) ? value : [value]) {
+        if (target != null && typeof target === 'object') {
+          targets.push(target);
+        }
+      }
+    },
   );
+  targets.forEach((target, index) => {
+    // every target gets its own copy like in the router, the merge would otherwise share objects
+    // between them and a later fetch merging into one would change the others
+    deepMerge(
+      target,
+      index === targets.length - 1
+        ? responseData
+        : structuredClone(responseData),
+      rootFetch.node.customScalarPaths,
+    );
+  });
 }
 
 function handleSubgraphExecutionError(
