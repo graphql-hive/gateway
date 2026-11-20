@@ -52,6 +52,54 @@ import {
 } from 'graphql';
 import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
+// TODO: drop after bumping @graphql-hive/router-query-planner to 0.0.56
+declare module '@graphql-hive/router-query-planner' {
+  /**
+   * How the planner plans, like the router's planner options from its config. Every option is
+   * off or unlimited when missing.
+   */
+  interface QueryPlannerOptions {
+    /**
+     * The most aliases one entity request to a subgraph may carry, like the router's
+     * `traffic_shaping.all.max_aliases_per_request`. An integer from 0 to 4294967295, where 0
+     * counts as 1. Batch fetches are split to stay within it, and it limits the
+     * `maxContextGroups` of fetches with context variables. No limit when missing.
+     */
+    maxAliasesPerRequest?: number;
+    /**
+     * `maxAliasesPerRequest` for single subgraphs, by subgraph name, like the router's
+     * `traffic_shaping.subgraphs.<name>.max_aliases_per_request`. Wins over
+     * `maxAliasesPerRequest` for its subgraph.
+     */
+    subgraphMaxAliasesPerRequest?: Record<string, number>;
+    /**
+     * Folds matching object type fragments into an interface fragment even when that interface
+     * isn't the field's type, like the router's
+     * `query_planner.experimental_abstract_type_folding`. Only the subgraph operations change.
+     */
+    experimentalAbstractTypeFolding?: boolean;
+  }
+  interface FetchNode {
+    /**
+     * The most groups of context values one request of this fetch may carry, at least 1, from the
+     * `maxAliasesPerRequest` options. Put up to this many groups in one request, each under its own
+     * aliases, and send as many requests as it takes. 1 means one request per group, without
+     * aliasing. The planner already checked that the operation can be aliased per group, so the
+     * executor doesn't have to. Only on fetches with `contextVariables`, missing on those when there
+     * is no limit, so every group goes in one request.
+     */
+    maxContextGroups?: number;
+  }
+  interface BatchFetchNode {
+    /**
+     * Like `FetchNode.maxContextGroups`, only on batches with an alias that has
+     * `contextVariables`. A group repeats every alias of the batch, so the limit is
+     * `maxAliasesPerRequest` divided by the number of aliases.
+     */
+    maxContextGroups?: number;
+  }
+}
+
 export interface QueryPlanExecutionContext {
   /**
    * The public schema of the supergraph
@@ -271,11 +319,6 @@ interface FlattenFetch {
   /** Where an error that can't be pointed to an entity points to. */
   errorPath: (string | number)[];
   target: EntityTarget;
-  /**
-   * Whether the context groups can go as aliased fields in one request, they can't when a
-   * context variable is non-null.
-   */
-  contextAliasable: boolean;
 }
 
 interface ScheduledBatchFetch {
@@ -385,7 +428,6 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
         const errorPath = path.flatMap((segment) =>
           segment.kind === 'Field' ? [segment.name] : [],
         );
-        const contextVariables = fetchNode.contextVariables ?? [];
         fetches.push({
           kind: 'Flatten',
           node: fetchNode,
@@ -399,13 +441,6 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
             inputRewrites: fetchNode.inputRewrites,
             context: prepareContext(fetchNode),
           },
-          contextAliasable:
-            contextVariables.length > 0 &&
-            !getOperationASTFromDocument(document)?.variableDefinitions?.some(
-              (definition) =>
-                contextVariables.includes(definition.variable.name.value) &&
-                definition.type.kind === Kind.NON_NULL_TYPE,
-            ),
         });
         ids.push({ completes: [fetchNode.id], dependsOn: fetchNode.dependsOn });
         return;
@@ -1307,21 +1342,18 @@ function executeBatchFetch(
 
   const { byAlias, waves } = batchContext;
   // every wave repeats all batch aliases, each with its own representations and context values
-  const aliased =
-    waves.length > 1 &&
-    batchFetch.aliases.some((alias) => alias.context.names.length)
-      ? writeContextAliasedDocument(
-          batchFetch.document,
-          batchFetch.aliases.flatMap((alias) => [
-            ...alias.context.names,
-            alias.alias.representationsVariableName,
-          ]),
-          waves.length,
-        )
-      : null;
+  const requests = splitContextGroups(
+    waves,
+    batchFetchNode.maxContextGroups,
+    batchFetch.document,
+    batchFetch.aliases.flatMap((alias) => [
+      ...alias.context.names,
+      alias.alias.representationsVariableName,
+    ]),
+  );
 
   return waitAll(
-    (aliased ? [waves] : waves.map((wave) => [wave])).map((chunk) => {
+    requests.map(({ groups: chunk, aliased }) => {
       const ranges = new Map<string, RepresentationRange>();
       for (const [aliasName, aliasContext] of byAlias) {
         const offsetAt = (wave: number) =>
@@ -1432,22 +1464,17 @@ function executeFlattenFetch(
     fetchNode.variableUsages,
   );
 
-  const groups = collected.groups.flatMap((group, index) =>
-    group.representations.length ? [index] : [],
+  const requests = splitContextGroups(
+    collected.groups.flatMap((group, index) =>
+      group.representations.length ? [index] : [],
+    ),
+    fetchNode.maxContextGroups,
+    document,
+    [...flattenFetch.target.context.names, 'representations'],
   );
-  // one alias per context group, unless a context variable is non-null. those groups are
-  // fetched one by one instead
-  const aliased =
-    groups.length > 1 && flattenFetch.contextAliasable
-      ? writeContextAliasedDocument(
-          document,
-          [...flattenFetch.target.context.names, 'representations'],
-          groups.length,
-        )
-      : null;
 
   return waitAll(
-    (aliased ? [groups] : groups.map((group) => [group])).map((chunk) => {
+    requests.map(({ groups: chunk, aliased }) => {
       const range: RepresentationRange = {
         start: collected.offsets[chunk[0]!]!,
         end: collected.offsets[chunk[chunk.length - 1]! + 1]!,
@@ -1563,6 +1590,41 @@ function waitAll(values: MaybePromise<unknown>[]): MaybePromise<unknown> {
     return promises[0];
   }
   return Promise.all(promises);
+}
+
+/**
+ * Splits the context groups (or batch waves) of a fetch, in order, into requests of at most
+ * `maxContextGroups` groups each, like the router does. A request with more than one group sends
+ * the operation written out per group by {@link writeContextAliasedDocument}, one that can't be
+ * written out goes as one request per group. Without `maxContextGroups` every group goes in one
+ * request.
+ */
+function splitContextGroups(
+  groups: number[],
+  maxContextGroups: number | undefined,
+  document: DocumentNode,
+  groupVariables: string[],
+): { groups: number[]; aliased: ContextAliasedDocument | null }[] {
+  const size = Math.max(1, maxContextGroups ?? groups.length);
+  const requests: {
+    groups: number[];
+    aliased: ContextAliasedDocument | null;
+  }[] = [];
+  for (let start = 0; start < groups.length; start += size) {
+    const chunk = groups.slice(start, start + size);
+    const aliased =
+      chunk.length > 1
+        ? writeContextAliasedDocument(document, groupVariables, chunk.length)
+        : null;
+    if (aliased || chunk.length === 1) {
+      requests.push({ groups: chunk, aliased });
+    } else {
+      requests.push(
+        ...chunk.map((group) => ({ groups: [group], aliased: null })),
+      );
+    }
+  }
+  return requests;
 }
 
 interface ContextAliasedDocument {
