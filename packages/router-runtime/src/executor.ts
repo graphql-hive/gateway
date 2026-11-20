@@ -522,11 +522,13 @@ function runFetches(
   const waits = initialWaits.slice();
   let running = 0;
   let deferred: DeferredPromise<void> | undefined;
+  let syncError: { error: unknown } | undefined;
   const fail = (error: unknown) => {
-    if (!deferred) {
-      throw error;
+    if (deferred) {
+      deferred.reject(error);
+    } else {
+      syncError ??= { error };
     }
-    deferred.reject(error);
   };
   const release = (index: number) => {
     for (const dependent of schedule.dependents[index]!) {
@@ -561,6 +563,9 @@ function runFetches(
   // picked before any starts, starting one can bring the waits of others to zero
   const ready = waits.flatMap((count, index) => (count === 0 ? [index] : []));
   ready.forEach(start);
+  if (syncError) {
+    throw syncError.error;
+  }
   if (!running) {
     return;
   }
