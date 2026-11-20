@@ -57,7 +57,7 @@ function sha256(str: string) {
  * The version of `@graphql-hive/router-query-planner` the executor runs the plans of. It is part
  * of the key of the plans in the shared cache. The executor can't run plans of another version.
  */
-const QUERY_PLANNER_VERSION = '0.0.55';
+const QUERY_PLANNER_VERSION = '0.0.56';
 
 /** Query plans only depend on the supergraph and the operation, so they're safe to keep for a while. */
 const QUERY_PLAN_CACHE_TTL_SECONDS = 60 * 60 * 24;
@@ -109,14 +109,7 @@ export async function unifiedGraphHandler(
   } else if (opts.maxAliasesPerRequest != null) {
     plannerOptions = { maxAliasesPerRequest: opts.maxAliasesPerRequest };
   }
-  // TODO: drop after bumping @graphql-hive/router-query-planner to 0.0.56, the cast only adds
-  // the options argument of its constructor
-  const queryPlanner = new (
-    QueryPlanner as new (
-      supergraphSdl: string,
-      options?: QueryPlannerOptions,
-    ) => InstanceType<typeof QueryPlanner>
-  )(supergraphSdl, plannerOptions);
+  const queryPlanner = new QueryPlanner(supergraphSdl, plannerOptions);
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
   const pubsubOperationMetadataMap = getPubsubOperationRootFields(
     opts.unifiedGraph,
