@@ -50,6 +50,12 @@ function sha256(str: string) {
   );
 }
 
+/**
+ * The version of `@graphql-hive/router-query-planner` the executor runs the plans of. It's in the
+ * key of the plans in the shared cache, the executor can't run plans of another version.
+ */
+const QUERY_PLANNER_VERSION = '0.0.55';
+
 /** Query plans only depend on the supergraph and the operation, so they're safe to keep for a while. */
 const QUERY_PLAN_CACHE_TTL_SECONDS = 60 * 60 * 24;
 
@@ -109,8 +115,9 @@ export async function unifiedGraphHandler(
   // Scoping the key by the supergraph itself means a schema reload (or a
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
+  // the planner version keeps plans of other versions out, their shape may differ
   const remotePlanCacheKeyPrefix = opts.cache
-    ? `hive-gateway:query-plan:${await sha256(supergraphSdl)}:`
+    ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:`
     : undefined;
 
   const documentOperationPlanCache = new WeakMap<
