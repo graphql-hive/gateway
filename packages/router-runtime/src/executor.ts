@@ -415,23 +415,13 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
           kind: 'BatchFetch',
           node,
           document: getDocumentNodeOfFetchingNode(node),
-          aliases: node.entityBatch.aliases.map((alias) => {
-            const seen = new Set<string>();
-            return {
-              alias,
-              paths: alias.paths.flatMap((path) => {
-                const key = JSON.stringify(path);
-                if (seen.has(key)) {
-                  return [];
-                }
-                seen.add(key);
-                return [normalizeFlattenNodePath(path)];
-              }),
-              requires: alias.requires,
-              inputRewrites: alias.inputRewrites,
-              context: prepareContext(alias),
-            };
-          }),
+          aliases: node.entityBatch.aliases.map((alias) => ({
+            alias,
+            paths: alias.paths.map(normalizeFlattenNodePath),
+            requires: alias.requires,
+            inputRewrites: alias.inputRewrites,
+            context: prepareContext(alias),
+          })),
         });
         ids.push({ completes: node.completes, dependsOn: node.dependsOn });
         return;
