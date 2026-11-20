@@ -30,6 +30,109 @@ async function execute(
 }
 
 describe('@interfaceObject', () => {
+  // https://github.com/graphql-hive/gateway/issues/2463
+  it('resolves fields from inline fragments nested in a named fragment on the interface', async () => {
+    const a = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key", "@interfaceObject"]
+          )
+
+        type Node @key(fields: "id", resolvable: false) @interfaceObject {
+          id: ID!
+        }
+
+        type Query {
+          node: Node
+        }
+      `),
+      resolvers: {
+        Query: {
+          node: () => ({ id: 'leaf1' }),
+        },
+      },
+    });
+    const b = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key"]
+          )
+
+        interface Node @key(fields: "id") {
+          id: ID!
+        }
+
+        type Leaf implements Node @key(fields: "id") {
+          id: ID!
+          extra: String!
+        }
+
+        type Query {
+          bPing: String
+        }
+      `),
+      resolvers: {
+        Node: {
+          __resolveReference: ({ id }: { id: string }) => ({
+            __typename: 'Leaf',
+            id,
+          }),
+        },
+        Leaf: {
+          __resolveReference: ({ id }: { id: string }) => ({ id }),
+          extra: ({ id }: { id: string }) => `extra-${id}`,
+        },
+      },
+    });
+
+    for (const query of [
+      /* GraphQL */ `
+        {
+          node {
+            ...NodeFields
+            __typename
+          }
+        }
+
+        fragment NodeFields on Node {
+          ... on Leaf {
+            extra
+          }
+        }
+      `,
+      /* GraphQL */ `
+        {
+          node {
+            ...NodeFields
+            __typename
+          }
+        }
+
+        fragment NodeFields on Node {
+          ...LeafFields
+        }
+
+        fragment LeafFields on Leaf {
+          extra
+        }
+      `,
+    ]) {
+      const { result } = await execute({ a, b }, query);
+      expect(result).toEqual({
+        data: {
+          node: {
+            __typename: 'Leaf',
+            extra: 'extra-leaf1',
+          },
+        },
+      });
+    }
+  });
+
   // https://github.com/graphql-hive/gateway/issues/2736
   it('resolves the interface object field when another subgraph extends the implementation', async () => {
     const kinds: Record<string, string> = { store1: 'Store', spa1: 'Spa' };

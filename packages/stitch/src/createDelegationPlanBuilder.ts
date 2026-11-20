@@ -445,6 +445,16 @@ export function createDelegationPlanBuilder(
             for (const selection of fieldNode.selectionSet.selections) {
               if (selection.kind === Kind.INLINE_FRAGMENT) {
                 inlineFragments.push(selection);
+              } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
+                const fragment = fragments[selection.name.value];
+                if (fragment) {
+                  inlineFragments.push({
+                    kind: Kind.INLINE_FRAGMENT,
+                    typeCondition: fragment.typeCondition,
+                    directives: selection.directives,
+                    selectionSet: fragment.selectionSet,
+                  });
+                }
               }
             }
           }
