@@ -303,6 +303,16 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies['@apollo/rover'] = `^${roverVersion}`;
     }
 
+    if (packageJson.dependencies['graphql']) {
+      // the e2es run on graphql 17 but examples are installed with npm, which enforces peers.
+      // @apollo/server 5 and the stable gateway releases only allow graphql 16, so examples stay on it
+      const graphqlVersion = '16.15.0';
+      console.log(
+        `Setting "graphql@^${graphqlVersion}" dependency because npm installs examples with strict peers...`,
+      );
+      packageJson.dependencies['graphql'] = `^${graphqlVersion}`;
+    }
+
     const overridesPkgs = [
       'minimatch',
       'fast-uri',
