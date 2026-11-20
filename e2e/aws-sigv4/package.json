@@ -2,7 +2,7 @@
   "name": "@e2e/aws-sigv4",
   "private": true,
   "devDependencies": {
-    "@apollo/subgraph": "2.16.0",
+    "@apollo/subgraph": "^2.16.0",
     "aws4-express": "^0.14.2",
     "express": "^5.3.0",
     "graphql": "^17.1.0",
