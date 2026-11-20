@@ -12,6 +12,7 @@ import type {
   ProjectionCondition,
   ProjectionField,
   QueryPlan,
+  QueryPlanner,
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
 import {
@@ -76,7 +77,7 @@ export interface QueryPlanExecutionContext {
   /**
    * The resolvable keys of every entity type in every subgraph
    */
-  entityKeys: EntityKeys | undefined;
+  entityKeys: EntityKeys;
 
   /**
    * The member types of every abstract type
@@ -107,13 +108,13 @@ export interface EntityRepresentation {
  * the list of its top-level fields without `__typename`, so a key of `__typename` alone is empty.
  * It is what `QueryPlanner.entityKeys` gives.
  */
-export type EntityKeys = Record<string, Record<string, string[][]>>;
+export type EntityKeys = QueryPlanner['entityKeys'];
 
 /**
  * The member types of every abstract type of the public schema, by type name. It is what
  * `QueryPlanner.possibleTypes` gives.
  */
-export type PossibleTypes = Record<string, string[]>;
+export type PossibleTypes = QueryPlanner['possibleTypes'];
 
 function isEntityRepresentation(obj: any): obj is EntityRepresentation {
   return obj?.__typename != null;
@@ -150,15 +151,13 @@ export interface QueryPlanExecutorOptions {
    */
   supergraphSchema: GraphQLSchema;
   /**
-   * The resolvable keys of every entity type in every subgraph. Without them, an entity is sent
-   * without the fields it misses, and one with nothing but `__typename` isn't sent.
+   * The resolvable keys of every entity type in every subgraph.
    */
-  entityKeys?: EntityKeys;
+  entityKeys: EntityKeys;
   /**
-   * The member types of every abstract type. Without them, an object only satisfies a type
-   * condition of its own type.
+   * The member types of every abstract type.
    */
-  possibleTypes?: PossibleTypes;
+  possibleTypes: PossibleTypes;
   /**
    * The factory function that returns an executor for a subgraph
    */
@@ -174,7 +173,7 @@ export function executeQueryPlan({
   onSubgraphExecute,
   supergraphSchema,
   entityKeys,
-  possibleTypes = {},
+  possibleTypes,
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
@@ -597,7 +596,7 @@ function executeFetch(
         executionContext.data,
         fetch.target,
         executionContext,
-        executionContext.entityKeys?.[fetch.node.serviceName],
+        executionContext.entityKeys[fetch.node.serviceName],
       );
       if (!collected.entities.length) {
         return;
@@ -662,7 +661,7 @@ function trimErrorPath(
 interface CreateExecutionContextOpts {
   supergraphSchema: GraphQLSchema;
   executionRequest: ExecutionRequest;
-  entityKeys: EntityKeys | undefined;
+  entityKeys: EntityKeys;
   possibleTypes: PossibleTypes;
   onSubgraphExecute(
     subgraphName: string,
@@ -1144,7 +1143,7 @@ function prepareBatchFetchContext(
         executionContext.data,
         alias,
         executionContext,
-        executionContext.entityKeys?.[batchFetch.node.serviceName],
+        executionContext.entityKeys[batchFetch.node.serviceName],
       );
       collectedByVariableName.set(
         alias.alias.representationsVariableName,
