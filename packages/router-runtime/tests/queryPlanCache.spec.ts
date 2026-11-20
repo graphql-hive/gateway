@@ -198,6 +198,48 @@ it('does not reuse a query plan cached by another version of the query planner',
   ]);
 });
 
+it('does not share query plans between gateways with different alias limits', async () => {
+  const { cache, set } = createMockCache();
+  const subgraphs = [
+    {
+      name: 'upstream',
+      schema: {
+        typeDefs: /* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
+        },
+      },
+    },
+  ];
+
+  const keys: string[] = [];
+  for (const maxAliasesPerRequest of <
+    (number | Record<string, number> | undefined)[]
+  >[undefined, 10, { upstream: 10 }, { '*': 10, upstream: 2 }]) {
+    set.mockClear();
+    await using gw = createGatewayTester({
+      unifiedGraphHandler,
+      cache,
+      subgraphs,
+      maxAliasesPerRequest,
+    });
+    await expect(gw.execute({ query: '{ hello }' })).resolves.toEqual({
+      data: { hello: 'world' },
+    });
+    // every gateway plans and caches on its own, it can't find the plans of the others
+    const setCalls = getQueryPlanCacheSetCalls(set);
+    expect(setCalls).toHaveLength(1);
+    keys.push(setCalls[0]![0]);
+  }
+  expect(new Set(keys).size).toBe(keys.length);
+});
+
 it('reuses the in-memory query plan for the same document', async () => {
   const computeCacheKey = vi.spyOn(QueryPlanner.prototype, 'computeCacheKey');
   const planAsync = vi.spyOn(QueryPlanner.prototype, 'planAsync');

@@ -274,6 +274,32 @@ export interface GatewayConfigSupergraph<
   unifiedGraphHandler?: UnifiedGraphHandler;
 
   /**
+   * The most aliases one entity request to a subgraph may carry, like the Hive Router's
+   * `traffic_shaping.all.max_aliases_per_request` and
+   * `traffic_shaping.subgraphs.<name>.max_aliases_per_request`. Subgraphs that limit the aliases
+   * of an operation can reject requests with more.
+   *
+   * A number applies to all subgraphs. A record sets it by subgraph name, with `"*"` applying to
+   * the subgraphs that are not named. Every limit is an integer from 0 to 4294967295, where 0
+   * counts as 1. There is no limit by default.
+   *
+   * Only the Hive Router runtime (`@graphql-hive/router-runtime`) uses it. Batched entity fetches
+   * are planned to stay within the limit, and a `@fromContext` fetch, which sends one aliased
+   * `_entities` field per group of distinct context values, is split into as many requests as it
+   * takes.
+   *
+   * @example Allow at most 15 aliases per request, and 4 for the `accounts` subgraph.
+   * ```ts
+   * import { defineConfig } from '@graphql-hive/gateway';
+   *
+   * export const gatewayConfig = defineConfig({
+   *   maxAliasesPerRequest: { '*': 15, accounts: 4 },
+   * });
+   * ```
+   */
+  maxAliasesPerRequest?: number | Record<string, number>;
+
+  /**
    * Gracefully reload the supergraph by letting in-flight operations finish on
    * the previous schema generation instead of aborting them. Disabled by
    * default (previous generation is disposed immediately on reload).
