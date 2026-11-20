@@ -4,8 +4,8 @@ import type {
   QueryPlan,
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
-import { assertSingleExecutionValue } from '@internal/testing';
 import type { ExecutionResult } from '@graphql-tools/utils';
+import { assertSingleExecutionValue } from '@internal/testing';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { buildSchema, parse } from 'graphql';
 import { expect, it } from 'vitest';
@@ -184,7 +184,9 @@ function rootFetch(
 }
 
 // a rewrite the executor doesn't know makes it throw while merging the result
-const throwingRewrites = [{ Bogus: {} }] as unknown as FetchNode['outputRewrites'];
+const throwingRewrites = [
+  { Bogus: {} },
+] as unknown as FetchNode['outputRewrites'];
 
 it('starts no fetch after one throws while starting the plan', async () => {
   const calls: string[] = [];
