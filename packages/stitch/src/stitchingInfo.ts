@@ -546,6 +546,11 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
 
   for (const typeName in selectionSetsByField) {
     const type = schema.getType(typeName) as GraphQLObjectType;
+    // fields selected through an implementation (`... on Impl { field }`) need
+    // the dependencies declared on the interface too, like @requires on an @interfaceObject
+    const typeNames = isInterfaceType(type)
+      ? [typeName, ...schema.getPossibleTypes(type).map((t) => t.name)]
+      : [typeName];
     for (const fieldName in selectionSetsByField[typeName]) {
       for (const selectionSet of selectionSetsByField[typeName]![fieldName]!) {
         const { fields } = collectFields(
@@ -559,13 +564,11 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
         for (const [, fieldNodes] of fields) {
           for (const fieldNode of fieldNodes) {
             const key = print(fieldNode);
-            if (fieldNodeMap[key] == null) {
-              fieldNodeMap[key] = fieldNode;
-              updateArrayMap(fieldNodesByField, typeName, fieldName, fieldNode);
-            } else {
+            fieldNodeMap[key] ??= fieldNode;
+            for (const name of typeNames) {
               updateArrayMap(
                 fieldNodesByField,
-                typeName,
+                name,
                 fieldName,
                 fieldNodeMap[key],
               );
