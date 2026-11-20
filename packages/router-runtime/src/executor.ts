@@ -52,54 +52,6 @@ import {
 } from 'graphql';
 import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
-// TODO: drop after bumping @graphql-hive/router-query-planner to 0.0.56
-declare module '@graphql-hive/router-query-planner' {
-  /**
-   * How the planner plans, like the router's planner options from its config. Every option is
-   * off or unlimited when missing.
-   */
-  interface QueryPlannerOptions {
-    /**
-     * The most aliases one entity request to a subgraph may carry, like the router's
-     * `traffic_shaping.all.max_aliases_per_request`. An integer from 0 to 4294967295, where 0
-     * counts as 1. Batch fetches are split to stay within it, and it limits the
-     * `maxContextGroups` of fetches with context variables. No limit when missing.
-     */
-    maxAliasesPerRequest?: number;
-    /**
-     * `maxAliasesPerRequest` for single subgraphs, by subgraph name, like the router's
-     * `traffic_shaping.subgraphs.<name>.max_aliases_per_request`. Wins over
-     * `maxAliasesPerRequest` for its subgraph.
-     */
-    subgraphMaxAliasesPerRequest?: Record<string, number>;
-    /**
-     * Folds matching object type fragments into an interface fragment even when that interface
-     * isn't the field's type, like the router's
-     * `query_planner.experimental_abstract_type_folding`. Only the subgraph operations change.
-     */
-    experimentalAbstractTypeFolding?: boolean;
-  }
-  interface FetchNode {
-    /**
-     * The most groups of context values one request of this fetch may carry, at least 1, from the
-     * `maxAliasesPerRequest` options. Put up to this many groups in one request, each under its own
-     * aliases, and send as many requests as it takes. 1 means one request per group, without
-     * aliasing. The planner already checked that the operation can be aliased per group, so the
-     * executor doesn't have to. Only on fetches with `contextVariables`, missing on those when there
-     * is no limit, so every group goes in one request.
-     */
-    maxContextGroups?: number;
-  }
-  interface BatchFetchNode {
-    /**
-     * Like `FetchNode.maxContextGroups`, only on batches with an alias that has
-     * `contextVariables`. A group repeats every alias of the batch, so the limit is
-     * `maxAliasesPerRequest` divided by the number of aliases.
-     */
-    maxContextGroups?: number;
-  }
-}
-
 export interface QueryPlanExecutionContext {
   /**
    * The public schema of the supergraph
