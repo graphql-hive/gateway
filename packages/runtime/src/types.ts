@@ -288,6 +288,9 @@ export interface GatewayConfigSupergraph<
    * `_entities` field per group of distinct context values, is split into as many requests as it
    * takes.
    *
+   * Requests to a subgraph with a limit are not batched (see `__experimental__batchExecution`),
+   * because batching would merge the split requests back into one.
+   *
    * @example Allow at most 15 aliases per request, and 4 for the `accounts` subgraph.
    * ```ts
    * import { defineConfig } from '@graphql-hive/gateway';
