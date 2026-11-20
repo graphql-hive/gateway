@@ -93,7 +93,8 @@ export interface UnifiedGraphHandlerOpts {
   /**
    * The most aliases one entity request to a subgraph may carry. A number applies to all
    * subgraphs, a record sets it by subgraph name (`"*"` = default). Handlers that split requests
-   * by aliases, like the Hive Router runtime, follow it.
+   * by aliases, like the Hive Router runtime, follow it. Requests to a subgraph with a limit are
+   * not batched, because batching would merge the split requests back into one.
    */
   maxAliasesPerRequest?: number | Record<string, number>;
 
@@ -158,7 +159,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
   /**
    * The most aliases one entity request to a subgraph may carry. A number applies to all
    * subgraphs, a record sets it by subgraph name (`"*"` = default). Handlers that split requests
-   * by aliases, like the Hive Router runtime, follow it.
+   * by aliases, like the Hive Router runtime, follow it. Requests to a subgraph with a limit are
+   * not batched, because batching would merge the split requests back into one.
    */
   maxAliasesPerRequest?: number | Record<string, number>;
 
@@ -564,7 +566,17 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             // applies to every generation.
             getDisposeReason: () =>
               generation.disposeReason ?? this.disposeReason,
-            batch: this.batch,
+            // batching would merge requests that were split to stay within the alias limit
+            // of a subgraph back into one, so subgraphs with a limit aren't batched. the hive
+            // router doesn't merge separate fetches either
+            batch: (subgraphName) => {
+              const limits = this.opts.maxAliasesPerRequest;
+              const limit =
+                typeof limits === 'object'
+                  ? (limits[subgraphName] ?? limits['*'])
+                  : limits;
+              return this.batch && limit == null;
+            },
             instrumentation: () => this.instrumentation(),
           });
 
