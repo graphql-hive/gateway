@@ -23,11 +23,11 @@ import {
 } from '@graphql-hive/plugin-opentelemetry/setup';
 import {
   ROOT_CONTEXT,
+  SeverityNumber,
   SpanStatusCode,
   TextMapPropagator,
   TracerProvider,
 } from '@opentelemetry/api';
-import { SeverityNumber } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
   CompositePropagator,
@@ -44,14 +44,14 @@ import {
 import {
   AlwaysOffSampler,
   AlwaysOnSampler,
-  BasicTracerProvider,
   BatchSpanProcessor,
   ConsoleSpanExporter,
   ParentBasedSampler,
+  TracerProvider as SdkTracerProvider,
   SimpleSpanProcessor,
   SpanProcessor,
   TraceIdRatioBasedSampler,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
@@ -101,7 +101,7 @@ describe('useOpenTelemetry', () => {
       });
 
       // Check context manager
-      expect(getTracerProvider()).toBeInstanceOf(BasicTracerProvider);
+      expect(getTracerProvider()).toBeInstanceOf(SdkTracerProvider);
       expect(getContextManager()).toBeInstanceOf(
         AsyncLocalStorageContextManager,
       );
@@ -195,7 +195,9 @@ describe('useOpenTelemetry', () => {
         log: silentLog,
         contextManager: null,
         traces: {
-          processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
+          processors: [
+            new SimpleSpanProcessor({ exporter: new OTLPTraceExporter() }),
+          ],
           console: true,
         },
       });
@@ -373,10 +375,6 @@ describe('useOpenTelemetry', () => {
             eventCountLimit: 5,
             linkCountLimit: 6,
           },
-        },
-        generalLimits: {
-          attributeCountLimit: 7,
-          attributeValueLengthLimit: 8,
         },
       });
 
@@ -834,10 +832,10 @@ describe('useOpenTelemetry', () => {
 
       it('should handle validation error with hive processor', async () => {
         disableAll();
-        const traceProvider = new BasicTracerProvider({
+        const traceProvider = new SdkTracerProvider({
           spanProcessors: [
             new HiveTracingSpanProcessor({
-              processor: new SimpleSpanProcessor(spanExporter),
+              processor: new SimpleSpanProcessor({ exporter: spanExporter }),
             }),
           ],
         });
@@ -1255,7 +1253,7 @@ describe('useOpenTelemetry', () => {
         log: silentLog,
         target: 'test-target',
         contextManager: new AsyncLocalStorageContextManager(),
-        processor: new SimpleSpanProcessor(spanExporter),
+        processor: new SimpleSpanProcessor({ exporter: spanExporter }),
       });
     });
 

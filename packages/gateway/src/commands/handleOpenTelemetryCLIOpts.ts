@@ -1,7 +1,4 @@
-import {
-  BatchSpanProcessor,
-  SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace';
 import { getEnvStr, isNode } from '~internal/env';
 import type { CLIContext } from '..';
 
@@ -70,7 +67,9 @@ export async function handleOpenTelemetryCLIOpts(
       );
 
       processors.push(
-        new BatchSpanProcessor(new OTLPTraceExporter({ url: otelEndpoint })),
+        new BatchSpanProcessor({
+          exporter: new OTLPTraceExporter({ url: otelEndpoint }),
+        }),
       );
     }
 

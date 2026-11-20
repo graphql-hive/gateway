@@ -7,7 +7,12 @@ import {
   getResourceDetectors,
 } from '@opentelemetry/auto-instrumentations-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import {
+  BatchSpanProcessor,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -39,7 +44,7 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
     url: process.env['OTLP_EXPORTER_URL'],
   });
 
-  const resource = resources.resourceFromAttributes({
+  const resource = resourceFromAttributes({
     'custom.resource': 'custom value',
   });
 
@@ -60,8 +65,8 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
         // in-flight requests exist at any given time and their lifecycle is well-defined.
         // For regular e2e tests, SimpleSpanProcessor is still preferred for faster span visibility.
         process.env['MEMTEST']
-          ? new tracing.BatchSpanProcessor(exporter)
-          : new tracing.SimpleSpanProcessor(exporter),
+          ? new BatchSpanProcessor({ exporter })
+          : new SimpleSpanProcessor({ exporter }),
       ],
       resource,
       // In memtests, disable auto-instrumentations entirely to prevent the OTLP exporter's own
