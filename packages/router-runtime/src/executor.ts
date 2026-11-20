@@ -1124,9 +1124,6 @@ function prepareBatchFetchContext(
       });
       continue;
     }
-    if (!alias.requires.length) {
-      continue;
-    }
     let collected = collectedByVariableName.get(
       alias.alias.representationsVariableName,
     );
