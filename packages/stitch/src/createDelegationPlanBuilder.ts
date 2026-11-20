@@ -18,7 +18,6 @@ import {
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
-  InlineFragmentNode,
   isAbstractType,
   isInterfaceType,
   isObjectType,
@@ -439,22 +438,15 @@ export function createDelegationPlanBuilder(
           (fieldNode) => fieldNode.name.value === '__typename',
         )
       ) {
-        const inlineFragments: InlineFragmentNode[] = [];
+        const fragmentSelections: SelectionNode[] = [];
         for (const fieldNode of fieldNodes) {
           if (fieldNode.selectionSet) {
             for (const selection of fieldNode.selectionSet.selections) {
-              if (selection.kind === Kind.INLINE_FRAGMENT) {
-                inlineFragments.push(selection);
-              } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
-                const fragment = fragments[selection.name.value];
-                if (fragment) {
-                  inlineFragments.push({
-                    kind: Kind.INLINE_FRAGMENT,
-                    typeCondition: fragment.typeCondition,
-                    directives: selection.directives,
-                    selectionSet: fragment.selectionSet,
-                  });
-                }
+              if (
+                selection.kind === Kind.INLINE_FRAGMENT ||
+                selection.kind === Kind.FRAGMENT_SPREAD
+              ) {
+                fragmentSelections.push(selection);
               }
             }
           }
@@ -482,7 +474,7 @@ export function createDelegationPlanBuilder(
                   value: '__typename',
                 },
               });
-              existingSelections.push(...inlineFragments);
+              existingSelections.push(...fragmentSelections);
               added = true;
               break;
             }
@@ -508,7 +500,7 @@ export function createDelegationPlanBuilder(
                     value: '__typename',
                   },
                 },
-                ...inlineFragments,
+                ...fragmentSelections,
               ],
             });
             delegationMaps.push(delegationStageToFetchTypeName);
