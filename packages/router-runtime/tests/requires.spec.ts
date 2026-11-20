@@ -214,6 +214,8 @@ it('sends an object inside a representation that misses a selected field as null
   await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
     executionRequest: { document: parse('{ products { shipping } }') },
     onSubgraphExecute(subgraphName, { variables }) {
       if (subgraphName === 'a') {

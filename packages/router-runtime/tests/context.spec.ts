@@ -174,6 +174,7 @@ async function execute(
   const result = (await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
     possibleTypes,
     executionRequest: { document: parse(query), variables },
     onSubgraphExecute(_subgraphName, executionRequest) {

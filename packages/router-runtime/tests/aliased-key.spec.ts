@@ -287,6 +287,8 @@ it('reads an aliased required field only from its alias', async () => {
   await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
     executionRequest: {
       document: parse('{ products { price(currency: "USD") shipping } }'),
     },
