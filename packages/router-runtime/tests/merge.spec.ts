@@ -100,3 +100,85 @@ it('replaces a custom scalar object instead of merging it with what another fetc
     data: { products: [{ meta: { b: 2, list: [3] } }] },
   });
 });
+
+it('keeps the value of an earlier fetch when a later one returns null for it', async () => {
+  const supergraphSchema = buildSchema(/* GraphQL */ `
+    type Query {
+      products: [Product]
+    }
+
+    type Product {
+      id: ID!
+      name: String
+    }
+  `);
+  const queryPlan: QueryPlan = {
+    kind: 'QueryPlan',
+    node: {
+      kind: 'Sequence',
+      nodes: [
+        {
+          kind: 'Fetch',
+          serviceName: 'a',
+          operationKind: 'query',
+          operation: '{products{__typename id name}}',
+          id: 1,
+          dependsOn: [],
+        },
+        {
+          kind: 'Flatten',
+          path: [{ Field: 'products' }, '@'],
+          node: {
+            kind: 'Fetch',
+            serviceName: 'b',
+            operationKind: 'query',
+            operation:
+              'query($representations:[_Any!]!){_entities(representations: $representations){...on Product{name}}}',
+            requires: [
+              {
+                kind: 'InlineFragment',
+                typeCondition: 'Product',
+                selections: [
+                  { kind: 'Field', name: '__typename' },
+                  { kind: 'Field', name: 'id' },
+                ],
+              },
+            ],
+            id: 2,
+            dependsOn: [1],
+          },
+        },
+      ],
+    },
+    projection: {
+      rootType: 'Query',
+      fields: [
+        {
+          name: 'products',
+          itemNonNull: [false],
+          selections: [{ name: 'name' }],
+        },
+      ],
+    },
+  };
+
+  const result = await executeQueryPlan({
+    queryPlan,
+    supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
+    executionRequest: { document: parse('{ products { name } }') },
+    onSubgraphExecute(subgraphName) {
+      if (subgraphName === 'a') {
+        return {
+          data: {
+            products: [{ __typename: 'Product', id: '1', name: 'Chair' }],
+          },
+        };
+      }
+      return { data: { _entities: [{ name: null }] } };
+    },
+  });
+
+  expect(result).toEqual({ data: { products: [{ name: 'Chair' }] } });
+});
