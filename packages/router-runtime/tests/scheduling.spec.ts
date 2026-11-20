@@ -49,10 +49,15 @@ it('starts a fetch once its dependencies are done without waiting for unrelated 
             Product: {
               __resolveReference: async (product: { upc: string }) => {
                 // slow until accounts is asked, which never happens when accounts waits for us
+                let timeout: ReturnType<typeof setTimeout> | undefined;
                 await Promise.race([
                   accountsCalled.promise,
-                  new Promise((resolve) => setTimeout(resolve, 1_000)),
+                  new Promise((resolve) => {
+                    timeout = setTimeout(resolve, 1_000);
+                  }),
                 ]);
+                // the pending timer would otherwise outlive the test and leak
+                clearTimeout(timeout);
                 events.push('inventory done');
                 return { ...product, inStock: true };
               },
