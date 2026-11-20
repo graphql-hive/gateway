@@ -1,5 +1,20 @@
 # @graphql-tools/delegate
 
+## 12.3.5
+### Patch Changes
+
+
+
+- [#2751](https://github.com/graphql-hive/gateway/pull/2751) [`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131) Thanks [@aarne](https://github.com/aarne)! - Do not add a `null` item to a streamed list when the subgraph ends the stream with `{ "hasNext": false }`
+
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Resolve `@interfaceObject` fields on an implementation that another subgraph extends directly
+  
+  Previously the field resolved to `null` without an error, because only the implementation's subgraphs were considered and the `@interfaceObject` subgraph was never called.
+  
+  Closes [#2736](https://github.com/graphql-hive/gateway/issues/2736)
+
 ## 12.3.4
 ### Patch Changes
 

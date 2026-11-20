@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-runtime",
-  "version": "2.14.1",
+  "version": "2.14.2",
   "type": "module",
   "repository": {
     "type": "git",
@@ -74,7 +74,7 @@
     "@graphql-yoga/plugin-csrf-prevention": "^4.0.1",
     "@graphql-yoga/plugin-defer-stream": "^4.0.1",
     "@graphql-yoga/plugin-persisted-operations": "^4.0.1",
-    "@theguild/federation-composition": "^0.27.0",
+    "@theguild/federation-composition": "^0.27.2",
     "@types/node": "^26.6.5",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.12.1",
