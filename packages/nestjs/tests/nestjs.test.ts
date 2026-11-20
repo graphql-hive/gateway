@@ -26,6 +26,10 @@ const schemaSDL = /* GraphQL */ `
   type Query {
     hello: String!
   }
+
+  type Subscription {
+    countdown(from: Int!): Int!
+  }
 `;
 
 async function createNestApp(
@@ -40,6 +44,15 @@ async function createNestApp(
       resolvers: {
         Query: {
           hello: () => 'world',
+        },
+      },
+      Subscription: {
+        countdown: {
+          async *subscribe(_: unknown, { from }: { from: number }) {
+            for (let i = from; i >= 0; i--) {
+              yield { countdown: i };
+            }
+          },
         },
       },
     },
@@ -158,25 +171,7 @@ describe('NestJS', () => {
   describe('with @nestjs/platform-node', () => {
     it('should serve graphql-ws subscriptions', async () => {
       await using nestApp = await createNestApp(
-        {
-          subscriptions: { 'graphql-ws': true },
-          typeDefs: /* GraphQL */ `
-            type Subscription {
-              countdown(from: Int!): Int!
-            }
-          `,
-          resolvers: {
-            Subscription: {
-              countdown: {
-                async *subscribe(_: unknown, { from }: { from: number }) {
-                  for (let i = from; i >= 0; i--) {
-                    yield { countdown: i };
-                  }
-                },
-              },
-            },
-          },
-        },
+        { subscriptions: { 'graphql-ws': true } },
         new NodeAdapter(),
       );
       const client = createClient({
