@@ -36,6 +36,10 @@ import {
   type GraphQLSchema,
   type ObjectTypeDefinitionNode,
 } from 'graphql';
+import {
+  registerRawForwardSchema,
+  wrapSubschemaExecutorForRawForward,
+} from '../rawForward';
 import type {
   UnifiedGraphHandlerOpts,
   UnifiedGraphHandlerResult,
@@ -227,6 +231,7 @@ export const handleFederationSupergraph = function ({
   onDelegateHooks,
   batchDelegateOptions,
   subgraphDefer,
+  rawForward,
   handleProgressiveOverride,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
@@ -302,6 +307,12 @@ export const handleFederationSupergraph = function ({
       });
       if (isSubgraphDeferEnabled(subgraphDefer, subschemaConfig.name)) {
         subschemaConfig.defer = true;
+      }
+      if (rawForward && subschemaConfig.executor) {
+        subschemaConfig.executor = wrapSubschemaExecutorForRawForward(
+          subschemaConfig,
+          subschemaConfig.executor,
+        );
       }
     },
     onStitchingOptions(opts) {
@@ -495,6 +506,17 @@ export const handleFederationSupergraph = function ({
         }
         return fieldConfig;
       },
+    });
+  }
+  // Resolvers of the gateway itself (additional resolvers, pubsub) need the
+  // resolved values, so such a supergraph stays on the regular path as a whole.
+  if (
+    rawForward &&
+    !additionalResolvers.length &&
+    !executableUnifiedGraph.getDirective('pubsubPublish')
+  ) {
+    registerRawForwardSchema(executableUnifiedGraph, {
+      defaultFieldResolver: defaultMergedResolver,
     });
   }
   function getSubschema(subgraphName: string): SubschemaConfig {

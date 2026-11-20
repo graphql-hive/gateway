@@ -95,6 +95,14 @@ export interface UnifiedGraphHandlerOpts {
    */
   subgraphDefer?: boolean | Record<string, boolean>;
 
+  /**
+   * Forward the response body of a subgraph to the client as is when it is,
+   * byte for byte, the response of the client operation. See the `rawForward`
+   * module for what is eligible; everything else is executed as usual.
+   * @default false
+   */
+  rawForward?: boolean;
+
   log?: Logger;
   /** Shared cache instance (e.g. Redis), used by handlers that support cross-process caching. */
   cache?: KeyValueCache;
@@ -155,6 +163,13 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * `true` enables all subgraphs; a record enables named subgraphs (`"*"` = default).
    */
   subgraphDefer?: boolean | Record<string, boolean>;
+
+  /**
+   * Forward the response body of a subgraph to the client as is when it is,
+   * byte for byte, the response of the client operation.
+   * @default false
+   */
+  rawForward?: boolean;
 
   instrumentation?: () => Instrumentation | undefined;
   /**
@@ -521,6 +536,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             onDelegateHooks: this.opts.onDelegateHooks,
             batchDelegateOptions: this.opts.batchDelegateOptions,
             subgraphDefer: this.opts.subgraphDefer,
+            rawForward: this.opts.rawForward,
             log: this.opts.transportContext?.log,
             cache: this.opts.transportContext?.cache,
             handleProgressiveOverride: this.opts.handleProgressiveOverride

@@ -3449,6 +3449,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/raw-forward@workspace:e2e/raw-forward":
+  version: 0.0.0-use.local
+  resolution: "@e2e/raw-forward@workspace:e2e/raw-forward"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.13.3"
+    "@graphql-hive/gateway": "workspace:*"
+    graphql: "npm:16.14.0"
+    graphql-yoga: "npm:^5.21.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/regular-subgraph@workspace:e2e/regular-subgraph":
   version: 0.0.0-use.local
   resolution: "@e2e/regular-subgraph@workspace:e2e/regular-subgraph"
