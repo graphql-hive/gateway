@@ -51,8 +51,8 @@ function sha256(str: string) {
 }
 
 /**
- * The version of `@graphql-hive/router-query-planner` the executor runs the plans of. It's in the
- * key of the plans in the shared cache, the executor can't run plans of another version.
+ * The version of `@graphql-hive/router-query-planner` the executor runs the plans of. It is part
+ * of the key of the plans in the shared cache. The executor can't run plans of another version.
  */
 const QUERY_PLANNER_VERSION = '0.0.55';
 
