@@ -18,25 +18,24 @@ import {
 import { Resource, resourceFromAttributes } from '@opentelemetry/resources';
 import {
   AlwaysOnSampler,
-  BasicTracerProvider,
   BatchSpanProcessor,
   ConsoleSpanExporter,
-  GeneralLimits,
   ParentBasedSampler,
+  TracerProvider as SdkTracerProvider,
   SimpleSpanProcessor,
   SpanLimits,
   TraceIdRatioBasedSampler,
-  type BufferConfig,
   type Sampler,
   type SpanExporter,
   type SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { getEnvBool, getEnvStr } from '~internal/env';
 import {
+  BufferConfig,
   HiveTracingSpanProcessor,
   HiveTracingSpanProcessorOptions,
 } from './hive-span-processor';
@@ -135,10 +134,6 @@ type BaseOptions = {
    * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
    */
   propagators?: TextMapPropagator[];
-  /**
-   * The general limits of OTEL attributes.
-   */
-  generalLimits?: GeneralLimits;
   /**
    * The Logger to be used by this utility.
    * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
@@ -239,7 +234,9 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
       }
 
       if (options.traces.console) {
-        spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+        spanProcessors.push(
+          new SimpleSpanProcessor({ exporter: new ConsoleSpanExporter() }),
+        );
         logMessage += ' in addition to an stdout debug exporter';
         logAttributes['console'] = true;
       }
@@ -253,7 +250,7 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
 
       logAttributes['registrationResults'].tracerProvider =
         trace.setGlobalTracerProvider(
-          new BasicTracerProvider({
+          new SdkTracerProvider({
             resource,
             sampler:
               options.sampler ??
@@ -263,7 +260,6 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
                   })
                 : new AlwaysOnSampler()),
             spanProcessors,
-            generalLimits: options.generalLimits,
             spanLimits: options.traces.spanLimits,
           }),
         );
@@ -386,12 +382,13 @@ function resolveBatchingConfig(
 ): SpanProcessor {
   const value = batchingConfig ?? true;
 
+  // the sdk-trace processors take the exporter as part of a single options object
   if (value === true) {
-    return new BatchSpanProcessor(exporter);
+    return new BatchSpanProcessor({ exporter });
   } else if (value === false) {
-    return new SimpleSpanProcessor(exporter);
+    return new SimpleSpanProcessor({ exporter });
   } else {
-    return new BatchSpanProcessor(exporter, value);
+    return new BatchSpanProcessor({ ...value, exporter });
   }
 }
 
