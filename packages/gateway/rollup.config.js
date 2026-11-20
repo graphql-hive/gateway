@@ -134,7 +134,6 @@ const deps = {
 
       // Propagators
       ['propagator-b3'],
-      ['propagator-jaeger'],
 
       // Context Managers
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
