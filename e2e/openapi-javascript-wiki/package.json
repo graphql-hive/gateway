@@ -13,7 +13,7 @@
     "@graphql-mesh/compose-cli": "^1.8.4",
     "@graphql-mesh/incontext-sdk-codegen": "^0.3.3",
     "@omnigraph/openapi": "^0.112.7",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "graphql-scalars": "^2.0.1",
     "tslib": "^2.9.1"
   }

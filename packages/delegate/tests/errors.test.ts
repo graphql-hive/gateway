@@ -46,7 +46,7 @@ describe('Errors', () => {
       fragments: {},
       rootValue: {},
       operation: {} as any,
-      variableValues: {},
+      variableValues: {} as GraphQLResolveInfo['variableValues'],
       getAbortSignal: () => undefined,
       getAsyncHelpers: () => ({
         promiseAll: (values) => Promise.all(values),

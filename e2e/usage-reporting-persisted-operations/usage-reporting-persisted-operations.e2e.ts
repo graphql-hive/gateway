@@ -49,17 +49,18 @@ describe('Usage Reporting with Persisted Operations', () => {
       );
       expect(req.headers['user-agent']).toContain('hive-gateway/');
 
-      expect(req.body.map).toMatchInlineSnapshot(`
-      {
-        "5d112fb0e85c9e113301e9354c39f36b2ee41d82": {
-          "fields": [
-            "Query.__typename",
-          ],
-          "operation": "{__typename}",
-          "operationName": "anonymous",
-        },
-      }
-    `);
+      // the operation hash keys differ between graphql versions
+      expect(Object.values(req.body.map)).toMatchInlineSnapshot(`
+        [
+          {
+            "fields": [
+              "Query.__typename",
+            ],
+            "operation": "{__typename}",
+            "operationName": "anonymous",
+          },
+        ]
+      `);
 
       break; // we only make one request
     }
@@ -116,17 +117,18 @@ describe('Usage Reporting with Persisted Operations', () => {
       );
       expect(req.headers['user-agent']).toContain('hive-gateway/');
 
-      expect(req.body.map).toMatchInlineSnapshot(`
-      {
-        "5d112fb0e85c9e113301e9354c39f36b2ee41d82": {
-          "fields": [
-            "Query.__typename",
-          ],
-          "operation": "{__typename}",
-          "operationName": "anonymous",
-        },
-      }
-    `);
+      // the operation hash keys differ between graphql versions
+      expect(Object.values(req.body.map)).toMatchInlineSnapshot(`
+        [
+          {
+            "fields": [
+              "Query.__typename",
+            ],
+            "operation": "{__typename}",
+            "operationName": "anonymous",
+          },
+        ]
+      `);
 
       break; // we only make one request
     }

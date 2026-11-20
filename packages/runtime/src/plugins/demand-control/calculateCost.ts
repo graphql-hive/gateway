@@ -1,5 +1,6 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
+  asGetArgumentValuesVariables,
   getDirective,
   getDirectiveExtensions,
   memoize1,
@@ -145,10 +146,11 @@ export function createCalculateCost({
                     if ('slicingArguments' in listSizeAnnotation) {
                       const slicingArguments =
                         listSizeAnnotation.slicingArguments;
+                      // graphql 17 expects `{ coerced, sources }` instead of a flat map
                       const argValues = getArgumentValues(
                         field,
                         node,
-                        variables,
+                        asGetArgumentValuesVariables(variables),
                       );
                       let factorSet = false;
                       let slicingArgumentFactor: number = 1;

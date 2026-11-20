@@ -130,7 +130,8 @@ export function federationToStitchingSDL(
 
     // Discard remaining "@external" directives and any "@provides" directives
     typeDef.fields?.forEach((fieldDef: any) => {
-      fieldDef.directives = fieldDef.directives.filter(
+      // graphql 17 omits empty directive lists from the ast
+      fieldDef.directives = (fieldDef.directives ?? []).filter(
         (dir: any) => !/^(external|provides)$/.test(dir.name.value),
       );
       fieldDef.directives.forEach((dir: any) => {

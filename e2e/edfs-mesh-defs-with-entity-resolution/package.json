@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@nats-io/transport-node": "^3.4.0",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "graphql-sse": "^2.6.3"
   }
 }

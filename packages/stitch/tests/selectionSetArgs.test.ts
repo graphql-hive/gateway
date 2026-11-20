@@ -46,8 +46,8 @@ describe('forwardArgsToSelectionSet', () => {
     expect(result.selections.length).toEqual(2);
     assertFieldNode(result.selections[0]);
     expect(result.selections[0].name.value).toEqual('id');
-    assertSome(result.selections[0].arguments);
-    expect(result.selections[0].arguments.length).toEqual(0);
+    // graphql 17 parses no arguments as undefined instead of an empty list
+    expect(result.selections[0].arguments ?? []).toHaveLength(0);
     assertFieldNode(result.selections[1]);
     expect(result.selections[1].name.value).toEqual('postIds');
     assertSome(result.selections[1].arguments);

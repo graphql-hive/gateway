@@ -43,7 +43,7 @@
     "@graphql-tools/utils": "^13.2.2"
   },
   "devDependencies": {
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "pkgroll": "2.27.1"
   },
   "sideEffects": false

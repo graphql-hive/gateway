@@ -35,11 +35,11 @@ scalar link__Import
 
 enum link__Purpose {
   """
-  \`SECURITY\` features provide metadata necessary to securely resolve fields.
+    \`SECURITY\` features provide metadata necessary to securely resolve fields.
   """
   SECURITY
   """
-  \`EXECUTION\` features provide metadata necessary for operation execution.
+    \`EXECUTION\` features provide metadata necessary for operation execution.
   """
   EXECUTION
 }
@@ -82,6 +82,5 @@ enum HTTPMethod @join__type(graph: AUTHORS) @join__type(graph: BOOKS) {
   OPTIONS @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
   TRACE @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
   PATCH @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
-}
-"
+}"
 `;

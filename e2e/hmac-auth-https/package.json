@@ -13,7 +13,7 @@
     "@graphql-mesh/compose-cli": "^1.8.4",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "graphql-yoga": "^6.1.0"
   }
 }

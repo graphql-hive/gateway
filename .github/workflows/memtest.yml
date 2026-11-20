@@ -38,7 +38,10 @@ jobs:
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
-    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }}
+        graphql-version:
+          - 16
+          - 17
+    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }} / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,6 +58,9 @@ jobs:
           # TODO: should we test more node versions? we usually always recommend upgrading to
           #       latest when people suspect leaks - latest is always the most stable
           node-version-file: .node-version
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - if: runner.os == 'Linux'
         name: Hash Docker Images
         id: hash-docker-images
@@ -82,7 +88,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{matrix.test.name}}-heap-snapshots
+          name: ${{matrix.test.name}}-${{matrix.test.hive-router-runtime}}-graphql-${{matrix.graphql-version}}-heap-snapshots
           path: |
             e2e/${{matrix.test.name}}/*.heapsnapshot
             packages/logger/tests/*.heapsnapshot
