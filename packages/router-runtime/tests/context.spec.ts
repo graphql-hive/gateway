@@ -1,7 +1,9 @@
 import type {
   FetchNode,
   FlattenNodePathSegment,
+  ProjectionField,
   QueryPlan,
+  ResponseProjection,
 } from '@graphql-hive/router-query-planner';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import { buildSchema, GraphQLError, parse, print } from 'graphql';
@@ -63,6 +65,24 @@ const transactionRequires = [
   },
 ];
 
+const possibleTypes = {
+  Account: ['Other', 'User'],
+  Viewer: ['Other', 'User'],
+};
+
+function list(name: string, selections: ProjectionField[]): ProjectionField {
+  return { name, itemNonNull: [false], selections };
+}
+
+function projection(...fields: ProjectionField[]): ResponseProjection {
+  return { rootType: 'Query', fields };
+}
+
+// `{ users { txs { amount } } }`
+const usersTxsAmountProjection = projection(
+  list('users', [list('txs', [{ name: 'amount' }])]),
+);
+
 const usersTxsPath: FlattenNodePathSegment[] = [
   { Field: 'users' },
   '@',
@@ -77,6 +97,7 @@ function flattenPlan(
     FetchNode,
     'variableUsages' | 'operation' | 'contextVariables' | 'contextRewrites'
   >,
+  responseProjection = usersTxsAmountProjection,
 ): QueryPlan {
   return {
     kind: 'QueryPlan',
@@ -88,6 +109,8 @@ function flattenPlan(
           serviceName: 'a',
           operationKind: 'query',
           operation: rootOperation,
+          id: 1,
+          dependsOn: [],
         },
         {
           kind: 'Flatten',
@@ -98,10 +121,13 @@ function flattenPlan(
             operationKind: 'query',
             requires: transactionRequires,
             ...fetch,
+            id: 2,
+            dependsOn: [1],
           },
         },
       ],
     },
+    projection: responseProjection,
   };
 }
 
@@ -148,6 +174,8 @@ async function execute(
   const result = (await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes,
     executionRequest: { document: parse(query), variables },
     onSubgraphExecute(_subgraphName, executionRequest) {
       const request = {
@@ -453,6 +481,14 @@ describe('@fromContext', () => {
             },
           ],
         },
+        projection(
+          list('users', [
+            {
+              name: 'wrapper',
+              selections: [list('txs', [{ name: 'amount' }])],
+            },
+          ]),
+        ),
       ),
       '{ users { wrapper { txs { amount } } } }',
       ({ query }) =>
@@ -503,6 +539,10 @@ describe('@fromContext', () => {
             },
           ],
         },
+        projection({
+          name: 'account',
+          selections: [list('txs', [{ name: 'fromInterface' }])],
+        }),
       ),
       '{ account { txs { fromInterface } } }',
       ({ query }) =>
@@ -615,6 +655,8 @@ describe('@fromContext', () => {
             operationKind: 'query',
             operation:
               '{users{...a} secondUsers{...a}}\n\nfragment a on User {__typename currency txs{__typename id}}\n',
+            id: 1,
+            dependsOn: [],
           },
           {
             kind: 'BatchFetch',
@@ -663,9 +705,17 @@ describe('@fromContext', () => {
                 },
               ],
             },
+            id: 2,
+            dependsOn: [1],
+            completes: [2, 3],
           },
         ],
       },
+      // `{ users { txs { amount } } secondUsers { txs { amount } } }`
+      projection: projection(
+        list('users', [list('txs', [{ name: 'amount' }])]),
+        list('secondUsers', [list('txs', [{ name: 'amount' }])]),
+      ),
     };
 
     it('sends one wave with the original operation', async () => {
@@ -852,6 +902,8 @@ describe('@fromContext', () => {
                 operationKind: 'query',
                 operation:
                   '{viewer{__typename ...on User{__typename currency txs{...a}} ...on Other{__typename currency txs{...a}}}}\n\nfragment a on Transaction {__typename id}\n',
+                id: 1,
+                dependsOn: [],
               },
               {
                 kind: 'BatchFetch',
@@ -889,9 +941,21 @@ describe('@fromContext', () => {
                     })),
                   })),
                 },
+                id: 2,
+                dependsOn: [1],
+                completes: [2, 3],
               },
             ],
           },
+          projection: projection({
+            name: 'viewer',
+            selections: [
+              {
+                ...list('txs', [{ name: 'fromUnion' }]),
+                parentTypes: ['Other', 'User'],
+              },
+            ],
+          }),
         },
         '{ viewer { ... on User { txs { fromUnion } } ... on Other { txs { fromUnion } } } }',
         ({ query }) =>

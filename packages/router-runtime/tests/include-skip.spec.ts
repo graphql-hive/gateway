@@ -187,7 +187,7 @@ describe('fetch runIf', () => {
       })) as ExecutionResult;
 
       // guard: no fetch can ever run, so the planner leaves the node out
-      expect(result.extensions?.queryPlan).toEqual({ kind: 'QueryPlan' });
+      expect(result.extensions?.queryPlan).not.toHaveProperty('node');
 
       expect(result.errors).toBeUndefined();
       expect(result.data).toEqual({});

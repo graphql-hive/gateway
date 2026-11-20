@@ -45,10 +45,20 @@ it('should callback when the query plan is available', async () => {
     {
       "kind": "QueryPlan",
       "node": {
+        "dependsOn": [],
+        "id": 2,
         "kind": "Fetch",
         "operation": "{hello}",
         "operationKind": "query",
         "serviceName": "upstream",
+      },
+      "projection": {
+        "fields": [
+          {
+            "name": "hello",
+          },
+        ],
+        "rootType": "Query",
       },
     }
   `);
@@ -98,10 +108,20 @@ it('should include the query plan in result extensions when exposed', async () =
         "queryPlan": {
           "kind": "QueryPlan",
           "node": {
+            "dependsOn": [],
+            "id": 2,
             "kind": "Fetch",
             "operation": "{hello}",
             "operationKind": "query",
             "serviceName": "upstream",
+          },
+          "projection": {
+            "fields": [
+              {
+                "name": "hello",
+              },
+            ],
+            "rootType": "Query",
           },
         },
       },
@@ -172,10 +192,20 @@ it('should include the query plan in result extensions when expose returns true'
         "queryPlan": {
           "kind": "QueryPlan",
           "node": {
+            "dependsOn": [],
+            "id": 2,
             "kind": "Fetch",
             "operation": "{hello}",
             "operationKind": "query",
             "serviceName": "upstream",
+          },
+          "projection": {
+            "fields": [
+              {
+                "name": "hello",
+              },
+            ],
+            "rootType": "Query",
           },
         },
       },
