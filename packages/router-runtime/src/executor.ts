@@ -2422,10 +2422,13 @@ function projectRequires(
   ) {
     return null;
   }
-  // only an entity found by its `__typename` alone is sent with nothing else
+  // only an entity found by its `__typename` alone is sent with nothing else, without keys for
+  // its type the subgraph is trusted to find it like that
   if (
     !Object.keys(applied.result).length &&
-    (!applied.typename || !typeKeys?.some((key) => !key.length))
+    (!applied.typename ||
+      applied.missingField ||
+      (typeKeys && !typeKeys.some((key) => !key.length)))
   ) {
     return null;
   }
