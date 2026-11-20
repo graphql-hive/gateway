@@ -1,9 +1,16 @@
 import { Attributes, LogLevel, LogWriter } from '@graphql-hive/logger';
-import { Context, context, ROOT_CONTEXT } from '@opentelemetry/api';
-import { logs, SeverityNumber, type Logger } from '@opentelemetry/api-logs';
+import {
+  Context,
+  context,
+  logs,
+  ROOT_CONTEXT,
+  SeverityNumber,
+  type Logger,
+} from '@opentelemetry/api';
 import { Resource } from '@opentelemetry/resources';
 import {
   BatchLogRecordProcessor,
+  BatchLogRecordProcessorOptions,
   ConsoleLogRecordExporter,
   LoggerProvider,
   LogRecordExporter,
@@ -11,7 +18,6 @@ import {
   LogRecordProcessor,
   SimpleLogRecordProcessor,
 } from '@opentelemetry/sdk-logs';
-import { BufferConfig } from '@opentelemetry/sdk-trace-base';
 import { otelCtxForRequestId } from './plugin';
 
 type ProcessorOptions = {
@@ -36,7 +42,9 @@ export type OpenTelemetryLogWriterSetupOptions =
           }
         | {
             exporter: LogRecordExporter;
-            batching?: boolean | BufferConfig;
+            // the batching options of the log record processor, the exporter is provided separately
+            batching?:
+              boolean | Omit<BatchLogRecordProcessorOptions, 'exporter'>;
             processors?: never;
           }
         | {

@@ -1,31 +1,10 @@
-import sdkDefault, {
-  api,
-  contextBase,
-  core,
+import { NodeSDK, startNodeSdk } from '@opentelemetry/sdk-node';
+
+export type {
   LoggerProviderConfig,
-  logs,
   MeterProviderConfig,
-  metrics,
-  node,
-  NodeSDK,
   NodeSDKConfiguration,
-  resources,
-  tracing,
 } from '@opentelemetry/sdk-node';
 
-export type { LoggerProviderConfig, MeterProviderConfig, NodeSDKConfiguration };
-
-export {
-  api,
-  contextBase,
-  core,
-  logs,
-  metrics,
-  node,
-  NodeSDK,
-  resources,
-  sdkDefault,
-  tracing,
-};
-
-export default sdkDefault;
+// sdk-node has no namespace re-exports of the other sdk packages, they're bundled on their own
+export { NodeSDK, startNodeSdk };

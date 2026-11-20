@@ -1,7 +1,7 @@
 import type { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import { Logger } from '@graphql-hive/logger';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
-import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
+import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace';
 import CircuitBreaker from 'opossum';
 
 const defaultCircuitBreakerConfiguration: CircuitBreakerConfiguration = {
