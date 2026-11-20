@@ -1,5 +1,27 @@
 # @graphql-tools/stitch
 
+## 10.4.5
+### Patch Changes
+
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep fields of named fragments spread on an interface when fetching the concrete type from the implementing subgraph
+  
+  For example, `node { ...NodeFields }` with `fragment NodeFields on Node { ... on Leaf { extra } }` now fetches `extra` instead of returning `null` for it.
+  
+  Closes [#2463](https://github.com/graphql-hive/gateway/issues/2463)
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fetch `@requires` fields of an `@interfaceObject` field when it is selected through an inline fragment on an implementation
+  
+  For example, `location { ... on Store { events } }` where `events` is `@requires(fields: "code")` on the `Location` interface object now sends `code` to the contributing subgraph.
+  
+  Closes [#2737](https://github.com/graphql-hive/gateway/issues/2737)
+- Updated dependencies [[`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2)]:
+  - @graphql-tools/delegate@12.3.5
+  - @graphql-tools/batch-delegate@10.1.7
+  - @graphql-tools/wrap@11.2.7
+
 ## 10.4.4
 ### Patch Changes
 
