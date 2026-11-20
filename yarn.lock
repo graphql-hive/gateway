@@ -4773,7 +4773,7 @@ __metadata:
     "@graphql-yoga/plugin-defer-stream": "npm:^3.16.2"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.16.2"
     "@omnigraph/openapi": "npm:^0.109.49"
-    "@theguild/federation-composition": "npm:^0.26.1"
+    "@theguild/federation-composition": "npm:^0.27.2"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^25.0.0"
     "@types/opossum": "npm:^8.1.9"
@@ -12331,9 +12331,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/federation-composition@npm:^0.26.1":
-  version: 0.26.2
-  resolution: "@theguild/federation-composition@npm:0.26.2"
+"@theguild/federation-composition@npm:^0.27.2":
+  version: 0.27.2
+  resolution: "@theguild/federation-composition@npm:0.27.2"
   dependencies:
     constant-case: "npm:^3.0.4"
     debug: "npm:4.4.3"
@@ -12341,7 +12341,7 @@ __metadata:
     lodash.sortby: "npm:^4.7.0"
   peerDependencies:
     graphql: ^16.0.0 || ^17.0.0
-  checksum: 10c0/d142ff9803f7cf2860103fb74078f1ef012bdc8d67358ed9d5bd488d277e7f3bac7c995b43aa9be2832ae43e1cd0ac01ee010a885b7060615413c673323653c0
+  checksum: 10c0/5a23d75713259b24e6387b1715e5ddd03a1315439016e8531a192c3f9d894b83cdf3782053972f938009a17ebb72bea6facb86ea8dcc63f0c433eecb5927156e
   languageName: node
   linkType: hard
 
