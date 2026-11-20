@@ -30,62 +30,64 @@ async function main() {
 
   createServer(
     createYoga({
-      schema: buildSubgraphSchema({
-        typeDefs: parse(/* GraphQL */ `
-          type Query {
-            product(id: ID!): Product
-          }
+      schema: buildSubgraphSchema([
+        {
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              product(id: ID!): Product
+            }
 
-          type Product @key(fields: "id") {
-            id: ID!
-            name: String!
-            price: Float!
-            review: Review
-          }
+            type Product @key(fields: "id") {
+              id: ID!
+              name: String!
+              price: Float!
+              review: Review
+            }
 
-          type Review @key(fields: "id") {
-            id: ID!
-          }
+            type Review @key(fields: "id") {
+              id: ID!
+            }
 
-          type Mutation {
-            addProduct(id: ID!, name: String!, price: Float!): Product!
-            updateProduct(id: ID!, name: String!, price: Float!): Product!
-          }
-        `),
-        resolvers: {
-          Query: {
-            product: (_parent, { id }) => products[id] ?? null,
-          },
-          Product: {
-            __resolveReference: (ref: { id: string }) => {
-              const id = ref.id;
-              return {
-                id,
-                name: `Resolved ${products[id]?.name ?? 'Product'}`,
-                price: products[id]?.price ?? 0,
-              };
+            type Mutation {
+              addProduct(id: ID!, name: String!, price: Float!): Product!
+              updateProduct(id: ID!, name: String!, price: Float!): Product!
+            }
+          `),
+          resolvers: {
+            Query: {
+              product: (_parent, { id }) => products[id] ?? null,
             },
-            review: (product: { id: string }) => ({ id: product.id }),
-          },
-          Review: {
-            __resolveReference: (ref: { id: string }) => ({ id: ref.id }),
-          },
-          Mutation: {
-            addProduct: (_parent, { id, name, price }) => {
-              const product = { id, name, price };
-              products[id] = product;
-              pubsub.publish('new_product', product);
-              return product;
+            Product: {
+              __resolveReference: (ref: { id: string }) => {
+                const id = ref.id;
+                return {
+                  id,
+                  name: `Resolved ${products[id]?.name ?? 'Product'}`,
+                  price: products[id]?.price ?? 0,
+                };
+              },
+              review: (product: { id: string }) => ({ id: product.id }),
             },
-            updateProduct: (_parent, { id, name, price }) => {
-              const product = { id, name, price };
-              products[id] = product;
-              pubsub.publish('update_product', product);
-              return product;
+            Review: {
+              __resolveReference: (ref: { id: string }) => ({ id: ref.id }),
+            },
+            Mutation: {
+              addProduct: (_parent, { id, name, price }) => {
+                const product = { id, name, price };
+                products[id] = product;
+                pubsub.publish('new_product', product);
+                return product;
+              },
+              updateProduct: (_parent, { id, name, price }) => {
+                const product = { id, name, price };
+                products[id] = product;
+                pubsub.publish('update_product', product);
+                return product;
+              },
             },
           },
         },
-      }),
+      ]),
     }),
   ).listen(port, () => {
     console.log(

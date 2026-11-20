@@ -7,32 +7,34 @@ const port = 4003;
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Review @key(fields: "id") {
-          id: ID!
-          content: String
-          product: Product
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Review @key(fields: "id") {
+            id: ID!
+            content: String
+            product: Product
+          }
 
-        type Query {
-          reviews: [Review]
-        }
+          type Query {
+            reviews: [Review]
+          }
 
-        type Product @key(fields: "id") {
-          id: ID!
-        }
-      `),
-      resolvers: {
-        Query: {
-          reviews() {
-            return [
-              { id: '1', content: 'Great product!', product: { id: '101' } },
-              { id: '2', content: 'Not bad', product: { id: '102' } },
-            ];
+          type Product @key(fields: "id") {
+            id: ID!
+          }
+        `),
+        resolvers: {
+          Query: {
+            reviews() {
+              return [
+                { id: '1', content: 'Great product!', product: { id: '101' } },
+                { id: '2', content: 'Not bad', product: { id: '102' } },
+              ];
+            },
           },
         },
       },
-    }),
+    ]),
   }),
 ).listen(port);

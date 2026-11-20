@@ -23,46 +23,48 @@ const feed = [
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          feed: [Post] @override(from: "a", label: "feed_in_b")
-          bFeed: [Post]
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            feed: [Post] @override(from: "a", label: "feed_in_b")
+            bFeed: [Post]
+          }
 
-        type Post @key(fields: "id") {
-          id: ID!
-          createdAt: String @override(from: "a", label: "percent(75)")
-        }
+          type Post @key(fields: "id") {
+            id: ID!
+            createdAt: String @override(from: "a", label: "percent(75)")
+          }
 
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.7"
-            import: ["@override", "@key"]
-          )
-      `),
-      resolvers: {
-        Query: {
-          feed() {
-            return feed;
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.7"
+              import: ["@override", "@key"]
+            )
+        `),
+        resolvers: {
+          Query: {
+            feed() {
+              return feed;
+            },
+            bFeed() {
+              return feed;
+            },
           },
-          bFeed() {
-            return feed;
-          },
-        },
-        Post: {
-          __resolveReference(post) {
-            return {
-              ...post,
-              createdAt: `from-b:${post.id}`,
-            };
-          },
-          createdAt(post) {
-            return `from-b:${post.id}`;
+          Post: {
+            __resolveReference(post) {
+              return {
+                ...post,
+                createdAt: `from-b:${post.id}`,
+              };
+            },
+            createdAt(post) {
+              return `from-b:${post.id}`;
+            },
           },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         onParams({ params }) {

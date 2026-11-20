@@ -6,21 +6,21 @@
     "@graphql-mesh/cross-helpers": "^0.4.18",
     "@graphql-mesh/plugin-live-query": "^0.107.3",
     "@omnigraph/json-schema": "^0.112.6",
-    "fets": "^0.8.12",
-    "graphql": "^16.12.0",
+    "fets": "^0.8.14",
+    "graphql": "^16.15.0",
     "graphql-sse": "^2.6.3",
-    "tslib": "^2.8.1",
+    "tslib": "^2.9.1",
     "@graphql-hive/gateway": "^2.15.10"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "minimatch": "^10.2.5",
-    "fast-uri": "^3.1.6",
-    "protobufjs": "^8.2.1",
+    "minimatch": "^10.2.6",
+    "fast-uri": "^3.1.9",
+    "protobufjs": "^8.8.1",
     "esbuild": "^0.25.12",
-    "@graphql-yoga/plugin-persisted-operations": "^4.0.1"
+    "@graphql-yoga/plugin-persisted-operations": "^4.1.0"
   },
   "scripts": {
     "service:api": "tsx services/api.ts",

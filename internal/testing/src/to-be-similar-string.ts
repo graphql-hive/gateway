@@ -1,14 +1,15 @@
 import { diff } from 'jest-diff';
 import { expect } from 'vitest';
 
-declare global {
-  namespace jest {
-    interface Matchers<R, T> {
-      /**
-       * Normalizes whitespace and performs string comparisons
-       */
-      toBeSimilarString(expected: string): R;
-    }
+declare module 'vitest' {
+  interface Matchers<
+    R extends void | Promise<void> = void | Promise<void>,
+    T = unknown,
+  > {
+    /**
+     * Normalizes whitespace and performs string comparisons
+     */
+    toBeSimilarString(expected: string): R;
   }
 }
 

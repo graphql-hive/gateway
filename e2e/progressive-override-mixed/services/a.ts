@@ -23,40 +23,42 @@ const feed = [
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          feed: [Post]
-          aFeed: [Post]
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            feed: [Post]
+            aFeed: [Post]
+          }
 
-        type Post @key(fields: "id") {
-          id: ID!
-          createdAt: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          feed() {
-            return feed;
+          type Post @key(fields: "id") {
+            id: ID!
+            createdAt: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            feed() {
+              return feed;
+            },
+            aFeed() {
+              return feed;
+            },
           },
-          aFeed() {
-            return feed;
-          },
-        },
-        Post: {
-          __resolveReference(post) {
-            return {
-              ...post,
-              createdAt: `from-a:${post.id}`,
-            };
-          },
-          createdAt(post) {
-            return `from-a:${post.id}`;
+          Post: {
+            __resolveReference(post) {
+              return {
+                ...post,
+                createdAt: `from-a:${post.id}`,
+              };
+            },
+            createdAt(post) {
+              return `from-a:${post.id}`;
+            },
           },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         onParams({ params }) {
