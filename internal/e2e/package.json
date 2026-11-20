@@ -4,14 +4,15 @@
   "main": "./src/index.ts",
   "devDependencies": {
     "@apollo/gateway": "^2.14.4",
+    "@apollo/subgraph": "2.14.4",
     "@types/dockerode": "^4.0.2",
-    "@types/node": "^26.6.5",
-    "@whatwg-node/disposablestack": "^0.0.6",
+    "@types/node": "^26.6.6",
+    "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/fetch": "^0.12.1",
     "dockerode": "^5.0.1",
     "get-tsconfig": "^4.14.3",
-    "glob": "^13.0.6",
-    "graphql": "^16.12.0",
+    "glob": "^14.0.6",
+    "graphql": "^16.15.0",
     "terminate": "^2.8.0"
   }
 }

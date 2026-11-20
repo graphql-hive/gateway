@@ -25,35 +25,37 @@ const recordQueries: Plugin = {
  * forward `@defer` on the subgraph operation instead of omitting the slow
  * selection and refetching later (gateway-owned path).
  */
-const schema = buildSubgraphSchema({
-  typeDefs: parse(/* GraphQL */ `
-    type Product @key(fields: "id") {
-      id: ID!
-      name: String!
-      """
-      Slow field - client defers this so the subgraph can stream it back
-      after the initial name payload.
-      """
-      description: String
-    }
-    type Query {
-      product(id: ID!): Product
-    }
-  `),
-  resolvers: {
-    Query: {
-      product: (_: unknown, { id }: { id: string }) => ({ id }),
-    },
-    Product: {
-      __resolveReference: (ref: { id: string }) => ref,
-      name: () => 'Widget',
-      description: async () => {
-        await delay(150);
-        return 'A carefully deferred product description';
+const schema = buildSubgraphSchema([
+  {
+    typeDefs: parse(/* GraphQL */ `
+      type Product @key(fields: "id") {
+        id: ID!
+        name: String!
+        """
+        Slow field - client defers this so the subgraph can stream it back
+        after the initial name payload.
+        """
+        description: String
+      }
+      type Query {
+        product(id: ID!): Product
+      }
+    `),
+    resolvers: {
+      Query: {
+        product: (_: unknown, { id }: { id: string }) => ({ id }),
+      },
+      Product: {
+        __resolveReference: (ref: { id: string }) => ref,
+        name: () => 'Widget',
+        description: async () => {
+          await delay(150);
+          return 'A carefully deferred product description';
+        },
       },
     },
   },
-});
+]);
 
 const yoga = createYoga({
   schema,

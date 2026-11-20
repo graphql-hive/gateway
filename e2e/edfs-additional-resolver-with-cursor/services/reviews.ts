@@ -16,39 +16,41 @@ const reviews: Record<
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          review(id: ID!): Review
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            review(id: ID!): Review
+          }
 
-        type Review @key(fields: "id") {
-          id: ID!
-          content: String!
-          product: Product!
-        }
+          type Review @key(fields: "id") {
+            id: ID!
+            content: String!
+            product: Product!
+          }
 
-        type Product @key(fields: "id") {
-          id: ID!
-        }
-      `),
-      resolvers: {
-        Query: {
-          review: (_parent, { id }) => reviews[id] ?? null,
-        },
-        Review: {
-          __resolveReference: (ref: { id: string }) =>
-            reviews[ref.id] ?? {
-              id: ref.id,
-              content: `Review ${ref.id}`,
-              productId: ref.id,
-            },
-          product: (review: { productId: string }) => ({
-            id: review.productId,
-          }),
+          type Product @key(fields: "id") {
+            id: ID!
+          }
+        `),
+        resolvers: {
+          Query: {
+            review: (_parent, { id }) => reviews[id] ?? null,
+          },
+          Review: {
+            __resolveReference: (ref: { id: string }) =>
+              reviews[ref.id] ?? {
+                id: ref.id,
+                content: `Review ${ref.id}`,
+                productId: ref.id,
+              },
+            product: (review: { productId: string }) => ({
+              id: review.productId,
+            }),
+          },
         },
       },
-    }),
+    ]),
   }),
 ).listen(port, () => {
   console.log(`Reviews subgraph running on http://localhost:${port}/graphql`);

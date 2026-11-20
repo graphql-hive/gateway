@@ -7,13 +7,13 @@
     "@whatwg-node/promise-helpers": "^2.0.2",
     "canvas": "^3.2.3",
     "chart.js": "^4.6.1",
-    "chartjs-plugin-trendline": "^3.2.14",
-    "parse-duration": "^2.1.9",
+    "chartjs-plugin-trendline": "^3.3.0",
+    "parse-duration": "^2.1.11",
     "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
-    "ws": "^8.22.0"
+    "ws": "^8.23.0"
   },
   "devDependencies": {
-    "@types/k6": "^2.3.0",
+    "@types/k6": "^2.3.1",
     "@types/ws": "^8.18.2"
   }
 }

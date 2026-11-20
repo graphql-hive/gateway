@@ -9,28 +9,30 @@ const servicePort = opts.getServicePort('thing');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          thing(id: Int!): Thing!
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            thing(id: Int!): Thing!
+          }
 
-        type Thing @key(fields: "id") {
-          id: Int!
-        }
-      `),
-      resolvers: {
-        Query: {
-          thing: (_: unknown, { id }: { id: number }) => {
-            console.log(
-              '\n[Thing Query Resolver] Resolving thing with id:',
-              id,
-            );
-            return { id };
+          type Thing @key(fields: "id") {
+            id: Int!
+          }
+        `),
+        resolvers: {
+          Query: {
+            thing: (_: unknown, { id }: { id: number }) => {
+              console.log(
+                '\n[Thing Query Resolver] Resolving thing with id:',
+                id,
+              );
+              return { id };
+            },
           },
         },
       },
-    }),
+    ]),
   }),
 ).listen(servicePort, () => {
   console.log(

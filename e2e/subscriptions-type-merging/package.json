@@ -2,8 +2,8 @@
   "name": "@e2e/subscriptions-type-merging",
   "private": true,
   "dependencies": {
-    "graphql": "^16.14.0",
+    "graphql": "^16.15.0",
     "graphql-sse": "^2.6.3",
-    "ioredis": "^5.11.1"
+    "ioredis": "^6.0.0"
   }
 }
