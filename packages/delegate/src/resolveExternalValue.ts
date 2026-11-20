@@ -195,6 +195,41 @@ function resolveExternalObject<TContext extends Record<string, any>>(
     return object;
   }
 
+  // the abstract type can have merge targets that dont know the concrete type at all,
+  // like an @interfaceObject subgraph. those are reachable only through the abstract
+  // type so we merge it too, otherwise their fields resolve to null
+  const abstractMergedTypeInfo =
+    mergedTypeInfo.typeName === type.name
+      ? undefined
+      : stitchingInfo.mergedTypes[type.name];
+  if (
+    abstractMergedTypeInfo?.targetSubschemas
+      .get(subschema as Subschema)
+      ?.some(
+        (targetSubschema) =>
+          !targetSubschema.transformedSchema.getType(object.__typename),
+      )
+  ) {
+    return handleMaybePromise(
+      () =>
+        mergeFields(
+          mergedTypeInfo,
+          object,
+          subschema as Subschema,
+          context,
+          info,
+        ),
+      () =>
+        mergeFields(
+          abstractMergedTypeInfo,
+          object,
+          subschema as Subschema,
+          context,
+          info,
+        ),
+    );
+  }
+
   return mergeFields(
     mergedTypeInfo,
     object,

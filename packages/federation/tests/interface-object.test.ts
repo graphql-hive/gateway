@@ -30,6 +30,128 @@ async function execute(
 }
 
 describe('@interfaceObject', () => {
+  // https://github.com/graphql-hive/gateway/issues/2736
+  it('resolves the interface object field when another subgraph extends the implementation', async () => {
+    const kinds: Record<string, string> = { store1: 'Store', spa1: 'Spa' };
+    const owner = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key"]
+          )
+
+        interface Location @key(fields: "id") {
+          id: ID!
+        }
+
+        type Store implements Location @key(fields: "id") {
+          id: ID!
+        }
+
+        type Spa implements Location @key(fields: "id") {
+          id: ID!
+        }
+
+        type Query {
+          location(id: ID!): Location
+        }
+      `),
+      resolvers: {
+        Query: {
+          location: (_: unknown, { id }: { id: string }) => ({
+            id,
+            kind: kinds[id],
+          }),
+        },
+        Location: {
+          __resolveType: ({ kind }: { kind: string }) => kind,
+        },
+      },
+    });
+    const contributor = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key", "@interfaceObject"]
+          )
+
+        type Location @key(fields: "id") @interfaceObject {
+          id: ID!
+          plain: String
+        }
+
+        type Query {
+          contributorPing: String
+        }
+      `),
+      resolvers: {
+        Location: {
+          __resolveReference: (reference: unknown) => reference,
+          plain: ({ id }: { id: string }) => `plain-${id}`,
+        },
+      },
+    });
+    const extender = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key"]
+          )
+
+        type Store @key(fields: "id") {
+          id: ID!
+          feed: String
+        }
+
+        type Query {
+          extenderPing: String
+        }
+      `),
+      resolvers: {
+        Store: {
+          __resolveReference: (reference: unknown) => reference,
+          feed: ({ id }: { id: string }) => `feed-${id}`,
+        },
+      },
+    });
+
+    for (const id of ['store1', 'spa1']) {
+      const { result, subgraphCalls } = await execute(
+        { owner, contributor, extender },
+        /* GraphQL */ `
+          {
+            location(id: "${id}") {
+              __typename
+              id
+              plain
+              ... on Store {
+                feed
+              }
+            }
+          }
+        `,
+      );
+      expect(result).toEqual({
+        data: {
+          location: {
+            __typename: kinds[id],
+            id,
+            plain: `plain-${id}`,
+            ...(id === 'store1' && { feed: 'feed-store1' }),
+          },
+        },
+      });
+      expect(subgraphCalls.map(({ subgraph }) => subgraph).sort()).toEqual(
+        id === 'store1'
+          ? ['contributor', 'extender', 'owner']
+          : ['contributor', 'owner'],
+      );
+    }
+  });
+
   // https://github.com/graphql-hive/gateway/issues/2737
   it('sends the @requires fields to the interface object when selected through an inline fragment on the implementation', async () => {
     const owner = buildSubgraphSchema({
