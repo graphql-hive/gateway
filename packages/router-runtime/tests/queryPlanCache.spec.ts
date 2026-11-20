@@ -5,7 +5,8 @@ import type { KeyValueCache } from '@graphql-mesh/types';
 import { afterEach, expect, it, vi } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
 
-const { version: queryPlannerVersion } = createRequire(import.meta.url)(
+// __filename instead of import.meta.url, jest runs the tests as commonjs
+const { version: queryPlannerVersion } = createRequire(__filename)(
   '@graphql-hive/router-query-planner/package.json',
 );
 
