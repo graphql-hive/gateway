@@ -120,36 +120,30 @@ const deps = {
     // Those are most used features.
     [
       // Common API base
-      ['api-logs'],
-      ['core'],
-      ['resources', 'esm/'],
-      ['sdk-trace-base'],
-      ['sdk-metrics'],
-      ['sdk-logs'],
-      ['instrumentation'],
+      'api',
+      'core',
+      'resources',
+      'sdk-trace',
+      'sdk-metrics',
+      'sdk-logs',
+      'instrumentation',
+      'semantic-conventions',
 
       // Exporters
-      ['exporter-trace-otlp-http'],
-      ['exporter-zipkin'],
+      'exporter-trace-otlp-http',
+      'exporter-zipkin',
 
       // Propagators
-      ['propagator-b3'],
+      'propagator-b3',
 
       // Context Managers
-      ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
-    ].map(([otelPackage, buildDir = 'esm']) => [
+      'context-zone', // An incomplete but Web compatible async context manager based on zone.js
+    ].map((otelPackage) => [
       `node_modules/@opentelemetry/${otelPackage}/index`,
-      `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
+      // all otel packages ship their esm build at the same path
+      `../../node_modules/@opentelemetry/${otelPackage}/dist/index.mjs`,
     ]),
   ),
-  'node_modules/@opentelemetry/api/index':
-    '../../node_modules/@opentelemetry/api/dist/index.mjs',
-  'node_modules/@opentelemetry/semantic-conventions/index':
-    '../../node_modules/@opentelemetry/semantic-conventions/dist/index.mjs',
-  // sdk-trace-base's ESM entry is a shim re-exporting from @opentelemetry/sdk-trace
-  // this will override the common api base for OTEL declared above
-  'node_modules/@opentelemetry/sdk-trace-base/index':
-    '../../node_modules/@opentelemetry/sdk-trace-base/build/esm/index-shim.js',
 };
 
 if (
@@ -185,7 +179,9 @@ export default defineConfig({
     nodeResolve({
       preferBuiltins: true,
       mainFields: ['esnext', 'module', 'main'],
-      exportConditions: ['esnext'],
+      // otel packages pick their node implementation through the "node" condition of the "#platform" import,
+      // without it the browser implementation would end up in the bundle
+      exportConditions: ['node', 'esnext'],
     }), // resolve node_modules and bundle them too
     graphql(), // handle graphql imports
     commonjs({ strictRequires: true }), // convert commonjs to esm
@@ -193,6 +189,7 @@ export default defineConfig({
     sucrase({ transforms: ['typescript'] }), // transpile typescript
     packagejson(), // add package jsons
     avoidminjs(),
+    otelgrpcrequire(),
     copy({
       targets: [
         {
@@ -214,6 +211,35 @@ function avoidminjs() {
           return withoutMin;
         }
       }
+    },
+  };
+}
+
+/**
+ * The OTLP gRPC exporters load `@grpc/grpc-js` with a `require` created from `import.meta.url`,
+ * which Rollup cannot see. At runtime that `require` loads the bundled ES module of `@grpc/grpc-js`,
+ * which has only a default export, so the destructured `credentials`, `Metadata` and `status` are
+ * missing. This plugin imports the bundled `@grpc/grpc-js` instead.
+ *
+ * @type {import('rollup').PluginImpl}
+ */
+function otelgrpcrequire() {
+  const requireCall = '__require("@grpc/grpc-js")';
+  return {
+    name: 'otelgrpcrequire',
+    transform(code, id) {
+      if (
+        !id.includes('@opentelemetry/otlp-grpc-exporter-base') ||
+        !code.includes(requireCall)
+      ) {
+        return null;
+      }
+      return {
+        code:
+          "import __grpcJs from '@grpc/grpc-js';\n" +
+          code.replaceAll(requireCall, '__grpcJs'),
+        map: null,
+      };
     },
   };
 }
