@@ -7,10 +7,8 @@ import {
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ReadableStream, Request, Response } from '@whatwg-node/fetch';
-import {
-  createDeferredPromise,
-  createServerAdapter,
-} from '@whatwg-node/server';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { createServerAdapter } from '@whatwg-node/server';
 import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
@@ -292,6 +290,7 @@ describe('buildHTTPExecutor', () => {
   it('should abort stream when SSE gets cancelled while waiting for next event', async () => {
     // we use yoga intentionally here because simulating the proper response object locally is tricky
     await using yoga = createYoga({
+      logging: false,
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           scalar Upload # intentionally not "File" to test scalar name independence

@@ -1,5 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import {
   defaultPrintFn,
   type Transport,
@@ -11,11 +11,6 @@ import {
 import { isDisposable, iterateAsync } from '@graphql-mesh/utils';
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
-  DelegationPlanBuilder,
-  MergedTypeResolver,
-  Subschema,
-} from '@graphql-tools/delegate';
-import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
@@ -25,24 +20,21 @@ import {
   type Executor,
   type GraphQLResolveInfoHelpers,
   type Maybe,
-  type MaybePromise,
 } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   handleMaybePromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
 import {
-  FragmentDefinitionNode,
   GraphQLError,
   isEnumType,
-  SelectionNode,
-  SelectionSetNode,
   type DocumentNode,
   type ExecutionResult,
   type GraphQLSchema,
 } from 'graphql';
-import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
+import type { GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
 import {
   Instrumentation,
@@ -147,7 +139,6 @@ function getTransportExecutor({
         transportContext?.log ||
         // if the logger is not provided by the context, create a new silent one just for consistency in the hooks
         new Logger({ level: false });
-      const logger = transportContext?.logger || LegacyLogger.from(log);
       return getSubgraphExecutor({
         subgraphName,
         subgraph,
@@ -165,7 +156,6 @@ function getTransportExecutor({
         getDisposeReason,
         ...transportContext,
         log,
-        logger,
       });
     },
   );
@@ -441,8 +431,6 @@ export function wrapExecutorWithHooks({
 
 export interface UnifiedGraphPlugin<TContext> {
   onSubgraphExecute?: OnSubgraphExecuteHook<TContext>;
-  onDelegationPlan?: OnDelegationPlanHook<TContext>;
-  onDelegationStageExecute?: OnDelegationStageExecuteHook<TContext>;
 }
 
 export type OnSubgraphExecuteHook<TContext = any> = (
@@ -485,67 +473,6 @@ export type OnSubgraphExecuteDoneResult = {
   onEnd?: OnSubgraphExecuteDoneResultOnEnd;
 };
 
-export type OnDelegationPlanHook<TContext> = (
-  payload: OnDelegationPlanHookPayload<TContext>,
-) => Maybe<OnDelegationPlanDoneHook | void>;
-
-export interface OnDelegationPlanHookPayload<TContext> {
-  supergraph: GraphQLSchema;
-  subgraph: string;
-  sourceSubschema: Subschema<any, any, any, TContext>;
-  typeName: string;
-  variables: Record<string, any>;
-  fragments: Record<string, FragmentDefinitionNode>;
-  fieldNodes: SelectionNode[];
-  context: TContext;
-  log: Logger;
-  info?: GraphQLResolveInfo;
-  delegationPlanBuilder: DelegationPlanBuilder;
-  setDelegationPlanBuilder(delegationPlanBuilder: DelegationPlanBuilder): void;
-}
-
-export type OnDelegationPlanDoneHook = (
-  payload: OnDelegationPlanDonePayload,
-) => Maybe<void>;
-
-export interface OnDelegationPlanDonePayload {
-  delegationPlan: ReturnType<DelegationPlanBuilder>;
-  setDelegationPlan: (
-    delegationPlan: ReturnType<DelegationPlanBuilder>,
-  ) => void;
-}
-
-export type OnDelegationStageExecuteHook<TContext> = (
-  payload: OnDelegationStageExecutePayload<TContext>,
-) => Maybe<OnDelegationStageExecuteDoneHook>;
-
-export interface OnDelegationStageExecutePayload<TContext> {
-  object: any;
-  context: TContext;
-  info: GraphQLResolveInfo;
-  subgraph: string;
-  subschema: Subschema<any, any, any, TContext>;
-  selectionSet: SelectionSetNode;
-  key?: any;
-  type: GraphQLOutputType;
-
-  resolver: MergedTypeResolver<TContext>;
-  setResolver: (resolver: MergedTypeResolver<TContext>) => void;
-
-  typeName: string;
-
-  log: Logger;
-}
-
-export type OnDelegationStageExecuteDoneHook = (
-  payload: OnDelegationStageExecuteDonePayload,
-) => void;
-
-export interface OnDelegationStageExecuteDonePayload {
-  result: any;
-  setResult: (result: any) => void;
-}
-
 export function compareSchemas(
   a: DocumentNode | string | GraphQLSchema,
   b: DocumentNode | string | GraphQLSchema,
@@ -575,78 +502,6 @@ export function compareSchemas(
 // TODO: Fix this in GraphQL Tools
 export function compareSubgraphNames(name1: string, name2: string) {
   return constantCase(name1) === constantCase(name2);
-}
-
-export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
-  originalResolver: MergedTypeResolver<TContext>,
-  typeName: string,
-  onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[],
-  log: Logger,
-): MergedTypeResolver<TContext> {
-  return (
-    object,
-    context,
-    info,
-    subschema,
-    selectionSet,
-    key,
-    type,
-    skipTypeMerging,
-  ) => {
-    if (subschema.name) {
-      log = log.child({ subgraph: subschema.name });
-    }
-    let resolver = originalResolver as MergedTypeResolver<TContext>;
-    function setResolver(newResolver: MergedTypeResolver<TContext>) {
-      resolver = newResolver;
-    }
-    const onDelegationStageExecuteDoneHooks: OnDelegationStageExecuteDoneHook[] =
-      [];
-    for (const onDelegationStageExecute of onDelegationStageExecuteHooks) {
-      const onDelegationStageExecuteDone = onDelegationStageExecute({
-        object,
-        context: context as TContext,
-        info,
-        subgraph: subschema.name!,
-        subschema: subschema as Subschema<any, any, any, TContext>,
-        selectionSet,
-        key,
-        typeName,
-        type,
-        log,
-        resolver,
-        setResolver,
-      });
-      if (onDelegationStageExecuteDone) {
-        onDelegationStageExecuteDoneHooks.push(onDelegationStageExecuteDone);
-      }
-    }
-    return handleMaybePromise(
-      () =>
-        resolver(
-          object,
-          context as TContext,
-          info,
-          subschema as Subschema<any, any, any, TContext>,
-          selectionSet,
-          key,
-          type,
-          skipTypeMerging,
-        ),
-      (result) => {
-        function setResult(newResult: any) {
-          result = newResult;
-        }
-        for (const onDelegationStageExecuteDone of onDelegationStageExecuteDoneHooks) {
-          onDelegationStageExecuteDone({
-            result,
-            setResult,
-          });
-        }
-        return result;
-      },
-    );
-  };
 }
 
 // Taken from https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form

@@ -25,10 +25,9 @@ describe('Persisted Documents', () => {
     },
   });
 
-  const subgraphServer = createYoga({
-    schema: subgraphSchema,
-  });
+  const subgraphServer = createYoga({ logging: false, schema: subgraphSchema });
   const gateway = createGatewayRuntime({
+    logging: false,
     supergraph: getUnifiedGraphGracefully([
       {
         name: 'foo',
@@ -101,6 +100,7 @@ describe('Persisted Documents', () => {
   });
   it('supports `allowArbitraryDocuments` option with custom store', async () => {
     const gatewayWithArbitraryDocs = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'foo',

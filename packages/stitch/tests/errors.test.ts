@@ -1,11 +1,6 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import {
-  assertSome,
-  createGraphQLError,
-  ExecutionResult,
-  Executor,
-} from '@graphql-tools/utils';
+import { assertSome, ExecutionResult, Executor } from '@graphql-tools/utils';
 import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
 import { buildSchema, graphql, GraphQLError } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
@@ -259,7 +254,7 @@ describe('passes along errors for remote schemas', () => {
     const expectedResult: ExecutionResult<any> = {
       data: null,
       errors: [
-        createGraphQLError('INVALID_CREDENTIALS', {
+        new GraphQLError('INVALID_CREDENTIALS', {
           path: ['test'],
         }),
       ],

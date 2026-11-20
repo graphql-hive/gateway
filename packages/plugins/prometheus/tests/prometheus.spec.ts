@@ -35,6 +35,7 @@ describe('Prometheus', () => {
     registry?: Registry,
   ) {
     return createGatewayRuntime({
+      logging: false,
       supergraph: () =>
         getUnifiedGraphGracefully([
           {

@@ -152,20 +152,17 @@ export type PluginWithState<
     ? P[K] extends infer Instrumentation | undefined
       ? {
           [I in keyof Instrumentation]: Instrumentation[I] extends
-            | ((payload: infer IP, ...args: infer Args) => infer IR)
-            | undefined
-            ?
-                | ((
-                    payload: PayloadWithState<IP, Http, GraphQL, Gateway>,
-                    ...args: Args
-                  ) => IR)
-                | undefined
+            ((payload: infer IP, ...args: infer Args) => infer IR) | undefined
+            ? | ((
+                  payload: PayloadWithState<IP, Http, GraphQL, Gateway>,
+                  ...args: Args
+                ) => IR)
+              | undefined
             : Instrumentation[I];
         }
       : P[K]
     : P[K] extends ((payload: infer T) => infer R) | undefined
-      ?
-          | ((payload: PayloadWithState<T, Http, GraphQL, Gateway>) => R)
-          | undefined
+      ? | ((payload: PayloadWithState<T, Http, GraphQL, Gateway>) => R)
+        | undefined
       : P[K];
 };

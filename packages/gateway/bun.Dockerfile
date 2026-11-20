@@ -1,14 +1,14 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.3.13-slim AS install
+FROM oven/bun:1.4.4-slim AS install
 
 WORKDIR /install
 
-RUN bun i graphql@16.14.0
+RUN bun i graphql@16.14.2
 
 #
 
-FROM oven/bun:1.3.13-slim
+FROM oven/bun:1.4.4-slim
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \

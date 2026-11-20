@@ -1,6 +1,5 @@
 import {
   AsyncExecutor,
-  createGraphQLError,
   ExecutionResult,
   Executor,
   inspect,
@@ -11,6 +10,7 @@ import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   buildClientSchema,
   getIntrospectionQuery,
+  GraphQLError,
   GraphQLSchema,
   IntrospectionOptions,
   IntrospectionQuery,
@@ -26,8 +26,8 @@ function getSchemaFromIntrospection(
     return buildClientSchema(introspectionResult.data, options);
   }
   if (introspectionResult?.errors) {
-    const graphqlErrors = introspectionResult.errors.map((error) =>
-      createGraphQLError(error.message, error),
+    const graphqlErrors = introspectionResult.errors.map(
+      (error) => new GraphQLError(error.message, error),
     );
     if (introspectionResult.errors.length === 1) {
       throw graphqlErrors[0];
@@ -38,7 +38,7 @@ function getSchemaFromIntrospection(
       );
     }
   }
-  throw createGraphQLError(
+  throw new GraphQLError(
     `Could not obtain introspection result, received the following as response; \n ${inspect(
       introspectionResult,
     )}`,

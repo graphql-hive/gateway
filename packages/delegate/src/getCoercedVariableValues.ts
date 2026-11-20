@@ -1,14 +1,12 @@
 import type { VariableValues } from '@graphql-tools/utils';
 
 type VersionedVariableValues =
-  | Record<string, unknown>
-  | VariableValues<Record<string, unknown>>
-  | undefined;
+  Record<string, unknown> | VariableValues<Record<string, unknown>> | undefined;
 
 /**
  * Returns the runtime variable values, regardless of the graphql-js version.
  *
- * - graphql <=16: `info.variableValues` is a flat `{ [name]: value }` map.
+ * - graphql 16: `info.variableValues` is a flat `{ [name]: value }` map.
  * - graphql >=17: `info.variableValues` is `{ sources, coerced }`; the runtime
  *   values live under `.coerced`.
  */

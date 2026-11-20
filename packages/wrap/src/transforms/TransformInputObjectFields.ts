@@ -44,11 +44,9 @@ export default class TransformInputObjectFields<
 > {
   private readonly inputFieldTransformer: InputFieldTransformer;
   private readonly inputFieldNodeTransformer:
-    | InputFieldNodeTransformer
-    | undefined;
+    InputFieldNodeTransformer | undefined;
   private readonly inputObjectNodeTransformer:
-    | InputObjectNodeTransformer
-    | undefined;
+    InputObjectNodeTransformer | undefined;
   private transformedSchema: GraphQLSchema | undefined;
   private mapping: Record<string, Record<string, string>>;
 

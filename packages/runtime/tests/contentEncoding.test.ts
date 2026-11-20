@@ -58,10 +58,12 @@ describe('contentEncoding', () => {
     },
   });
   const subgraphServer = createYoga({
+    logging: false,
     schema: subgraphSchema,
     plugins: [useContentEncoding()],
   });
   const gateway = createGatewayRuntime({
+    logging: false,
     supergraph() {
       return getUnifiedGraphGracefully([
         {
@@ -226,10 +228,9 @@ describe('contentEncoding with SSE subscriptions', () => {
       },
     },
   });
-  const subgraphServer = createYoga({
-    schema: subgraphSchema,
-  });
+  const subgraphServer = createYoga({ logging: false, schema: subgraphSchema });
   const gateway = createGatewayRuntime({
+    logging: false,
     supergraph() {
       return getUnifiedGraphGracefully([
         {

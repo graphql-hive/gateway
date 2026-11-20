@@ -192,8 +192,7 @@ export function handleFederationSubschema({
       }
       if (meshSourceDirectiveName) {
         const sourceDirectives = typeDirectives[meshSourceDirectiveName] as
-          | SourceDirective[]
-          | undefined;
+          SourceDirective[] | undefined;
         const sourceDirective = sourceDirectives?.find((directive) =>
           compareSubgraphNames(directive.subgraph, subgraphName),
         );

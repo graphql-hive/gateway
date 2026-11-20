@@ -1,9 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createGraphQLError } from '@graphql-tools/utils';
 import {
   buildSchema,
   DocumentNode,
   graphql,
+  GraphQLError,
   Kind,
   OperationTypeNode,
   parse,
@@ -277,7 +277,7 @@ describe('bare requests', () => {
         delegate: null,
       },
       errors: [
-        createGraphQLError('test', {
+        new GraphQLError('test', {
           path: ['delegate'],
         }),
       ],

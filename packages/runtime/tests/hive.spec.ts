@@ -1,11 +1,7 @@
 import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import {
-  fakePromise,
-  MaybePromise,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
+import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   createDisposableServer,
@@ -15,6 +11,7 @@ import {
   isDebug,
 } from '@internal/testing';
 import { fetch, Response } from '@whatwg-node/fetch';
+import { fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { createServerAdapter } from '@whatwg-node/server';
 import {
   buildClientSchema,
@@ -117,6 +114,7 @@ describe('Hive CDN', () => {
         }),
       );
       await using upstreamServer = createYoga({
+        logging: false,
         schema: upstreamSchema,
         // Make sure introspection is not fetched from the service itself
         plugins: [useDisableIntrospection()],
@@ -185,7 +183,7 @@ describe('Hive CDN', () => {
       ),
     );
     await using upstreamServer = await createDisposableServer(
-      createYoga({ schema: createUpstreamSchema() }),
+      createYoga({ logging: false, schema: createUpstreamSchema() }),
     );
     await using gateway = createGatewayRuntime({
       proxy: {
@@ -293,7 +291,10 @@ describe('Hive CDN', () => {
           );
         }),
       );
-      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      await using upstreamServer = createYoga({
+        logging: false,
+        schema: upstreamSchema,
+      });
       const cdn = {
         type: 'hive',
         endpoint: cdnServer.url,
@@ -393,7 +394,10 @@ describe('Hive CDN', () => {
           );
         }),
       );
-      await using upstreamServer = createYoga({ schema: upstreamSchema });
+      await using upstreamServer = createYoga({
+        logging: false,
+        schema: upstreamSchema,
+      });
       const cdn = {
         type: 'hive',
         endpoint: cdnServer.url,
@@ -498,7 +502,10 @@ describe('Hive CDN', () => {
         );
       }),
     );
-    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    await using upstreamServer = createYoga({
+      logging: false,
+      schema: upstreamSchema,
+    });
     // warm cache, like after a restart with a shared cache
     const cacheStore = new Map<string, unknown>([
       ['hive-gateway:supergraph', supergraphSdl],
@@ -617,7 +624,10 @@ describe('Hive CDN', () => {
         );
       }),
     );
-    await using upstreamServer = createYoga({ schema: upstreamSchema });
+    await using upstreamServer = createYoga({
+      logging: false,
+      schema: upstreamSchema,
+    });
     await using gateway = createGatewayRuntime({
       proxy: { endpoint: 'http://upstream/graphql' },
       schema: { type: 'hive', endpoint: cdnServer.url, key: 'key' },
@@ -709,6 +719,7 @@ describe('Hive CDN', () => {
       ),
     );
     await using upstreamServer = createYoga({
+      logging: false,
       schema: upstreamSchema,
       plugins: [
         {
@@ -798,6 +809,7 @@ describe('Hive CDN', () => {
     );
     await using upstreamServer = await createDisposableServer(
       createYoga({
+        logging: false,
         schema: createSchema({
           typeDefs: /* GraphQL */ `
             type Query {
@@ -867,6 +879,7 @@ describe('Hive CDN', () => {
     );
     await using upstreamServer = await createDisposableServer(
       createYoga<{}>({
+        logging: false,
         schema: createSchema({
           typeDefs: /* GraphQL */ `
             type Query {
@@ -937,6 +950,7 @@ describe('Hive CDN', () => {
     const upstreamSchema = createUpstreamSchema();
 
     await using upstreamServer = createYoga({
+      logging: false,
       schema: upstreamSchema,
       // Make sure introspection is not fetched from the service itself
       plugins: [useDisableIntrospection()],
@@ -962,6 +976,7 @@ describe('Hive CDN', () => {
     );
 
     await using gateway = createGatewayRuntime({
+      logging: false,
       supergraph: {
         type: 'hive',
         endpoint: [cdnServer.url, cdnMirrorServer.url],
@@ -1004,9 +1019,7 @@ describe('Hive CDN', () => {
     const upstreamSchema = createUpstreamSchema();
 
     await using upstreamServer = await createDisposableServer(
-      createYoga({
-        schema: upstreamSchema,
-      }),
+      createYoga({ logging: false, schema: upstreamSchema }),
     );
 
     await using cdnServer = await createDisposableServer(
@@ -1024,6 +1037,7 @@ describe('Hive CDN', () => {
     );
 
     await using gateway = createGatewayRuntime({
+      logging: false,
       proxy: {
         endpoint: `${upstreamServer.url}/graphql`,
       },

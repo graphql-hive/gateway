@@ -116,7 +116,7 @@ describe('useJWTAuth', () => {
             signingKeyProviders: [createInlineSigningKeyProvider(secret)],
           }),
         ],
-        logging: true,
+        logging: false,
       });
 
       const token = jwt.sign({ sub: '123' }, secret, {});
