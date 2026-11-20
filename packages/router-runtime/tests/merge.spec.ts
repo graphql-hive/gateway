@@ -270,7 +270,10 @@ it('merges a root type re-entry into every object its flatten path reaches', asy
   });
 
   expect(requests).toEqual([
-    { operationType: 'mutation', document: print(parse('mutation{do{query{__typename a}}}')) },
+    {
+      operationType: 'mutation',
+      document: print(parse('mutation{do{query{__typename a}}}')),
+    },
     { operationType: 'query', document: print(parse('{x}')) },
   ]);
   expect(result).toEqual({
@@ -282,7 +285,10 @@ it('merges a root type re-entry into every object its flatten path reaches', asy
       ],
     },
     errors: [
-      expect.objectContaining({ message: 'x is partial', path: ['do', 'query'] }),
+      expect.objectContaining({
+        message: 'x is partial',
+        path: ['do', 'query'],
+      }),
     ],
   });
 });
