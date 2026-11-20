@@ -10,7 +10,7 @@ The query plan now says which fetches each fetch waits for, so a fetch no longer
 
 The router runtime also takes the entity keys, the possible types of abstract types and the shape of the response straight from the query planner, instead of working them out from the supergraph for every request.
 
-`@fromContext` fetches now respect a configurable alias limit. Such a fetch sends one aliased `_entities` field per group of distinct context values, so a subgraph that caps the aliases of an operation could reject it. With `maxAliasesPerRequest` the groups are split into as many requests as it takes to stay within the limit, like the Hive Router's `traffic_shaping` `max_aliases_per_request` does. There is no limit by default.
+`@fromContext` fetches now respect a configurable alias limit. Such a fetch sends one aliased `_entities` field per group of distinct context values, so a subgraph that caps the aliases of an operation could reject it. With `maxAliasesPerRequest` the groups are split into as many requests as it takes to stay within the limit, like the Hive Router's `traffic_shaping` `max_aliases_per_request` does. There is no limit by default. Requests to a subgraph with a limit are not batched, because batching would merge the split requests back into one.
 
 ```ts
 import { defineConfig } from '@graphql-hive/gateway';
