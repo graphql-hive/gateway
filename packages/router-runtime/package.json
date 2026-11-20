@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@envelop/core": "^6.0.0",
-    "@graphql-hive/router-query-planner": "0.0.55",
+    "@graphql-hive/router-query-planner": "0.0.56",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/utils": "^0.107.3",
