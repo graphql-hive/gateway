@@ -5279,7 +5279,9 @@ function optimizeStitchPlanNode(
     const seenIslands = new Set<string>();
     for (const child of flat) {
       if (child.kind === 'Island') {
-        const ik = `${child.parentTypeName}.${child.fieldNode.name.value}::${islandFlattenPaths(child)
+        const ik = `${child.parentTypeName}.${child.fieldNode.name.value}::${islandFlattenPaths(
+          child,
+        )
           .map((p) => p.join('\0'))
           .join('/')}::${child.fieldNode.alias?.value ?? ''}`;
         if (seenIslands.has(ik)) {
@@ -5714,9 +5716,14 @@ function buildCompletePlan(
   );
   // Entity reuse is always planned for queries; mutations skip at execute.
   const withReuse = isMutation ? annotated : annotateEntityReuse(annotated);
-  const withDocs = isMutation
+  // Router-style fold: same dependsOn wave + same subgraph → one BatchFetch
+  // (or covering Fetch). Runs after reuse so reuse edges affect wave layers.
+  const folded = isMutation
     ? withReuse
-    : preparePlanDocuments(withReuse, {
+    : foldSameWaveSubgraphFetches(withReuse, stitchingInfo);
+  const withDocs = isMutation
+    ? folded
+    : preparePlanDocuments(folded, {
         operation,
         fragments,
         fieldNodesByField: stitchingInfo.fieldNodesByField,
@@ -6268,6 +6275,176 @@ function tryCoalesceOverlappingEntityFetches(
   };
 }
 
+type EntityFetchHop = Extract<StitchPlanNode, { kind: 'Fetch' }> & {
+  entityTypeName: string;
+};
+type FoldableEntityHop =
+  EntityFetchHop | Extract<StitchPlanNode, { kind: 'BatchFetch' }>;
+
+function isEntityFetchHop(n: StitchPlanNode): n is EntityFetchHop {
+  return n.kind === 'Fetch' && Boolean(n.entityTypeName) && !n.rootField;
+}
+
+function isFoldableEntityHop(n: StitchPlanNode): n is FoldableEntityHop {
+  return isEntityFetchHop(n) || n.kind === 'BatchFetch';
+}
+
+/** Subschema identity for BatchFetch grouping (name, else object identity). */
+function makeSubschemaKeyFn(): (s: Subschema) => string {
+  const anonIds = new WeakMap<object, string>();
+  let anonSeq = 0;
+  return (s: Subschema): string => {
+    if (s.name) {
+      return `n:${s.name}`;
+    }
+    let id = anonIds.get(s);
+    if (!id) {
+      id = `a:${anonSeq++}`;
+      anonIds.set(s, id);
+    }
+    return id;
+  };
+}
+
+/**
+ * Collapse same-subschema entity Fetches into covering Fetch / multi-path /
+ * BatchFetch (Router fold). Shared by Parallel grouping and wave fold.
+ */
+function collapseSameSubschemaEntityFetches(
+  stitchingInfo: StitchingInfo,
+  group: EntityFetchHop[],
+): StitchPlanNode {
+  if (group.length === 0) {
+    throw new Error('collapseSameSubschemaEntityFetches: empty group');
+  }
+  if (group.length === 1) {
+    return group[0]!;
+  }
+
+  const byEntityType = new Map<string, EntityFetchHop[]>();
+  for (const g of group) {
+    const tk = g.entityTypeName;
+    let list = byEntityType.get(tk);
+    if (!list) {
+      list = [];
+      byEntityType.set(tk, list);
+    }
+    list.push(g);
+  }
+  const collapsed: EntityFetchHop[] = [];
+  for (const typeGroup of byEntityType.values()) {
+    const united = tryUnionEntityFetches(stitchingInfo, typeGroup);
+    if (united) {
+      collapsed.push(united as EntityFetchHop);
+      continue;
+    }
+    if (typeGroup.length === 1) {
+      collapsed.push(typeGroup[0]!);
+      continue;
+    }
+    const sameSel =
+      typeGroup.every(
+        (g) =>
+          selectionSetKey(g.selectionSet) ===
+          selectionSetKey(typeGroup[0]!.selectionSet),
+      ) && !pathsHaveNesting(typeGroup.flatMap(fetchFlattenPaths));
+    if (sameSel) {
+      collapsed.push(mergeMultiPathFetches(typeGroup) as EntityFetchHop);
+    } else {
+      collapsed.push(...typeGroup);
+    }
+  }
+
+  if (collapsed.length === 1) {
+    return collapsed[0]!;
+  }
+
+  const covering = tryCoalesceOverlappingEntityFetches(
+    stitchingInfo,
+    collapsed,
+  );
+  if (covering) {
+    return covering;
+  }
+
+  return {
+    kind: 'BatchFetch',
+    subschema: collapsed[0]!.subschema,
+    aliases: collapsed.map((g, i) => ({
+      alias: `_e${i}`,
+      entityTypeName: g.entityTypeName,
+      selectionSet: g.selectionSet,
+      flattenPaths: fetchFlattenPaths(g),
+      runIf: g.runIf,
+    })),
+    runIf: collapsed.reduce(
+      (acc: ReturnType<typeof orRunIf>, g) => orRunIf(acc, g.runIf),
+      collapsed[0]!.runIf as ReturnType<typeof orRunIf>,
+    ),
+  };
+}
+
+function expandFoldableToEntityFetches(
+  hop: FoldableEntityHop,
+): EntityFetchHop[] {
+  if (hop.kind === 'Fetch') {
+    return [hop];
+  }
+  return hop.aliases.map((a) => ({
+    kind: 'Fetch' as const,
+    subschema: hop.subschema,
+    entityTypeName: a.entityTypeName,
+    selectionSet: a.selectionSet,
+    flattenPaths: a.flattenPaths,
+    runIf: a.runIf,
+  }));
+}
+
+function hopCompletesIdList(hop: FoldableEntityHop): string[] {
+  if (hop.completesIds?.length) {
+    return [...hop.completesIds];
+  }
+  return hop.id ? [hop.id] : [];
+}
+
+/**
+ * Attach schedule metadata from a fold group onto the collapsed hop so
+ * dependents still see every original completesId.
+ */
+function withFoldScheduleMeta(
+  collapsed: StitchPlanNode,
+  group: FoldableEntityHop[],
+): StitchPlanNode {
+  const completesIds = [...new Set(group.flatMap(hopCompletesIdList))];
+  const dependsOn = new Set<string>();
+  for (const h of group) {
+    for (const d of h.dependsOn ?? []) {
+      dependsOn.add(d);
+    }
+  }
+  for (const id of completesIds) {
+    dependsOn.delete(id);
+  }
+  const depList = [...dependsOn];
+  if (collapsed.kind === 'Fetch') {
+    return {
+      ...collapsed,
+      id: completesIds[0] ?? collapsed.id,
+      completesIds: completesIds.length ? completesIds : collapsed.completesIds,
+      dependsOn: depList.length ? depList : collapsed.dependsOn,
+    };
+  }
+  if (collapsed.kind === 'BatchFetch') {
+    return {
+      ...collapsed,
+      id: completesIds[0] ?? collapsed.id,
+      completesIds: completesIds.length ? completesIds : collapsed.completesIds,
+      dependsOn: depList.length ? depList : collapsed.dependsOn,
+    };
+  }
+  return collapsed;
+}
+
 /**
  * Inside each Parallel, collapse same-subschema entity Fetches:
  * - same type -> multi-path / selection union when safe
@@ -6306,18 +6483,14 @@ function groupParallelBatchFetches(
     // shared prefix - BatchFetch them like a Parallel group.
     const out: StitchPlanNode[] = [];
     let i = 0;
-    const isEntity = (
-      n: StitchPlanNode,
-    ): n is Extract<StitchPlanNode, { kind: 'Fetch' }> =>
-      n.kind === 'Fetch' && Boolean(n.entityTypeName) && !n.rootField;
     while (i < mapped.length) {
-      if (!isEntity(mapped[i]!)) {
+      if (!isEntityFetchHop(mapped[i]!)) {
         out.push(mapped[i]!);
         i++;
         continue;
       }
-      const run: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
-      while (i < mapped.length && isEntity(mapped[i]!)) {
+      const run: EntityFetchHop[] = [];
+      while (i < mapped.length && isEntityFetchHop(mapped[i]!)) {
         run.push(mapped[i]!);
         i++;
       }
@@ -6340,30 +6513,13 @@ function groupParallelBatchFetches(
   const children = node.nodes.map((c) =>
     groupParallelBatchFetches(c, stitchingInfo),
   );
-  const entityFetches = children.filter(
-    (c): c is Extract<StitchPlanNode, { kind: 'Fetch' }> =>
-      c.kind === 'Fetch' && Boolean(c.entityTypeName) && !c.rootField,
-  );
+  const entityFetches = children.filter(isEntityFetchHop);
   if (entityFetches.length < 2) {
     return { kind: 'Parallel', nodes: children };
   }
 
-  // Group by subschema identity (name when set, else object identity) so
-  // unnamed schemas still BatchFetch Book||Magazine together.
-  const anonIds = new WeakMap<object, string>();
-  let anonSeq = 0;
-  const subKey = (s: Subschema): string => {
-    if (s.name) {
-      return `n:${s.name}`;
-    }
-    let id = anonIds.get(s);
-    if (!id) {
-      id = `a:${anonSeq++}`;
-      anonIds.set(s, id);
-    }
-    return id;
-  };
-  const bySub = new Map<string, typeof entityFetches>();
+  const subKey = makeSubschemaKeyFn();
+  const bySub = new Map<string, EntityFetchHop[]>();
   for (const f of entityFetches) {
     const key = subKey(f.subschema);
     let list = bySub.get(key);
@@ -6381,7 +6537,7 @@ function groupParallelBatchFetches(
     if (consumed.has(child)) {
       continue;
     }
-    if (child.kind !== 'Fetch' || !child.entityTypeName || child.rootField) {
+    if (!isEntityFetchHop(child)) {
       next.push(child);
       continue;
     }
@@ -6394,85 +6550,190 @@ function groupParallelBatchFetches(
       // Emitted when we visited group[0].
       continue;
     }
-
-    // 1) Same entity type: union selections / multi-path when safe.
-    const byEntityType = new Map<
-      string,
-      Array<Extract<StitchPlanNode, { kind: 'Fetch' }>>
-    >();
-    for (const g of group) {
-      const tk = g.entityTypeName!;
-      let list = byEntityType.get(tk);
-      if (!list) {
-        list = [];
-        byEntityType.set(tk, list);
-      }
-      list.push(g);
-    }
-    const collapsed: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
-    for (const typeGroup of byEntityType.values()) {
-      const united = tryUnionEntityFetches(stitchingInfo, typeGroup);
-      if (united) {
-        collapsed.push(united);
-        continue;
-      }
-      if (typeGroup.length === 1) {
-        collapsed.push(typeGroup[0]!);
-        continue;
-      }
-      const sameSel =
-        typeGroup.every(
-          (g) =>
-            selectionSetKey(g.selectionSet) ===
-            selectionSetKey(typeGroup[0]!.selectionSet),
-        ) && !pathsHaveNesting(typeGroup.flatMap(fetchFlattenPaths));
-      if (sameSel) {
-        collapsed.push(mergeMultiPathFetches(typeGroup));
-      } else {
-        collapsed.push(...typeGroup);
-      }
-    }
-
     for (const g of group) {
       consumed.add(g);
     }
-
-    if (collapsed.length === 1) {
-      next.push(collapsed[0]!);
-      continue;
-    }
-
-    // 2) Multi-type (or uncollapsed same-type): prefer covering-type union
-    // (Product||Book → one Product Fetch with inline fragments), else BatchFetch
-    // even when possibles overlap under the same root.
-    const covering = tryCoalesceOverlappingEntityFetches(
-      stitchingInfo,
-      collapsed,
-    );
-    if (covering) {
-      next.push(covering);
-      continue;
-    }
-
-    next.push({
-      kind: 'BatchFetch',
-      subschema: collapsed[0]!.subschema,
-      aliases: collapsed.map((g, i) => ({
-        alias: `_e${i}`,
-        entityTypeName: g.entityTypeName!,
-        selectionSet: g.selectionSet,
-        flattenPaths: fetchFlattenPaths(g),
-        runIf: g.runIf,
-      })),
-      runIf: collapsed.reduce(
-        (acc: ReturnType<typeof orRunIf>, g) => orRunIf(acc, g.runIf),
-        collapsed[0]!.runIf as ReturnType<typeof orRunIf>,
-      ),
-    });
+    next.push(collapseSameSubschemaEntityFetches(stitchingInfo, group));
   }
   return next.length === 1 ? next[0]! : { kind: 'Parallel', nodes: next };
 }
 
+/**
+ * Earliest ready wave from dependsOn (0 = no preds). Used for Router-style
+ * same-wave / same-subgraph BatchFetch fold.
+ */
+function earliestHopWave(
+  hop: { dependsOn?: string[] },
+  waveById: Map<string, number>,
+): number {
+  const deps = hop.dependsOn ?? [];
+  if (!deps.length) {
+    return 0;
+  }
+  let w = 0;
+  for (const d of deps) {
+    w = Math.max(w, (waveById.get(d) ?? 0) + 1);
+  }
+  return w;
+}
+
+function buildCompletesWaveMap(root: StitchPlanNode): Map<string, number> {
+  const hops: Array<
+    | Extract<StitchPlanNode, { kind: 'Fetch' }>
+    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
+    | Extract<StitchPlanNode, { kind: 'Island' }>
+  > = [];
+  collectExecutableHops(root, hops, {});
+  const byId = new Map<string, (typeof hops)[number]>();
+  for (const h of hops) {
+    for (const id of h.completesIds?.length
+      ? h.completesIds
+      : h.id
+        ? [h.id]
+        : []) {
+      byId.set(id, h);
+    }
+  }
+  const memo = new Map<string, number>();
+  const visiting = new Set<string>();
+  const waveOf = (id: string): number => {
+    if (memo.has(id)) {
+      return memo.get(id)!;
+    }
+    if (visiting.has(id)) {
+      return 0;
+    }
+    visiting.add(id);
+    const h = byId.get(id);
+    let w = 0;
+    if (h) {
+      for (const d of h.dependsOn ?? []) {
+        w = Math.max(w, waveOf(d) + 1);
+      }
+    }
+    visiting.delete(id);
+    memo.set(id, w);
+    return w;
+  };
+  for (const id of byId.keys()) {
+    waveOf(id);
+  }
+  return memo;
+}
+
+/**
+ * After dependsOn + entity-reuse annotation: fold every entity Fetch/BatchFetch
+ * that shares the same earliest ready wave and the same subgraph into one
+ * BatchFetch (or covering Fetch). Matches Hive Router "one fetch per subgraph
+ * per step" plan quality. CompletesIds of folded hops are preserved so
+ * downstream dependsOn stay valid.
+ */
+function foldSameWaveSubgraphFetches(
+  root: StitchPlanNode,
+  stitchingInfo: StitchingInfo,
+): StitchPlanNode {
+  const allHops: Array<
+    | Extract<StitchPlanNode, { kind: 'Fetch' }>
+    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
+    | Extract<StitchPlanNode, { kind: 'Island' }>
+  > = [];
+  collectExecutableHops(root, allHops, {});
+  const foldable = allHops.filter(isFoldableEntityHop);
+  if (foldable.length < 2) {
+    return root;
+  }
+
+  const waveById = buildCompletesWaveMap(root);
+  const subKey = makeSubschemaKeyFn();
+  const groups = new Map<string, FoldableEntityHop[]>();
+  for (const hop of foldable) {
+    const wave = earliestHopWave(hop, waveById);
+    const key = `${wave}::${subKey(hop.subschema)}`;
+    let list = groups.get(key);
+    if (!list) {
+      list = [];
+      groups.set(key, list);
+    }
+    list.push(hop);
+  }
+
+  const replacement = new Map<StitchPlanNode, StitchPlanNode>();
+  const skip = new Set<StitchPlanNode>();
+  for (const group of groups.values()) {
+    if (group.length < 2) {
+      continue;
+    }
+    const expanded = group.flatMap(expandFoldableToEntityFetches);
+    const collapsed = withFoldScheduleMeta(
+      collapseSameSubschemaEntityFetches(stitchingInfo, expanded),
+      group,
+    );
+    // Only rewrite when we actually reduced hop count (or kept a BatchFetch).
+    if (collapsed === group[0] && group.length === 1) {
+      continue;
+    }
+    replacement.set(group[0]!, collapsed);
+    for (let i = 1; i < group.length; i++) {
+      skip.add(group[i]!);
+    }
+  }
+  if (!replacement.size) {
+    return root;
+  }
+
+  const rewrite = (node: StitchPlanNode): StitchPlanNode | null => {
+    if (skip.has(node)) {
+      return null;
+    }
+    const rep = replacement.get(node);
+    if (rep) {
+      return rep;
+    }
+    if (node.kind === 'Island') {
+      const cont = node.continue ? rewrite(node.continue) : undefined;
+      return cont === node.continue
+        ? node
+        : { ...node, continue: cont ?? undefined };
+    }
+    if (node.kind === 'Condition') {
+      const ifClause = node.ifClause ? rewrite(node.ifClause) : undefined;
+      const elseClause = node.elseClause ? rewrite(node.elseClause) : undefined;
+      return {
+        ...node,
+        ifClause: ifClause ?? undefined,
+        elseClause: elseClause ?? undefined,
+      };
+    }
+    if (node.kind === 'Sequence' || node.kind === 'Parallel') {
+      const nodes: StitchPlanNode[] = [];
+      let changed = false;
+      for (const c of node.nodes) {
+        const next = rewrite(c);
+        if (next == null) {
+          changed = true;
+          continue;
+        }
+        if (next !== c) {
+          changed = true;
+        }
+        nodes.push(next);
+      }
+      if (!changed) {
+        return node;
+      }
+      if (nodes.length === 0) {
+        return null;
+      }
+      if (nodes.length === 1) {
+        return nodes[0]!;
+      }
+      return { kind: node.kind, nodes };
+    }
+    return node;
+  };
+
+  return rewrite(root) ?? root;
+}
 
 /**
  * Field response-key → nested selection (null = leaf). Inline fragments are
@@ -6576,7 +6837,11 @@ function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
   collectExecutableHops(root, hops, {});
   const byId = new Map<string, (typeof hops)[number]>();
   for (const h of hops) {
-    for (const id of h.completesIds?.length ? h.completesIds : h.id ? [h.id] : []) {
+    for (const id of h.completesIds?.length
+      ? h.completesIds
+      : h.id
+        ? [h.id]
+        : []) {
       byId.set(id, h);
     }
   }
@@ -6607,10 +6872,7 @@ function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
       } else if (src.kind === 'Fetch' && src.rootField) {
         // Root may embed entity fields under flatten path - leaf cover only
         // when root selectionSet matches entity type fields directly.
-        if (
-          src.selectionSet &&
-          selectionCovers(src.selectionSet, needed)
-        ) {
+        if (src.selectionSet && selectionCovers(src.selectionSet, needed)) {
           out.push(src.id ?? id);
         }
       } else if (src.kind === 'BatchFetch') {

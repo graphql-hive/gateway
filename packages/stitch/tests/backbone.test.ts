@@ -736,7 +736,10 @@ describe('backbone plan quality', () => {
 });
 
 describe('backbone aggressive BatchFetch + entityReuse', () => {
-  function walkBatches(n: StitchPlanNode, out: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>>) {
+  function walkBatches(
+    n: StitchPlanNode,
+    out: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>>,
+  ) {
     if (n.kind === 'BatchFetch') out.push(n);
     else if (n.kind === 'Parallel' || n.kind === 'Sequence') {
       for (const c of n.nodes) walkBatches(c, out);
@@ -869,10 +872,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     expect(plan.schedule).toBeDefined();
   });
 
-  function createProductBookSchema(calls: {
-    product: number;
-    book: number;
-  }) {
+  function createProductBookSchema(calls: { product: number; book: number }) {
     const catalog = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         interface Product {
@@ -985,9 +985,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     expect(plan.incompleteReasons).toEqual([]);
     const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
     walkBatches(plan.root, batches);
-    const entityFetches: Array<
-      Extract<StitchPlanNode, { kind: 'Fetch' }>
-    > = [];
+    const entityFetches: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
     const walkFetches = (n: StitchPlanNode) => {
       if (n.kind === 'Fetch' && n.entityTypeName && !n.rootField) {
         entityFetches.push(n);
@@ -1030,9 +1028,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     // One hop (covering Product, unified Book, or Product||Book BatchFetch) —
     // not a lingering Product Fetch beside a Book Fetch under products.
     expect(
-      coveringProduct != null ||
-        unifiedConcrete != null ||
-        multiBatch != null,
+      coveringProduct != null || unifiedConcrete != null || multiBatch != null,
     ).toBe(true);
     if (unifiedConcrete || coveringProduct) {
       expect(entityFetches.length).toBe(1);
@@ -1084,8 +1080,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
       `,
       resolvers: {
         Product: {
-          __resolveType: (o: { __typename?: string }) =>
-            o.__typename ?? 'Book',
+          __resolveType: (o: { __typename?: string }) => o.__typename ?? 'Book',
         },
         Query: {
           products: () => [
@@ -1119,8 +1114,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
       `,
       resolvers: {
         Product: {
-          __resolveType: (o: { __typename?: string }) =>
-            o.__typename ?? 'Book',
+          __resolveType: (o: { __typename?: string }) => o.__typename ?? 'Book',
         },
         Query: {
           _product: () => ({ __typename: 'Book', id: 'x', inStock: true }),
@@ -1180,12 +1174,9 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
       {},
     );
     expect(plan.incompleteReasons).toEqual([]);
-    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> =
-      [];
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
     walkBatches(plan.root, batches);
-    const entityFetches: Array<
-      Extract<StitchPlanNode, { kind: 'Fetch' }>
-    > = [];
+    const entityFetches: Array<Extract<StitchPlanNode, { kind: 'Fetch' }>> = [];
     const walkFetches = (n: StitchPlanNode) => {
       if (n.kind === 'Fetch' && n.entityTypeName && !n.rootField) {
         entityFetches.push(n);
@@ -1569,5 +1560,292 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     });
     expect(userCalls).toBe(1);
   });
-});
 
+  function countHttpHops(node: StitchPlanNode): {
+    http: number;
+    batch: number;
+  } {
+    let http = 0;
+    let batch = 0;
+    const walk = (n: StitchPlanNode) => {
+      if (n.kind === 'Fetch' || n.kind === 'BatchFetch') {
+        http++;
+        if (n.kind === 'BatchFetch') batch++;
+      } else if (n.kind === 'Island' && n.continue) {
+        walk(n.continue);
+      } else if (n.kind === 'Sequence' || n.kind === 'Parallel') {
+        for (const c of n.nodes) walk(c);
+      } else if (n.kind === 'Condition') {
+        if (n.ifClause) walk(n.ifClause);
+        if (n.elseClause) walk(n.elseClause);
+      }
+    };
+    walk(node);
+    return { http, batch };
+  }
+
+  it('wave-folds Book||Magazine inventory hops from separate root branches into one BatchFetch', () => {
+    // Two root fields → two Sequences; inventory hops share a dependsOn wave
+    // and subgraph even when they are not Parallel siblings in the raw tree.
+    const books = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Book {
+          id: ID!
+          title: String
+        }
+        type Query {
+          book(id: ID!): Book
+        }
+      `,
+      resolvers: {
+        Query: {
+          book: (_: unknown, { id }: { id: string }) => ({
+            id,
+            title: 'B',
+          }),
+        },
+      },
+    });
+    const magazines = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Magazine {
+          id: ID!
+          title: String
+        }
+        type Query {
+          magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Query: {
+          magazine: (_: unknown, { id }: { id: string }) => ({
+            id,
+            title: 'M',
+          }),
+        },
+      },
+    });
+    const inventoryCalls = { n: 0 };
+    const inventory = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Book {
+          id: ID!
+          inStock: Boolean
+        }
+        type Magazine {
+          id: ID!
+          inStock: Boolean
+        }
+        type Query {
+          _book(id: ID!): Book
+          _magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Query: {
+          _book: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: true };
+          },
+          _magazine: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: false };
+          },
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: books,
+          executor: createDefaultExecutor(books),
+          batch: true,
+        },
+        {
+          schema: magazines,
+          executor: createDefaultExecutor(magazines),
+          batch: true,
+        },
+        {
+          schema: inventory,
+          executor: createDefaultExecutor(inventory),
+          merge: {
+            Book: {
+              fieldName: '_book',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Magazine: {
+              fieldName: '_magazine',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const document = parse(/* GraphQL */ `
+      {
+        book(id: "1") {
+          id
+          title
+          inStock
+        }
+        magazine(id: "2") {
+          id
+          title
+          inStock
+        }
+      }
+    `);
+    const plan = buildStitchPlan(
+      schema,
+      document.definitions[0] as any,
+      {},
+      {},
+    );
+    expect(plan.incompleteReasons).toEqual([]);
+    const batches: Array<Extract<StitchPlanNode, { kind: 'BatchFetch' }>> = [];
+    walkBatches(plan.root, batches);
+    const invBatch = batches.find(
+      (b) =>
+        b.aliases.some((a) => a.entityTypeName === 'Book') &&
+        b.aliases.some((a) => a.entityTypeName === 'Magazine'),
+    );
+    expect(invBatch).toBeDefined();
+    // Wave fold: one inventory hop for both concretes (not 2 separate Fetches).
+    const hops = countHttpHops(plan.root);
+    // 2 root Fetches + 1 inventory BatchFetch (or covering) — not 2 entity Fetches.
+    expect(hops.http).toBeLessThanOrEqual(3);
+    expect(hops.batch).toBeGreaterThanOrEqual(1);
+  });
+
+  it('executes wave-folded Book||Magazine from separate roots with one inventory round-trip family', async () => {
+    const books = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Book {
+          id: ID!
+          title: String
+        }
+        type Query {
+          book(id: ID!): Book
+        }
+      `,
+      resolvers: {
+        Query: {
+          book: (_: unknown, { id }: { id: string }) => ({
+            id,
+            title: 'B',
+          }),
+        },
+      },
+    });
+    const magazines = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Magazine {
+          id: ID!
+          title: String
+        }
+        type Query {
+          magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Query: {
+          magazine: (_: unknown, { id }: { id: string }) => ({
+            id,
+            title: 'M',
+          }),
+        },
+      },
+    });
+    const inventoryCalls = { n: 0 };
+    const inventory = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Book {
+          id: ID!
+          inStock: Boolean
+        }
+        type Magazine {
+          id: ID!
+          inStock: Boolean
+        }
+        type Query {
+          _book(id: ID!): Book
+          _magazine(id: ID!): Magazine
+        }
+      `,
+      resolvers: {
+        Query: {
+          _book: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: true };
+          },
+          _magazine: (_: unknown, { id }: { id: string }) => {
+            inventoryCalls.n++;
+            return { id, inStock: false };
+          },
+        },
+      },
+    });
+    const schema = stitchSchemas({
+      subschemas: [
+        {
+          schema: books,
+          executor: createDefaultExecutor(books),
+          batch: true,
+        },
+        {
+          schema: magazines,
+          executor: createDefaultExecutor(magazines),
+          batch: true,
+        },
+        {
+          schema: inventory,
+          executor: createDefaultExecutor(inventory),
+          merge: {
+            Book: {
+              fieldName: '_book',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+            Magazine: {
+              fieldName: '_magazine',
+              selectionSet: '{ id }',
+              args: (o: { id: string }) => ({ id: o.id }),
+            },
+          },
+          batch: true,
+        },
+      ],
+    });
+    const executor = createBackboneExecutor(schema);
+    const result = await exec(executor, {
+      document: parse(/* GraphQL */ `
+        {
+          book(id: "1") {
+            id
+            title
+            inStock
+          }
+          magazine(id: "2") {
+            id
+            title
+            inStock
+          }
+        }
+      `),
+      variables: {},
+      context: {},
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      book: { id: '1', title: 'B', inStock: true },
+      magazine: { id: '2', title: 'M', inStock: false },
+    });
+    // Merge fieldNames differ → BatchFetch falls back to parallel Fetches, but
+    // with batch:true DataLoader still coalesces; either way both resolve.
+    expect(inventoryCalls.n).toBeGreaterThanOrEqual(1);
+  });
+});
