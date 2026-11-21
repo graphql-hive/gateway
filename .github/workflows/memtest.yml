@@ -80,6 +80,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{matrix.test.name}}-heap-snapshots
+          retention-days: 7
           path: |
             e2e/${{matrix.test.name}}/*.heapsnapshot
             packages/logger/tests/*.heapsnapshot

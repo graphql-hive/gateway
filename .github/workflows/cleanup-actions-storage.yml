@@ -1,0 +1,61 @@
+name: Cleanup Actions Storage
+
+on:
+  schedule:
+    # Weekly on Mondays at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup-caches:
+    name: Delete non-main Actions caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete caches not on refs/heads/main
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const keepRef = 'refs/heads/main';
+
+            const caches = await github.paginate(
+              github.rest.actions.getActionsCacheList,
+              { owner, repo, per_page: 100 },
+            );
+
+            console.log(`Found ${caches.length} cache(s) total`);
+
+            let kept = 0;
+            let deleted = 0;
+            let failed = 0;
+
+            for (const cache of caches) {
+              if (cache.ref === keepRef) {
+                kept++;
+                console.log(`Keeping: id=${cache.id} key=${cache.key} ref=${cache.ref}`);
+                continue;
+              }
+
+              try {
+                await github.rest.actions.deleteActionsCacheById({
+                  owner,
+                  repo,
+                  cache_id: cache.id,
+                });
+                deleted++;
+                console.log(`Deleted: id=${cache.id} key=${cache.key} ref=${cache.ref}`);
+              } catch (error) {
+                failed++;
+                console.warn(
+                  `Failed to delete id=${cache.id} key=${cache.key} ref=${cache.ref}: ${error.message}`,
+                );
+              }
+            }
+
+            console.log(
+              `Done. kept=${kept} deleted=${deleted} failed=${failed} total=${caches.length}`,
+            );
