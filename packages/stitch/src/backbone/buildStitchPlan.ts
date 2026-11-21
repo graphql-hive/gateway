@@ -4014,6 +4014,15 @@ function selectionProducesPathSuffix(
     return selectionProducesPathSuffix(selectionSet, suffix.slice(1));
   }
   for (const sel of selectionSet.selections) {
+    if (sel.kind === Kind.INLINE_FRAGMENT) {
+      // Abstract parent selections nest entity paths under inline fragments
+      // (`blocks { ... on BrandSpotlight { brand { … } } }`). Skipping them
+      // left nested entity hops with empty dependsOn (wave-0 races).
+      if (selectionProducesPathSuffix(sel.selectionSet, suffix)) {
+        return true;
+      }
+      continue;
+    }
     if (sel.kind !== Kind.FIELD) {
       continue;
     }

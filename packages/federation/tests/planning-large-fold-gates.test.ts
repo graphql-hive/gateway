@@ -117,11 +117,17 @@ describe('planning-large fold gates vs Router QP', () => {
       ).toBeLessThanOrEqual(ceiling);
     }
 
-    // search discriminates exact-deps (80) vs aggressive (~58) vs Router (54)
+    // search discriminates exact-deps (80) vs gated (~48–58) vs Router (54)
     expect(
       results.search!.backbone,
       `search must beat exact-deps-only ${EXACT_DEPS_HTTP.search}`,
     ).toBeLessThanOrEqual(EXACT_DEPS_HTTP.search - 10);
+    // Inline-fragment path dependsOn (Produces) puts nested entity hops after
+    // path producers — search should be ≤ Router plan fetches.
+    expect(
+      results.search!.backbone,
+      `search should be ≤ Router ${results.search!.router}`,
+    ).toBeLessThanOrEqual(results.search!.router);
 
     // product_page / checkout / order_history: aggressive should not regress
     // past exact-deps when already near Router
