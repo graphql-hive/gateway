@@ -24,6 +24,7 @@ import {
   valueFromASTUntyped,
 } from 'graphql';
 import { isLocalField } from './localFields.js';
+import { getBatchedMergeEntry, inferMergeArgName } from './mergeEntry.js';
 import {
   buildPlanSchedule,
   collectExecutableHops,
@@ -44,6 +45,14 @@ import type {
   StitchPlanNode,
   StitchRunIfClause,
 } from './types.js';
+
+/**
+ * Aggressive (earliest-wave) fold only kicks in when the plan still has many
+ * foldable entity hops after the safe exact-dependsOn pass. Federation-example
+ * TestQuery stays under this threshold so continuous dispatch is preserved;
+ * planning-large (100+ hops) gets Router-style wave coalesce.
+ */
+const AGGRESSIVE_WAVE_FOLD_MIN_ENTITY_HOPS = 16;
 
 function selectionSetOf(
   selections: readonly SelectionNode[],
@@ -6558,19 +6567,110 @@ function groupParallelBatchFetches(
   return next.length === 1 ? next[0]! : { kind: 'Parallel', nodes: next };
 }
 
+/** True when every entity type in the group shares one merge field + arg. */
+function groupCanTrueBatchHttp(group: FoldableEntityHop[]): boolean {
+  const expanded = group.flatMap(expandFoldableToEntityFetches);
+  if (!expanded.length) {
+    return false;
+  }
+  const entries = expanded.map((f) =>
+    getBatchedMergeEntry(f.subschema, f.entityTypeName),
+  );
+  const first = entries[0];
+  if (first == null) {
+    return false;
+  }
+  const argName = inferMergeArgName(first.argsFromKeys);
+  if (argName == null) {
+    return false;
+  }
+  return entries.every(
+    (e) =>
+      e != null &&
+      e.fieldName === first.fieldName &&
+      inferMergeArgName(e.argsFromKeys) === argName,
+  );
+}
+
+function earliestHopWave(
+  hop: { dependsOn?: string[] },
+  waveById: Map<string, number>,
+): number {
+  const deps = hop.dependsOn ?? [];
+  if (!deps.length) {
+    return 0;
+  }
+  let w = 0;
+  for (const d of deps) {
+    w = Math.max(w, (waveById.get(d) ?? 0) + 1);
+  }
+  return w;
+}
+
+function buildCompletesWaveMap(root: StitchPlanNode): Map<string, number> {
+  const hops: Array<
+    | Extract<StitchPlanNode, { kind: 'Fetch' }>
+    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
+    | Extract<StitchPlanNode, { kind: 'Island' }>
+  > = [];
+  collectExecutableHops(root, hops, {});
+  const byId = new Map<string, (typeof hops)[number]>();
+  for (const h of hops) {
+    for (const id of h.completesIds?.length
+      ? h.completesIds
+      : h.id
+        ? [h.id]
+        : []) {
+      byId.set(id, h);
+    }
+  }
+  const memo = new Map<string, number>();
+  const visiting = new Set<string>();
+  const waveOf = (id: string): number => {
+    if (memo.has(id)) {
+      return memo.get(id)!;
+    }
+    if (visiting.has(id)) {
+      return 0;
+    }
+    visiting.add(id);
+    const h = byId.get(id);
+    let w = 0;
+    if (h) {
+      for (const d of h.dependsOn ?? []) {
+        w = Math.max(w, waveOf(d) + 1);
+      }
+    }
+    visiting.delete(id);
+    memo.set(id, w);
+    return w;
+  };
+  for (const id of byId.keys()) {
+    waveOf(id);
+  }
+  return memo;
+}
+
+function countFoldableEntityHops(root: StitchPlanNode): number {
+  const hops: Array<
+    | Extract<StitchPlanNode, { kind: 'Fetch' }>
+    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
+    | Extract<StitchPlanNode, { kind: 'Island' }>
+  > = [];
+  collectExecutableHops(root, hops, {});
+  return hops.filter(isFoldableEntityHop).length;
+}
+
 /**
- * After dependsOn + entity-reuse annotation: fold entity Fetch/BatchFetch hops
- * that share the **exact same dependsOn set** (same ready-set) and the same
- * subgraph into one BatchFetch (or covering Fetch).
- *
- * Grouping by earliest-wave layer alone unions unrelated predecessor chains and
- * delays continuous dispatch (~10 hz on federation-example). Exact dependsOn
- * keeps Router-style coalesce without coupling independent ready moments.
- * CompletesIds of folded hops are preserved so downstream edges stay valid.
+ * Fold foldable entity hops using `groupKey`. When `requireTrueBatchHttp` is
+ * set, skip groups that cannot share one merge-field HTTP (avoids waiting on
+ * a unioned dependsOn only to fall back to parallel Fetches).
  */
-function foldSameWaveSubgraphFetches(
+function foldEntityHopsByKey(
   root: StitchPlanNode,
   stitchingInfo: StitchingInfo,
+  groupKey: (hop: FoldableEntityHop) => string,
+  opts: { requireTrueBatchHttp?: boolean } = {},
 ): StitchPlanNode {
   const allHops: Array<
     | Extract<StitchPlanNode, { kind: 'Fetch' }>
@@ -6583,12 +6683,9 @@ function foldSameWaveSubgraphFetches(
     return root;
   }
 
-  const subKey = makeSubschemaKeyFn();
-  const depsKey = (hop: FoldableEntityHop): string =>
-    [...(hop.dependsOn ?? [])].sort().join('\0');
   const groups = new Map<string, FoldableEntityHop[]>();
   for (const hop of foldable) {
-    const key = `${depsKey(hop)}::${subKey(hop.subschema)}`;
+    const key = groupKey(hop);
     let list = groups.get(key);
     if (!list) {
       list = [];
@@ -6603,12 +6700,14 @@ function foldSameWaveSubgraphFetches(
     if (group.length < 2) {
       continue;
     }
+    if (opts.requireTrueBatchHttp && !groupCanTrueBatchHttp(group)) {
+      continue;
+    }
     const expanded = group.flatMap(expandFoldableToEntityFetches);
     const collapsed = withFoldScheduleMeta(
       collapseSameSubschemaEntityFetches(stitchingInfo, expanded),
       group,
     );
-    // Only rewrite when we actually reduced hop count (or kept a BatchFetch).
     if (collapsed === group[0] && group.length === 1) {
       continue;
     }
@@ -6673,6 +6772,43 @@ function foldSameWaveSubgraphFetches(
   };
 
   return rewrite(root) ?? root;
+}
+
+/**
+ * After dependsOn + entity-reuse annotation:
+ * 1. Always fold hops that share the **exact same dependsOn** + subgraph
+ *    (safe ready-set; no continuous-dispatch delay).
+ * 2. When many entity hops remain (planning-large), also fold by earliest
+ *    ready **wave** + subgraph (Router-style). Gated so small plans like
+ *    federation-example keep exact-deps-only scheduling. Wave groups must be
+ *    able to share one merge-field HTTP.
+ */
+function foldSameWaveSubgraphFetches(
+  root: StitchPlanNode,
+  stitchingInfo: StitchingInfo,
+): StitchPlanNode {
+  const subKey = makeSubschemaKeyFn();
+  const depsKey = (hop: FoldableEntityHop): string =>
+    [...(hop.dependsOn ?? [])].sort().join('\0');
+
+  // Pass 1: exact ready-set (never delays independent chains).
+  let next = foldEntityHopsByKey(
+    root,
+    stitchingInfo,
+    (hop) => `${depsKey(hop)}::${subKey(hop.subschema)}`,
+  );
+
+  // Pass 2: aggressive wave fold only on large plans.
+  if (countFoldableEntityHops(next) < AGGRESSIVE_WAVE_FOLD_MIN_ENTITY_HOPS) {
+    return next;
+  }
+  const waveById = buildCompletesWaveMap(next);
+  return foldEntityHopsByKey(
+    next,
+    stitchingInfo,
+    (hop) => `${earliestHopWave(hop, waveById)}::${subKey(hop.subschema)}`,
+    { requireTrueBatchHttp: true },
+  );
 }
 
 /**
