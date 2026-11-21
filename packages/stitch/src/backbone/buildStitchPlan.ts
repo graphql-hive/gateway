@@ -6559,74 +6559,14 @@ function groupParallelBatchFetches(
 }
 
 /**
- * Earliest ready wave from dependsOn (0 = no preds). Used for Router-style
- * same-wave / same-subgraph BatchFetch fold.
- */
-function earliestHopWave(
-  hop: { dependsOn?: string[] },
-  waveById: Map<string, number>,
-): number {
-  const deps = hop.dependsOn ?? [];
-  if (!deps.length) {
-    return 0;
-  }
-  let w = 0;
-  for (const d of deps) {
-    w = Math.max(w, (waveById.get(d) ?? 0) + 1);
-  }
-  return w;
-}
-
-function buildCompletesWaveMap(root: StitchPlanNode): Map<string, number> {
-  const hops: Array<
-    | Extract<StitchPlanNode, { kind: 'Fetch' }>
-    | Extract<StitchPlanNode, { kind: 'BatchFetch' }>
-    | Extract<StitchPlanNode, { kind: 'Island' }>
-  > = [];
-  collectExecutableHops(root, hops, {});
-  const byId = new Map<string, (typeof hops)[number]>();
-  for (const h of hops) {
-    for (const id of h.completesIds?.length
-      ? h.completesIds
-      : h.id
-        ? [h.id]
-        : []) {
-      byId.set(id, h);
-    }
-  }
-  const memo = new Map<string, number>();
-  const visiting = new Set<string>();
-  const waveOf = (id: string): number => {
-    if (memo.has(id)) {
-      return memo.get(id)!;
-    }
-    if (visiting.has(id)) {
-      return 0;
-    }
-    visiting.add(id);
-    const h = byId.get(id);
-    let w = 0;
-    if (h) {
-      for (const d of h.dependsOn ?? []) {
-        w = Math.max(w, waveOf(d) + 1);
-      }
-    }
-    visiting.delete(id);
-    memo.set(id, w);
-    return w;
-  };
-  for (const id of byId.keys()) {
-    waveOf(id);
-  }
-  return memo;
-}
-
-/**
- * After dependsOn + entity-reuse annotation: fold every entity Fetch/BatchFetch
- * that shares the same earliest ready wave and the same subgraph into one
- * BatchFetch (or covering Fetch). Matches Hive Router "one fetch per subgraph
- * per step" plan quality. CompletesIds of folded hops are preserved so
- * downstream dependsOn stay valid.
+ * After dependsOn + entity-reuse annotation: fold entity Fetch/BatchFetch hops
+ * that share the **exact same dependsOn set** (same ready-set) and the same
+ * subgraph into one BatchFetch (or covering Fetch).
+ *
+ * Grouping by earliest-wave layer alone unions unrelated predecessor chains and
+ * delays continuous dispatch (~10 hz on federation-example). Exact dependsOn
+ * keeps Router-style coalesce without coupling independent ready moments.
+ * CompletesIds of folded hops are preserved so downstream edges stay valid.
  */
 function foldSameWaveSubgraphFetches(
   root: StitchPlanNode,
@@ -6643,12 +6583,12 @@ function foldSameWaveSubgraphFetches(
     return root;
   }
 
-  const waveById = buildCompletesWaveMap(root);
   const subKey = makeSubschemaKeyFn();
+  const depsKey = (hop: FoldableEntityHop): string =>
+    [...(hop.dependsOn ?? [])].sort().join('\0');
   const groups = new Map<string, FoldableEntityHop[]>();
   for (const hop of foldable) {
-    const wave = earliestHopWave(hop, waveById);
-    const key = `${wave}::${subKey(hop.subschema)}`;
+    const key = `${depsKey(hop)}::${subKey(hop.subschema)}`;
     let list = groups.get(key);
     if (!list) {
       list = [];
