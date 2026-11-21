@@ -1,6 +1,8 @@
 import { QueryPlan } from '@graphql-hive/router-query-planner';
 import {
+  getPubsubPublishMetadata,
   handleFederationSupergraph,
+  handleResultWithPubSubPublish,
   type UnifiedGraphHandlerOpts,
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
@@ -23,9 +25,7 @@ import {
   addEntityResolutionFieldsForPubsubPublish,
   getEntityResolutionMap,
   getPubsubOperationRootFields,
-  getPubsubPublishMetadata,
   handlePubsubOperationField,
-  handleResultWithPubSubPublish,
 } from './pubsubDirectives';
 import {
   getLazyFactory,

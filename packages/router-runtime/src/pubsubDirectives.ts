@@ -1,5 +1,8 @@
 import type { GatewayContext } from '@graphql-hive/gateway-runtime';
-import type { PubSub } from '@graphql-hive/pubsub';
+import {
+  getRealSubgraphNameMap,
+  type PubsubPublishMetadata,
+} from '@graphql-mesh/fusion-runtime';
 import {
   getResolverForPubSubOperation,
   type PubSubOperationOptions,
@@ -14,11 +17,8 @@ import {
   memoize2,
   mergeDeep,
   parseSelectionSet,
-  ResultVisitorMap,
-  ValueVisitor,
-  visitResult,
 } from '@graphql-tools/utils';
-import { MaybePromise } from '@whatwg-node/promise-helpers';
+import { type MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   ArgumentNode,
   BREAK,
@@ -26,7 +26,6 @@ import {
   ExecutionResult,
   getNamedType,
   GraphQLSchema,
-  isEnumType,
   Kind,
   OperationTypeNode,
   SelectionSetNode,
@@ -80,17 +79,7 @@ export function getEntityResolutionMap(supergraphSchema: GraphQLSchema) {
     string,
     Record<string, SelectionSetNode>
   >();
-  const realSubgraphNames = new Map<string, string>();
-  const joinGraph = supergraphSchema.getType('join__Graph');
-  if (isEnumType(joinGraph)) {
-    for (const value of joinGraph.getValues()) {
-      const valueDirectives = getDirectiveExtensions(value, supergraphSchema);
-      const graphName = valueDirectives?.['join__graph']?.[0]?.['name'];
-      if (graphName) {
-        realSubgraphNames.set(value.name, graphName);
-      }
-    }
-  }
+  const realSubgraphNames = getRealSubgraphNameMap(supergraphSchema);
   for (const typeName in supergraphSchema.getTypeMap()) {
     const type = supergraphSchema.getType(typeName);
     if (type) {
@@ -432,52 +421,7 @@ export function handlePubsubOperationField(
   return executeSubgraph(executionRequest);
 }
 
-/** @pubsubPublish */
-
-export interface PubsubPublishMetadata {
-  pubsubTopic: string;
-  entityInfo?: Record<string, SelectionSetNode>;
-}
-
-export function getPubsubPublishMetadata(
-  schema: GraphQLSchema,
-  entityResolutionMap: Map<string, Record<string, SelectionSetNode>>,
-) {
-  // Pubsub publish metadata by typename and fieldname
-  const pubsubPublishMetadataMap: Map<
-    string,
-    Map<string, PubsubPublishMetadata>
-  > = new Map();
-  for (const typeName in schema.getTypeMap()) {
-    const type = schema.getType(typeName);
-    if (type != null && 'getFields' in type) {
-      const fields = type.getFields();
-      for (const fieldName in fields) {
-        const fieldDef = fields[fieldName];
-        if (fieldDef) {
-          const pubsubPublishes = getDirectiveInExtensions(
-            fieldDef,
-            'pubsubPublish',
-          );
-          if (pubsubPublishes) {
-            for (const { pubsubTopic } of pubsubPublishes) {
-              let typeMap = pubsubPublishMetadataMap.get(typeName);
-              if (!typeMap) {
-                typeMap = new Map<string, PubsubPublishMetadata>();
-                pubsubPublishMetadataMap.set(typeName, typeMap);
-              }
-              const returnType = getNamedType(fieldDef.type);
-              const returnTypeName = returnType.name;
-              const entityInfo = entityResolutionMap.get(returnTypeName);
-              typeMap.set(fieldName, { pubsubTopic, entityInfo });
-            }
-          }
-        }
-      }
-    }
-  }
-  return pubsubPublishMetadataMap;
-}
+/** @pubsubPublish - metadata / result publish live in fusion-runtime */
 
 export function addEntityResolutionFieldsForPubsubPublish(
   schema: GraphQLSchema,
@@ -525,57 +469,4 @@ export function addEntityResolutionFieldsForPubsubPublish(
     }
   }
   return executionRequest;
-}
-
-const getPubsubPublishVisitor = memoize2(function getPubsubPublishFields(
-  metadata: Map<string, Map<string, PubsubPublishMetadata>>,
-  pubsub: PubSub,
-) {
-  if (!metadata.size) {
-    return false;
-  }
-  const pubsubPublishVisitor: ResultVisitorMap = {};
-  for (const [typeName, fieldsMap] of metadata) {
-    const typeVisitor = (pubsubPublishVisitor[typeName] ||= {}) as Record<
-      string,
-      ValueVisitor
-    >;
-    for (const [fieldName, { pubsubTopic }] of fieldsMap) {
-      typeVisitor[fieldName] = (value) => {
-        const maybePromise = pubsub.publish(pubsubTopic, value);
-        if (
-          maybePromise &&
-          typeof (maybePromise as Promise<void>).catch === 'function'
-        ) {
-          (maybePromise as Promise<void>).catch(() => {
-            // Swallow publish errors to avoid unhandled promise rejections.
-          });
-        }
-        return value;
-      };
-    }
-  }
-  return pubsubPublishVisitor;
-});
-
-export function handleResultWithPubSubPublish(
-  schema: GraphQLSchema,
-  metadata: Map<string, Map<string, PubsubPublishMetadata>>,
-  request: ExecutionRequest<any, GatewayContext>,
-  result: ExecutionResult,
-) {
-  if (
-    request.operationType === 'mutation' &&
-    result.data != null &&
-    request.context?.pubsub != null
-  ) {
-    const pubsubPublishVisitor = getPubsubPublishVisitor(
-      metadata,
-      request.context.pubsub,
-    );
-    if (pubsubPublishVisitor) {
-      return visitResult(result, request, schema, pubsubPublishVisitor);
-    }
-  }
-  return result;
 }

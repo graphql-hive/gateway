@@ -57,6 +57,7 @@ export function createStitchingInfo<
     fieldNodesByField: Object.create(null),
     dynamicSelectionSetsByField: Object.create(null),
     mergedTypes,
+    localFields: new Map(),
   };
 }
 

@@ -20,9 +20,12 @@ import {
   HTTPExecutorOptions,
 } from '@graphql-tools/executor-http';
 import {
+  attachBackboneExecutor,
   calculateSelectionScore,
   getDefaultFieldConfigMerger,
+  markChangedRootResolvesAsLocal,
   MergeFieldConfigCandidate,
+  snapshotRootFieldResolves,
   stitchSchemas,
   TypeMergingOptions,
   ValidationLevel,
@@ -1209,7 +1212,7 @@ export function getStitchingOptionsFromSupergraphSdl(
             }
 
             if (!targetGroup) {
-              // No compatible group — create a new conflict group
+              // No compatible group - create a new conflict group
               const newExtraKeys = new Set<string>();
               const newFieldsConfig: Record<string, MergedFieldConfig> = {};
               targetGroup = {
@@ -2357,12 +2360,26 @@ export function getStitchedSchemaFromSupergraphSdl(
   const stitchSchemasOpts = getStitchingOptionsFromSupergraphSdl(opts);
   opts.onStitchingOptions?.(stitchSchemasOpts);
   let supergraphSchema = stitchSchemas(stitchSchemasOpts);
+  // filterInternalFieldsAndTypes mapSchema -> new schema; re-bind backbone.
   supergraphSchema = filterInternalFieldsAndTypes(supergraphSchema);
   if (opts.onStitchedSchema) {
+    const rootResolvesBefore = snapshotRootFieldResolves(supergraphSchema);
     supergraphSchema =
       opts.onStitchedSchema(supergraphSchema) || supergraphSchema;
+    // Late root resolver overrides (Query.me -> local) must plan as Islands.
+    markChangedRootResolvesAsLocal(supergraphSchema, rootResolvesBefore);
   }
-  return supergraphSchema;
+  // Persist progressive-override plan-cache opts on schema.extensions so a
+  // later mapSchema + bare re-attach (e.g. filterInternalFieldsAndTypes) needs
+  // no options bag.
+  return attachBackboneExecutor(supergraphSchema, {
+    // Plan-cache keying only needs label + context; federation's handler also
+    // accepts resolve info when used as a field override callback.
+    handleProgressiveOverride: opts.handleProgressiveOverride
+      ? (label, context) =>
+          opts.handleProgressiveOverride!(label, context, undefined as any)
+      : undefined,
+  });
 }
 
 const anyTypeDefinitionNode: ScalarTypeDefinitionNode = {
