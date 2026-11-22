@@ -1098,7 +1098,7 @@ describe('Demand Control', () => {
         const result = await response.json();
         if (usingHiveRouterRuntime()) {
           expect(result).toEqual({
-            // data field completely omitted on errors from the query-planner path
+            // data field completely omitted on errors from the Hive Router Rust query planner path
             errors: [
               {
                 extensions: {
@@ -1110,7 +1110,7 @@ describe('Demand Control', () => {
                 },
                 message:
                   'Operation estimated cost 2 exceeded configured maximum 1',
-                // path and locations not present on the query-planner path
+                // path and locations not present on the Hive Router Rust query planner path
               },
             ],
             extensions: {

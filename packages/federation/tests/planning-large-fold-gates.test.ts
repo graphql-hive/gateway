@@ -24,8 +24,8 @@ const PRE_FOLD_HTTP = {
 
 /**
  * Exact-deps-only ceilings (`344f8894`). Aggressive wave fold must beat these
- * on scenarios where exact-deps lagged the reference query planner (especially
- * `search`).
+ * on scenarios where exact-deps lagged the Hive Router Rust query planner
+ * (especially `search`).
  */
 const EXACT_DEPS_HTTP = {
   product_page: 66,
@@ -41,7 +41,9 @@ function countBackboneHttp(root: Parameters<typeof collectExecutableHops>[0]) {
     .length;
 }
 
-function countQueryPlannerFetches(plan: { node?: unknown }): number {
+function countHiveRouterRustQueryPlannerFetches(plan: {
+  node?: unknown;
+}): number {
   let fetches = 0;
   const walk = (n: any) => {
     if (!n || typeof n !== 'object') return;
@@ -55,18 +57,20 @@ function countQueryPlannerFetches(plan: { node?: unknown }): number {
   return fetches;
 }
 
-/** Allow small slack vs reference query-planner fetches (cardinality / fold shape noise). */
-function queryPlannerBandCeiling(referenceFetches: number): number {
-  return Math.ceil(referenceFetches * 1.15) + 2;
+/** Allow small slack vs Hive Router Rust query planner fetches (cardinality / fold shape noise). */
+function hiveRouterRustQueryPlannerBandCeiling(
+  hiveRouterRustQpFetches: number,
+): number {
+  return Math.ceil(hiveRouterRustQpFetches * 1.15) + 2;
 }
 
-describe('planning-large fold gates vs query planner', () => {
-  it('keeps all four queries in the reference fetch band and beats exact-deps on search', async () => {
+describe('planning-large fold gates vs Hive Router Rust query planner', () => {
+  it('keeps all four queries in the Hive Router Rust query planner fetch band and beats exact-deps on search', async () => {
     const { QueryPlanner } = await import('@graphql-hive/router-query-planner');
     const schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl: SUPERGRAPH_SDL,
     });
-    const qp = new QueryPlanner(SUPERGRAPH_SDL);
+    const hiveRouterRustQp = new QueryPlanner(SUPERGRAPH_SDL);
 
     const names = Object.keys(QUERIES) as Array<keyof typeof QUERIES>;
     expect(names.sort()).toEqual(
@@ -75,7 +79,11 @@ describe('planning-large fold gates vs query planner', () => {
 
     const results: Record<
       string,
-      { backbone: number; reference: number; ceiling: number }
+      {
+        backbone: number;
+        hiveRouterRustQp: number;
+        ceiling: number;
+      }
     > = {};
 
     for (const name of names) {
@@ -95,15 +103,23 @@ describe('planning-large fold gates vs query planner', () => {
       ).toBe(false);
       const backbone = countBackboneHttp(plan.root);
       const opName = op.name?.value ?? null;
-      const qpPlan = qp.plan(
+      const hiveRouterRustQpPlan = hiveRouterRustQp.plan(
         QUERIES[name].replaceAll('__ID__', '1'),
         opName,
         new Set(),
         0,
       );
-      const reference = countQueryPlannerFetches(qpPlan);
-      const ceiling = queryPlannerBandCeiling(reference);
-      results[name] = { backbone, reference, ceiling };
+      const hiveRouterRustQpFetches = countHiveRouterRustQueryPlannerFetches(
+        hiveRouterRustQpPlan,
+      );
+      const ceiling = hiveRouterRustQueryPlannerBandCeiling(
+        hiveRouterRustQpFetches,
+      );
+      results[name] = {
+        backbone,
+        hiveRouterRustQp: hiveRouterRustQpFetches,
+        ceiling,
+      };
 
       // vs pre-fold: fold must be active on every scenario (all drop ≥2×)
       expect(
@@ -111,27 +127,27 @@ describe('planning-large fold gates vs query planner', () => {
         `${name} (${DESCRIPTIONS[name]}): expected fold << pre-fold ${PRE_FOLD_HTTP[name]}`,
       ).toBeLessThanOrEqual(Math.floor(PRE_FOLD_HTTP[name] / 2));
 
-      // vs reference query-planner fetches
+      // vs Hive Router Rust query planner fetches
       expect(
         backbone,
-        `${name}: backbone ${backbone} > query-planner band ceiling ${ceiling} (reference ${reference})`,
+        `${name}: backbone ${backbone} > Hive Router Rust query planner band ceiling ${ceiling} (Hive Router Rust query planner ${hiveRouterRustQpFetches})`,
       ).toBeLessThanOrEqual(ceiling);
     }
 
-    // search discriminates exact-deps (80) vs gated (~48–58) vs reference (54)
+    // search discriminates exact-deps (80) vs gated (~48–58) vs Hive Router Rust query planner (54)
     expect(
       results.search!.backbone,
       `search must beat exact-deps-only ${EXACT_DEPS_HTTP.search}`,
     ).toBeLessThanOrEqual(EXACT_DEPS_HTTP.search - 10);
     // Inline-fragment path dependsOn (Produces) puts nested entity hops after
-    // path producers — search should be ≤ reference query-planner fetches.
+    // path producers — search should be ≤ Hive Router Rust query planner fetches.
     expect(
       results.search!.backbone,
-      `search should be ≤ reference ${results.search!.reference}`,
-    ).toBeLessThanOrEqual(results.search!.reference);
+      `search should be ≤ Hive Router Rust query planner ${results.search!.hiveRouterRustQp}`,
+    ).toBeLessThanOrEqual(results.search!.hiveRouterRustQp);
 
     // product_page / checkout / order_history: aggressive should not regress
-    // past exact-deps when already near the reference planner band
+    // past exact-deps when already near the Hive Router Rust query planner band
     for (const name of ['product_page', 'checkout', 'order_history'] as const) {
       expect(
         results[name]!.backbone,

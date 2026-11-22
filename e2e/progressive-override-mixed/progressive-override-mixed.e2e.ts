@@ -143,8 +143,8 @@ describe('Progressive Override', () => {
       const AReceivedQueries = ALogs.split('\n').filter((line) =>
         line.includes('received query'),
       );
-      // Field order differs between stitching (`id __typename`) and the query
-      // planner (`__typename id`) - assert contents, not print order.
+      // Field order differs between stitching (`id __typename`) and the Hive
+      // Router Rust query planner (`__typename id`) - assert contents, not print order.
       expect(AReceivedQueries).toHaveLength(1);
       expect(AReceivedQueries[0]).toContain(
         '[service-a] received query: {aFeed{',
