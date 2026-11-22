@@ -156,7 +156,7 @@ describe('OpenTelemetry', () => {
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
           // Stitching backbone: 1 inventory + 1 reviews (multi-path coalesce).
-          // Classic stitch was 20; Hive router was inventoryx2 / reviewsx1.
+          // Classic stitch was 20; query-planner path was inventory×2 / reviews×1.
           expect(relevantTrace!.spans.length).toBe(
             usingHiveRouterRuntime() ? 20 : 18,
           );
@@ -282,7 +282,7 @@ describe('OpenTelemetry', () => {
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
           // Stitching backbone: 1 inventory + 1 reviews (multi-path coalesce).
-          // Classic stitch was 20; Hive router was inventoryx2 / reviewsx1.
+          // Classic stitch was 20; query-planner path was inventory×2 / reviews×1.
           expect(relevantTrace!.spans.length).toBe(
             usingHiveRouterRuntime() ? 20 : 18,
           );

@@ -52,7 +52,7 @@ describe('Upstream Timeout', () => {
             ),
             ...(usingHiveRouterRuntime()
               ? {
-                  // TODO: path is missing in Hive Router
+                  // TODO: path is missing on the query-planner path
                 }
               : {
                   path: ['hello'],
