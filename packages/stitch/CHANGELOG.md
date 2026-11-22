@@ -62,7 +62,7 @@
   
   `@stream` continues to be forwarded on field directives as before. List streaming in `@graphql-tools/delegate` uses a plain async generator (no `@repeaterjs/repeater` dependency).
   
-  Hive Router runtime does not plan incremental delivery yet; `deferStream.subgraph` applies to the stitching federation path.
+  `@graphql-hive/router-runtime` does not plan incremental delivery yet; `deferStream.subgraph` applies to the stitching federation path.
 
 ### Patch Changes
 

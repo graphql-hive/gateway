@@ -286,7 +286,7 @@ function copySelectionFromCached(
   }
 }
 
-/** Entity reuse is always on for queries; hard skips match Router #1799. */
+/** Entity reuse is always on for queries; mutations and streams hard-skip. */
 function entityReuseAllowed(ctx: BackboneExecutionContext): boolean {
   if (ctx.operation.operation === 'mutation') {
     return false;
@@ -313,11 +313,11 @@ function representationHash(
     const cacheKeyFn = entry.dataLoaderOptions?.cacheKeyFn;
     const identity =
       cacheKeyFn != null ? String(cacheKeyFn(key)) : JSON.stringify(key);
-    // Scope by subgraph + type + key (Router entity-reuse rep hash shape).
+    // Scope by subgraph + type + key (entity-reuse representation hash).
     return `${sub}::${entityTypeName}::${identity}`;
   }
   // Classic stitching merge (`args` / selectionSet) — hash the merge args
-  // or key fields so same-rep parents share one fetch (Router #1799).
+  // or key fields so same-rep parents share one fetch.
   const mergeConfig = hopSubschema.merge?.[entityTypeName];
   if (!mergeConfig) {
     return null;

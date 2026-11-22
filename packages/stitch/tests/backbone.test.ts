@@ -699,7 +699,7 @@ describe('backbone plan quality', () => {
     expect(plan.incomplete).toBe(false);
     const counts = countFetches(plan.root);
     // Shared root `userById`: either Parallel roots (chirps + authors) with no
-    // entity hop, or 1 root + 1 entity - both match router-quality coverage.
+    // entity hop, or 1 root + 1 entity - both are acceptable coverage shapes.
     expect(counts.island).toBe(0);
     expect(counts.root + counts.entity).toBeGreaterThanOrEqual(2);
     expect(counts.root).toBeGreaterThanOrEqual(1);
@@ -1237,7 +1237,7 @@ describe('backbone aggressive BatchFetch + entityReuse', () => {
     });
   });
 
-  it('runIf DNF supports || of AND-groups (Router-style)', () => {
+  it('runIf DNF supports || of AND-groups', () => {
     const bookOnly = [[{ variable: 'wantBook', equals: true }]];
     const magOnly = [[{ variable: 'wantMag', equals: true }]];
     const either = orRunIf(bookOnly, magOnly)!;

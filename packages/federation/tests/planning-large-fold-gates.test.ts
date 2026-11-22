@@ -24,7 +24,8 @@ const PRE_FOLD_HTTP = {
 
 /**
  * Exact-deps-only ceilings (`344f8894`). Aggressive wave fold must beat these
- * on scenarios where exact-deps lagged Router (especially `search`).
+ * on scenarios where exact-deps lagged the reference query planner (especially
+ * `search`).
  */
 const EXACT_DEPS_HTTP = {
   product_page: 66,
@@ -40,7 +41,7 @@ function countBackboneHttp(root: Parameters<typeof collectExecutableHops>[0]) {
     .length;
 }
 
-function countRouterFetches(plan: { node?: unknown }): number {
+function countQueryPlannerFetches(plan: { node?: unknown }): number {
   let fetches = 0;
   const walk = (n: any) => {
     if (!n || typeof n !== 'object') return;
@@ -54,13 +55,13 @@ function countRouterFetches(plan: { node?: unknown }): number {
   return fetches;
 }
 
-/** Allow small slack vs Router plan fetches (cardinality / fold shape noise). */
-function routerBandCeiling(routerFetches: number): number {
-  return Math.ceil(routerFetches * 1.15) + 2;
+/** Allow small slack vs reference query-planner fetches (cardinality / fold shape noise). */
+function queryPlannerBandCeiling(referenceFetches: number): number {
+  return Math.ceil(referenceFetches * 1.15) + 2;
 }
 
-describe('planning-large fold gates vs Router QP', () => {
-  it('keeps all four queries in Router fetch band and beats exact-deps on search', async () => {
+describe('planning-large fold gates vs query planner', () => {
+  it('keeps all four queries in the reference fetch band and beats exact-deps on search', async () => {
     const { QueryPlanner } = await import('@graphql-hive/router-query-planner');
     const schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl: SUPERGRAPH_SDL,
@@ -74,7 +75,7 @@ describe('planning-large fold gates vs Router QP', () => {
 
     const results: Record<
       string,
-      { backbone: number; router: number; ceiling: number }
+      { backbone: number; reference: number; ceiling: number }
     > = {};
 
     for (const name of names) {
@@ -94,15 +95,15 @@ describe('planning-large fold gates vs Router QP', () => {
       ).toBe(false);
       const backbone = countBackboneHttp(plan.root);
       const opName = op.name?.value ?? null;
-      const routerPlan = qp.plan(
+      const qpPlan = qp.plan(
         QUERIES[name].replaceAll('__ID__', '1'),
         opName,
         new Set(),
         0,
       );
-      const router = countRouterFetches(routerPlan);
-      const ceiling = routerBandCeiling(router);
-      results[name] = { backbone, router, ceiling };
+      const reference = countQueryPlannerFetches(qpPlan);
+      const ceiling = queryPlannerBandCeiling(reference);
+      results[name] = { backbone, reference, ceiling };
 
       // vs pre-fold: fold must be active on every scenario (all drop ≥2×)
       expect(
@@ -110,27 +111,27 @@ describe('planning-large fold gates vs Router QP', () => {
         `${name} (${DESCRIPTIONS[name]}): expected fold << pre-fold ${PRE_FOLD_HTTP[name]}`,
       ).toBeLessThanOrEqual(Math.floor(PRE_FOLD_HTTP[name] / 2));
 
-      // vs Router plan fetches
+      // vs reference query-planner fetches
       expect(
         backbone,
-        `${name}: backbone ${backbone} > Router band ceiling ${ceiling} (Router ${router})`,
+        `${name}: backbone ${backbone} > query-planner band ceiling ${ceiling} (reference ${reference})`,
       ).toBeLessThanOrEqual(ceiling);
     }
 
-    // search discriminates exact-deps (80) vs gated (~48–58) vs Router (54)
+    // search discriminates exact-deps (80) vs gated (~48–58) vs reference (54)
     expect(
       results.search!.backbone,
       `search must beat exact-deps-only ${EXACT_DEPS_HTTP.search}`,
     ).toBeLessThanOrEqual(EXACT_DEPS_HTTP.search - 10);
     // Inline-fragment path dependsOn (Produces) puts nested entity hops after
-    // path producers — search should be ≤ Router plan fetches.
+    // path producers — search should be ≤ reference query-planner fetches.
     expect(
       results.search!.backbone,
-      `search should be ≤ Router ${results.search!.router}`,
-    ).toBeLessThanOrEqual(results.search!.router);
+      `search should be ≤ reference ${results.search!.reference}`,
+    ).toBeLessThanOrEqual(results.search!.reference);
 
     // product_page / checkout / order_history: aggressive should not regress
-    // past exact-deps when already near Router
+    // past exact-deps when already near the reference planner band
     for (const name of ['product_page', 'checkout', 'order_history'] as const) {
       expect(
         results[name]!.backbone,

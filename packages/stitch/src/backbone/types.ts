@@ -22,7 +22,7 @@ export interface StitchRunIfClause {
 /**
  * Hop `runIf` in DNF: OR of AND-groups. Missing/`undefined` means always run.
  * Example: `[[{a,true},{b,false}],[{c,true}]]` ⇒ `(a && !b) || c`.
- * Mirrors Hive Router Fetch/BatchFetch `runIf` (`||` / `&&`).
+ * DNF of AND-groups for Fetch/BatchFetch `runIf` (`||` / `&&`).
  */
 export type StitchRunIf = StitchRunIfClause[][];
 
@@ -91,7 +91,7 @@ export type StitchPlanNode =
       runIf?: StitchRunIf;
       /**
        * Hop ids whose results may already cover this entity selection.
-       * Execute may copy by representation hash and skip HTTP (Router #1799).
+       * Execute may copy by representation hash and skip HTTP.
        */
       reuseFrom?: string[];
     }

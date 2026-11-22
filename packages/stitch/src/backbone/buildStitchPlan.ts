@@ -50,7 +50,7 @@ import type {
  * Aggressive (earliest-wave) fold only kicks in when the plan still has many
  * foldable entity hops after the safe exact-dependsOn pass. Federation-example
  * TestQuery stays under this threshold so continuous dispatch is preserved;
- * planning-large (100+ hops) gets Router-style wave coalesce.
+ * planning-large (100+ hops) gets earliest-wave coalesce.
  */
 const AGGRESSIVE_WAVE_FOLD_MIN_ENTITY_HOPS = 16;
 
@@ -5576,9 +5576,9 @@ function stripOwnSkipIncludeDirectives(field: FieldNode): FieldNode {
 }
 
 /**
- * Stamp root-field `@skip`/`@include` as `runIf` on every hop (Hive Router
- * style). Keeps the hop set variable-independent so schedules cache and
- * conditional entity hops can BatchFetch together.
+ * Stamp root-field `@skip`/`@include` as `runIf` on every hop. Keeps the hop
+ * set variable-independent so schedules cache and conditional entity hops can
+ * BatchFetch together.
  */
 function wrapRootFieldWithRunIf(
   field: FieldNode,
@@ -5734,7 +5734,7 @@ function buildCompletePlan(
   );
   // Entity reuse is always planned for queries; mutations skip at execute.
   const withReuse = isMutation ? annotated : annotateEntityReuse(annotated);
-  // Router-style fold: same dependsOn wave + same subgraph → one BatchFetch
+  // Wave fold: same dependsOn wave + same subgraph → one BatchFetch
   // (or covering Fetch). Runs after reuse so reuse edges affect wave layers.
   const folded = isMutation
     ? withReuse
@@ -6326,7 +6326,7 @@ function makeSubschemaKeyFn(): (s: Subschema) => string {
 
 /**
  * Collapse same-subschema entity Fetches into covering Fetch / multi-path /
- * BatchFetch (Router fold). Shared by Parallel grouping and wave fold.
+ * BatchFetch. Shared by Parallel grouping and wave fold.
  */
 function collapseSameSubschemaEntityFetches(
   stitchingInfo: StitchingInfo,
@@ -6788,9 +6788,9 @@ function foldEntityHopsByKey(
  * 1. Always fold hops that share the **exact same dependsOn** + subgraph
  *    (safe ready-set; no continuous-dispatch delay).
  * 2. When many entity hops remain (planning-large), also fold by earliest
- *    ready **wave** + subgraph (Router-style). Gated so small plans like
- *    federation-example keep exact-deps-only scheduling. Wave groups must be
- *    able to share one merge-field HTTP.
+ *    ready **wave** + subgraph. Gated so small plans like federation-example
+ *    keep exact-deps-only scheduling. Wave groups must be able to share one
+ *    merge-field HTTP.
  */
 function foldSameWaveSubgraphFetches(
   root: StitchPlanNode,
@@ -6911,7 +6911,7 @@ function selectionCovers(
  * Annotate entity hops that can copy fields from an earlier hop they already
  * wait on (same entity type, covering selection — nested trees included).
  * Always on for queries. Adds a same-subgraph wait when a covering predecessor
- * would otherwise race the copy (Hive Router #1799).
+ * would otherwise race the copy.
  */
 function annotateEntityReuse(root: StitchPlanNode): StitchPlanNode {
   const hops: Array<

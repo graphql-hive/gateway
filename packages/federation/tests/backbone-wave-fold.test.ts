@@ -118,7 +118,7 @@ describe('backbone wave-per-subgraph fold (federation)', () => {
     );
     expect(plan.incomplete).toBe(false);
     const { http } = countPlanHttpHops(plan.root);
-    // Known target: 2 root Fetches + ≤1 inventory wave (Router-style fold).
+    // Known target: 2 root Fetches + ≤1 inventory wave (wave fold).
     // Without wave fold this was 2 entity Fetches (http ≥ 4).
     expect(http).toBeLessThanOrEqual(3);
     const hops: Parameters<typeof collectExecutableHops>[1] = [];
