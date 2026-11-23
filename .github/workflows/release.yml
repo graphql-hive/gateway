@@ -5,6 +5,14 @@ on:
     branches:
       - main
   pull_request:
+  # manually build and push the docker images and binaries of an already published gateway version,
+  # used when the stable release published to npm but failed before the docker and binary jobs ran
+  workflow_dispatch:
+    inputs:
+      gateway-version:
+        description: Already published @graphql-hive/gateway version to build docker images and binaries for
+        required: true
+        type: string
 
 env:
   NODE_NO_WARNINGS: 1
@@ -79,7 +87,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
 
   stable:
-    if: github.ref == 'refs/heads/main'
+    # manual dispatches only build docker images and binaries, never publish
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     concurrency: ${{ github.workflow }}-${{ github.ref }}-release-stable
     name: Stable
     permissions:
@@ -103,6 +112,7 @@ jobs:
     name: ${{ matrix.runtime }} Docker image
     needs: [stable, snapshot]
     if: always() && github.actor != 'dependabot[bot]' && (
+      inputs.gateway-version ||
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
       )
@@ -112,7 +122,8 @@ jobs:
         id: ver-gateway
         with:
           script: |
-            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
+            // on manual dispatch, fake the published packages from the input version
+            const publishedPackages = ${{ inputs.gateway-version && format('[{{"name":"@graphql-hive/gateway","version":"{0}"}}]', inputs.gateway-version) || needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
             const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
             if (!gateway) {
               return core.setFailed('@graphql-hive/gateway was not published!');
@@ -187,6 +198,7 @@ jobs:
     name: Binary built on ${{ matrix.os }}
     needs: [stable, snapshot]
     if: always() && (
+      inputs.gateway-version ||
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
       )
@@ -202,7 +214,8 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
+            // on manual dispatch, fake the published packages from the input version
+            const publishedPackages = ${{ inputs.gateway-version && format('[{{"name":"@graphql-hive/gateway","version":"{0}"}}]', inputs.gateway-version) || needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
             const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
             if (!gateway) {
               return core.setFailed('@graphql-hive/gateway was not published!');
@@ -276,7 +289,8 @@ jobs:
   examples:
     name: Examples
     needs: [stable, snapshot]
-    if: always() && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
+    # examples are not touched on manual dispatches
+    if: always() && github.event_name != 'workflow_dispatch' && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
     uses: graphql-hive/gateway/.github/workflows/examples.yml@main
     # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
     #       want the main branch to always use examples of stable releases. yeah sure, the examples
