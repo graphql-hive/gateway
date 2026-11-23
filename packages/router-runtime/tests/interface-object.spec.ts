@@ -1,7 +1,7 @@
-import { buildSubgraphSchema } from '@apollo/subgraph';
+import { buildSubgraphSchema, GraphQLSchemaModule } from '@apollo/subgraph';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { composeServices } from '@theguild/federation-composition';
-import { DocumentNode, parse } from 'graphql';
+import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { expect, it } from 'vitest';
 import { unifiedGraphHandler } from '../src/index';
@@ -9,10 +9,7 @@ import { unifiedGraphHandler } from '../src/index';
 // https://github.com/graphql-hive/gateway/issues/2737
 it('sends the @requires fields of an @interfaceObject field fetched from the owner', async () => {
   const representations: unknown[] = [];
-  const subgraphs: Record<
-    string,
-    Parameters<typeof buildSubgraphSchema>[0] & { typeDefs: DocumentNode }
-  > = {
+  const subgraphs: Record<string, GraphQLSchemaModule> = {
     owner: {
       typeDefs: parse(/* GraphQL */ `
         extend schema
