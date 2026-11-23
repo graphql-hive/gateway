@@ -40,13 +40,31 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
         ) {
           let timeoutSignal =
             timeoutSignalsByExecutionRequest.get(executionRequest);
+          let timer: ReturnType<typeof setTimeout> | undefined;
           if (!timeoutSignal) {
-            timeoutSignal = AbortSignal.timeout(timeout);
+            // a clearable timer instead of AbortSignal.timeout because node keeps timeout signals
+            // with abort listeners (like the ones from abortSignalAny) alive until they fire, which
+            // would retain everything around the request for the whole timeout even after it's done
+            const timeoutCtrl = new AbortController();
+            timer = setTimeout(
+              () =>
+                timeoutCtrl.abort(
+                  new DOMException(
+                    'The operation was aborted due to timeout',
+                    'TimeoutError',
+                  ),
+                ),
+              timeout,
+            );
+            // dont keep the process alive just for the timeout, same as AbortSignal.timeout
+            (timer as { unref?(): void }).unref?.();
+            timeoutSignal = timeoutCtrl.signal;
             timeoutSignalsByExecutionRequest.set(
               executionRequest,
               timeoutSignal,
             );
           }
+          let streaming = false;
           const timeoutDeferred =
             Promise.withResolvers<Awaited<ReturnType<typeof executor>>>();
           function rejectDeferred() {
@@ -73,6 +91,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           return Promise.race([timeoutDeferred.promise, res$])
             .then((result) => {
               if (isAsyncIterable(result)) {
+                streaming = true;
                 return {
                   [Symbol.asyncIterator]() {
                     const iterator = result[Symbol.asyncIterator]();
@@ -110,6 +129,11 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
+              // streams keep the timer so the timeout can still cut them off, everything
+              // else is settled here and the timer would only hold on to the request
+              if (!streaming) {
+                clearTimeout(timer);
+              }
               timeoutDeferred.resolve(undefined as any);
               timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again
