@@ -1,0 +1,44 @@
+diff --git a/dist/chunks/index.CZzC1gGg.js b/dist/chunks/index.CZzC1gGg.js
+index e03ed51d6736d5c889a15f61a1cc2c91635a4ef5..3174d221635a66b4bde389a42fde39da1b2ceaf9 100644
+--- a/dist/chunks/index.CZzC1gGg.js
++++ b/dist/chunks/index.CZzC1gGg.js
+@@ -507,7 +507,7 @@ class SnapshotClient {
+ 		// if `toMatchFileSnapshot` is called with a different test file's snapshot path,
+ 		// this check will not catch it.
+ 		throw new Error(`File snapshot cannot use the same path as the test snapshot file: ${rawSnapshot.file}`);
+-		const testName = [name, ...message ? [message] : []].join(" > ");
++		const testName = [name, ...message ? [message] : []].join(": ").replaceAll(" >", "");
+ 		// Probe first so we can mark as checked even on early return
+ 		const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+ 			testName,
+@@ -569,7 +569,7 @@ class SnapshotClient {
+ 		const captured = adapter.capture(received);
+ 		const rendered = adapter.render(captured);
+ 		const snapshotState = this.getSnapshotState(filepath);
+-		const testName = [name, ...message ? [message] : []].join(" > ");
++		const testName = [name, ...message ? [message] : []].join(": ").replaceAll(" >", "");
+ 		const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+ 			testName,
+ 			testId,
+@@ -599,7 +599,7 @@ class SnapshotClient {
+ 		const { poll, filepath, name, testId = name, message, adapter, isInline = false, inlineSnapshot, error, timeout = 1e3, interval = 50, assertionName } = options;
+ 		if (!filepath) throw new Error("Snapshot cannot be used outside of test");
+ 		const snapshotState = this.getSnapshotState(filepath);
+-		const testName = [name, ...message ? [message] : []].join(" > ");
++		const testName = [name, ...message ? [message] : []].join(": ").replaceAll(" >", "");
+ 		const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+ 			testName,
+ 			testId,
+diff --git a/dist/chunks/rawSnapshot.DqSiqIEx.js b/dist/chunks/rawSnapshot.DqSiqIEx.js
+index 1ded4513c676f584f6c1db4ffedabc42adcbb709..2874f35d46ea2c3afc259ccd8a93db3989fcfa24 100644
+--- a/dist/chunks/rawSnapshot.DqSiqIEx.js
++++ b/dist/chunks/rawSnapshot.DqSiqIEx.js
+@@ -132,7 +132,7 @@ function normalizeNewlines(string) {
+ }
+ async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
+ 	const snapshots = Object.keys(snapshotData).sort(naturalCompare).map((key) => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`);
+-	const content = `${environment.getHeader()}\n\n${snapshots.join("\n\n")}\n`;
++	const content = `// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing\n\n${snapshots.join("\n\n")}\n`;
+ 	const oldContent = await environment.readSnapshotFile(snapshotPath);
+ 	if (oldContent != null && oldContent === content) return;
+ 	await environment.saveSnapshotFile(snapshotPath, content);

@@ -6,9 +6,9 @@ import {
 } from '@internal/e2e';
 import { benchConfig, getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { bench, describe, expect } from 'vitest';
+import { expect, test } from 'vitest';
 
-describe('Gateway', async () => {
+test('Gateway', async ({ bench }) => {
   const { gateway, service: _service } = createTenv(__dirname);
   const example = createExampleSetup(__dirname, 1000);
 
@@ -38,6 +38,7 @@ describe('Gateway', async () => {
     }),
   };
 
+  const benches = [];
   for (const gwName in gateways) {
     const gw = gateways[gwName];
     if (!gw) {
@@ -49,9 +50,8 @@ describe('Gateway', async () => {
     const body = JSON.stringify({
       query: example.query,
     });
-    bench(
-      gwName,
-      async () => {
+    benches.push(
+      bench(gwName, async () => {
         const response = await fetch(gwUrl, {
           method: 'POST',
           headers: {
@@ -61,8 +61,9 @@ describe('Gateway', async () => {
         });
         const data = await response.json();
         expect(data).toEqual(example.result);
-      },
-      benchConfig,
+      }),
     );
   }
+
+  await bench.compare(...benches, benchConfig);
 });

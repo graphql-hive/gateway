@@ -31,14 +31,16 @@ async function createNestApp(
     Omit<GqlModuleOptions, 'driver'> = {},
 ) {
   const disposableStack = new AsyncDisposableStack();
-  const upstreamSchema = buildSubgraphSchema({
-    typeDefs: parse(schemaSDL),
-    resolvers: {
-      Query: {
-        hello: () => 'world',
+  const upstreamSchema = buildSubgraphSchema([
+    {
+      typeDefs: parse(schemaSDL),
+      resolvers: {
+        Query: {
+          hello: () => 'world',
+        },
       },
     },
-  });
+  ]);
   const upstreamYoga = createYoga({ logging: false, schema: upstreamSchema });
   disposableStack.use(upstreamYoga);
   const upstreamServer = await createDisposableServer(upstreamYoga);

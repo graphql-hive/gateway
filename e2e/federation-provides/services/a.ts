@@ -8,32 +8,34 @@ const port = Opts(process.argv).getServicePort('a');
 
 createServer(
   createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          _aPlaceholder: Boolean
-        }
+    schema: buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            _aPlaceholder: Boolean
+          }
 
-        type Entity @key(fields: "id") {
-          id: ID!
-          name: String!
-          description: String!
-          extra: String!
-        }
-      `),
-      resolvers: {
-        Entity: {
-          __resolveReference({ id }: { id: string }) {
-            return {
-              id,
-              name: `A:name`,
-              description: `A:description`,
-              extra: `A:extra`,
-            };
+          type Entity @key(fields: "id") {
+            id: ID!
+            name: String!
+            description: String!
+            extra: String!
+          }
+        `),
+        resolvers: {
+          Entity: {
+            __resolveReference({ id }: { id: string }) {
+              return {
+                id,
+                name: `A:name`,
+                description: `A:description`,
+                extra: `A:extra`,
+              };
+            },
           },
         },
       },
-    }),
+    ]),
     plugins: [
       {
         onParams({ params }) {

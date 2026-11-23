@@ -12,18 +12,20 @@ describe('Persisted Documents', () => {
   const store: Record<string, string> = {
     '1': 'query { foo }',
   };
-  const subgraphSchema = buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        foo: String
-      }
-    `),
-    resolvers: {
-      Query: {
-        foo: () => 'bar',
+  const subgraphSchema = buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          foo: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          foo: () => 'bar',
+        },
       },
     },
-  });
+  ]);
 
   const subgraphServer = createYoga({ logging: false, schema: subgraphSchema });
   const gateway = createGatewayRuntime({

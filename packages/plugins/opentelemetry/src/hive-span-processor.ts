@@ -19,6 +19,9 @@ import {
 } from './attributes';
 import { CircuitBreakerExporter } from './circuit-breaker-exporter';
 
+// sdk-trace-base doesnt export the span implementation anymore, we only need its writable end time
+type SpanImpl = Span & { endTime: HrTime };
+
 export type HiveTracingSpanProcessorOptions =
   | {
       target: string;

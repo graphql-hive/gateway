@@ -2,8 +2,8 @@
   "name": "@e2e/federation-batching-plan",
   "private": true,
   "dependencies": {
-    "@apollo/server": "^5.5.1",
-    "@apollo/subgraph": "^2.13.3",
-    "graphql": "^16.12.0"
+    "@apollo/server": "^5.5.2",
+    "@apollo/subgraph": "^2.16.0",
+    "graphql": "^16.15.0"
   }
 }

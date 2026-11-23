@@ -5,21 +5,23 @@ import { expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 
 it('should delegate requests to the subgraph supporting aliases', async () => {
-  const subgraph = buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        products: [Product]
-      }
-      type Product {
-        title: String
-      }
-    `),
-    resolvers: {
-      Query: {
-        products: () => [{ title: 'glasses' }, { title: 'shoes' }],
+  const subgraph = buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          products: [Product]
+        }
+        type Product {
+          title: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          products: () => [{ title: 'glasses' }, { title: 'shoes' }],
+        },
       },
     },
-  });
+  ]);
 
   await using gw = createGatewayRuntime({
     logging: false,

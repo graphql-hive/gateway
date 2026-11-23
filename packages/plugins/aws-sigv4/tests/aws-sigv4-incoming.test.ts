@@ -9,28 +9,30 @@ import { useAWSSigv4 } from '../src';
 
 describe('AWS Sigv4 Incoming requests', () => {
   let mutationCalls = 0;
-  const subgraphSchema = buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        hello: String
-      }
+  const subgraphSchema = buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          hello: String
+        }
 
-      type Mutation {
-        flip: String
-      }
-    `),
-    resolvers: {
-      Query: {
-        hello: () => 'world',
-      },
-      Mutation: {
-        flip: () => {
-          mutationCalls++;
-          return 'mutated';
+        type Mutation {
+          flip: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          hello: () => 'world',
+        },
+        Mutation: {
+          flip: () => {
+            mutationCalls++;
+            return 'mutated';
+          },
         },
       },
     },
-  });
+  ]);
   it('validates incoming requests', async () => {
     await using gw = createGatewayTester({
       subgraphs: [

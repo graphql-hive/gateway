@@ -22,79 +22,85 @@ describe('Subscriptions in Federation', () => {
     ];
 
     const comments = [{ id: '1', content: 'Comment 1', postId: '1' }];
-    const postsSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          posts: [Post]
-          post(id: ID!): Post
-        }
+    const postsSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            posts: [Post]
+            post(id: ID!): Post
+          }
 
-        type Post @key(fields: "id") {
-          id: ID!
-          title: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          posts: () => posts,
-          post: (_, { id }) => posts.find((post) => post.id === id),
-        },
-        Post: {
-          __resolveReference: (post) => posts.find(({ id }) => id === post.id),
-        },
-      },
-    });
-    const commentsSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Comment @key(fields: "id") {
-          id: ID!
-          content: String!
-          post: Post
-        }
-
-        extend type Post @key(fields: "id") {
-          id: ID!
-          comments: [Comment]
-        }
-
-        type Mutation {
-          addComment(postId: ID!, content: String!): Comment
-        }
-
-        type Subscription {
-          commentAdded(postId: ID!): Comment
-        }
-      `),
-      resolvers: {
-        Comment: {
-          post: (comment) => posts.find((post) => post.id === comment.postId),
-        },
-        Post: {
-          __resolveReference: (post) => posts.find(({ id }) => id === post.id),
-          comments: (post) =>
-            comments.filter((comment) => comment.postId === post.id),
-        },
-        Mutation: {
-          addComment: (_, { postId, content }) => {
-            const comment = {
-              id: String(comments.length + 1),
-              content,
-              postId,
-            };
-            comments.push(comment);
-            pubsub.publish('comment:added', postId, comment);
-            return comment;
+          type Post @key(fields: "id") {
+            id: ID!
+            title: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            posts: () => posts,
+            post: (_, { id }) => posts.find((post) => post.id === id),
           },
-        },
-        Subscription: {
-          commentAdded: {
-            subscribe: (_, { postId }) =>
-              pubsub.subscribe('comment:added', postId),
-            resolve: (payload) => payload,
+          Post: {
+            __resolveReference: (post) =>
+              posts.find(({ id }) => id === post.id),
           },
         },
       },
-    });
+    ]);
+    const commentsSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Comment @key(fields: "id") {
+            id: ID!
+            content: String!
+            post: Post
+          }
+
+          extend type Post @key(fields: "id") {
+            id: ID!
+            comments: [Comment]
+          }
+
+          type Mutation {
+            addComment(postId: ID!, content: String!): Comment
+          }
+
+          type Subscription {
+            commentAdded(postId: ID!): Comment
+          }
+        `),
+        resolvers: {
+          Comment: {
+            post: (comment) => posts.find((post) => post.id === comment.postId),
+          },
+          Post: {
+            __resolveReference: (post) =>
+              posts.find(({ id }) => id === post.id),
+            comments: (post) =>
+              comments.filter((comment) => comment.postId === post.id),
+          },
+          Mutation: {
+            addComment: (_, { postId, content }) => {
+              const comment = {
+                id: String(comments.length + 1),
+                content,
+                postId,
+              };
+              comments.push(comment);
+              pubsub.publish('comment:added', postId, comment);
+              return comment;
+            },
+          },
+          Subscription: {
+            commentAdded: {
+              subscribe: (_, { postId }) =>
+                pubsub.subscribe('comment:added', postId),
+              resolve: (payload) => payload,
+            },
+          },
+        },
+      },
+    ]);
     const supergraphSdl = await composeLocalSchemasWithApollo([
       {
         name: 'posts',
