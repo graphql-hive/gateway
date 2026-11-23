@@ -17,7 +17,7 @@
     "graphql-tag": "^2.12.7",
     "graphql-yoga": "^6.1.1",
     "tslib": "^2.9.1",
-    "@graphql-hive/gateway": "^2.15.13"
+    "@graphql-hive/gateway": "^3.0.0"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
