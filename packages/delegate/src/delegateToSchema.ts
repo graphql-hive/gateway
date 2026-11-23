@@ -699,7 +699,12 @@ function setObjectKeyPath(
     ) {
       return;
     }
-    if (current[key] == null) {
+    // path segments are client response keys (aliases), so only follow own props.
+    // inherited members like `hasOwnProperty` would otherwise make us descend into shared builtins
+    if (
+      !Object.prototype.hasOwnProperty.call(current, key) ||
+      current[key] == null
+    ) {
       current[key] = typeof path[i + 1] === 'number' ? [] : {};
     }
     current = current[key];
@@ -713,6 +718,9 @@ function setObjectKeyPath(
   ) {
     return;
   }
-  const existingValue = current[lastKey];
+  // same deal for the leaf, never merge into an inherited value
+  const existingValue = Object.prototype.hasOwnProperty.call(current, lastKey)
+    ? current[lastKey]
+    : undefined;
   current[lastKey] = existingValue ? mergeDeep([existingValue, value]) : value;
 }
