@@ -8,13 +8,13 @@ import {
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
-import { makeDisposable } from '@graphql-mesh/utils';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
   type ExecutionRequest,
 } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { crypto } from '@whatwg-node/fetch';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { ExecutionResult, GraphQLError } from 'graphql';
@@ -320,6 +320,9 @@ export default {
         clearTimeout(interval);
       }
     }
-    return makeDisposable(httpCallbackExecutor, disposeFn);
+    // Avoid `@graphql-mesh/utils` `makeDisposable` (removed on Mesh tip); set
+    // the sync dispose symbol directly like other Gateway executors/transports.
+    httpCallbackExecutor[DisposableSymbols.dispose] = disposeFn;
+    return httpCallbackExecutor;
   },
 } satisfies Transport<HTTPCallbackTransportOptions>;
