@@ -12,7 +12,6 @@ import {
   mapSchema,
 } from '@graphql-tools/utils';
 import {
-  GraphQLFieldConfigMap,
   GraphQLObjectType,
   GraphQLSchema,
   isObjectType,
@@ -58,9 +57,10 @@ export class MoveRootField implements Transform<MoveRootFieldTransformationConte
     _subschemaConfig: Record<string, any>,
   ): GraphQLSchema {
     const rootTypeMap = getRootTypeMap(schema);
+    // fields come from toConfig, so use its type which is normalized in graphql 17
     const newRootFieldsMap: Record<
       OperationTypeNode,
-      GraphQLFieldConfigMap<any, any>
+      ReturnType<GraphQLObjectType['toConfig']>['fields']
     > = {
       query:
         rootTypeMap.get('query' as OperationTypeNode)?.toConfig()?.fields || {},

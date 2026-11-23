@@ -12,7 +12,7 @@
     "dockerode": "^5.0.1",
     "get-tsconfig": "^4.14.3",
     "glob": "^14.0.6",
-    "graphql": "^16.15.0",
+    "graphql": "^17.1.0",
     "terminate": "^2.8.0"
   }
 }

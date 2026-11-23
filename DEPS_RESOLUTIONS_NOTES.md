@@ -10,6 +10,7 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### tsx
 
 1. https://github.com/privatenumber/tsx/issues/159#issuecomment-2473632866 (did what was suggested)
+2. `require()` of `.mjs` files is left to Node when it supports requiring ES modules. Otherwise tsx compiles them to CommonJS and loads a second instance next to the one loaded with `import`. GraphQL v17 resolves to its `.mjs` build for both `require()` and `import`, so CommonJS packages like `graphql-compose` and `@apollo/subgraph` would get a different `graphql` instance than ES modules.
 
 ### @opentelemetry/otlp-exporter-base
 
@@ -63,3 +64,8 @@ Here we collect reasons and write explanations about why some resolutions or pat
 1. Writes snapshot files with the Jest header instead of the Vitest one.
 2. Names snapshots like Jest does, joining the test name and the snapshot hint with `: ` and without `>` between nested test names. This keeps the snapshot files shared with `bun test`.
 3. Vitest 5 bundles `@vitest/snapshot`, so the patch is applied on `vitest` itself.
+
+### @graphql-hive/federation-gateway-audit/graphql-yoga
+
+1. The audit serves its subgraphs with `graphql-yoga` v5, which does not work with GraphQL v17.
+2. It's resolved to the same `graphql-yoga` major the rest of the repository uses, which supports GraphQL v16 and v17.

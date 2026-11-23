@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { assertSome, ExecutionResult, Executor } from '@graphql-tools/utils';
+import { serialized } from '@internal/testing';
 import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
 import { buildSchema, graphql, GraphQLError } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
@@ -40,7 +41,7 @@ describe('passes along errors for missing fields on list', () => {
       schema: stitchedSchema,
       source: query,
     });
-    expect(stitchedResult).toEqual(originalResult);
+    expect(serialized(stitchedResult)).toEqual(serialized(originalResult));
     assertSome(stitchedResult.errors);
     assertSome(originalResult.errors);
     expect(stitchedResult.errors[0]?.path).toEqual(
@@ -82,7 +83,7 @@ describe('passes along errors for missing fields on list', () => {
       schema: stitchedSchema,
       source: query,
     });
-    expect(stitchedResult).toEqual(originalResult);
+    expect(serialized(stitchedResult)).toEqual(serialized(originalResult));
     assertSome(originalResult.errors);
     assertSome(stitchedResult.errors);
     expect(stitchedResult.errors[0]?.path).toEqual(
@@ -126,7 +127,7 @@ describe('passes along errors when list field errors', () => {
       schema: stitchedSchema,
       source: query,
     });
-    expect(stitchedResult).toEqual(originalResult);
+    expect(serialized(stitchedResult)).toEqual(serialized(originalResult));
     assertSome(stitchedResult.errors);
     assertSome(originalResult.errors);
     expect(stitchedResult.errors[0]?.path).toEqual(
@@ -168,7 +169,7 @@ describe('passes along errors when list field errors', () => {
       schema: stitchedSchema,
       source: query,
     });
-    expect(stitchedResult).toEqual(originalResult);
+    expect(serialized(stitchedResult)).toEqual(serialized(originalResult));
     assertSome(stitchedResult.errors);
     assertSome(originalResult.errors);
     expect(stitchedResult.errors[0]?.path).toEqual(
@@ -205,7 +206,7 @@ describe('passes along errors when list field errors', () => {
         schema: stitchedSchema,
         source: query,
       });
-      expect(stitchedResult).toEqual(originalResult);
+      expect(serialized(stitchedResult)).toEqual(serialized(originalResult));
       assertSome(stitchedResult.errors);
       assertSome(originalResult.errors);
       expect(stitchedResult.errors[0]?.path).toEqual(
@@ -269,7 +270,7 @@ describe('passes along errors for remote schemas', () => {
     `;
 
     const result = await graphql({ schema: stitchedSchema, source: query });
-    expect(result).toEqual(expectedResult);
+    expect(serialized(result)).toEqual(serialized(expectedResult));
   });
 });
 

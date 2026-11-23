@@ -46,6 +46,7 @@ import {
   OperationTypeNode,
   parse,
   printSchema,
+  versionInfo,
 } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
@@ -475,6 +476,8 @@ describe('optional arguments', () => {
   });
 
   // See https://github.com/graphql/graphql-js/issues/2533
+  // graphql 17 treats an explicit undefined variable like a missing one
+  const undefinedArgResult = versionInfo.major >= 17;
   it('may not work as expected when explicitly passing in an undefined value', async () => {
     const query = /* GraphQL */ `
       query test($arg: Arg) {
@@ -488,7 +491,7 @@ describe('optional arguments', () => {
       variableValues: { arg: undefined },
     });
     assertSome(originalResult.data);
-    expect(originalResult.data['test']).toEqual(false);
+    expect(originalResult.data['test']).toEqual(undefinedArgResult);
 
     const stitchedResult = await graphql({
       schema: stitchedSchema,
@@ -496,7 +499,7 @@ describe('optional arguments', () => {
       variableValues: { arg: undefined },
     });
     assertSome(stitchedResult.data);
-    expect(stitchedResult.data['test']).toEqual(false);
+    expect(stitchedResult.data['test']).toEqual(undefinedArgResult);
   });
 });
 
