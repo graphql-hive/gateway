@@ -27,7 +27,7 @@ export function wrapFetchWithHooks<TContext>(
 ): MeshFetch {
   let wrappedFetchFn = function wrappedFetchFn(
     url,
-    options,
+    options = {},
     context = {},
     info,
   ) {
@@ -52,7 +52,6 @@ export function wrapFetchWithHooks<TContext>(
               setURL(newUrl) {
                 url = String(newUrl);
               },
-              // @ts-expect-error TODO: why?
               options,
               setOptions(newOptions) {
                 options = newOptions;
