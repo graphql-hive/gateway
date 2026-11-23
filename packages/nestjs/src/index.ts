@@ -43,7 +43,7 @@ export type HiveGatewayDriverConfig<
     GatewayCLIBuiltinPluginConfig &
     Omit<GqlModuleOptions, 'schema'> & {
       /**
-       * If enabled, "subscriptions-transport-ws" will be automatically registered.
+       * If enabled, "graphql-ws" will be automatically registered.
        */
       installSubscriptionHandlers?: boolean;
       /**
@@ -175,6 +175,8 @@ export class HiveGatewayDriver<
     const platformName = this.httpAdapterHost.httpAdapter.getType();
     if (platformName === 'express') {
       this.registerExpress();
+    } else if (platformName === 'node') {
+      this.registerNode();
     } else if (platformName === 'fastify') {
       this.registerFastify();
     } else {
@@ -198,62 +200,10 @@ export class HiveGatewayDriver<
             : {}),
         } as GraphQLWsSubscriptionsConfig;
       }
-      if (subscriptionsOptions['subscriptions-transport-ws']) {
-        subscriptionsOptions['subscriptions-transport-ws'] =
-          typeof subscriptionsOptions['subscriptions-transport-ws'] === 'object'
-            ? subscriptionsOptions['subscriptions-transport-ws']
-            : {};
-        subscriptionsOptions['subscriptions-transport-ws'].onOperation = async (
-          _msg: unknown,
-          params: {
-            query: string;
-            variables: Record<string, any>;
-            operationName: string;
-            context: Record<string, any>;
-          },
-          ws: WebSocket,
-        ) => {
-          const {
-            schema,
-            execute,
-            subscribe,
-            contextFactory,
-            parse,
-            validate,
-          } = gatewayRuntime.getEnveloped({
-            ...params.context,
-            req:
-              // @ts-expect-error upgradeReq does exist but is untyped
-              ws.upgradeReq,
-            socket: ws,
-            params,
-          });
-
-          const args = {
-            schema,
-            operationName: params.operationName,
-            document:
-              typeof params.query === 'string'
-                ? parse(params.query)
-                : params.query,
-            variables: params.variables,
-            context: await contextFactory(),
-            rootValue: { execute, subscribe },
-          };
-
-          const errors = validate(args.schema, args.document);
-          if (errors.length) return errors;
-          return args;
-        };
-      }
       this._subscriptionService = new GqlSubscriptionService(
         {
           schema: await gatewayRuntime!.getSchema(),
           path: options.path,
-          // @ts-expect-error - We know that execute and subscribe are defined
-          execute: (args) => args.rootValue.execute(args),
-          // @ts-expect-error - We know that execute and subscribe are defined
-          subscribe: (args) => args.rootValue.subscribe(args),
           ...subscriptionsOptions,
         },
         this.httpAdapterHost.httpAdapter?.getHttpServer(),
@@ -279,6 +229,15 @@ export class HiveGatewayDriver<
     if (!this._gatewayRuntime) {
       throw new Error('Hive Gateway is not initialized');
     }
+    this.httpAdapterHost.httpAdapter.use(this._gatewayRuntime);
+  }
+  private registerNode() {
+    if (!this._gatewayRuntime) {
+      throw new Error('Hive Gateway is not initialized');
+    }
+    // @nestjs/platform-node runs Express-style middleware, and its NodeRequest and
+    // NodeResponse extend IncomingMessage and ServerResponse, so the gateway's
+    // request listener mounts directly and puts `req` and `res` in the context
     this.httpAdapterHost.httpAdapter.use(this._gatewayRuntime);
   }
   private registerFastify() {
