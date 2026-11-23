@@ -695,7 +695,7 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
   {
     const links =
       getDirectiveExtensions<{
-        link?: { url?: string }[];
+        link: { url?: string };
       }>(unifiedGraph)?.link || [];
     for (const link of links) {
       const url = link?.url;
@@ -724,7 +724,7 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
   const joinGraph = unifiedGraph.getType('join__Graph');
   const schemaDirectives = getDirectiveExtensions<{
     transport: TransportEntry;
-    join__directive?: JoinDirective[];
+    join__directive: JoinDirective;
   }>(unifiedGraph);
   const graphEnumToName: Record<string, string> = {};
   if (isEnumType(joinGraph)) {
@@ -836,14 +836,14 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
       continue;
     }
     for (const dir of getDirectiveExtensions<{
-      join__directive?: JoinDirective[];
+      join__directive: JoinDirective;
     }>(type)?.join__directive || []) {
       applyJoinTransportDirective(dir);
     }
     if (isObjectType(type) || isInterfaceType(type)) {
       for (const field of Object.values(type.getFields())) {
         for (const dir of getDirectiveExtensions<{
-          join__directive?: JoinDirective[];
+          join__directive: JoinDirective;
         }>(field)?.join__directive || []) {
           applyJoinTransportDirective(dir);
         }
@@ -855,8 +855,9 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
   // `join__graph(url:)` (no SCHEMA `@source`), so they never get a join-url
   // seed entry - still create connect transport.
   for (const subgraphName of graphsWithConnect) {
-    const entry = transportEntryMap[subgraphName] || {
+    const entry: TransportEntry = transportEntryMap[subgraphName] || {
       subgraph: subgraphName,
+      kind: 'http',
     };
     if (!entry.kind || entry.kind === 'http') {
       transportEntryMap[subgraphName] = {

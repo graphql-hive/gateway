@@ -122,7 +122,7 @@ function getMeshSourceDirectives(
   ) {
     return directives[meshSourceDirectiveName] as SourceDirective[];
   }
-  return (directives?.meshSource || directives?.source) as
+  return (directives?.['meshSource'] || directives?.['source']) as
     | SourceDirective[]
     | undefined;
 }

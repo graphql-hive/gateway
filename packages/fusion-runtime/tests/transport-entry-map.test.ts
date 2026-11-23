@@ -44,12 +44,12 @@ describe('getTransportEntryMapUsingFusionAndFederationDirectives', () => {
     `);
 
     const map = getTransportEntryMapUsingFusionAndFederationDirectives(schema);
-    expect(map.thrift).toMatchObject({
+    expect(map['thrift']).toMatchObject({
       subgraph: 'thrift',
       kind: 'thrift',
       location: 'http://thrift.local',
     });
-    expect(map.thrift?.options).toEqual({ serviceName: 'Demo' });
+    expect(map['thrift']?.options).toEqual({ serviceName: 'Demo' });
   });
 
   it('infers kind connect from field @join__directive(name: "connect")', () => {
@@ -78,7 +78,7 @@ describe('getTransportEntryMapUsingFusionAndFederationDirectives', () => {
     `);
 
     const map = getTransportEntryMapUsingFusionAndFederationDirectives(schema);
-    expect(map.reviews).toMatchObject({
+    expect(map['reviews']).toMatchObject({
       subgraph: 'reviews',
       kind: 'connect',
     });
@@ -124,13 +124,13 @@ describe('getTransportEntryMapUsingFusionAndFederationDirectives', () => {
     `);
 
     const map = getTransportEntryMapUsingFusionAndFederationDirectives(schema);
-    expect(map.connectors).toMatchObject({
+    expect(map['connectors']).toMatchObject({
       subgraph: 'connectors',
       kind: 'connect',
       location: 'http://widgets.local',
     });
     // Mesh stitching type `@source` must not flip HTTP transport to connect.
-    expect(map.http).toMatchObject({
+    expect(map['http']).toMatchObject({
       subgraph: 'http',
       kind: 'http',
       location: 'http://api.local',
@@ -205,13 +205,13 @@ describe('getTransportEntryMapUsingFusionAndFederationDirectives', () => {
     `);
 
     const map = getTransportEntryMapUsingFusionAndFederationDirectives(schema);
-    expect(map.api).toMatchObject({
+    expect(map['api']).toMatchObject({
       subgraph: 'api',
       kind: 'http',
       location: 'http://from-transport',
     });
-    expect(map.api?.options).toEqual({ timeout: 5 });
+    expect(map['api']?.options).toEqual({ timeout: 5 });
     // Ensure directives stayed readable for regression.
-    expect(getDirectiveExtensions(schema)?.transport?.length).toBe(1);
+    expect(getDirectiveExtensions(schema)?.['transport']?.length).toBe(1);
   });
 });
