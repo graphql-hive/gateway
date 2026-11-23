@@ -45,13 +45,13 @@ async function createNestApp(
         Query: {
           hello: () => 'world',
         },
-      },
-      Subscription: {
-        countdown: {
-          async *subscribe(_: unknown, { from }: { from: number }) {
-            for (let i = from; i >= 0; i--) {
-              yield { countdown: i };
-            }
+        Subscription: {
+          countdown: {
+            async *subscribe(_: unknown, { from }: { from: number }) {
+              for (let i = from; i >= 0; i--) {
+                yield { countdown: i };
+              }
+            },
           },
         },
       },
