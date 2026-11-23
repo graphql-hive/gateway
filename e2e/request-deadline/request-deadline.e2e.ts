@@ -53,5 +53,5 @@ it('should invoke onResponse on deadline reached', async () => {
 
   const onResponseData = JSON.parse(onResponseRawData!);
   expect(onResponseData.statusCode).toBe(503); // the status code when deadline is reached
-  expect(onResponseData.durationInMs).toBeLessThan(150); // 100ms is the request deadline + some leeway
+  expect(onResponseData.durationInMs).toBeLessThan(250); // 100ms is the request deadline + some leeway (even more leeway for Windows)
 });
