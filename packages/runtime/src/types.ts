@@ -1003,6 +1003,24 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   __experimental__batchDelegateOptions?: BatchDelegateOptions;
 
   /**
+   * Forward the response of a subgraph to the client without parsing and
+   * serializing it again.
+   *
+   * Applies to a query whose only root field is resolved by a single subgraph
+   * request that selects exactly what the client selects. The response bytes of
+   * the subgraph are then checked against the schema (shape, nullability, leaf
+   * types) and become the response body. When the operation is not eligible or
+   * the check fails, the operation is executed as usual from the same subgraph
+   * response.
+   *
+   * Only with a supergraph that is executed by the default (stitching) runtime.
+   *
+   * @experimental
+   * @default false
+   */
+  __experimental__rawForward?: boolean;
+
+  /**
    * Subgraph error handling
    */
   subgraphErrors?: SubgraphErrorPluginOptions | false;
