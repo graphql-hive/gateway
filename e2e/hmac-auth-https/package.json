@@ -7,13 +7,13 @@
   },
   "dependencies": {
     "@apollo/server": "^5.5.2",
-    "@apollo/subgraph": "^2.16.0",
+    "@apollo/subgraph": "^2.17.0",
     "@graphql-hive/gateway": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/compose-cli": "^1.8.4",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
     "graphql": "^17.1.0",
-    "graphql-yoga": "^6.1.0"
+    "graphql-yoga": "^6.1.1"
   }
 }

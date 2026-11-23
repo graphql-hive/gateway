@@ -95,14 +95,14 @@
   },
   "devDependencies": {
     "@logtape/logtape": "^2.4.2",
-    "@types/fast-redact": "^3",
+    "@types/fast-redact": "^3.0.4",
     "@types/quick-format-unescaped": "^4.0.3",
     "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "fast-redact": "^3.5.0",
     "fast-safe-stringify": "^2.1.1",
     "pino": "^10.4.0",
-    "pkgroll": "2.27.1",
+    "pkgroll": "2.29.1",
     "quick-format-unescaped": "^4.0.4",
     "winston": "^3.19.0"
   },

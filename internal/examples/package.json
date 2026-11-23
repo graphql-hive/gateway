@@ -7,14 +7,14 @@
     "start": "tsx ./src/bin.ts"
   },
   "devDependencies": {
-    "@babel/parser": "^7.28.5",
-    "@types/jscodeshift": "^17.0.0",
-    "@whatwg-node/disposablestack": "^0.0.6",
-    "dedent": "^1.7.0",
-    "esbuild": "^0.28.0",
-    "glob": "^13.0.0",
-    "jscodeshift": "^17.1.1",
-    "tsx": "4.22.4",
-    "zod": "^4.1.12"
+    "@babel/parser": "^7.29.14",
+    "@types/jscodeshift": "^17.3.0",
+    "@whatwg-node/disposablestack": "^0.1.0",
+    "dedent": "^1.7.2",
+    "esbuild": "^0.28.2",
+    "glob": "^14.0.6",
+    "jscodeshift": "^17.4.0",
+    "tsx": "4.23.15",
+    "zod": "^4.6.7"
   }
 }
