@@ -1,6 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createInlineSigningKeyProvider, useJWT } from '@graphql-hive/gateway';
+import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
+import aws4 from 'aws4';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { useAWSSigv4 } from '../src';
@@ -135,6 +137,69 @@ describe('AWS Sigv4 Incoming requests', () => {
 
     expect(response.status).toBe(401);
     expect(mutationCalls).toBe(0);
+  });
+  it('validates operations over websockets', async () => {
+    await using gw = createGatewayTester({
+      subgraphs: [
+        {
+          name: 'subgraph',
+          schema: subgraphSchema,
+        },
+      ],
+      landingPage: false,
+      graphqlEndpoint: '/',
+      plugins: () => [
+        useAWSSigv4({
+          incoming: {
+            secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          },
+        }),
+      ],
+    });
+
+    // the gateway loads the schema in onRequestParse, which websockets skip
+    await gw.runtime.getSchema();
+
+    // websocket operations skip onRequestParse and go through getResultForParams,
+    // so we drive the same graphql-ws hooks the servers use with the upgrade request
+    async function executeOverWS(headers: Record<string, string>) {
+      const wsOptions = getGraphQLWSOptions(gw.runtime, () => ({
+        request: new Request('http://localhost:4000/', { headers }),
+      }));
+      const args = await wsOptions.onSubscribe!(
+        { connectionParams: {} } as any,
+        '1',
+        { query: '{ hello }' },
+      );
+      return wsOptions.execute!(args as any);
+    }
+    const upgradeHeaders = {
+      connection: 'Upgrade',
+      upgrade: 'websocket',
+      'sec-websocket-protocol': 'graphql-transport-ws',
+    };
+
+    await expect(executeOverWS(upgradeHeaders)).rejects.toThrow(
+      'Required headers are missing',
+    );
+
+    const signed = aws4.sign(
+      {
+        host: 'localhost:4000',
+        path: '/',
+        method: 'GET',
+        service: 's3',
+        region: 'eu-central-1',
+        headers: { ...upgradeHeaders },
+      },
+      {
+        accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+        secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+      },
+    );
+    await expect(
+      executeOverWS(signed.headers as Record<string, string>),
+    ).resolves.toEqual({ data: { hello: 'world' } });
   });
   it('works with JWT', async () => {
     const JWT_SECRET = 'a-string-secret-at-least-256-bits-long';
