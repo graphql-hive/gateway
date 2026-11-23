@@ -1,5 +1,100 @@
 # @graphql-tools/wrap
 
+## 12.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Minor Changes
+
+
+
+- [#2763](https://github.com/graphql-hive/gateway/pull/2763) [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL v17
+  
+  Hive Gateway and the stitching, wrapping and federation packages work with GraphQL v17 alongside v16. The `graphql` peer dependency range stays `^16 || ^17`, so projects that install the packages themselves keep the GraphQL version they already use.
+  
+  Schema stitching, schema wrapping (including `TransformEnumValues` with defaults defined in SDL), `federationToStitchingSDL` and demand control behave the same on both versions.
+  
+  ## Docker images and binary ship GraphQL v17
+  
+  The Hive Gateway Docker images and the standalone binary come with `graphql@17.1.0`. Custom code loaded by the gateway configuration, like plugins, additional resolvers, transforms and hooks, runs against GraphQL v17. Code that only uses the gateway APIs needs no changes. Code that uses GraphQL internals directly might, see the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) for all changes.
+  
+  ### Variable values in resolver info
+  
+  `info.variableValues` is an object of `{ sources, coerced }` instead of a flat map of variable names to values. Read the variable values from `info.variableValues.coerced`, or use `getCoercedVariableValues` from `@graphql-tools/delegate` to support both versions.
+  
+  ```ts
+  import { getCoercedVariableValues } from '@graphql-tools/delegate';
+  
+  const variables = getCoercedVariableValues(info.variableValues);
+  ```
+  
+  ### Calling `getArgumentValues` and `getDirectiveValues`
+  
+  The `variableValues` argument of `getArgumentValues` and `getDirectiveValues` from `graphql` expects the `{ sources, coerced }` shape too. Wrap a flat map of variables with `asGetArgumentValuesVariables` from `@graphql-tools/utils`, which works with both versions.
+  
+  ```ts
+  import { asGetArgumentValuesVariables } from '@graphql-tools/utils';
+  import { getArgumentValues } from 'graphql';
+  
+  const args = getArgumentValues(
+    field,
+    fieldNode,
+    asGetArgumentValuesVariables(variables),
+  );
+  ```
+  
+  ### Empty lists in parsed documents
+  
+  Parsed documents leave out empty lists. For example, a field without arguments has `arguments` set to `undefined` instead of `[]`, and the same goes for `directives`, `variableDefinitions`, `interfaces` and `fields`. Use optional chaining or a fallback like `node.directives ?? []` when reading them.
+  
+  ### Default values defined in SDL
+  
+  Default values of arguments and input fields defined in SDL are kept as an AST node in `default.literal`, and `defaultValue` is `undefined`. Read `default` first and fall back to `defaultValue` to support both versions. When mapping a schema and changing a default, set `default` to `undefined` next to the new `defaultValue`, otherwise the literal from SDL is still used.
+  
+  ### Custom scalars
+  
+  Scalars have the `coerceOutputValue`, `coerceInputValue`, `coerceInputLiteral` and `valueToLiteral` functions next to the deprecated `serialize`, `parseValue` and `parseLiteral`. When building a scalar from another scalar's `toConfig()` and replacing its coercion, replace the new functions too, otherwise they keep coercing with the original implementation.
+  
+  ### Errors
+  
+  `GraphQLError` sets the standard `cause` property to its original error. Errors from subgraphs that the gateway relays to clients have the subgraph error as `cause`. What clients receive stays the same.
+  
+  ### Printing and introspection
+  
+  `print` formats object values with spaces, like `{ a: 1 }` instead of `{a: 1}`, and breaks long ones over several lines. The `reason` argument of `@deprecated` and the `includeDeprecated` argument of introspection fields are non-nullable. Update snapshots or string comparisons of printed documents and introspection results.
+  
+  Closes [#2750](https://github.com/graphql-hive/gateway/issues/2750)
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/delegate@13.0.0
+
 ## 11.2.8
 ### Patch Changes
 

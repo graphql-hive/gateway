@@ -1,5 +1,61 @@
 # @graphql-tools/executor-http
 
+## 4.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove the unused `disposable` option from `buildHTTPExecutor`. Executors are always disposable.
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Incremental delivery (`@defer` / `@stream`) Accept negotiation uses the shared `INCREMENTAL_DELIVERY_SPECS` table from `@graphql-tools/utils`.
+  
+  Client Accept (gateway responses) and upstream Accept (subgraph calls) are separate:
+  
+  | Direction | Default | Force |
+  | --- | --- | --- |
+  | Client → Gateway (Yoga) | Negotiate from `Accept`; echo spec on `Content-Type` | n/a (client-driven) |
+  | Gateway → Subgraph (`executor-http`) | Bare `multipart/mixed` (no spec param) | `incrementalSpec: 'v0.1' \| 'v0.2'` on executor or `ExecutionRequest` |
+  
+  | Spec | Accept / Content-Type parameter | Payload |
+  | --- | --- | --- |
+  | `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
+  | `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
+  
+  `mergeIncrementalResult` merges both formats. Force `'v0.1'` when stitching `IncrementalReceiver` needs path/label patches. Client `Accept` is never copied onto upstream `Accept`.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/executor-common@2.0.0
+  - @graphql-hive/signal@3.0.0
+
 ## 3.6.2
 ### Patch Changes
 

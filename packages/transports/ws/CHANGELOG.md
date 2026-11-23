@@ -1,5 +1,44 @@
 # @graphql-mesh/transport-ws
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove `TransportContext.logger`. Use `TransportContext.log` (`@graphql-hive/logger`) only.
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/executor-graphql-ws@4.0.0
+  - @graphql-mesh/transport-common@2.0.0
+
 ## 2.1.3
 ### Patch Changes
 

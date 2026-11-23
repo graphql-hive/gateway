@@ -1,5 +1,103 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 2.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2765](https://github.com/graphql-hive/gateway/pull/2765) [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Upgrade to OpenTelemetry JS SDK 3
+  
+  The OpenTelemetry plugin and Hive Gateway use OpenTelemetry JS SDK 3: the stable packages like `@opentelemetry/core`, `@opentelemetry/resources`, `@opentelemetry/sdk-trace` and `@opentelemetry/sdk-logs` at 3.x, the experimental packages like `@opentelemetry/sdk-node` and the OTLP exporters at 0.301.x, and `@opentelemetry/api` 1.10. SDK 2.x packages can't be used together with `@opentelemetry/api` 1.10, so custom code using OpenTelemetry packages has to upgrade to SDK 3 too. The [OpenTelemetry JS 3.x migration guide](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/3.x/migration-guide.md) describes all changes, the ones affecting the gateway are listed below.
+  
+  ## `@opentelemetry/sdk-trace` replaces `@opentelemetry/sdk-trace-base`
+  
+  OpenTelemetry removed `@opentelemetry/sdk-trace-base` and `@opentelemetry/sdk-trace-node` in favour of `@opentelemetry/sdk-trace`. The Hive Gateway package depends on `@opentelemetry/sdk-trace` instead of `@opentelemetry/sdk-trace-base`, and the Docker images and the binary bundle it instead. Import the samplers, processors and exporters from `@opentelemetry/sdk-trace`. `BasicTracerProvider` is called `TracerProvider`, and the span processors take the exporter as an option:
+  
+  ```ts
+  import { openTelemetrySetup } from '@graphql-hive/gateway/opentelemetry/setup';
+  import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+  import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+  import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
+  
+  openTelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    traces: {
+      processors: [
+        // instead of new SimpleSpanProcessor(new OTLPTraceExporter())
+        new SimpleSpanProcessor({ exporter: new OTLPTraceExporter() }),
+      ],
+    },
+  });
+  ```
+  
+  The batching options of `openTelemetrySetup` and `hiveTracingSetup` (`BufferConfig`) are exported from `@graphql-hive/plugin-opentelemetry/setup` and `@graphql-hive/gateway/opentelemetry/setup`.
+  
+  ## Environment variables for batching and limits
+  
+  `openTelemetrySetup`, `hiveTracingSetup` and the `--opentelemetry` CLI option don't read the `OTEL_BSP_*` environment variables (`OTEL_BSP_SCHEDULE_DELAY`, `OTEL_BSP_EXPORT_TIMEOUT`, `OTEL_BSP_MAX_QUEUE_SIZE` and `OTEL_BSP_MAX_EXPORT_BATCH_SIZE`) and the attribute, span, event and link limit environment variables (like `OTEL_ATTRIBUTE_COUNT_LIMIT` or `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT`), because the trace SDK doesn't read environment variables anymore. Configure batching with the `traces.batching` option and limits with the `traces.spanLimits` option, or set up the SDK with `NodeSDK` from `@opentelemetry/sdk-node`, which still reads the OpenTelemetry environment variables.
+  
+  ## `generalLimits` option removed
+  
+  The tracer provider of SDK 3 doesn't accept general limits. The `generalLimits` option of `openTelemetrySetup` is removed, set `attributeCountLimit` and `attributeValueLengthLimit` in `traces.spanLimits` instead.
+  
+  ```ts
+  openTelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    traces: {
+      exporter: new OTLPTraceExporter(),
+      // instead of generalLimits: { attributeCountLimit: 64 }
+      spanLimits: { attributeCountLimit: 64 },
+    },
+  });
+  ```
+  
+  ## Logs API is part of `@opentelemetry/api`
+  
+  OpenTelemetry moved the Logs API into `@opentelemetry/api` and removed `@opentelemetry/api-logs`. The Hive Gateway package doesn't depend on `@opentelemetry/api-logs`, and the Docker images and the binary don't bundle it. Import `logs`, `SeverityNumber` and the `Logger` types from `@opentelemetry/api`, or from `@graphql-hive/gateway/opentelemetry/api` which re-exports it.
+  
+  ```ts
+  // instead of import { logs, SeverityNumber } from '@opentelemetry/api-logs';
+  import { logs, SeverityNumber } from '@opentelemetry/api';
+  ```
+  
+  ## `@opentelemetry/sdk-node` in the Docker images and the binary
+  
+  The bundled `@opentelemetry/sdk-node` exports `NodeSDK`, `startNodeSdk` and the configuration types. It has no default export and no namespace re-exports anymore (`api`, `contextBase`, `core`, `logs`, `metrics`, `node`, `resources` and `tracing`). Import from the packages directly, they're bundled too:
+  
+  ```ts
+  // instead of import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
+  import { resourceFromAttributes } from '@opentelemetry/resources';
+  import { NodeSDK } from '@opentelemetry/sdk-node';
+  import { BatchSpanProcessor } from '@opentelemetry/sdk-trace';
+  ```
+  
+  ## `AsyncHooksContextManager` removed
+  
+  The bundled `@opentelemetry/context-async-hooks` exports only `AsyncLocalStorageContextManager`, OpenTelemetry removed `AsyncHooksContextManager`.
+  
+  ## Deep imports
+  
+  OpenTelemetry packages declare their entry points with `exports`, so imports of files inside a package, like `@opentelemetry/core/build/src/...`, don't resolve anymore. Import from the package name instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`5144835`](https://github.com/graphql-hive/gateway/commit/51448354ac5c0a3369b051a6fc0708a2461cd212), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-hive/gateway-runtime@3.0.0
+  - @graphql-mesh/transport-common@2.0.0
+  - @graphql-hive/logger@2.0.0
+
 ## 1.5.15
 ### Patch Changes
 
