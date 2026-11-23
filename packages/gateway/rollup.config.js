@@ -186,7 +186,8 @@ export default defineConfig({
     graphql(), // handle graphql imports
     commonjs({ strictRequires: true }), // convert commonjs to esm
     json(), // support importing json files to esm (needed for commonjs() plugin)
-    sucrase({ transforms: ['typescript'], exclude: ['**/node_modules/**'] }), // transpile typescript
+    // only ts files, sucrase chokes on some modern js syntax in node_modules
+    sucrase({ transforms: ['typescript'], include: /\.[cm]?ts$/ }), // transpile typescript
     packagejson(), // add package jsons
     avoidminjs(),
     otelgrpcrequire(),
