@@ -72,3 +72,26 @@ it.each([
     ],
   });
 });
+
+it('responds with 200 and nulls the fields of a subgraph whose connection dropped', async () => {
+  await using gw = createGateway(() => {
+    throw new Error('socket hang up');
+  });
+
+  const res = await post(gw, { query: '{ orders }' });
+
+  expect(res.status).toBe(200);
+  await expect(res.json()).resolves.toEqual({
+    data: { orders: null },
+    errors: [
+      {
+        message: 'socket hang up',
+        path: ['orders'],
+        extensions: expect.objectContaining({
+          code: 'SUBREQUEST_HTTP_ERROR',
+          serviceName: 's0',
+        }),
+      },
+    ],
+  });
+});

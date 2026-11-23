@@ -223,7 +223,8 @@ export function executeQueryPlan({
         subscription.node.serviceName,
         subscription.errorPath,
       );
-      return toExecutionResult(eventContext, queryPlan);
+      // a subscription that failed has no data, like in the default executor
+      return { errors: toExecutionResult(eventContext, queryPlan).errors };
     },
   );
 }
@@ -232,20 +233,17 @@ function toExecutionResult(
   executionContext: QueryPlanExecutionContext,
   { projection }: QueryPlan,
 ): ExecutionResult {
-  const executionResult = {} as ExecutionResult;
-  // nothing fetched without errors means every field was skipped, which is still `data: {}`
-  if (
-    Object.keys(executionContext.data).length > 0 ||
-    !executionContext.errors.length
-  ) {
-    executionResult.data = projectObject(
+  const executionResult: ExecutionResult = {
+    // nothing fetched without errors means every field was skipped, which is still `data: {}`
+    // and the fields of failed fetches are null, like in the default executor
+    data: projectObject(
       executionContext.data,
       projection.fields,
       projection.rootType,
       executionContext,
       [],
-    );
-  }
+    ),
+  };
   if (executionContext.errors.length > 0) {
     executionResult.errors = executionContext.errors.map((error) =>
       trimErrorPath(error, projection.fields),
