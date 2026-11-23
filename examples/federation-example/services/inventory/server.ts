@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { inspect } from 'node:util';
 import { ApolloServer } from '@apollo/server';
+// @apollo/subgraph is pinned to 2.14 in @internal/e2e because these fed1 services publish only
+// `extend type` in `_service { sdl }` there, which mesh compose can read (see DEPS_RESOLUTIONS_NOTES.md)
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { parse } from 'graphql';
 
