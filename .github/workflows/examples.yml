@@ -73,6 +73,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: example-${{matrix.e2e}}
+          retention-days: 7
           # include all files and folders starting with a dot (.)
           include-hidden-files: true
           # > If multiple paths are provided as input, the least common ancestor of all the search paths will be used as the root directory of the artifact.
