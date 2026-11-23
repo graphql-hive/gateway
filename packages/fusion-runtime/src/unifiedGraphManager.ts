@@ -90,6 +90,14 @@ export interface UnifiedGraphHandlerOpts {
    */
   subgraphDefer?: boolean | Record<string, boolean>;
 
+  /**
+   * The most aliases one entity request to a subgraph may carry. A number applies to all
+   * subgraphs, a record sets it by subgraph name (`"*"` = default). Handlers that split requests
+   * by aliases, like the Hive Router runtime, follow it. Requests to a subgraph with a limit are
+   * not batched, because batching would merge the split requests back into one.
+   */
+  maxAliasesPerRequest?: number | Record<string, number>;
+
   log?: Logger;
   /** Shared cache instance (e.g. Redis), used by handlers that support cross-process caching. */
   cache?: KeyValueCache;
@@ -147,6 +155,14 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * `true` enables all subgraphs; a record enables named subgraphs (`"*"` = default).
    */
   subgraphDefer?: boolean | Record<string, boolean>;
+
+  /**
+   * The most aliases one entity request to a subgraph may carry. A number applies to all
+   * subgraphs, a record sets it by subgraph name (`"*"` = default). Handlers that split requests
+   * by aliases, like the Hive Router runtime, follow it. Requests to a subgraph with a limit are
+   * not batched, because batching would merge the split requests back into one.
+   */
+  maxAliasesPerRequest?: number | Record<string, number>;
 
   instrumentation?: () => Instrumentation | undefined;
   /**
@@ -506,6 +522,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             onDelegateHooks: this.opts.onDelegateHooks,
             batchDelegateOptions: this.opts.batchDelegateOptions,
             subgraphDefer: this.opts.subgraphDefer,
+            maxAliasesPerRequest: this.opts.maxAliasesPerRequest,
             log: this.opts.transportContext?.log,
             cache: this.opts.transportContext?.cache,
             handleProgressiveOverride: this.opts.handleProgressiveOverride
@@ -549,7 +566,17 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             // applies to every generation.
             getDisposeReason: () =>
               generation.disposeReason ?? this.disposeReason,
-            batch: this.batch,
+            // batching would merge requests that were split to stay within the alias limit
+            // of a subgraph back into one, so subgraphs with a limit aren't batched. the hive
+            // router doesn't merge separate fetches either
+            batch: (subgraphName) => {
+              const limits = this.opts.maxAliasesPerRequest;
+              const limit =
+                typeof limits === 'object'
+                  ? (limits[subgraphName] ?? limits['*'])
+                  : limits;
+              return this.batch && limit == null;
+            },
             instrumentation: () => this.instrumentation(),
           });
 

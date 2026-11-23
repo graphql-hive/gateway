@@ -52,7 +52,6 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace';
-import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
 import { CircuitBreakerExporter } from '../src/circuit-breaker-exporter';
@@ -1294,10 +1293,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: usingHiveRouterRuntime()
-          ? // 500 because there wont be a data field with hive router query planner and it's a application graphql response json
-            500
-          : 200,
+        [SEMATTRS_HTTP_STATUS_CODE]: 200,
 
         // Hive specific
         ['hive.client.name']: 'test-client-name',
@@ -1331,16 +1327,9 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        ...(usingHiveRouterRuntime()
-          ? {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-            }
-          : {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-              [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
-            }),
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 
         // Federation attributes
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',

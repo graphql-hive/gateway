@@ -1,7 +1,11 @@
 import type {
+  BatchFetchNode,
   FetchNode,
   FlattenNodePathSegment,
+  ProjectionField,
   QueryPlan,
+  ResponseProjection,
+  SequenceNode,
 } from '@graphql-hive/router-query-planner';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import { buildSchema, GraphQLError, parse, print } from 'graphql';
@@ -63,6 +67,24 @@ const transactionRequires = [
   },
 ];
 
+const possibleTypes = {
+  Account: ['Other', 'User'],
+  Viewer: ['Other', 'User'],
+};
+
+function list(name: string, selections: ProjectionField[]): ProjectionField {
+  return { name, itemNonNull: [false], selections };
+}
+
+function projection(...fields: ProjectionField[]): ResponseProjection {
+  return { rootType: 'Query', fields };
+}
+
+// `{ users { txs { amount } } }`
+const usersTxsAmountProjection = projection(
+  list('users', [list('txs', [{ name: 'amount' }])]),
+);
+
 const usersTxsPath: FlattenNodePathSegment[] = [
   { Field: 'users' },
   '@',
@@ -75,8 +97,13 @@ function flattenPlan(
   path: FlattenNodePathSegment[],
   fetch: Pick<
     FetchNode,
-    'variableUsages' | 'operation' | 'contextVariables' | 'contextRewrites'
+    | 'variableUsages'
+    | 'operation'
+    | 'contextVariables'
+    | 'contextRewrites'
+    | 'maxContextGroups'
   >,
+  responseProjection = usersTxsAmountProjection,
 ): QueryPlan {
   return {
     kind: 'QueryPlan',
@@ -88,6 +115,8 @@ function flattenPlan(
           serviceName: 'a',
           operationKind: 'query',
           operation: rootOperation,
+          id: 1,
+          dependsOn: [],
         },
         {
           kind: 'Flatten',
@@ -98,10 +127,13 @@ function flattenPlan(
             operationKind: 'query',
             requires: transactionRequires,
             ...fetch,
+            id: 2,
+            dependsOn: [1],
           },
         },
       ],
     },
+    projection: responseProjection,
   };
 }
 
@@ -148,6 +180,8 @@ async function execute(
   const result = (await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes,
     executionRequest: { document: parse(query), variables },
     onSubgraphExecute(_subgraphName, executionRequest) {
       const request = {
@@ -159,6 +193,42 @@ async function execute(
     },
   })) as ExecutionResult;
   return { result, requests };
+}
+
+const amounts: Record<string, number> = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+
+/**
+ * Responds to an `_entities` request with the amount of every representation's currency, and an
+ * error for currency `D`. `match` finds the representations variables, `names` gives the response
+ * key and the context variable of the suffix it captured.
+ */
+function respondAmounts(
+  variables: Record<string, unknown>,
+  match: RegExp,
+  names: (suffix: string) => [responseKey: string, contextVariable: string],
+): ExecutionResult {
+  const data: Record<string, unknown> = {};
+  const errors: GraphQLError[] = [];
+  for (const [name, representations] of Object.entries(variables)) {
+    const groups = match.exec(name);
+    if (!groups) {
+      continue;
+    }
+    const [responseKey, contextVariable] = names(groups.slice(1).join(''));
+    const currency = variables[contextVariable] as string;
+    data[responseKey] = (representations as unknown[]).map((_, index) => {
+      if (currency === 'D') {
+        errors.push(
+          new GraphQLError('D failed', {
+            path: [responseKey, index, 'amount'],
+          }),
+        );
+        return { amount: null };
+      }
+      return { amount: amounts[currency] };
+    });
+  }
+  return errors.length ? { data, errors } : { data };
 }
 
 describe('@fromContext', () => {
@@ -372,7 +442,8 @@ describe('@fromContext', () => {
     });
   });
 
-  it('fetches context groups one by one when a context variable is non-null', async () => {
+  it('fetches context groups one by one without aliasing when maxContextGroups is 1', async () => {
+    // the planner sets it to 1 when a context variable is non-null
     const operation =
       'query($representations:[_Any!]!, $__context_0:String!){_entities(representations: $representations){...on Transaction{amount(code: $__context_0)}}}';
     const { result, requests } = await execute(
@@ -383,6 +454,7 @@ describe('@fromContext', () => {
           variableUsages: ['__context_0'],
           operation,
           contextVariables: ['__context_0'],
+          maxContextGroups: 1,
           contextRewrites: [
             {
               path: [
@@ -453,6 +525,14 @@ describe('@fromContext', () => {
             },
           ],
         },
+        projection(
+          list('users', [
+            {
+              name: 'wrapper',
+              selections: [list('txs', [{ name: 'amount' }])],
+            },
+          ]),
+        ),
       ),
       '{ users { wrapper { txs { amount } } } }',
       ({ query }) =>
@@ -503,6 +583,10 @@ describe('@fromContext', () => {
             },
           ],
         },
+        projection({
+          name: 'account',
+          selections: [list('txs', [{ name: 'fromInterface' }])],
+        }),
       ),
       '{ account { txs { fromInterface } } }',
       ({ query }) =>
@@ -603,6 +687,87 @@ describe('@fromContext', () => {
     ]);
   });
 
+  it('splits context groups into requests of at most maxContextGroups groups', async () => {
+    const operation =
+      'query($representations:[_Any!]!, $__context_0:String){_entities(representations: $representations){...on Transaction{amount(code: $__context_0)}}}';
+    const { result, requests } = await execute(
+      flattenPlan(
+        '{users{__typename currency txs{__typename id}}}',
+        usersTxsPath,
+        {
+          variableUsages: ['__context_0'],
+          operation,
+          contextVariables: ['__context_0'],
+          contextRewrites: [
+            {
+              path: [
+                'Parent',
+                { TypenameEquals: ['User'] },
+                { Key: 'currency' },
+              ],
+              renameKeyTo: '__context_0',
+            },
+          ],
+          maxContextGroups: 2,
+        },
+      ),
+      '{ users { txs { amount } } }',
+      ({ query, variables }) =>
+        query.includes('_entities')
+          ? respondAmounts(variables!, /^representations(.*)$/, (suffix) => [
+              `_entities${suffix}`,
+              `__context_0${suffix}`,
+            ])
+          : { data: { users: usersWithCurrencies(['A', 'B', 'C', 'D', 'E']) } },
+    );
+
+    const representations = [{ __typename: 'Transaction', id: 'same' }];
+    const entities = requests.slice(1);
+    expect(entities.map((request) => request.variables)).toEqual([
+      {
+        __context_0_0: 'A',
+        representations_0: representations,
+        __context_0_1: 'B',
+        representations_1: representations,
+      },
+      {
+        __context_0_0: 'C',
+        representations_0: representations,
+        __context_0_1: 'D',
+        representations_1: representations,
+      },
+      // the last group goes alone, with the original operation
+      { __context_0: 'E', representations },
+    ]);
+    expect(entities[0]!.query).toMatchInlineSnapshot(`
+      "query ($representations_0: [_Any!]!, $__context_0_0: String, $representations_1: [_Any!]!, $__context_0_1: String) {
+        _entities_0: _entities(representations: $representations_0) {
+          ... on Transaction {
+            amount(code: $__context_0_0)
+          }
+        }
+        _entities_1: _entities(representations: $representations_1) {
+          ... on Transaction {
+            amount(code: $__context_0_1)
+          }
+        }
+      }"
+    `);
+    expect(entities[1]!.query).toBe(entities[0]!.query);
+    expect(entities[2]!.query).toBe(print(parse(operation)));
+    expect(result.data).toEqual({
+      users: [1, 2, 3, null, 5].map((amount) => ({ txs: [{ amount }] })),
+    });
+    expect(
+      result.errors?.map((error) => ({
+        message: error.message,
+        path: error.path,
+      })),
+    ).toEqual([
+      { message: 'D failed', path: ['users', 3, 'txs', 0, 'amount'] },
+    ]);
+  });
+
   describe('BatchFetch', () => {
     const batchPlan: QueryPlan = {
       kind: 'QueryPlan',
@@ -615,6 +780,8 @@ describe('@fromContext', () => {
             operationKind: 'query',
             operation:
               '{users{...a} secondUsers{...a}}\n\nfragment a on User {__typename currency txs{__typename id}}\n',
+            id: 1,
+            dependsOn: [],
           },
           {
             kind: 'BatchFetch',
@@ -663,9 +830,17 @@ describe('@fromContext', () => {
                 },
               ],
             },
+            id: 2,
+            dependsOn: [1],
+            completes: [2, 3],
           },
         ],
       },
+      // `{ users { txs { amount } } secondUsers { txs { amount } } }`
+      projection: projection(
+        list('users', [list('txs', [{ name: 'amount' }])]),
+        list('secondUsers', [list('txs', [{ name: 'amount' }])]),
+      ),
     };
 
     it('sends one wave with the original operation', async () => {
@@ -839,6 +1014,74 @@ describe('@fromContext', () => {
       ]);
     });
 
+    it('splits waves into requests of at most maxContextGroups waves', async () => {
+      const batch = (batchPlan.node as SequenceNode).nodes[1] as BatchFetchNode;
+      const { result, requests } = await execute(
+        {
+          ...batchPlan,
+          node: {
+            kind: 'Sequence',
+            nodes: [
+              (batchPlan.node as SequenceNode).nodes[0]!,
+              { ...batch, maxContextGroups: 2 },
+            ],
+          },
+        },
+        '{ users { txs { amount } } secondUsers { txs { amount } } }',
+        ({ query, variables }) =>
+          query.includes('_entities')
+            ? respondAmounts(variables!, /^__batch_reps_(\d)(.*)$/, (suffix) =>
+                // _e0 reads __context_1, _e1 reads __context_0
+                [
+                  `_e${suffix}`,
+                  `__context_${1 - Number(suffix[0])}${suffix.slice(1)}`,
+                ],
+              )
+            : {
+                data: {
+                  users: usersWithCurrencies(['A', 'B', 'D']),
+                  secondUsers: usersWithCurrencies(['C']),
+                },
+              },
+      );
+
+      const representations = [{ __typename: 'Transaction', id: 'same' }];
+      const entities = requests.slice(1);
+      expect(entities.map((request) => request.variables)).toEqual([
+        {
+          __context_1_0: 'C',
+          __batch_reps_0_0: representations,
+          __context_0_0: 'A',
+          __batch_reps_1_0: representations,
+          __context_1_1: 'C',
+          __batch_reps_0_1: [],
+          __context_0_1: 'B',
+          __batch_reps_1_1: representations,
+        },
+        // the last wave goes alone, with the original operation
+        {
+          __context_1: 'C',
+          __batch_reps_0: [],
+          __context_0: 'D',
+          __batch_reps_1: representations,
+        },
+      ]);
+      expect(entities[0]!.query).toContain('_e1_1: _entities');
+      expect(entities[1]!.query).toBe(print(parse(batch.operation)));
+      expect(result.data).toEqual({
+        users: [1, 2, null].map((amount) => ({ txs: [{ amount }] })),
+        secondUsers: [{ txs: [{ amount: 3 }] }],
+      });
+      expect(
+        result.errors?.map((error) => ({
+          message: error.message,
+          path: error.path,
+        })),
+      ).toEqual([
+        { message: 'D failed', path: ['users', 2, 'txs', 0, 'amount'] },
+      ]);
+    });
+
     it('reads context values from the ancestor matching a union member', async () => {
       const { result, requests } = await execute(
         {
@@ -852,6 +1095,8 @@ describe('@fromContext', () => {
                 operationKind: 'query',
                 operation:
                   '{viewer{__typename ...on User{__typename currency txs{...a}} ...on Other{__typename currency txs{...a}}}}\n\nfragment a on Transaction {__typename id}\n',
+                id: 1,
+                dependsOn: [],
               },
               {
                 kind: 'BatchFetch',
@@ -889,9 +1134,21 @@ describe('@fromContext', () => {
                     })),
                   })),
                 },
+                id: 2,
+                dependsOn: [1],
+                completes: [2, 3],
               },
             ],
           },
+          projection: projection({
+            name: 'viewer',
+            selections: [
+              {
+                ...list('txs', [{ name: 'fromUnion' }]),
+                parentTypes: ['Other', 'User'],
+              },
+            ],
+          }),
         },
         '{ viewer { ... on User { txs { fromUnion } } ... on Other { txs { fromUnion } } } }',
         ({ query }) =>

@@ -185,7 +185,11 @@ export function getOnSubgraphExecute({
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
-  batch?: boolean;
+  /**
+   * Whether to batch the executions of subgraphs. A function decides it for every subgraph by
+   * its name.
+   */
+  batch?: boolean | ((subgraphName: string) => boolean);
   instrumentation: () => Instrumentation | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
@@ -258,7 +262,7 @@ export function getOnSubgraphExecute({
       subgraphExecutorMap.set(subgraphName, executor);
     }
 
-    if (batch) {
+    if (typeof batch === 'function' ? batch(subgraphName) : batch) {
       executor = getBatchingExecutor(
         executionRequest.context || subgraphExecutorMap,
         executor,

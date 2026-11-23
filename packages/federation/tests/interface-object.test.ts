@@ -32,62 +32,66 @@ async function execute(
 describe('@interfaceObject', () => {
   // https://github.com/graphql-hive/gateway/issues/2463
   it('resolves fields from inline fragments nested in a named fragment on the interface', async () => {
-    const a = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key", "@interfaceObject"]
-          )
+    const a = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key", "@interfaceObject"]
+            )
 
-        type Node @key(fields: "id", resolvable: false) @interfaceObject {
-          id: ID!
-        }
+          type Node @key(fields: "id", resolvable: false) @interfaceObject {
+            id: ID!
+          }
 
-        type Query {
-          node: Node
-        }
-      `),
-      resolvers: {
-        Query: {
-          node: () => ({ id: 'leaf1' }),
+          type Query {
+            node: Node
+          }
+        `),
+        resolvers: {
+          Query: {
+            node: () => ({ id: 'leaf1' }),
+          },
         },
       },
-    });
-    const b = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key"]
-          )
+    ]);
+    const b = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key"]
+            )
 
-        interface Node @key(fields: "id") {
-          id: ID!
-        }
+          interface Node @key(fields: "id") {
+            id: ID!
+          }
 
-        type Leaf implements Node @key(fields: "id") {
-          id: ID!
-          extra: String!
-        }
+          type Leaf implements Node @key(fields: "id") {
+            id: ID!
+            extra: String!
+          }
 
-        type Query {
-          bPing: String
-        }
-      `),
-      resolvers: {
-        Node: {
-          __resolveReference: ({ id }: { id: string }) => ({
-            __typename: 'Leaf',
-            id,
-          }),
-        },
-        Leaf: {
-          __resolveReference: ({ id }: { id: string }) => ({ id }),
-          extra: ({ id }: { id: string }) => `extra-${id}`,
+          type Query {
+            bPing: String
+          }
+        `),
+        resolvers: {
+          Node: {
+            __resolveReference: ({ id }: { id: string }) => ({
+              __typename: 'Leaf',
+              id,
+            }),
+          },
+          Leaf: {
+            __resolveReference: ({ id }: { id: string }) => ({ id }),
+            extra: ({ id }: { id: string }) => `extra-${id}`,
+          },
         },
       },
-    });
+    ]);
 
     for (const query of [
       /* GraphQL */ `
@@ -136,135 +140,143 @@ describe('@interfaceObject', () => {
   // https://github.com/graphql-hive/gateway/issues/2736
   it('resolves the interface object field when another subgraph extends the implementation', async () => {
     const kinds: Record<string, string> = { store1: 'Store', spa1: 'Spa' };
-    const owner = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key"]
-          )
+    const owner = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key"]
+            )
 
-        interface Location @key(fields: "id") {
-          id: ID!
-        }
+          interface Location @key(fields: "id") {
+            id: ID!
+          }
 
-        type Store implements Location @key(fields: "id") {
-          id: ID!
-        }
+          type Store implements Location @key(fields: "id") {
+            id: ID!
+          }
 
-        type Spa implements Location @key(fields: "id") {
-          id: ID!
-        }
+          type Spa implements Location @key(fields: "id") {
+            id: ID!
+          }
 
-        type Query {
-          location(id: ID!): Location
-        }
-      `),
-      resolvers: {
-        Query: {
-          location: (_: unknown, { id }: { id: string }) => ({
-            id,
-            kind: kinds[id],
-          }),
-        },
-        Location: {
-          __resolveType: ({ kind }: { kind: string }) => kind,
-        },
-      },
-    });
-    const contributor = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key", "@interfaceObject"]
-          )
-
-        type Location @key(fields: "id") @interfaceObject {
-          id: ID!
-          plain: String
-        }
-
-        type Query {
-          contributorPing: String
-        }
-      `),
-      resolvers: {
-        Location: {
-          __resolveReference: (reference: unknown) => reference,
-          plain: ({ id }: { id: string }) => `plain-${id}`,
+          type Query {
+            location(id: ID!): Location
+          }
+        `),
+        resolvers: {
+          Query: {
+            location: (_: unknown, { id }: { id: string }) => ({
+              id,
+              kind: kinds[id],
+            }),
+          },
+          Location: {
+            __resolveType: ({ kind }: { kind: string }) => kind,
+          },
         },
       },
-    });
-    const extender = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key"]
-          )
+    ]);
+    const contributor = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key", "@interfaceObject"]
+            )
 
-        type Store @key(fields: "id") {
-          id: ID!
-          feed: String
-        }
+          type Location @key(fields: "id") @interfaceObject {
+            id: ID!
+            plain: String
+          }
 
-        type Query {
-          extenderPing: String
-        }
-      `),
-      resolvers: {
-        Store: {
-          __resolveReference: (reference: unknown) => reference,
-          feed: ({ id }: { id: string }) => `feed-${id}`,
+          type Query {
+            contributorPing: String
+          }
+        `),
+        resolvers: {
+          Location: {
+            __resolveReference: (reference: unknown) => reference,
+            plain: ({ id }: { id: string }) => `plain-${id}`,
+          },
         },
       },
-    });
+    ]);
+    const extender = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key"]
+            )
+
+          type Store @key(fields: "id") {
+            id: ID!
+            feed: String
+          }
+
+          type Query {
+            extenderPing: String
+          }
+        `),
+        resolvers: {
+          Store: {
+            __resolveReference: (reference: unknown) => reference,
+            feed: ({ id }: { id: string }) => `feed-${id}`,
+          },
+        },
+      },
+    ]);
     // merge target of both the implementation and the interface
-    const rater = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key"]
-          )
+    const rater = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key"]
+            )
 
-        interface Location @key(fields: "id") {
-          id: ID!
-          rating: Int
-        }
+          interface Location @key(fields: "id") {
+            id: ID!
+            rating: Int
+          }
 
-        type Store implements Location @key(fields: "id") {
-          id: ID!
-          rating: Int
-        }
+          type Store implements Location @key(fields: "id") {
+            id: ID!
+            rating: Int
+          }
 
-        type Spa implements Location @key(fields: "id") {
-          id: ID!
-          rating: Int
-        }
+          type Spa implements Location @key(fields: "id") {
+            id: ID!
+            rating: Int
+          }
 
-        type Query {
-          raterPing: String
-        }
-      `),
-      resolvers: {
-        Location: {
-          __resolveReference: ({ id }: { id: string }) => ({
-            __typename: kinds[id],
-            id,
-          }),
-        },
-        Store: {
-          __resolveReference: (reference: unknown) => reference,
-          rating: () => 5,
-        },
-        Spa: {
-          __resolveReference: (reference: unknown) => reference,
-          rating: () => 5,
+          type Query {
+            raterPing: String
+          }
+        `),
+        resolvers: {
+          Location: {
+            __resolveReference: ({ id }: { id: string }) => ({
+              __typename: kinds[id],
+              id,
+            }),
+          },
+          Store: {
+            __resolveReference: (reference: unknown) => reference,
+            rating: () => 5,
+          },
+          Spa: {
+            __resolveReference: (reference: unknown) => reference,
+            rating: () => 5,
+          },
         },
       },
-    });
+    ]);
 
     for (const id of ['store1', 'spa1']) {
       const { result, subgraphCalls } = await execute(
@@ -304,66 +316,70 @@ describe('@interfaceObject', () => {
 
   // https://github.com/graphql-hive/gateway/issues/2737
   it('sends the @requires fields to the interface object when selected through an inline fragment on the implementation', async () => {
-    const owner = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key"]
-          )
+    const owner = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key"]
+            )
 
-        interface Location @key(fields: "id") {
-          id: ID!
-          code: String
-        }
+          interface Location @key(fields: "id") {
+            id: ID!
+            code: String
+          }
 
-        type Store implements Location @key(fields: "id") {
-          id: ID!
-          code: String
-        }
+          type Store implements Location @key(fields: "id") {
+            id: ID!
+            code: String
+          }
 
-        type Query {
-          location(id: ID!): Location
-        }
-      `),
-      resolvers: {
-        Query: {
-          location: (_: unknown, { id }: { id: string }) => ({
-            id,
-            code: `code-${id}`,
-          }),
-        },
-        Location: {
-          __resolveType: () => 'Store',
-        },
-      },
-    });
-    const contributor = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key", "@interfaceObject", "@external", "@requires"]
-          )
-
-        type Location @key(fields: "id") @interfaceObject {
-          id: ID!
-          code: String @external
-          events: [String!] @requires(fields: "code")
-        }
-
-        type Query {
-          contributorPing: String
-        }
-      `),
-      resolvers: {
-        Location: {
-          __resolveReference: (reference: unknown) => reference,
-          events: ({ code }: { code?: string }) =>
-            code ? [`event-at-${code}`] : [],
+          type Query {
+            location(id: ID!): Location
+          }
+        `),
+        resolvers: {
+          Query: {
+            location: (_: unknown, { id }: { id: string }) => ({
+              id,
+              code: `code-${id}`,
+            }),
+          },
+          Location: {
+            __resolveType: () => 'Store',
+          },
         },
       },
-    });
+    ]);
+    const contributor = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key", "@interfaceObject", "@external", "@requires"]
+            )
+
+          type Location @key(fields: "id") @interfaceObject {
+            id: ID!
+            code: String @external
+            events: [String!] @requires(fields: "code")
+          }
+
+          type Query {
+            contributorPing: String
+          }
+        `),
+        resolvers: {
+          Location: {
+            __resolveReference: (reference: unknown) => reference,
+            events: ({ code }: { code?: string }) =>
+              code ? [`event-at-${code}`] : [],
+          },
+        },
+      },
+    ]);
 
     for (const query of [
       /* GraphQL */ `

@@ -215,6 +215,8 @@ it('reads an aliased required field only from its alias', async () => {
           serviceName: 'a',
           operationKind: 'query',
           operation: '{products{__typename id price(currency: "USD")}}',
+          id: 1,
+          dependsOn: [],
         },
         {
           kind: 'Flatten',
@@ -235,6 +237,8 @@ it('reads an aliased required field only from its alias', async () => {
                 ],
               },
             ],
+            id: 2,
+            dependsOn: [1],
           },
         },
         {
@@ -261,7 +265,19 @@ it('reads an aliased required field only from its alias', async () => {
                 ],
               },
             ],
+            id: 3,
+            dependsOn: [1, 2],
           },
+        },
+      ],
+    },
+    projection: {
+      rootType: 'Query',
+      fields: [
+        {
+          name: 'products',
+          itemNonNull: [false],
+          selections: [{ name: 'price' }, { name: 'shipping' }],
         },
       ],
     },
@@ -271,6 +287,8 @@ it('reads an aliased required field only from its alias', async () => {
   await executeQueryPlan({
     queryPlan,
     supergraphSchema,
+    entityKeys: {},
+    possibleTypes: {},
     executionRequest: {
       document: parse('{ products { price(currency: "USD") shipping } }'),
     },

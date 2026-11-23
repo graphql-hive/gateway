@@ -692,6 +692,9 @@ describe('Demand Control', () => {
         const result = await response.json();
         if (usingHiveRouterRuntime()) {
           expect(result).toEqual({
+            data: {
+              items: null,
+            },
             errors: [
               {
                 message:
@@ -1122,7 +1125,10 @@ describe('Demand Control', () => {
         const result = await response.json();
         if (usingHiveRouterRuntime()) {
           expect(result).toEqual({
-            // data field completely omitted on errors from hive router qp
+            data: {
+              foo: null,
+              bar: null,
+            },
             errors: [
               {
                 extensions: {
