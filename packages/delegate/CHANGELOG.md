@@ -1,5 +1,177 @@
 # @graphql-tools/delegate
 
+## 13.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove `createDeferred`. Use `Promise.withResolvers()`.
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Incremental delivery (`@defer` / `@stream`) Accept negotiation uses the shared `INCREMENTAL_DELIVERY_SPECS` table from `@graphql-tools/utils`.
+  
+  Client Accept (gateway responses) and upstream Accept (subgraph calls) are separate:
+  
+  | Direction | Default | Force |
+  | --- | --- | --- |
+  | Client → Gateway (Yoga) | Negotiate from `Accept`; echo spec on `Content-Type` | n/a (client-driven) |
+  | Gateway → Subgraph (`executor-http`) | Bare `multipart/mixed` (no spec param) | `incrementalSpec: 'v0.1' \| 'v0.2'` on executor or `ExecutionRequest` |
+  
+  | Spec | Accept / Content-Type parameter | Payload |
+  | --- | --- | --- |
+  | `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
+  | `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
+  
+  `mergeIncrementalResult` merges both formats. Force `'v0.1'` when stitching `IncrementalReceiver` needs path/label patches. Client `Accept` is never copied onto upstream `Accept`.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Minor Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - **Breaking:** Remove `isolateComputedFieldsTransformer` and isolation-clone planning.
+  
+  ### What changed
+  
+  Computed / `@requires` fields used to live on **cloned** subschema copies so the initial Query hop could not select them early. That N-clone tax is gone. Computed fields stay on the single subschema schema; `deferComputedFieldsTransformer` strips them from non-merge outbound requests and injects merge-key fields (including nested selections) so later entity hops still have identity. Aliased key fields (for example `aliasId: id`) are not treated as the literal merge key.
+  
+  Default `stitchSchemas` / federation presets already include deferral. Most apps need no config change.
+  
+  ### Migration
+  
+  If you previously passed isolation explicitly, drop it:
+  
+  ```ts
+  // before
+  import {
+    isolateComputedFieldsTransformer,
+    stitchSchemas,
+  } from '@graphql-tools/stitch';
+  
+  stitchSchemas({
+    subschemas,
+    subschemaConfigTransforms: [isolateComputedFieldsTransformer],
+  });
+  
+  // after
+  import { stitchSchemas } from '@graphql-tools/stitch';
+  
+  stitchSchemas({ subschemas });
+  // defaults already defer computed fields without cloning
+  ```
+  
+  Computed field config is unchanged. Example inventory-style merge:
+  
+  ```ts
+  merge: {
+    Product: {
+      selectionSet: '{ upc }',
+      fieldName: 'products',
+      key: ({ upc }) => upc,
+      argsFromKeys: (upcs) => ({ upcs }),
+      fields: {
+        shippingEstimate: {
+          selectionSet: '{ price weight }',
+          computed: true,
+        },
+      },
+    },
+  }
+  ```
+  
+  `shippingEstimate` stays on the schema for merge hops, but the initial `products` selection no longer resolves it before `price` / `weight` are available.
+
+### Patch Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep multiple merged-type `entryPoints` on **one** subschema instead of cloning a `SubschemaConfig` per entry.
+  
+  ### Before
+  
+  Two keys on the same subgraph used to become two registered subschemas (via `splitMergedTypeEntryPointsTransformer`). That duplicated stitching bookkeeping and could split work that should be one merge.
+  
+  ### After
+  
+  Declare every key on the same `merge` config. The planner treats the target as proxiable when **any** entry's keys are present; at hop time stitching picks the entry that matches the parent (including nested keys like `{ organization { id } }`). Parent merge defaults (`argsFromKeys`, `valuesFromResults`, `dataLoaderOptions`, shared `key` / `args` / `fieldName`) overlay onto each entry, and a per-entry custom `resolve` is honored when set.
+  
+  ```ts
+  stitchSchemas({
+    subschemas: [
+      {
+        schema: vendorSchema,
+        merge: {
+          Product: {
+            // shared batching defaults apply to every entry unless overridden
+            argsFromKeys: (keys) => ({ keys }),
+            valuesFromResults: (results) => results,
+            entryPoints: [
+              {
+                selectionSet: '{ upc }',
+                fieldName: 'productsByKey',
+                key: ({ upc }) => ({ upc }),
+              },
+              {
+                selectionSet: '{ id }',
+                fieldName: 'productsByKey',
+                key: ({ id }) => ({ id }),
+              },
+            ],
+          },
+        },
+      },
+    ],
+  });
+  ```
+  
+  With a parent that only has `upc`, the first entry runs; with only `id`, the second. Nested keys work the same way:
+  
+  ```ts
+  entryPoints: [
+    {
+      selectionSet: '{ organization { id } }',
+      fieldName: 'productByOrg',
+      key: ({ organization }) => organization?.id,
+      argsFromKeys: (ids) => ({ ids }),
+    },
+    {
+      selectionSet: '{ upc }',
+      fieldName: 'productByUpc',
+      key: ({ upc }) => upc,
+      argsFromKeys: (upcs) => ({ upcs }),
+    },
+  ]
+  ```
+  
+  No caller API change is required if you already used `entryPoints`; clones simply stop happening.
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/batch-execute@11.0.0
+
 ## 12.3.6
 ### Patch Changes
 

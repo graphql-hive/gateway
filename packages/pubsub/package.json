@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/pubsub",
-  "version": "2.2.1",
+  "version": "3.0.0",
   "type": "module",
   "repository": {
     "type": "git",

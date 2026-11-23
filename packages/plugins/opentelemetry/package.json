@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-opentelemetry",
-  "version": "1.5.15",
+  "version": "2.0.0",
   "type": "module",
   "repository": {
     "type": "git",

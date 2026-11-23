@@ -1,5 +1,51 @@
 # @graphql-hive/nestjs
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2775](https://github.com/graphql-hive/gateway/pull/2775) [`d5a8f90`](https://github.com/graphql-hive/gateway/commit/d5a8f9020e3ee7c03f4392ceb5dafbf068b8e390) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support NestJS 12 and the `@nestjs/platform-node` HTTP adapter. Drop NestJS 10 and 11 support.
+  
+  `HiveGatewayDriver` now accepts the `@nestjs/platform-node` adapter (`getType() === 'node'`), alongside Express and Fastify. The adapter's `NodeRequest` and `NodeResponse` are available as `req` and `res` in the GraphQL context.
+  
+  The peer dependencies are now `@nestjs/common@^12`, `@nestjs/graphql@^14`, and `graphql@^16.11.0 || ^17.0.0` (the range `@nestjs/graphql` 14 requires). Upgrade NestJS to 12 and `@nestjs/graphql` to 14.
+  
+  `@nestjs/graphql` 14 removed `subscriptions-transport-ws`, so the driver no longer configures it. `installSubscriptionHandlers: true` already registered `graphql-ws`, and still does. Only apps that set `subscriptions: { 'subscriptions-transport-ws': ... }` must change: use `subscriptions: { 'graphql-ws': true }`, and move clients to the `graphql-transport-ws` protocol.
+  
+  Closes [#2747](https://github.com/graphql-hive/gateway/issues/2747)
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434), [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee), [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`5144835`](https://github.com/graphql-hive/gateway/commit/51448354ac5c0a3369b051a6fc0708a2461cd212), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-hive/gateway@3.0.0
+  - @graphql-hive/logger@2.0.0
+
 ## 2.1.16
 ### Patch Changes
 

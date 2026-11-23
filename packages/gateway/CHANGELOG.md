@@ -1,5 +1,270 @@
 # @graphql-hive/gateway
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Enable `executionCancellation` and `upstreamCancellation` by default
+  
+  When the client disconnects or aborts the request, the gateway now stops executing the operation and aborts the in-flight upstream subgraph requests by default.
+  
+  To restore the previous behaviour, explicitly disable them:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    executionCancellation: false,
+    upstreamCancellation: false,
+  });
+  ```
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2765](https://github.com/graphql-hive/gateway/pull/2765) [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop the OpenTelemetry Jaeger exporter and propagator
+  
+  The Hive Gateway package doesn't depend on `@opentelemetry/exporter-jaeger` and `@opentelemetry/propagator-jaeger`, and the Docker images and the binary don't bundle `@opentelemetry/propagator-jaeger`. OpenTelemetry JS SDK 3 removed both packages: Jaeger deprecated its Thrift protocol in favour of OTLP, and the OpenTelemetry specification deprecated the Jaeger propagator in favour of W3C Trace Context.
+  
+  ## Exporting traces to Jaeger
+  
+  Jaeger receives OTLP natively. Use the OTLP exporters, for example with the `--opentelemetry` CLI option pointing to Jaeger's OTLP HTTP endpoint:
+  
+  ```sh
+  hive-gateway supergraph --opentelemetry "http://jaeger:4318/v1/traces"
+  ```
+  
+  Or in the configuration:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  import { openTelemetrySetup } from '@graphql-hive/gateway/opentelemetry/setup';
+  import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+  import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+  
+  openTelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    traces: {
+      exporter: new OTLPTraceExporter({ url: 'http://jaeger:4318/v1/traces' }),
+    },
+  });
+  
+  export const gatewayConfig = defineConfig({
+    openTelemetry: { traces: true },
+  });
+  ```
+  
+  ## Propagating trace context
+  
+  The gateway propagates the W3C Trace Context (`traceparent`) and W3C Baggage headers by default. Services that still send or expect the `uber-trace-id` header have to switch to W3C Trace Context, otherwise their traces aren't correlated with the gateway's. The `jaeger` value of the `OTEL_PROPAGATORS` environment variable is not recognised by the OpenTelemetry Node SDK anymore, use `tracecontext` instead.
+
+
+- [#2765](https://github.com/graphql-hive/gateway/pull/2765) [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Upgrade to OpenTelemetry JS SDK 3
+  
+  The OpenTelemetry plugin and Hive Gateway use OpenTelemetry JS SDK 3: the stable packages like `@opentelemetry/core`, `@opentelemetry/resources`, `@opentelemetry/sdk-trace` and `@opentelemetry/sdk-logs` at 3.x, the experimental packages like `@opentelemetry/sdk-node` and the OTLP exporters at 0.301.x, and `@opentelemetry/api` 1.10. SDK 2.x packages can't be used together with `@opentelemetry/api` 1.10, so custom code using OpenTelemetry packages has to upgrade to SDK 3 too. The [OpenTelemetry JS 3.x migration guide](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/3.x/migration-guide.md) describes all changes, the ones affecting the gateway are listed below.
+  
+  ## `@opentelemetry/sdk-trace` replaces `@opentelemetry/sdk-trace-base`
+  
+  OpenTelemetry removed `@opentelemetry/sdk-trace-base` and `@opentelemetry/sdk-trace-node` in favour of `@opentelemetry/sdk-trace`. The Hive Gateway package depends on `@opentelemetry/sdk-trace` instead of `@opentelemetry/sdk-trace-base`, and the Docker images and the binary bundle it instead. Import the samplers, processors and exporters from `@opentelemetry/sdk-trace`. `BasicTracerProvider` is called `TracerProvider`, and the span processors take the exporter as an option:
+  
+  ```ts
+  import { openTelemetrySetup } from '@graphql-hive/gateway/opentelemetry/setup';
+  import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+  import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+  import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
+  
+  openTelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    traces: {
+      processors: [
+        // instead of new SimpleSpanProcessor(new OTLPTraceExporter())
+        new SimpleSpanProcessor({ exporter: new OTLPTraceExporter() }),
+      ],
+    },
+  });
+  ```
+  
+  The batching options of `openTelemetrySetup` and `hiveTracingSetup` (`BufferConfig`) are exported from `@graphql-hive/plugin-opentelemetry/setup` and `@graphql-hive/gateway/opentelemetry/setup`.
+  
+  ## Environment variables for batching and limits
+  
+  `openTelemetrySetup`, `hiveTracingSetup` and the `--opentelemetry` CLI option don't read the `OTEL_BSP_*` environment variables (`OTEL_BSP_SCHEDULE_DELAY`, `OTEL_BSP_EXPORT_TIMEOUT`, `OTEL_BSP_MAX_QUEUE_SIZE` and `OTEL_BSP_MAX_EXPORT_BATCH_SIZE`) and the attribute, span, event and link limit environment variables (like `OTEL_ATTRIBUTE_COUNT_LIMIT` or `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT`), because the trace SDK doesn't read environment variables anymore. Configure batching with the `traces.batching` option and limits with the `traces.spanLimits` option, or set up the SDK with `NodeSDK` from `@opentelemetry/sdk-node`, which still reads the OpenTelemetry environment variables.
+  
+  ## `generalLimits` option removed
+  
+  The tracer provider of SDK 3 doesn't accept general limits. The `generalLimits` option of `openTelemetrySetup` is removed, set `attributeCountLimit` and `attributeValueLengthLimit` in `traces.spanLimits` instead.
+  
+  ```ts
+  openTelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    traces: {
+      exporter: new OTLPTraceExporter(),
+      // instead of generalLimits: { attributeCountLimit: 64 }
+      spanLimits: { attributeCountLimit: 64 },
+    },
+  });
+  ```
+  
+  ## Logs API is part of `@opentelemetry/api`
+  
+  OpenTelemetry moved the Logs API into `@opentelemetry/api` and removed `@opentelemetry/api-logs`. The Hive Gateway package doesn't depend on `@opentelemetry/api-logs`, and the Docker images and the binary don't bundle it. Import `logs`, `SeverityNumber` and the `Logger` types from `@opentelemetry/api`, or from `@graphql-hive/gateway/opentelemetry/api` which re-exports it.
+  
+  ```ts
+  // instead of import { logs, SeverityNumber } from '@opentelemetry/api-logs';
+  import { logs, SeverityNumber } from '@opentelemetry/api';
+  ```
+  
+  ## `@opentelemetry/sdk-node` in the Docker images and the binary
+  
+  The bundled `@opentelemetry/sdk-node` exports `NodeSDK`, `startNodeSdk` and the configuration types. It has no default export and no namespace re-exports anymore (`api`, `contextBase`, `core`, `logs`, `metrics`, `node`, `resources` and `tracing`). Import from the packages directly, they're bundled too:
+  
+  ```ts
+  // instead of import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
+  import { resourceFromAttributes } from '@opentelemetry/resources';
+  import { NodeSDK } from '@opentelemetry/sdk-node';
+  import { BatchSpanProcessor } from '@opentelemetry/sdk-trace';
+  ```
+  
+  ## `AsyncHooksContextManager` removed
+  
+  The bundled `@opentelemetry/context-async-hooks` exports only `AsyncLocalStorageContextManager`, OpenTelemetry removed `AsyncHooksContextManager`.
+  
+  ## Deep imports
+  
+  OpenTelemetry packages declare their entry points with `exports`, so imports of files inside a package, like `@opentelemetry/core/build/src/...`, don't resolve anymore. Import from the package name instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove deprecated gateway options and CLI flags:
+  
+  - Persisted documents: `allowArbitraryOperations` → use `allowArbitraryDocuments`
+  - Rate limiting: bare `rateLimiting: [...]` → `rateLimiting: { config: [...] }`
+  - Hive Console `usage.clientInfo`: object form removed; pass `(context) => ClientInfo | null`
+  - CLI: `--hive-registry-token` / `--hive-usage-target` removed; use `--hive-access-token` with `--hive-target` (or usage/trace-specific tokens)
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Do not trust the incoming `x-request-id` header by default
+  
+  The request ID is taken from the ID the server framework already assigned to the request (for example Fastify's `request.id`), otherwise a new one is generated. The incoming `x-request-id` header is ignored, so clients reaching the gateway directly cannot pick request IDs that collide with other requests in the logs.
+  
+  If the gateway is reachable only through a proxy or another gateway that sets the header itself, trust the header:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    requestId: {
+      trustHeader: true,
+    },
+  });
+  ```
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Minor Changes
+
+
+
+- [#2763](https://github.com/graphql-hive/gateway/pull/2763) [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL v17
+  
+  Hive Gateway and the stitching, wrapping and federation packages work with GraphQL v17 alongside v16. The `graphql` peer dependency range stays `^16 || ^17`, so projects that install the packages themselves keep the GraphQL version they already use.
+  
+  Schema stitching, schema wrapping (including `TransformEnumValues` with defaults defined in SDL), `federationToStitchingSDL` and demand control behave the same on both versions.
+  
+  ## Docker images and binary ship GraphQL v17
+  
+  The Hive Gateway Docker images and the standalone binary come with `graphql@17.1.0`. Custom code loaded by the gateway configuration, like plugins, additional resolvers, transforms and hooks, runs against GraphQL v17. Code that only uses the gateway APIs needs no changes. Code that uses GraphQL internals directly might, see the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) for all changes.
+  
+  ### Variable values in resolver info
+  
+  `info.variableValues` is an object of `{ sources, coerced }` instead of a flat map of variable names to values. Read the variable values from `info.variableValues.coerced`, or use `getCoercedVariableValues` from `@graphql-tools/delegate` to support both versions.
+  
+  ```ts
+  import { getCoercedVariableValues } from '@graphql-tools/delegate';
+  
+  const variables = getCoercedVariableValues(info.variableValues);
+  ```
+  
+  ### Calling `getArgumentValues` and `getDirectiveValues`
+  
+  The `variableValues` argument of `getArgumentValues` and `getDirectiveValues` from `graphql` expects the `{ sources, coerced }` shape too. Wrap a flat map of variables with `asGetArgumentValuesVariables` from `@graphql-tools/utils`, which works with both versions.
+  
+  ```ts
+  import { asGetArgumentValuesVariables } from '@graphql-tools/utils';
+  import { getArgumentValues } from 'graphql';
+  
+  const args = getArgumentValues(
+    field,
+    fieldNode,
+    asGetArgumentValuesVariables(variables),
+  );
+  ```
+  
+  ### Empty lists in parsed documents
+  
+  Parsed documents leave out empty lists. For example, a field without arguments has `arguments` set to `undefined` instead of `[]`, and the same goes for `directives`, `variableDefinitions`, `interfaces` and `fields`. Use optional chaining or a fallback like `node.directives ?? []` when reading them.
+  
+  ### Default values defined in SDL
+  
+  Default values of arguments and input fields defined in SDL are kept as an AST node in `default.literal`, and `defaultValue` is `undefined`. Read `default` first and fall back to `defaultValue` to support both versions. When mapping a schema and changing a default, set `default` to `undefined` next to the new `defaultValue`, otherwise the literal from SDL is still used.
+  
+  ### Custom scalars
+  
+  Scalars have the `coerceOutputValue`, `coerceInputValue`, `coerceInputLiteral` and `valueToLiteral` functions next to the deprecated `serialize`, `parseValue` and `parseLiteral`. When building a scalar from another scalar's `toConfig()` and replacing its coercion, replace the new functions too, otherwise they keep coercing with the original implementation.
+  
+  ### Errors
+  
+  `GraphQLError` sets the standard `cause` property to its original error. Errors from subgraphs that the gateway relays to clients have the subgraph error as `cause`. What clients receive stays the same.
+  
+  ### Printing and introspection
+  
+  `print` formats object values with spaces, like `{ a: 1 }` instead of `{a: 1}`, and breaks long ones over several lines. The `reason` argument of `@deprecated` and the `includeDeprecated` argument of introspection fields are non-nullable. Update snapshots or string comparisons of printed documents and introspection results.
+  
+  Closes [#2750](https://github.com/graphql-hive/gateway/issues/2750)
+
+### Patch Changes
+
+
+
+- [#2777](https://github.com/graphql-hive/gateway/pull/2777) [`5144835`](https://github.com/graphql-hive/gateway/commit/51448354ac5c0a3369b051a6fc0708a2461cd212) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Deduplicate dependencies in yarn.lock of Docker image
+  
+  Closes [#2760](https://github.com/graphql-hive/gateway/issues/2760)
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`84aec50`](https://github.com/graphql-hive/gateway/commit/84aec505a6623155781b91b764d39abeea301434), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`75d12e5`](https://github.com/graphql-hive/gateway/commit/75d12e51fc84d13991a78349ad563329fb292459), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`5144835`](https://github.com/graphql-hive/gateway/commit/51448354ac5c0a3369b051a6fc0708a2461cd212), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-hive/gateway-runtime@3.0.0
+  - @graphql-hive/plugin-aws-sigv4@3.0.0
+  - @graphql-mesh/hmac-upstream-signature@3.0.0
+  - @graphql-mesh/plugin-jwt-auth@3.0.0
+  - @graphql-hive/plugin-opentelemetry@2.0.0
+  - @graphql-mesh/plugin-prometheus@3.0.0
+  - @graphql-mesh/transport-http-callback@2.0.0
+  - @graphql-mesh/transport-http@2.0.0
+  - @graphql-mesh/transport-ws@3.0.0
+  - @graphql-hive/importer@3.0.0
+  - @graphql-hive/logger@2.0.0
+  - @graphql-hive/pubsub@3.0.0
+  - @graphql-hive/signal@3.0.0
+
 ## 2.15.13
 ### Patch Changes
 
