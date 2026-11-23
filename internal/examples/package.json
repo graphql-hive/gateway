@@ -7,7 +7,7 @@
     "start": "tsx ./src/bin.ts"
   },
   "devDependencies": {
-    "@babel/parser": "^7.29.14",
+    "@babel/parser": "^8.1.2",
     "@types/jscodeshift": "^17.3.0",
     "@whatwg-node/disposablestack": "^0.1.0",
     "dedent": "^1.7.2",

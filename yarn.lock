@@ -7624,7 +7624,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@babel/parser": "npm:^7.29.14"
+    "@babel/parser": "npm:^8.1.2"
     "@types/jscodeshift": "npm:^17.3.0"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     dedent: "npm:^1.7.2"
