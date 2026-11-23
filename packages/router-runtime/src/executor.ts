@@ -1,6 +1,7 @@
 import { documentStringMap } from '@envelop/core';
 import type {
   BatchFetchNode,
+  ConditionGroup,
   EntityBatchAlias,
   FetchNode,
   FetchNodePathSegment,
@@ -15,11 +16,13 @@ import {
   coerceGetVariableValuesResult,
   ExecutionRequest,
   getDirective,
+  getDirectiveExtensions,
   getOperationASTFromDocument,
   getOperationASTFromRequest,
   MaybeAsyncIterable,
   memoize1,
   mergeDeep,
+  parseSelectionSet,
   relocatedError,
   type ExecutionResult,
 } from '@graphql-tools/utils';
@@ -78,6 +81,11 @@ export interface QueryPlanExecutionContext {
   errors: GraphQLError[];
 
   /**
+   * The resolvable keys of every entity type in every subgraph
+   */
+  entityKeys?: EntityKeys;
+
+  /**
    * Original ExecutionRequest
    */
   executionRequest: ExecutionRequest;
@@ -94,6 +102,60 @@ export interface QueryPlanExecutionContext {
 export interface EntityRepresentation {
   __typename: string;
   [key: string]: any;
+}
+
+/**
+ * The resolvable keys of every entity type, by subgraph name and then by type name. Each key is
+ * the list of its top-level fields without `__typename`, so a key of `__typename` alone is empty.
+ */
+export type EntityKeys = Map<string, Map<string, string[][]>>;
+
+/** Reads the {@link EntityKeys} from the `@join__type` directives of a supergraph. */
+export function getEntityKeys(supergraph: GraphQLSchema): EntityKeys {
+  const subgraphNames = new Map<string, string>();
+  const joinGraph = supergraph.getType('join__Graph');
+  if (isEnumType(joinGraph)) {
+    for (const value of joinGraph.getValues()) {
+      const name = getDirectiveExtensions(value, supergraph)?.[
+        'join__graph'
+      ]?.[0]?.['name'];
+      if (name) {
+        subgraphNames.set(value.name, name);
+      }
+    }
+  }
+  const entityKeys: EntityKeys = new Map();
+  for (const type of Object.values(supergraph.getTypeMap())) {
+    for (const joinType of getDirectiveExtensions(type, supergraph)?.[
+      'join__type'
+    ] ?? []) {
+      if (!joinType['key'] || joinType['resolvable'] === false) {
+        continue;
+      }
+      const subgraphName =
+        subgraphNames.get(joinType['graph']) ?? joinType['graph'];
+      let keysByType = entityKeys.get(subgraphName);
+      if (!keysByType) {
+        keysByType = new Map();
+        entityKeys.set(subgraphName, keysByType);
+      }
+      let typeKeys = keysByType.get(type.name);
+      if (!typeKeys) {
+        typeKeys = [];
+        keysByType.set(type.name, typeKeys);
+      }
+      typeKeys.push(
+        parseSelectionSet(`{ ${joinType['key']} }`).selections.flatMap(
+          (selection) =>
+            selection.kind === Kind.FIELD &&
+            selection.name.value !== '__typename'
+              ? [selection.name.value]
+              : [],
+        ),
+      );
+    }
+  }
+  return entityKeys;
 }
 
 export function isEntityRepresentation(obj: any): obj is EntityRepresentation {
@@ -115,6 +177,11 @@ export interface QueryPlanExecutorOptions {
    */
   supergraphSchema: GraphQLSchema;
   /**
+   * The resolvable keys of every entity type in every subgraph. Without them, an entity is sent
+   * without the fields it misses, and one with nothing but `__typename` isn't sent.
+   */
+  entityKeys?: EntityKeys;
+  /**
    * The factory function that returns an executor for a subgraph
    */
   onSubgraphExecute(
@@ -128,31 +195,99 @@ export function executeQueryPlan({
   executionRequest,
   onSubgraphExecute,
   supergraphSchema,
+  entityKeys,
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
   const node = queryPlan.node;
-  if (!node) {
-    throw new Error('Query plan has no root node.');
-  }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
     executionRequest,
     onSubgraphExecute,
   });
+  executionContext.entityKeys = entityKeys;
   return handleMaybePromiseMaybeAsyncIterable(
-    () => executePlanNode(node, executionContext),
+    // the planner leaves the node out when no fetch can ever run, like when every
+    // field is under both `@skip(if: $a)` and `@include(if: $a)`
+    () => node && executePlanNode(node, executionContext),
     () => {
       const executionResult = {} as ExecutionResult;
-      if (Object.keys(executionContext.data).length > 0) {
+      // nothing fetched without errors means every field was skipped, which is still `data: {}`
+      if (
+        Object.keys(executionContext.data).length > 0 ||
+        !executionContext.errors.length
+      ) {
         executionResult.data = projectDataByOperation(executionContext);
       }
       if (executionContext.errors.length > 0) {
-        executionResult.errors = executionContext.errors;
+        executionResult.errors = executionContext.errors.map((error) =>
+          trimErrorPath(error, executionContext),
+        );
       }
       return executionResult;
     },
   );
+}
+
+/**
+ * Cuts the error path at the first key the client didn't ask for. A subgraph's path can go into a
+ * field the gateway fetched for itself, like a `@requires` field or `_entities`, and that key means
+ * nothing to the client. The error points at the closest value it asked for then, and an error
+ * with no such value has no path.
+ */
+function trimErrorPath(
+  error: GraphQLError,
+  { operation, fragments }: QueryPlanExecutionContext,
+): GraphQLError {
+  const path = error.path;
+  if (!path?.length) {
+    return error;
+  }
+  // a response key can have a field per type, their selections all count
+  let selectionSets = [operation.selectionSet];
+  const cut = path.findIndex((segment) => {
+    if (typeof segment !== 'string') {
+      return false;
+    }
+    const fields: FieldNode[] = [];
+    const collect = (selectionSet: SelectionSetNode) => {
+      for (const selection of selectionSet.selections) {
+        if (selection.kind === Kind.FIELD) {
+          if ((selection.alias ?? selection.name).value === segment) {
+            fields.push(selection);
+          }
+        } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+          collect(selection.selectionSet);
+        } else {
+          const fragment = fragments[selection.name.value];
+          if (fragment) {
+            collect(fragment.selectionSet);
+          }
+        }
+      }
+    };
+    selectionSets.forEach(collect);
+    if (!fields.length) {
+      return true;
+    }
+    selectionSets = fields.flatMap((field) =>
+      field.selectionSet ? [field.selectionSet] : [],
+    );
+    return false;
+  });
+  if (cut === -1) {
+    return error;
+  }
+  if (cut > 0) {
+    return relocatedError(error, path.slice(0, cut));
+  }
+  return new GraphQLError(error.message, {
+    nodes: error.nodes,
+    source: error.source,
+    positions: error.positions,
+    originalError: error,
+    extensions: error.extensions,
+  });
 }
 
 interface CreateExecutionContextOpts {
@@ -305,6 +440,27 @@ function normalizeFlattenNodePath(
   return normalized;
 }
 
+/**
+ * Whether a fetch or a batch alias with the given `runIf` runs. It runs when any of the
+ * condition groups holds, and always when there is no `runIf`. A group holds when every
+ * `includeIf` variable is `true` and no `skipIf` variable is.
+ */
+function shouldRun(
+  runIf: ConditionGroup[] | undefined,
+  variableValues: Record<string, any> | undefined,
+): boolean {
+  return (
+    !runIf ||
+    runIf.some(
+      (group) =>
+        (group.includeIf ?? []).every(
+          (name) => variableValues?.[name] === true,
+        ) &&
+        !(group.skipIf ?? []).some((name) => variableValues?.[name] === true),
+    )
+  );
+}
+
 function getContextGroupVariables(context: FetchContext): string[] {
   const names = [...(context.contextVariables ?? [])];
   for (const rewrite of context.contextRewrites ?? []) {
@@ -375,6 +531,7 @@ function collectEntities(
   inputRewrites: FetchRewrite[] | undefined,
   context: FetchContext,
   supergraphSchema: GraphQLSchema,
+  subgraphKeys: Map<string, string[][]> | undefined,
 ): CollectedEntities {
   const names = getContextGroupVariables(context);
   const sources = names.map((name) =>
@@ -464,11 +621,15 @@ function collectEntities(
     }
     const groupIndex = resolveGroupIndex(entity, ancestors);
     const group = groups[groupIndex]!;
-    let representation = projectRequires(requires, entity, supergraphSchema);
-    if (!representation || Array.isArray(representation)) {
+    let representation = projectRequires(
+      requires,
+      entity,
+      supergraphSchema,
+      subgraphKeys?.get(entity.__typename),
+    );
+    if (!representation) {
       return;
     }
-    representation.__typename ??= entity.__typename;
     if (inputRewrites?.length) {
       representation = applyInputRewrites(
         representation,
@@ -665,6 +826,7 @@ function prepareFlattenContext(
     fetchNode.inputRewrites,
     fetchNode,
     executionContext.supergraphSchema,
+    executionContext.entityKeys?.get(fetchNode.serviceName),
   );
   if (!collected.entities.length) {
     return null;
@@ -697,6 +859,18 @@ function prepareBatchFetchContext(
   const collectedByVariableName = new Map<string, CollectedEntities>();
 
   for (const alias of batchFetchNode.entityBatch.aliases) {
+    if (!shouldRun(alias.runIf, executionContext.variableValues)) {
+      // an alias that's off collects no entities and sends `[]`, the planner shares a
+      // representations variable only between aliases with the same `runIf`
+      byAlias.set(alias.alias, {
+        groups: [],
+        offsets: [0],
+        entities: [],
+        entityPathsByIndex: new Map(),
+        alias,
+      });
+      continue;
+    }
     const requires = alias.requires;
     if (!requires || requires.length === 0) {
       continue;
@@ -712,6 +886,7 @@ function prepareBatchFetchContext(
         alias.inputRewrites,
         alias,
         executionContext.supergraphSchema,
+        executionContext.entityKeys?.get(batchFetchNode.serviceName),
       );
       collectedByVariableName.set(alias.representationsVariableName, collected);
     }
@@ -1410,12 +1585,14 @@ function executeFetchPlanNode(
             fetchNode.requires,
             entity,
             executionContext.supergraphSchema,
+            executionContext.entityKeys
+              ?.get(fetchNode.serviceName)
+              ?.get(entity.__typename),
           )
         : entity;
-      if (!projection || Array.isArray(projection)) {
+      if (!projection) {
         continue;
       }
-      projection.__typename ??= entity.__typename;
       if (fetchNode.inputRewrites?.length) {
         projection = applyInputRewrites(
           projection,
@@ -1827,6 +2004,12 @@ function executePlanNode(
       return Promise.all(promises);
     }
     case 'Flatten': {
+      if (
+        planNode.node.kind === 'Fetch' &&
+        !shouldRun(planNode.node.runIf, executionContext.variableValues)
+      ) {
+        return;
+      }
       const flattenContext = prepareFlattenContext(planNode, executionContext);
       if (!flattenContext) {
         return;
@@ -1839,6 +2022,10 @@ function executePlanNode(
       );
     }
     case 'Fetch': {
+      // the `@include`/`@skip` around the fetch and on its fields decide whether it runs
+      if (!shouldRun(planNode.runIf, executionContext.variableValues)) {
+        return;
+      }
       return executeFetchPlanNode(planNode, executionContext, state);
     }
     case 'BatchFetch': {
@@ -1851,18 +2038,6 @@ function executePlanNode(
         executionContext,
         batchContext,
       );
-    }
-    case 'Condition': {
-      const conditionValue =
-        executionContext.variableValues?.[planNode.condition];
-      if (conditionValue === true) {
-        if (planNode.ifClause) {
-          return executePlanNode(planNode.ifClause, executionContext);
-        }
-      } else if (planNode.elseClause) {
-        return executePlanNode(planNode.elseClause, executionContext);
-      }
-      break;
     }
     case 'Subscription': {
       return executeFetchPlanNode(planNode.primary, executionContext);
@@ -2374,83 +2549,167 @@ function projectDataByOperation(executionContext: QueryPlanExecutionContext) {
 
 /**
  * This helper function projects the entity data based on the selections in the requires of Fetch Node,
- * so only the required data is sent to the subgraph.
+ * so only the required data is sent to the subgraph. Returns `null` when the entity can't be sent.
+ *
+ * `typeKeys` are the top-level fields of each resolvable key the entity's type has in the subgraph
+ * the representation goes to. When they're known, an entity without a complete key is left out,
+ * and a field it misses, like a `@requires` field whose subgraph returned `null` for the entity, is
+ * sent as `null`. When they aren't, a field the entity misses is left out of the representation.
  *
  * Not the same with `projectDocumentNode`, because `Requires` is not the same with `SelectionNode`
  */
 function projectRequires(
   requiresSelections: RequiresSelection[],
-  entity: EntityRepresentation[],
-  supergraphSchema: GraphQLSchema,
-): EntityRepresentation[];
-function projectRequires(
-  requiresSelections: RequiresSelection[],
   entity: EntityRepresentation,
   supergraphSchema: GraphQLSchema,
-): EntityRepresentation;
-function projectRequires(
-  requiresSelections: RequiresSelection[],
-  entity: EntityRepresentation | EntityRepresentation[],
-  supergraphSchema: GraphQLSchema,
-): EntityRepresentation | EntityRepresentation[] | null {
-  if (!entity) {
-    return entity;
-  }
-  if (Array.isArray(entity)) {
-    return entity.map((item) =>
-      projectRequires(requiresSelections, item, supergraphSchema),
-    );
-  }
-  const result = {} as EntityRepresentation;
-  for (const requiresSelection of requiresSelections) {
-    switch (requiresSelection.kind) {
-      case 'Field': {
-        const fieldName = requiresSelection.name;
-        const responseKey = requiresSelection.alias ?? fieldName;
-        let original = entity[fieldName];
-        if (original === undefined) {
-          original = entity[responseKey];
-        }
-        const projectedValue = requiresSelection.selections
-          ? projectRequires(
-              requiresSelection.selections,
-              original,
-              supergraphSchema,
-            )
-          : original;
-        if (projectedValue != null) {
-          result[responseKey] = projectedValue;
-        }
-        break;
-      }
-      case 'InlineFragment':
-        if (
-          entitySatisfiesTypeCondition(
-            supergraphSchema,
-            entity.__typename,
-            requiresSelection.typeCondition,
-          )
-        ) {
-          const projected = projectRequires(
-            requiresSelection.selections,
-            entity,
-            supergraphSchema,
-          );
-          if (projected) {
-            Object.assign(
-              result,
-              mergeDeep([result, projected], false, true, true),
-            );
-          }
-        }
-        break;
-    }
-  }
+  typeKeys: string[][] | undefined,
+): EntityRepresentation | null {
+  const applied = applyRequires(
+    requiresSelections,
+    entity,
+    supergraphSchema,
+    !!typeKeys,
+  );
   if (
-    (Object.keys(result).length === 1 && result.__typename) ||
-    Object.keys(result).length === 0
+    typeKeys &&
+    !typeKeys.some((key) => key.every((field) => applied.found.has(field)))
   ) {
     return null;
   }
-  return result;
+  // only an entity found by its `__typename` alone is sent with nothing else
+  if (
+    !Object.keys(applied.result).length &&
+    (!applied.typename || !typeKeys?.some((key) => !key.length))
+  ) {
+    return null;
+  }
+  return { __typename: entity.__typename, ...applied.result };
+}
+
+/**
+ * Projects a value inside a representation. An object that misses a selected field is `null`,
+ * and so is a list item with nothing to send, to keep its place. Returns `undefined` when there
+ * is nothing to send.
+ */
+function projectRequiresValue(
+  requiresSelections: RequiresSelection[] | undefined,
+  value: unknown,
+  supergraphSchema: GraphQLSchema,
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map(
+      (item) =>
+        projectRequiresValue(requiresSelections, item, supergraphSchema) ??
+        null,
+    );
+  }
+  // an object without selections is a scalar, like JSON
+  if (
+    value == null ||
+    typeof value !== 'object' ||
+    !requiresSelections?.length
+  ) {
+    return value;
+  }
+  const object = value as Record<string, unknown>;
+  const applied = applyRequires(
+    requiresSelections,
+    object,
+    supergraphSchema,
+    false,
+  );
+  if (applied.missingField) {
+    return null;
+  }
+  const typename = applied.typename ? object['__typename'] : undefined;
+  if (typename == null) {
+    return Object.keys(applied.result).length ? applied.result : undefined;
+  }
+  return { __typename: typename, ...applied.result };
+}
+
+/** What the requires selections that apply to an object found in it. */
+interface AppliedRequires {
+  /** The projected fields, without `__typename`. */
+  result: Record<string, unknown>;
+  /** Whether `__typename` is selected. */
+  typename: boolean;
+  /** Whether a selected field isn't in the object. */
+  missingField: boolean;
+  /** The response keys whose field was in the object, `null` included. */
+  found: Set<string>;
+}
+
+/**
+ * Projects the fields of `object` that `requiresSelections` select, following the inline
+ * fragments its type satisfies. With `keysKnown`, a field the object misses is `null`.
+ */
+function applyRequires(
+  requiresSelections: RequiresSelection[],
+  object: Record<string, unknown>,
+  supergraphSchema: GraphQLSchema,
+  keysKnown: boolean,
+  applied: AppliedRequires = {
+    result: {},
+    typename: false,
+    missingField: false,
+    found: new Set(),
+  },
+): AppliedRequires {
+  for (const requiresSelection of requiresSelections) {
+    if (requiresSelection.kind === 'InlineFragment') {
+      if (
+        entitySatisfiesTypeCondition(
+          supergraphSchema,
+          object['__typename'] as string,
+          requiresSelection.typeCondition,
+        )
+      ) {
+        applyRequires(
+          requiresSelection.selections,
+          object,
+          supergraphSchema,
+          keysKnown,
+          applied,
+        );
+      }
+      continue;
+    }
+    if (requiresSelection.kind !== 'Field') {
+      continue;
+    }
+    const responseKey = requiresSelection.alias ?? requiresSelection.name;
+    if (responseKey === '__typename') {
+      applied.typename = true;
+      continue;
+    }
+    // only where the fetch wrote it, with `price: _internal_qp_alias_0` whatever sits under
+    // `price` is some other field, like the client's own `price(currency: USD)`
+    let original = object[requiresSelection.name];
+    if (original === undefined) {
+      if (!keysKnown) {
+        applied.missingField = true;
+        continue;
+      }
+      // a `@requires` field whose subgraph returned `null` for the entity, the subgraph still
+      // finds the entity by its complete key
+      original = null;
+    } else {
+      applied.found.add(responseKey);
+    }
+    const projected = projectRequiresValue(
+      requiresSelection.selections,
+      original,
+      supergraphSchema,
+    );
+    if (projected === undefined) {
+      continue;
+    }
+    const previous = applied.result[responseKey];
+    applied.result[responseKey] =
+      previous != null && projected != null
+        ? mergeDeep([previous, projected], false, true, true)
+        : projected;
+  }
+  return applied;
 }
