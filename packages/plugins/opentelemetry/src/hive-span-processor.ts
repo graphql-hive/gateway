@@ -1,6 +1,6 @@
 import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import { Logger } from '@graphql-hive/logger';
-import { Context } from '@opentelemetry/api';
+import { Context, HrTime } from '@opentelemetry/api';
 import { hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
@@ -9,7 +9,6 @@ import {
   Span,
   SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
 import {
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
@@ -33,6 +32,10 @@ export type HiveTracingSpanProcessorOptions =
   | {
       processor: SpanProcessor;
     };
+
+// sdk-trace-base doesnt expose the internal SpanImpl class, so we describe
+// the mutable bits we touch ourselves (endTime is writable on the real impl)
+type SpanImpl = Span & { endTime: HrTime };
 
 type TraceState = {
   traceId: string;
