@@ -53,7 +53,8 @@ it.each([
     name: 'a oneOf input with two keys',
     query: 'query ($by: OrderBy!) { orderBy(by: $by) }',
     variables: { by: { id: 1, name: 'order' } },
-    message: 'exactly one field must be specified',
+    // graphql 16 says "key", 17 says "field"
+    message: /exactly one (field|key) must be specified/i,
   },
 ])('responds with 400 to $name', async ({ query, variables, message }) => {
   await using gw = createGateway(() => {
@@ -66,7 +67,7 @@ it.each([
   await expect(res.json()).resolves.toEqual({
     errors: [
       {
-        message: expect.stringContaining(message),
+        message: expect.stringMatching(message),
         locations: [{ line: 1, column: 8 }],
       },
     ],
