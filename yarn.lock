@@ -851,30 +851,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:8.1.2":
-  version: 8.1.2
-  resolution: "@babel/core@npm:8.1.2"
-  dependencies:
-    "@babel/code-frame": "npm:^8.0.6"
-    "@babel/generator": "npm:^8.1.2"
-    "@babel/helper-compilation-targets": "npm:^8.0.7"
-    "@babel/helpers": "npm:^8.1.2"
-    "@babel/parser": "npm:^8.1.2"
-    "@babel/template": "npm:^8.1.2"
-    "@babel/traverse": "npm:^8.1.2"
-    "@babel/types": "npm:^8.1.2"
-    "@types/gensync": "npm:^1.0.5"
-    convert-source-map: "npm:^2.0.0"
-    empathic: "npm:^2.0.1"
-    gensync: "npm:^1.0.0-beta.2"
-    import-meta-resolve: "npm:^4.2.0"
-    json5: "npm:^2.2.3"
-    obug: "npm:^3.0.0"
-    verkit: "npm:^0.5.0"
-  checksum: 10c0/f1f3394f77c7ae5e3fb887e4c977ceeb432215862f2ec8dea74555e85c54afafc642f5d840e52fed1c8026d36adcface3448b67f24822ee1b7de943c85535329
-  languageName: node
-  linkType: hard
-
 "@babel/core@npm:^7.23.9, @babel/core@npm:^7.24.7, @babel/core@npm:^7.27.4, @babel/core@npm:^7.29.7":
   version: 7.29.13
   resolution: "@babel/core@npm:7.29.13"
@@ -898,7 +874,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:^8.0.7":
+"@babel/core@npm:^8.0.7, @babel/core@npm:^8.1.3":
   version: 8.1.3
   resolution: "@babel/core@npm:8.1.3"
   dependencies:
@@ -936,7 +912,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:^8.1.2, @babel/generator@npm:^8.1.3":
+"@babel/generator@npm:^8.1.3":
   version: 8.1.3
   resolution: "@babel/generator@npm:8.1.3"
   dependencies:
@@ -1292,7 +1268,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/helpers@npm:^8.1.2, @babel/helpers@npm:^8.1.3":
+"@babel/helpers@npm:^8.1.3":
   version: 8.1.3
   resolution: "@babel/helpers@npm:8.1.3"
   dependencies:
@@ -1393,7 +1369,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-proposal-decorators@npm:8.0.2":
+"@babel/plugin-proposal-decorators@npm:^8.0.2":
   version: 8.0.2
   resolution: "@babel/plugin-proposal-decorators@npm:8.0.2"
   dependencies:
@@ -1685,18 +1661,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-class-properties@npm:8.0.1, @babel/plugin-transform-class-properties@npm:^8.0.1":
-  version: 8.0.1
-  resolution: "@babel/plugin-transform-class-properties@npm:8.0.1"
-  dependencies:
-    "@babel/helper-create-class-features-plugin": "npm:^8.0.1"
-    "@babel/helper-plugin-utils": "npm:^8.0.1"
-  peerDependencies:
-    "@babel/core": ^8.0.0
-  checksum: 10c0/cbb877d4a6b293a2b4e13c25c443955f5840eff05f86c5d7e65986f9b84d6725d68855098277775b065b0c3f8c976fa5a8b238c57680003d3f1c48d5872825a1
-  languageName: node
-  linkType: hard
-
 "@babel/plugin-transform-class-properties@npm:^7.24.7":
   version: 7.29.7
   resolution: "@babel/plugin-transform-class-properties@npm:7.29.7"
@@ -1709,7 +1673,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-class-static-block@npm:8.1.2, @babel/plugin-transform-class-static-block@npm:^8.0.5":
+"@babel/plugin-transform-class-properties@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "@babel/plugin-transform-class-properties@npm:8.0.1"
+  dependencies:
+    "@babel/helper-create-class-features-plugin": "npm:^8.0.1"
+    "@babel/helper-plugin-utils": "npm:^8.0.1"
+  peerDependencies:
+    "@babel/core": ^8.0.0
+  checksum: 10c0/cbb877d4a6b293a2b4e13c25c443955f5840eff05f86c5d7e65986f9b84d6725d68855098277775b065b0c3f8c976fa5a8b238c57680003d3f1c48d5872825a1
+  languageName: node
+  linkType: hard
+
+"@babel/plugin-transform-class-static-block@npm:^8.0.5, @babel/plugin-transform-class-static-block@npm:^8.1.2":
   version: 8.1.2
   resolution: "@babel/plugin-transform-class-static-block@npm:8.1.2"
   dependencies:
@@ -2325,7 +2301,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-env@npm:8.0.7":
+"@babel/preset-env@npm:^8.0.7":
   version: 8.0.7
   resolution: "@babel/preset-env@npm:8.0.7"
   dependencies:
@@ -2428,20 +2404,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-typescript@npm:8.0.7":
-  version: 8.0.7
-  resolution: "@babel/preset-typescript@npm:8.0.7"
-  dependencies:
-    "@babel/helper-plugin-utils": "npm:^8.0.1"
-    "@babel/helper-validator-option": "npm:^8.0.0"
-    "@babel/plugin-transform-modules-commonjs": "npm:^8.0.1"
-    "@babel/plugin-transform-typescript": "npm:^8.0.6"
-  peerDependencies:
-    "@babel/core": ^8.0.0
-  checksum: 10c0/f6cb4249114005c2f2c723360fd83fccc87d88173006aeb7353aa122ce8bc36c3f8cd21f9745defd32d02e15fbc2e577017ef9a93a1c2a5f99587541632d09a3
-  languageName: node
-  linkType: hard
-
 "@babel/preset-typescript@npm:^7.24.7":
   version: 7.29.7
   resolution: "@babel/preset-typescript@npm:7.29.7"
@@ -2454,6 +2416,20 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 10c0/40746a23a7ab46c0beb1c02d69883d9ffbe3043685cb3ae5363644391376b9261189fdad317191349e322c2c9bc550b031daa42470a1f8987362e4c56e492194
+  languageName: node
+  linkType: hard
+
+"@babel/preset-typescript@npm:^8.0.7":
+  version: 8.0.7
+  resolution: "@babel/preset-typescript@npm:8.0.7"
+  dependencies:
+    "@babel/helper-plugin-utils": "npm:^8.0.1"
+    "@babel/helper-validator-option": "npm:^8.0.0"
+    "@babel/plugin-transform-modules-commonjs": "npm:^8.0.1"
+    "@babel/plugin-transform-typescript": "npm:^8.0.6"
+  peerDependencies:
+    "@babel/core": ^8.0.0
+  checksum: 10c0/f6cb4249114005c2f2c723360fd83fccc87d88173006aeb7353aa122ce8bc36c3f8cd21f9745defd32d02e15fbc2e577017ef9a93a1c2a5f99587541632d09a3
   languageName: node
   linkType: hard
 
@@ -3071,7 +3047,7 @@ __metadata:
     "@cloudflare/workers-types": "npm:^5.20261120.1"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^17.1.0"
-    wrangler: "npm:^4.165.0"
+    wrangler: "npm:^4.166.0"
   languageName: unknown
   linkType: soft
 
@@ -3423,7 +3399,7 @@ __metadata:
   resolution: "@e2e/launchdarkly-override-example@workspace:e2e/launchdarkly-override"
   dependencies:
     "@apollo/subgraph": "npm:^2.17.0"
-    "@launchdarkly/node-server-sdk": "npm:9.17.0"
+    "@launchdarkly/node-server-sdk": "npm:9.17.1"
     graphql: "npm:17.1.0"
     graphql-yoga: "npm:^6.1.1"
     tslib: "npm:^2.9.1"
@@ -4937,7 +4913,7 @@ __metadata:
     "@graphql-yoga/plugin-defer-stream": "npm:^4.1.1"
     "@graphql-yoga/plugin-persisted-operations": "npm:^4.1.1"
     "@omnigraph/openapi": "npm:^0.112.7"
-    "@theguild/federation-composition": "npm:^0.27.2"
+    "@theguild/federation-composition": "npm:^0.27.3"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^26.6.6"
     "@types/opossum": "npm:^8.1.9"
@@ -7489,7 +7465,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@babel/parser": "npm:^8.1.2"
+    "@babel/parser": "npm:^8.1.3"
     "@types/jscodeshift": "npm:^17.3.0"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     dedent: "npm:^1.7.2"
@@ -8080,24 +8056,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@launchdarkly/js-server-sdk-common@npm:2.26.7":
-  version: 2.26.7
-  resolution: "@launchdarkly/js-server-sdk-common@npm:2.26.7"
+"@launchdarkly/js-server-sdk-common@npm:2.26.8":
+  version: 2.26.8
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.26.8"
   dependencies:
     "@launchdarkly/js-sdk-common": "npm:2.32.3"
     semver: "npm:7.5.4"
-  checksum: 10c0/0380a7eedcdb252d688be40951f06799b4194fa9d4a2078c79ac9015e0eebaf17ffec7638365f6f91c6157b7c9e1b9c10de8ab8f4f45822e16331969f887d785
+  checksum: 10c0/02d7b2fe831538ea7204db81174110128bb453be3f03808b32f46d29251172f3fc97b4ed42d43e760fe039d28ef89c7d5bfe7945c2fdfc106d9e4cc7fc1b4451
   languageName: node
   linkType: hard
 
-"@launchdarkly/node-server-sdk@npm:9.17.0":
-  version: 9.17.0
-  resolution: "@launchdarkly/node-server-sdk@npm:9.17.0"
+"@launchdarkly/node-server-sdk@npm:9.17.1":
+  version: 9.17.1
+  resolution: "@launchdarkly/node-server-sdk@npm:9.17.1"
   dependencies:
     "@launchdarkly/eventsource": "npm:0.2.5"
-    "@launchdarkly/js-server-sdk-common": "npm:2.26.7"
+    "@launchdarkly/js-server-sdk-common": "npm:2.26.8"
     https-proxy-agent: "npm:^7.0.6"
-  checksum: 10c0/b28a725be625ded7d682d4a80b62e691b9a216fc969bfe7311d0fa8c8b116da75d390ba44b870e65a5b6521b46c506f602ba4a87f04b24e46d48776d0d913e13
+  checksum: 10c0/272b7da26083bbce3fb060d2e26eab154ac6edcbf4565cc3023ba4f99baacf4b4efa7d766aef659aae2777bd1a42964f86f5fe64b7437f0ec4a8e506b6def46a
   languageName: node
   linkType: hard
 
@@ -12197,7 +12173,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/federation-composition@npm:^0.27.2":
+"@theguild/federation-composition@npm:^0.27.3":
   version: 0.27.3
   resolution: "@theguild/federation-composition@npm:0.27.3"
   dependencies:
@@ -17797,13 +17773,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "gateway@workspace:."
   dependencies:
-    "@babel/core": "npm:8.1.2"
-    "@babel/plugin-proposal-decorators": "npm:8.0.2"
-    "@babel/plugin-transform-class-properties": "npm:8.0.1"
-    "@babel/plugin-transform-class-static-block": "npm:8.1.2"
+    "@babel/core": "npm:^8.1.3"
+    "@babel/plugin-proposal-decorators": "npm:^8.0.2"
+    "@babel/plugin-transform-class-properties": "npm:^8.0.1"
+    "@babel/plugin-transform-class-static-block": "npm:^8.1.2"
     "@babel/plugin-transform-private-methods": "npm:^8.0.1"
-    "@babel/preset-env": "npm:8.0.7"
-    "@babel/preset-typescript": "npm:8.0.7"
+    "@babel/preset-env": "npm:^8.0.7"
+    "@babel/preset-typescript": "npm:^8.0.7"
     "@changesets/changelog-github": "npm:^1.0.1"
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.7.1"
@@ -26185,7 +26161,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.165.0":
+"wrangler@npm:^4.166.0":
   version: 4.166.0
   resolution: "wrangler@npm:4.166.0"
   dependencies:
