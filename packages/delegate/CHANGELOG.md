@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.3.6
+### Patch Changes
+
+
+
+- [#2781](https://github.com/graphql-hive/gateway/pull/2781) [`a0bd5e8`](https://github.com/graphql-hive/gateway/commit/a0bd5e8882d04c1211c244adc991e62bb4e5c369) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Only follow own properties when merging forwarded deferred patches
+  
+  Deferred patch paths are made of client response keys, so merging them into the result tree only considers properties the tree actually owns. Aliases matching built-in object members, like `hasOwnProperty`, are merged like any other response key.
+
 ## 12.3.5
 ### Patch Changes
 
