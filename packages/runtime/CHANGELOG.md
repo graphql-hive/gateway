@@ -1,5 +1,15 @@
 # @graphql-hive/gateway-runtime
 
+## 2.14.3
+### Patch Changes
+
+
+
+- [#2774](https://github.com/graphql-hive/gateway/pull/2774) [`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8) Thanks [@ardatan](https://github.com/ardatan)! - Support the incoming Mesh v2 supergraph shape (join transport, core `@link` / `@source`, Connectors without bare `@transport`).
+
+- Updated dependencies [[`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8)]:
+  - @graphql-mesh/fusion-runtime@1.15.0
+
 ## 2.14.2
 ### Patch Changes
 

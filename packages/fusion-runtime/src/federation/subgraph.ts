@@ -56,6 +56,19 @@ export interface HandleFederationSubschemaOpts {
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
 }
 
+function isMeshSourceSpecUrl(url: unknown): boolean {
+  if (typeof url !== 'string') {
+    return false;
+  }
+  // Current core `@link` plus the older Mesh source `@link` still seen on
+  // existing supergraphs. Unpublished intermediate prefixes are not accepted.
+  return (
+    url === 'https://the-guild.dev/graphql/mesh/spec/v1.0' ||
+    url.startsWith('https://the-guild.dev/graphql/mesh/spec/') ||
+    url.startsWith('https://specs.graphql-mesh.com/core/')
+  );
+}
+
 function getMeshSourceDirectiveName(
   schemaExtensions: Record<string, any>,
 ): string | undefined {
@@ -63,9 +76,7 @@ function getMeshSourceDirectiveName(
   const linkDirectives = schemaExtensions?.['directives']?.link;
   if (linkDirectives) {
     for (const linkDirective of linkDirectives) {
-      if (
-        linkDirective.url === 'https://the-guild.dev/graphql/mesh/spec/v1.0'
-      ) {
+      if (isMeshSourceSpecUrl(linkDirective.url)) {
         for (const importInfo of linkDirective.import || []) {
           if (importInfo === '@source') {
             return 'source';
@@ -81,6 +92,45 @@ function getMeshSourceDirectiveName(
     }
   }
   return undefined;
+}
+
+/**
+ * After Mesh Compose rewrites to `join__directive` (no subgraph arg), federation
+ * extract reconstitutes native apps onto a subgraph-scoped schema - missing
+ * subgraph means "this subgraph".
+ */
+function directiveTargetsSubgraph(
+  directive: { subgraph?: string } | null | undefined,
+  subgraphName: string,
+): boolean {
+  if (directive == null) {
+    return false;
+  }
+  if (directive.subgraph == null || directive.subgraph === '') {
+    return true;
+  }
+  return compareSubgraphNames(directive.subgraph, subgraphName);
+}
+
+function getMeshSourceDirectives(
+  directives: Record<string, any> | undefined,
+  meshSourceDirectiveName: string | undefined,
+): SourceDirective[] | undefined {
+  if (
+    meshSourceDirectiveName &&
+    directives?.[meshSourceDirectiveName]?.length
+  ) {
+    return directives[meshSourceDirectiveName] as SourceDirective[];
+  }
+  return (directives?.['meshSource'] || directives?.['source']) as
+    | SourceDirective[]
+    | undefined;
+}
+
+interface SourceDirective {
+  subgraph?: string;
+  name?: string;
+  type?: string;
 }
 
 export function handleFederationSubschema({
@@ -142,11 +192,6 @@ export function handleFederationSubschema({
     hoist: any;
     [key: string]: any;
   }
-  interface SourceDirective {
-    subgraph: string;
-    name?: string;
-    type?: string;
-  }
   const renameTypeNames: Record<string, string> = {};
   const renameTypeNamesReversed: Record<string, string> = {};
   const renameFieldByObjectTypeNames: Record<
@@ -190,11 +235,13 @@ export function handleFederationSubschema({
         }
         entitiesWithKeys.add([type.name, keys]);
       }
-      if (meshSourceDirectiveName) {
-        const sourceDirectives = typeDirectives[meshSourceDirectiveName] as
-          SourceDirective[] | undefined;
+      {
+        const sourceDirectives = getMeshSourceDirectives(
+          typeDirectives,
+          meshSourceDirectiveName,
+        );
         const sourceDirective = sourceDirectives?.find((directive) =>
-          compareSubgraphNames(directive.subgraph, subgraphName),
+          directiveTargetsSubgraph(directive, subgraphName),
         );
         if (sourceDirective != null) {
           const realName = sourceDirective.name || type.name;
@@ -243,11 +290,12 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = meshSourceDirectiveName
-        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
-        : undefined;
+      const sourceDirectives = getMeshSourceDirectives(
+        fieldDirectives,
+        meshSourceDirectiveName,
+      );
       const sourceDirective = sourceDirectives?.find((directive) =>
-        compareSubgraphNames(directive.subgraph, subgraphName),
+        directiveTargetsSubgraph(directive, subgraphName),
       );
       const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
       const realName = sourceDirective?.name ?? fieldName;
@@ -264,7 +312,7 @@ export function handleFederationSubschema({
       const hoistDirectives = fieldDirectives.hoist;
       if (hoistDirectives?.length) {
         for (const hoistDirective of hoistDirectives) {
-          if (hoistDirective.subgraph === subgraphName) {
+          if (directiveTargetsSubgraph(hoistDirective, subgraphName)) {
             const pathConfig: {
               fieldName: string;
               argFilter?: (arg: GraphQLArgument) => boolean;
@@ -295,11 +343,12 @@ export function handleFederationSubschema({
           const argConfig: GraphQLArgumentConfig = fieldConfig.args[argName]!;
           const argDirectives =
             getDirectiveExtensions<ArgDirectives>(argConfig);
-          const argSourceDirectives = meshSourceDirectiveName
-            ? (argDirectives[meshSourceDirectiveName] as SourceDirective[])
-            : undefined;
+          const argSourceDirectives = getMeshSourceDirectives(
+            argDirectives,
+            meshSourceDirectiveName,
+          );
           const argSourceDirective = argSourceDirectives?.find((directive) =>
-            compareSubgraphNames(directive.subgraph, subgraphName),
+            directiveTargetsSubgraph(directive, subgraphName),
           );
           if (argSourceDirective != null) {
             const realArgName = argSourceDirective.name ?? argName;
@@ -350,11 +399,12 @@ export function handleFederationSubschema({
     [MapperKind.INPUT_OBJECT_FIELD]: (fieldConfig, fieldName, typeName) => {
       const fieldDirectives =
         getDirectiveExtensions<FieldDirectives>(fieldConfig);
-      const sourceDirectives = meshSourceDirectiveName
-        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
-        : undefined;
+      const sourceDirectives = getMeshSourceDirectives(
+        fieldDirectives,
+        meshSourceDirectiveName,
+      );
       const sourceDirective = sourceDirectives?.find((directive) =>
-        compareSubgraphNames(directive.subgraph, subgraphName),
+        directiveTargetsSubgraph(directive, subgraphName),
       );
       if (sourceDirective != null) {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
@@ -409,11 +459,12 @@ export function handleFederationSubschema({
       if (additionalFieldDirectives?.length) {
         return null;
       }
-      const sourceDirectives = meshSourceDirectiveName
-        ? (fieldDirectives[meshSourceDirectiveName] as SourceDirective[])
-        : undefined;
+      const sourceDirectives = getMeshSourceDirectives(
+        fieldDirectives,
+        meshSourceDirectiveName,
+      );
       const sourceDirective = sourceDirectives?.find((directive) =>
-        compareSubgraphNames(directive.subgraph, subgraphName),
+        directiveTargetsSubgraph(directive, subgraphName),
       );
       if (sourceDirective != null) {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
@@ -435,11 +486,12 @@ export function handleFederationSubschema({
       externalValue,
     ) => {
       const enumDirectives = getDirectiveExtensions(enumValueConfig);
-      const sourceDirectives = meshSourceDirectiveName
-        ? (enumDirectives[meshSourceDirectiveName] as SourceDirective[])
-        : undefined;
+      const sourceDirectives = getMeshSourceDirectives(
+        enumDirectives,
+        meshSourceDirectiveName,
+      );
       const sourceDirective = sourceDirectives?.find((directive) =>
-        compareSubgraphNames(directive.subgraph, subgraphName),
+        directiveTargetsSubgraph(directive, subgraphName),
       );
       if (sourceDirective != null) {
         const realValue = sourceDirective.name ?? externalValue;
@@ -558,6 +610,7 @@ export function handleFederationSubschema({
         MergedTypeConfig<any, any, Record<string, any>>
       > = {};
       for (const realTypeName in subschemaConfig.merge) {
+        // Public type name after Mesh `@source` rename (AuthorWithBooks → Author).
         const renamedTypeName = renameTypeNames[realTypeName] ?? realTypeName;
         mergeConfig[renamedTypeName] = subschemaConfigMerge[realTypeName]!;
         const realQueryFieldName = mergeConfig[renamedTypeName].fieldName;
