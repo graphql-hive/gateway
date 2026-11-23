@@ -863,14 +863,31 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   maxRequestBodySize?: number | false;
 
   /**
-   * Enable execution cancellation
+   * Enable execution cancellation.
+   *
+   * When the client disconnects or aborts the request, the gateway stops
+   * executing the operation instead of continuing to resolve fields whose
+   * results would never be delivered. This frees up resources early.
+   *
+   * Set to `false` to keep executing operations even after the client went away.
+   *
+   * @default true
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/execution-cancellation)
    */
   executionCancellation?: boolean;
 
   /**
-   * Enable upstream cancellation
+   * Enable upstream cancellation.
+   *
+   * When the client disconnects or aborts the request, the gateway also aborts
+   * the in-flight requests it made to the upstream subgraphs, so that they
+   * can stop doing work whose results would never be used.
+   *
+   * Set to `false` to let upstream requests run to completion even after the
+   * client went away.
+   *
+   * @default true
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/upstream-cancellation)
    */

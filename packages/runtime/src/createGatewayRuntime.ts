@@ -1101,11 +1101,11 @@ export function createGatewayRuntime<
     extraPlugins.push(useDeferStream());
   }
 
-  if (config.executionCancellation) {
+  if (config.executionCancellation !== false) {
     extraPlugins.push(useExecutionCancellation());
   }
 
-  if (config.upstreamCancellation) {
+  if (config.upstreamCancellation !== false) {
     extraPlugins.push(useUpstreamCancel());
   }
 
