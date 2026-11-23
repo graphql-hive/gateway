@@ -5,10 +5,10 @@ import { hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   BatchSpanProcessor,
-  BufferConfig,
+  BatchSpanProcessorOptions,
   Span,
   SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 import {
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
@@ -19,8 +19,13 @@ import {
 } from './attributes';
 import { CircuitBreakerExporter } from './circuit-breaker-exporter';
 
-// sdk-trace-base doesnt export the span implementation anymore, we only need its writable end time
+// sdk-trace doesnt export the span implementation, we only need its writable end time
 type SpanImpl = Span & { endTime: HrTime };
+
+/**
+ * The batching options of a `BatchSpanProcessor`, without the exporter which is provided separately.
+ */
+export type BufferConfig = Omit<BatchSpanProcessorOptions, 'exporter'>;
 
 export type HiveTracingSpanProcessorOptions =
   | {
@@ -56,8 +61,10 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     if (config.processor) {
       this.processor = config.processor;
     } else {
-      this.processor = new BatchSpanProcessor(
-        new CircuitBreakerExporter(
+      // sdk-trace processors take the exporter and the batching options in one object
+      this.processor = new BatchSpanProcessor({
+        ...config.batching,
+        exporter: new CircuitBreakerExporter(
           new OTLPTraceExporter({
             url: config.endpoint,
             headers: {
@@ -68,8 +75,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
           config.circuitBreaker,
           config.log,
         ),
-        config.batching,
-      );
+      });
     }
   }
 
