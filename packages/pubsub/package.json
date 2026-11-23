@@ -90,11 +90,11 @@
     "@whatwg-node/promise-helpers": "^2.0.2"
   },
   "devDependencies": {
-    "@nats-io/jetstream": "^3.4.0",
-    "@nats-io/nats-core": "^3.4.0",
-    "@nats-io/transport-node": "^3.4.0",
+    "@nats-io/jetstream": "^3.5.0",
+    "@nats-io/nats-core": "^3.5.0",
+    "@nats-io/transport-node": "^3.5.0",
     "ioredis": "^6.0.0",
-    "pkgroll": "2.27.1"
+    "pkgroll": "2.29.1"
   },
   "sideEffects": false
 }

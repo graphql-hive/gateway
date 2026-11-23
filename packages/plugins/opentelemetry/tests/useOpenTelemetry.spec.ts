@@ -63,7 +63,6 @@ import {
   buildTestGateway,
   disableAll,
   getContextManager,
-  getLimits,
   getPropagator,
   getResource,
   getSampler,

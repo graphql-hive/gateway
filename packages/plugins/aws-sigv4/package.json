@@ -42,19 +42,19 @@
     "graphql": "^16.9.0 || ^17.0.0"
   },
   "dependencies": {
-    "@aws-sdk/client-sts": "^3.1169.0",
+    "@aws-sdk/client-sts": "^3.1173.0",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "aws4": "1.13.2",
     "tslib": "^2.9.1"
   },
   "devDependencies": {
-    "@apollo/subgraph": "^2.16.0",
+    "@apollo/subgraph": "^2.17.0",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@types/aws4": "^1.11.6",
     "graphql": "^17.1.0",
-    "graphql-yoga": "^6.1.0",
-    "pkgroll": "2.27.1"
+    "graphql-yoga": "^6.1.1",
+    "pkgroll": "2.29.1"
   },
   "sideEffects": false
 }

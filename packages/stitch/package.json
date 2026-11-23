@@ -54,8 +54,8 @@
     "array-shuffle": "4.1.0",
     "dataloader": "^2.2.3",
     "graphql": "^17.1.0",
-    "graphql-yoga": "^6.1.0",
-    "pkgroll": "2.27.1",
+    "graphql-yoga": "^6.1.1",
+    "pkgroll": "2.29.1",
     "rxjs": "^7.8.2"
   },
   "sideEffects": false

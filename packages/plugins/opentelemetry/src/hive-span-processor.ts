@@ -19,9 +19,6 @@ import {
 } from './attributes';
 import { CircuitBreakerExporter } from './circuit-breaker-exporter';
 
-// sdk-trace doesnt export the span implementation, we only need its writable end time
-type SpanImpl = Span & { endTime: HrTime };
-
 /**
  * The batching options of a `BatchSpanProcessor`, without the exporter which is provided separately.
  */

@@ -2,8 +2,8 @@
   "name": "@e2e/edfs-gateway-defs",
   "private": true,
   "dependencies": {
-    "@nats-io/transport-node": "^3.4.0",
+    "@nats-io/transport-node": "^3.5.0",
     "graphql": "^17.1.0",
-    "graphql-sse": "^2.6.3"
+    "graphql-sse": "^2.6.4"
   }
 }

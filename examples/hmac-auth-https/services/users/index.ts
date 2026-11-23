@@ -23,24 +23,28 @@ const yoga = createYoga({
     }),
     useForwardedJWT(),
   ],
-  schema: buildSubgraphSchema({
-    typeDefs: parse(readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf-8')),
-    resolvers: {
-      Query: {
-        me: (_, __, context: any) => {
-          const jwtPayload: JWTExtendContextFields = context.jwt;
-          return users.find((user) => user.id === jwtPayload?.payload?.sub);
+  schema: buildSubgraphSchema([
+    {
+      typeDefs: parse(
+        readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf-8'),
+      ),
+      resolvers: {
+        Query: {
+          me: (_, __, context: any) => {
+            const jwtPayload: JWTExtendContextFields = context.jwt;
+            return users.find((user) => user.id === jwtPayload?.payload?.sub);
+          },
+          users: () => users,
+          user: (_, { id }) => users.find((user) => user.id === id),
         },
-        users: () => users,
-        user: (_, { id }) => users.find((user) => user.id === id),
-      },
-      User: {
-        __resolveReference: (reference) => {
-          return users.find((user) => user.id === reference.id);
+        User: {
+          __resolveReference: (reference) => {
+            return users.find((user) => user.id === reference.id);
+          },
         },
       },
     },
-  }),
+  ]),
 });
 
 const port = 4001;
