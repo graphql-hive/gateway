@@ -8,11 +8,10 @@ import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
   collectFields,
   ExecutionRequest,
-  getArgumentValues,
   getDefinedRootType,
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
-import { GraphQLSchema } from 'graphql';
+import { getArgumentValues, GraphQLSchema } from 'graphql';
 
 /**
  * Creates an executor that uses the schema created by stitching together multiple subschemas.

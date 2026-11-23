@@ -2,14 +2,11 @@ import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
-import {
-  createDeferred,
-  fakePromise,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
+import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { fakeRejectPromise, isDebug } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { createRouter, Response, Type } from 'fets';
 import {
   buildSchema,
@@ -434,8 +431,9 @@ describe('Gateway Runtime', () => {
       handler: () => Response.json({ message: 'Hello, world!' }),
     });
     let subgraphCallCnt = 0;
-    const subgraphDeferred = createDeferred<GraphQLSchema>();
+    const subgraphDeferred = Promise.withResolvers<GraphQLSchema>();
     await using subgraphRuntime = createGatewayRuntime({
+      logging: false,
       subgraph() {
         subgraphCallCnt++;
         return subgraphDeferred.promise;
@@ -560,7 +558,7 @@ describe('Gateway Runtime', () => {
   describe('inboundInflightRequestDeduplication', () => {
     it('deduplicates identical concurrent requests when enabled', async () => {
       let pingCnt = 0;
-      const pingDeferred = createDeferred<string>();
+      const pingDeferred = Promise.withResolvers();
       const upstream = createYoga({
         schema: createSchema({
           typeDefs: /* GraphQL */ `
@@ -620,7 +618,7 @@ describe('Gateway Runtime', () => {
 
     it('passes shouldIncludeHeader option through to the plugin', async () => {
       let pingCnt = 0;
-      const pingDeferred = createDeferred<string>();
+      const pingDeferred = Promise.withResolvers();
       const upstream = createYoga({
         schema: createSchema({
           typeDefs: /* GraphQL */ `

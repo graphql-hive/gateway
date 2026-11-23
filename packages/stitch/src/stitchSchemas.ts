@@ -39,7 +39,7 @@ import {
   createStitchingInfo,
 } from './stitchingInfo.js';
 import {
-  isolateComputedFieldsTransformer,
+  deferComputedFieldsTransformer,
   splitMergedTypeEntryPointsTransformer,
 } from './subschemaConfigTransforms/index.js';
 import { buildTypeCandidates, buildTypes } from './typeCandidates.js';
@@ -98,9 +98,7 @@ export function stitchSchemas<
 
   if (extensions.length > 0) {
     const mergedExtensions = concatAST(extensions);
-    schema = extendSchema(schema, mergedExtensions, {
-      commentDescriptions: true,
-    } as any);
+    schema = extendSchema(schema, mergedExtensions);
   }
 
   // addLocalFieldResolvers writes the wrappers it builds back into this map, so
@@ -362,13 +360,12 @@ function addLocalFieldResolvers<TContext extends Record<string, any>>(
 }
 
 const subschemaConfigTransformerPresets: Array<SubschemaConfigTransform<any>> =
-  [isolateComputedFieldsTransformer, splitMergedTypeEntryPointsTransformer];
+  [deferComputedFieldsTransformer, splitMergedTypeEntryPointsTransformer];
 
 function applySubschemaConfigTransforms<TContext = Record<string, any>>(
   subschemaConfigTransforms: Array<SubschemaConfigTransform<TContext>>,
   subschemaOrSubschemaConfig:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, TContext>,
+    GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
   subschemaMap: Map<
     GraphQLSchema | SubschemaConfig<any, any, any, TContext>,
     Subschema<any, any, any, TContext>

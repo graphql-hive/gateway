@@ -5,7 +5,7 @@ import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { ServerAdapterInitialContext } from '@whatwg-node/server';
 import { getEnvStr } from '~internal/env';
 import aws4, { type Request as AWS4Request } from 'aws4';
-import { createGraphQLError } from 'graphql-yoga';
+import { GraphQLError } from 'graphql';
 import {
   AWSSignV4Headers,
   AWSSignv4PluginIncomingOptions,
@@ -31,7 +31,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
         }
       : undefined,
   onExpired() {
-    throw createGraphQLError('Request is expired', {
+    throw new GraphQLError('Request is expired', {
       extensions: {
         http: {
           status: 401,
@@ -41,7 +41,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
     });
   },
   onMissingHeaders() {
-    throw createGraphQLError('Required headers are missing', {
+    throw new GraphQLError('Required headers are missing', {
       extensions: {
         http: {
           status: 401,
@@ -51,7 +51,7 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
     });
   },
   onSignatureMismatch() {
-    throw createGraphQLError('The signature does not match', {
+    throw new GraphQLError('The signature does not match', {
       extensions: {
         http: {
           status: 401,

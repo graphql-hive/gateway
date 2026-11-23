@@ -1,5 +1,5 @@
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
-import { createDeferred } from '@graphql-tools/utils';
+import { Logger } from '@graphql-hive/logger';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { GraphQLSchema } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -106,7 +106,6 @@ describe('Unified graph metadata', () => {
         getUnifiedGraph: () => ({ graph: sdlA, metadata: { version: '1' } }),
         transportContext: {
           log,
-          logger: LegacyLogger.from(log),
           cache: {
             get: () => sdlA,
             set: () => {},
@@ -162,7 +161,7 @@ describe('Unified graph metadata', () => {
   });
 
   it('keeps the metadata local to each concurrent load', async () => {
-    const handlingA = createDeferred<void>();
+    const handlingA = createDeferredPromise<void>();
     const loads = [
       { graph: sdlA, metadata: { version: 'A' } },
       { graph: sdlB, metadata: { version: 'B' } },

@@ -100,6 +100,7 @@ describe.skipIf(process.env['LEAK_TEST'])(
     it('response caching plugin respect @cacheControl(maxAge:) w/ @composeDirective', async () => {
       await using cache = new InmemoryLRUCache();
       await using gw = createGatewayRuntime({
+        logging: false,
         supergraph,
         cache,
         responseCaching: {
@@ -171,6 +172,7 @@ describe.skipIf(process.env['LEAK_TEST'])(
     it('http caching plugin should respect cache control headers', async () => {
       await using cache = new InmemoryLRUCache();
       await using gw = createGatewayRuntime({
+        logging: false,
         supergraph,
         cache,
         plugins: (ctx) => [useHttpCache(ctx)],

@@ -79,7 +79,8 @@ describe('AWS Sigv4', () => {
           // s3 and eu-central-1 extracted from the URL
           'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
           'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
-          'Signature=6f39713ec7055a3c42088a38b76ebfc41623d805c13d1923397878f58a40ce0d',
+          // Accept includes bare multipart/mixed for incremental delivery (executor-http)
+          'Signature=6b3bd19cc796b9beb9dfcd991953a9461cd4599ae4d7cea6dc689a266e365e17',
         ].join(', '),
     );
   });

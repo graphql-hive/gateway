@@ -41,9 +41,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         opentelemetry,
         opentelemetryExporterType,
         maskedErrors,
-        hiveRegistryToken,
         hiveTarget,
-        hiveUsageTarget,
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,
@@ -82,9 +80,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       const registryConfig: Pick<SubgraphConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
-        hiveRegistryToken,
         hiveTarget,
-        hiveUsageTarget,
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,

@@ -5,7 +5,6 @@ import type {
 } from '@graphql-mesh/transport-common';
 import { dispose } from '@graphql-mesh/utils';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createDeferred } from '@graphql-tools/utils';
 import { createDisposableWebSocketServer } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
@@ -218,7 +217,7 @@ describe('WS Transport', () => {
 
   it('should create new executor after connection closed', async () => {
     let close!: () => void;
-    const { promise: waitForClosed, resolve: closed } = createDeferred<void>();
+    const { promise: waitForClosed, resolve: closed } = Promise.withResolvers();
 
     const onClient = vi.fn((client: Client) => {
       client.on('opened', (socket) => {

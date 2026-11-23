@@ -11,17 +11,6 @@ env:
   CI: true
 
 jobs:
-  dependencies:
-    if: github.event_name == 'pull_request' && github.event.pull_request.title != 'Upcoming Release Changes'
-    name: Dependencies
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-dependencies
-      cancel-in-progress: true
-    uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yml@v1
-    with:
-      node-version-file: .node-version
-    secrets:
-      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
   snapshot-npm-tag:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -205,14 +194,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          [
-            ubuntu-latest,
-            macos-15-intel,
-            macos-15,
-            windows-latest,
-            ubuntu-24.04-arm,
-          ]
+        os: [ubuntu-latest, macos-15, windows-latest, ubuntu-24.04-arm]
     steps:
       - name: Version
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
@@ -291,16 +273,17 @@ jobs:
 
             [![Download](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload.outputs.artifact-id }})
 
-  examples:
-    name: Examples
-    needs: [stable, snapshot]
-    if: always() && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
-    uses: graphql-hive/gateway/.github/workflows/examples.yml@main
-    # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
-    #       want the main branch to always use examples of stable releases. yeah sure, the examples
-    #       workflow will open a PR to update the examples to stable ones - but there will be some window
-    #       during which the examples on main will use snapshots and we want to avoid that
-    # with:
-    #   publishedPackages: ${{needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages}}
-    secrets:
-      token: ${{secrets.BOT_GITHUB_TOKEN}}
+  # TODO: re-enable once v3 stack is merged
+  # examples:
+  #   name: Examples
+  #   needs: [stable, snapshot]
+  #   if: always() && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
+  #   uses: graphql-hive/gateway/.github/workflows/examples.yml@main
+  #   # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
+  #   #       want the main branch to always use examples of stable releases. yeah sure, the examples
+  #   #       workflow will open a PR to update the examples to stable ones - but there will be some window
+  #   #       during which the examples on main will use snapshots and we want to avoid that
+  #   # with:
+  #   #   publishedPackages: ${{needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages}}
+  #   secrets:
+  #     token: ${{secrets.BOT_GITHUB_TOKEN}}

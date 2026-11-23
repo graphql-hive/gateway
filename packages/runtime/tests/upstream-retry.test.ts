@@ -5,7 +5,8 @@ import {
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
 import { Response } from '@whatwg-node/fetch';
-import { createGraphQLError, createSchema, createYoga } from 'graphql-yoga';
+import { GraphQLError } from 'graphql';
+import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
 describe('Upstream Retry', () => {
@@ -27,6 +28,7 @@ describe('Upstream Retry', () => {
       },
     });
     await using upstreamServer = createYoga({
+      logging: false,
       schema: upstreamSchema,
       plugins: [
         {
@@ -36,9 +38,7 @@ describe('Upstream Retry', () => {
               endResponse(
                 Response.json(
                   {
-                    errors: [
-                      createGraphQLError(`Error in attempt ${attempts}`),
-                    ],
+                    errors: [new GraphQLError(`Error in attempt ${attempts}`)],
                   },
                   {
                     status: 500,
@@ -52,6 +52,7 @@ describe('Upstream Retry', () => {
       ],
     });
     await using gateway = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'upstream',
@@ -133,6 +134,7 @@ describe('Upstream Retry', () => {
       },
     });
     await using gateway = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'upstream',
@@ -149,7 +151,7 @@ describe('Upstream Retry', () => {
             lastAttempt = Date.now();
             return Response.json(
               {
-                errors: [createGraphQLError(`Rate limited`)],
+                errors: [new GraphQLError(`Rate limited`)],
               },
               {
                 status: 429,
