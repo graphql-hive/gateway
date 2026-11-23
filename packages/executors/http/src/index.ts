@@ -209,6 +209,15 @@ export interface HTTPExecutorOptions {
 
 export type HeadersConfig = Record<string, string>;
 
+function assignHeaders(
+  target: Record<string, any>,
+  source: HeadersConfig,
+): void {
+  for (const name of Object.keys(source)) {
+    target[name.toLowerCase()] = source[name];
+  }
+}
+
 export interface InflightRequestOptions {
   url: string;
   method: string;
@@ -338,13 +347,14 @@ export function buildHTTPExecutor(
 
     const headers: Record<string, any> = { accept };
 
-    if (options?.headers) {
+    const optionHeaders = options?.headers;
+    if (optionHeaders) {
       isCustomHeader = true;
-      Object.assign(
+      assignHeaders(
         headers,
-        typeof options?.headers === 'function'
-          ? options.headers(request)
-          : options?.headers,
+        typeof optionHeaders === 'function'
+          ? optionHeaders(request)
+          : optionHeaders,
       );
     }
 
@@ -352,7 +362,7 @@ export function buildHTTPExecutor(
       isCustomHeader = true;
       const { headers: headersFromExtensions, ...restExtensions } =
         request.extensions;
-      Object.assign(headers, headersFromExtensions);
+      assignHeaders(headers, headersFromExtensions as HeadersConfig);
       request.extensions = restExtensions;
     }
 
