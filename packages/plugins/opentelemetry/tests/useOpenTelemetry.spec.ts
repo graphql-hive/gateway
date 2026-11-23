@@ -52,7 +52,6 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace';
-import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
 import { CircuitBreakerExporter } from '../src/circuit-breaker-exporter';
@@ -1328,16 +1327,9 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        ...(usingHiveRouterRuntime()
-          ? {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-            }
-          : {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-              [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
-            }),
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 
         // Federation attributes
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',

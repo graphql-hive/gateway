@@ -1522,8 +1522,15 @@ function executeSubgraphRequest(
   document: DocumentNode,
   variables: Record<string, any> | undefined,
 ) {
+  // the planner's operations are anonymous, name them after the client's like the default handler
+  const operationName = getOperationASTFromRequest(
+    executionContext.executionRequest,
+  ).name?.value;
   return executionContext.onSubgraphExecute(fetch.node.serviceName, {
-    document,
+    document: operationName
+      ? getNamedDocument(document, operationName)
+      : document,
+    operationName,
     variables,
     operationType:
       (fetch.node.operationKind as OperationTypeNode | undefined) ??
@@ -2170,6 +2177,36 @@ const getDocumentNodeOfFetchingNode = memoize1(
     return doc;
   },
 );
+
+const namedDocuments = new WeakMap<DocumentNode, Map<string, DocumentNode>>();
+
+/**
+ * The document with its operation named `operationName`, made once per document and name. Its
+ * string is printed and cached by `getDocumentString` on first use.
+ */
+function getNamedDocument(
+  document: DocumentNode,
+  operationName: string,
+): DocumentNode {
+  let byName = namedDocuments.get(document);
+  if (!byName) {
+    byName = new Map();
+    namedDocuments.set(document, byName);
+  }
+  let named = byName.get(operationName);
+  if (!named) {
+    named = {
+      ...document,
+      definitions: document.definitions.map((definition) =>
+        definition.kind === Kind.OPERATION_DEFINITION
+          ? { ...definition, name: { kind: Kind.NAME, value: operationName } }
+          : definition,
+      ),
+    };
+    byName.set(operationName, named);
+  }
+  return named;
+}
 
 /** The response key of the first root field of the fetch, where errors without a path go. */
 function getDefaultErrorPath(fetchNode: FetchNode): (string | number)[] {

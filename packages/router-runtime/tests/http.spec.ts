@@ -95,3 +95,21 @@ it('responds with 200 and nulls the fields of a subgraph whose connection droppe
     ],
   });
 });
+
+it('sends the operation name of the client to the subgraph', async () => {
+  const bodies: unknown[] = [];
+  await using gw = createGateway(async (_url, init) => {
+    bodies.push(JSON.parse(String(init?.body)));
+    return Response.json({ data: { orders: ['order'] } });
+  });
+
+  const res = await post(gw, {
+    query: 'query Orders { orders }',
+    operationName: 'Orders',
+  });
+
+  await expect(res.json()).resolves.toEqual({ data: { orders: ['order'] } });
+  expect(bodies).toEqual([
+    { query: 'query Orders{orders}', operationName: 'Orders' },
+  ]);
+});
