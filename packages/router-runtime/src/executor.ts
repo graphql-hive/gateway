@@ -185,6 +185,9 @@ export function executeQueryPlan({
     entityKeys,
     possibleTypes,
   });
+  if (Array.isArray(executionContext)) {
+    return { errors: executionContext };
+  }
   const subscription = schedule.subscription;
   if (!subscription) {
     return handleMaybePromise(
@@ -662,7 +665,7 @@ function createQueryPlanExecutionContext({
   onSubgraphExecute,
   entityKeys,
   possibleTypes,
-}: CreateExecutionContextOpts): QueryPlanExecutionContext {
+}: CreateExecutionContextOpts): QueryPlanExecutionContext | GraphQLError[] {
   const operation = getOperationASTFromRequest(executionRequest);
 
   let variableValues = executionRequest.variables;
@@ -676,13 +679,16 @@ function createQueryPlanExecutionContext({
       ),
     );
     if ('errors' in variableValuesResult) {
-      if (variableValuesResult.errors.length === 1) {
-        throw variableValuesResult.errors[0];
-      }
-      throw new AggregateError(
-        variableValuesResult.errors,
-        'Variable parsing error',
-      );
+      // bad variables are a bad request, like in the default executor
+      return variableValuesResult.errors.map((error) => {
+        Object.defineProperty(error, 'extensions', {
+          value: {
+            ...error.extensions,
+            http: { ...(error.extensions?.['http'] || {}), status: 400 },
+          },
+        });
+        return error;
+      });
     }
     variableValues = variableValuesResult.variableValues.coerced;
   }
