@@ -33,6 +33,8 @@ const ESM_PACKAGES = [
   // commander v15 and its extra typings are esm only and imported by the gateway cli
   'commander',
   '@commander-js',
+  // nestjs 12 is esm only
+  '@nestjs',
 ];
 
 export default {
