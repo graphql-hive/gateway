@@ -150,10 +150,6 @@ jobs:
           #   os: macos-15 # MacOS Arm64
           #   gateway-runner: bin
           #   hive-router-runtime: 0
-          # - workflow-name: Node Binary on MacOS x86_64
-          #   os: macos-15-intel # MacOS x86_64
-          #   gateway-runner: bin
-          #   hive-router-runtime: 0
 
           # Bun
           - workflow-name: Bun on Ubuntu
