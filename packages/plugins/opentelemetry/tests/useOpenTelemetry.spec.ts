@@ -64,6 +64,7 @@ import {
   buildTestGateway,
   disableAll,
   getContextManager,
+  getLimits,
   getPropagator,
   getResource,
   getSampler,
@@ -378,9 +379,8 @@ describe('useOpenTelemetry', () => {
         },
       });
 
-      // @ts-ignore access private field
-      const registeredConfig = getTracerProvider()._config;
-      expect(registeredConfig).toMatchObject({
+      // general limits are only span limits fallbacks, explicit span limits win
+      expect(getLimits()).toMatchObject({
         spanLimits: {
           attributeCountLimit: 1,
           attributePerEventCountLimit: 2,
@@ -388,10 +388,6 @@ describe('useOpenTelemetry', () => {
           attributeValueLengthLimit: 4,
           eventCountLimit: 5,
           linkCountLimit: 6,
-        },
-        generalLimits: {
-          attributeCountLimit: 7,
-          attributeValueLengthLimit: 8,
         },
       });
     });

@@ -415,6 +415,86 @@ describe('SubschemaConfig.defer - forward @defer to subgraph', () => {
     ]);
   });
 
+  it('merges deferred patches under aliases named like builtin object members', async () => {
+    const schema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type Details {
+          name: String
+        }
+        type Product {
+          id: ID!
+          details: Details
+        }
+        type Query {
+          product: Product
+        }
+      `,
+      resolvers: {
+        Query: { product: () => ({ id: '1', details: {} }) },
+        Details: {
+          name: async () => {
+            await setTimeout(10);
+            return 'Widget details';
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = stitchSchemas({
+      subschemas: [
+        {
+          schema,
+          defer: true,
+          executor: executorFromSchema(schema),
+        },
+      ],
+    });
+
+    const builtin = Object.prototype.hasOwnProperty as unknown as Record<
+      string,
+      unknown
+    >;
+    try {
+      const result = await normalizedExecutor({
+        schema: gatewaySchema,
+        document: parse(/* GraphQL */ `
+          query {
+            product {
+              id
+              hasOwnProperty: details {
+                ... @defer {
+                  call: name
+                }
+              }
+            }
+          }
+        `),
+      });
+
+      expect(isAsyncIterable(result)).toBe(true);
+      const values: Array<{
+        incremental?: Array<{ data?: unknown; path?: Array<string | number> }>;
+      }> = [];
+      for await (const v of result as AsyncIterable<(typeof values)[number]>) {
+        values.push(v);
+      }
+
+      // the alias must only ever land on the response object, never on the shared builtin
+      expect(Object.getOwnPropertyNames(builtin)).not.toContain('call');
+      expect(values.flatMap((v) => v.incremental ?? [])).toEqual([
+        {
+          data: { call: 'Widget details' },
+          path: ['product', 'hasOwnProperty'],
+        },
+      ]);
+    } finally {
+      // dont leak a polluted builtin into other tests if the assertion above fails
+      if (Object.getOwnPropertyNames(builtin).includes('call')) {
+        delete builtin['call'];
+      }
+    }
+  });
+
   /**
    * wrapSchema over a stitched schema, forward `@defer`, nested `@defer` on a
    * field merged from another subgraph. Flat object covers the recursion /

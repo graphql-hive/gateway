@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 2.0.80
+### Patch Changes
+
+
+
+- [#2779](https://github.com/graphql-hive/gateway/pull/2779) [`923f786`](https://github.com/graphql-hive/gateway/commit/923f786ebe6c2c158ecab3e65ee1039240815a5d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Validate incoming AWS SigV4 signatures for GraphQL operations over WebSockets
+  
+  WebSocket operations do not go through the request parsing phase, so the plugin validates the WebSocket upgrade request before executing each operation. Unsigned WebSocket clients are rejected the same way unsigned HTTP requests are.
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.15.1
+
 ## 2.0.79
 ### Patch Changes
 

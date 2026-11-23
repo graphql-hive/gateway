@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 2.14.4
+### Patch Changes
+
+- Updated dependencies [[`a0bd5e8`](https://github.com/graphql-hive/gateway/commit/a0bd5e8882d04c1211c244adc991e62bb4e5c369)]:
+  - @graphql-tools/delegate@12.3.6
+  - @graphql-tools/batch-delegate@10.1.8
+  - @graphql-tools/federation@4.6.7
+  - @graphql-mesh/fusion-runtime@1.15.1
+  - @graphql-tools/stitch@10.4.6
+  - @graphql-tools/wrap@11.2.8
+
 ## 2.14.3
 ### Patch Changes
 
