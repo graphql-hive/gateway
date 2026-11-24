@@ -33,6 +33,12 @@ import { handleMultipartMixedResponse } from './handleMultipartMixedResponse.js'
 import { isLiveQueryOperationDefinitionNode } from './isLiveQueryOperationDefinitionNode.js';
 import { prepareGETUrl } from './prepareGETUrl.js';
 import {
+  getRawResultAcceptor,
+  getRawResultBody,
+  readRawResultOrText,
+  shareRawResult,
+} from './rawResult.js';
+import {
   createGraphQLErrorForAbort,
   createResultForAbort,
   hashSHA256,
@@ -392,6 +398,11 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
+    // HTTP details are written into the result, which needs it parsed
+    const rawResultAcceptor = options?.exposeHTTPDetailsInExtensions
+      ? undefined
+      : getRawResultAcceptor(request);
+
     let serializeFn =
       function serialize(): MaybePromise<SerializedExecutionRequest> {
         return serializeExecutionRequest({
@@ -525,6 +536,11 @@ export function buildHTTPExecutor(
                   return handleMultipartMixedResponse(fetchResult, {
                     mergeIncremental: options?.mergeIncremental,
                   });
+                }
+
+                // an accepted body stays unparsed; a rejected one takes the path below
+                if (rawResultAcceptor) {
+                  return readRawResultOrText(fetchResult, rawResultAcceptor);
                 }
 
                 return fetchResult.text();
@@ -671,6 +687,15 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
+          // checked first because reading `data` would parse a raw result
+          const rawBody = getRawResultBody(result);
+          if (rawBody) {
+            return sharedInflightRequests.has(
+              inflightRequest as Promise<ExecutionResult>,
+            )
+              ? shareRawResult(rawBody, result, rawResultAcceptor)
+              : result;
+          }
           if (
             result == null ||
             !result.data ||
@@ -877,3 +902,8 @@ function coerceFetchError(
 }
 
 export { isLiveQueryOperationDefinitionNode };
+export {
+  RAW_RESULT_ACCEPTOR,
+  getRawResultBody,
+  type RawResultAcceptor,
+} from './rawResult.js';
