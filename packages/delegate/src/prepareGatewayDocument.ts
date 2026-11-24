@@ -21,6 +21,7 @@ import {
   isLeafType,
   isObjectType,
   Kind,
+  print,
   SelectionNode,
   SelectionSetNode,
   TypeInfo,
@@ -426,7 +427,8 @@ function isFieldNodeSatisfiedBySelections(
     if (
       existingSelection.kind === Kind.FIELD &&
       existingSelection.name.value === fieldNode.name.value &&
-      existingSelection.alias?.value === fieldNode.alias?.value
+      existingSelection.alias?.value === fieldNode.alias?.value &&
+      isConditionCoveredBy(fieldNode, existingSelection)
     ) {
       if (fieldNode.selectionSet && !existingSelection.selectionSet) {
         return false;
@@ -444,6 +446,29 @@ function isFieldNodeSatisfiedBySelections(
     }
   }
   return false;
+}
+
+// @skip/@include apply to each selection separately, so a conditional selection
+// only covers another one with exactly the same conditions. An unconditional
+// selection covers every other.
+function getConditionKey(fieldNode: FieldNode) {
+  let key = '';
+  if (fieldNode.directives) {
+    for (const directive of fieldNode.directives) {
+      if (
+        directive.name.value === 'skip' ||
+        directive.name.value === 'include'
+      ) {
+        key += print(directive);
+      }
+    }
+  }
+  return key;
+}
+
+function isConditionCoveredBy(fieldNode: FieldNode, existing: FieldNode) {
+  const existingKey = getConditionKey(existing);
+  return existingKey === '' || existingKey === getConditionKey(fieldNode);
 }
 
 export function isSelectionSetSatisfiedBySchema(
