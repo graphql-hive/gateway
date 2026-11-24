@@ -6,7 +6,7 @@ import {
 } from '@internal/testing';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { ReadableStream, Request, Response } from '@whatwg-node/fetch';
+import { Headers, ReadableStream, Request, Response } from '@whatwg-node/fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { createServerAdapter } from '@whatwg-node/server';
 import { GraphQLError, parse } from 'graphql';
@@ -227,6 +227,91 @@ describe('buildHTTPExecutor', () => {
       data: expect.any(Object),
     });
   });
+  it.each(['Accept', 'ACCEPT'])(
+    'should override the default accept header case-insensitively with %s',
+    async (headerName) => {
+      await using executor = buildHTTPExecutor({
+        headers: { [headerName]: 'application/json' },
+        fetch(_url, init) {
+          const headers = init?.headers as Record<string, string>;
+          const matchingNames = Object.keys(headers).filter(
+            (name) => name.toLowerCase() === 'accept',
+          );
+          expect(matchingNames).toHaveLength(1);
+          expect(new Headers(headers).get('accept')).toBe('application/json');
+          return Response.json({ data: { hello: 'world' } });
+        },
+      });
+
+      const res = await executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      });
+      expect(res).toEqual({ data: { hello: 'world' } });
+    },
+  );
+
+  it.each(['GET', 'POST'] as const)(
+    'should preserve a custom content-type header on %s requests',
+    async (method) => {
+      await using executor = buildHTTPExecutor({
+        method,
+        useGETForQueries: true,
+        useContentTypeForGETRequests: true,
+        headers: { 'Content-Type': 'application/vnd.api+json' },
+        fetch(_url, init) {
+          const headers = init?.headers as Record<string, string>;
+          const matchingNames = Object.keys(headers).filter(
+            (name) => name.toLowerCase() === 'content-type',
+          );
+          expect(matchingNames).toHaveLength(1);
+          expect(new Headers(headers).get('content-type')).toBe(
+            'application/vnd.api+json',
+          );
+          return Response.json({ data: { hello: 'world' } });
+        },
+      });
+
+      const res = await executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      });
+      expect(res).toEqual({ data: { hello: 'world' } });
+    },
+  );
+
+  it('should merge request extension headers case-insensitively', async () => {
+    await using executor = buildHTTPExecutor({
+      headers: { Accept: 'application/json' },
+      fetch(_url, init) {
+        const headers = init?.headers as Record<string, string>;
+        expect(
+          Object.keys(headers).filter(
+            (name) => name.toLowerCase() === 'accept',
+          ),
+        ).toHaveLength(1);
+        expect(new Headers(headers).get('accept')).toBe('application/graphql');
+        return Response.json({ data: { hello: 'world' } });
+      },
+    });
+
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          hello
+        }
+      `),
+      extensions: { headers: { ACCEPT: 'application/graphql' } },
+    });
+    expect(res).toEqual({ data: { hello: 'world' } });
+  });
+
   it('stops existing requests when the executor is disposed', async () => {
     // Create a server that never responds
     const neverResolves = createDeferredPromise<Response>();
