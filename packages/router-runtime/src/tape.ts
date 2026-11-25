@@ -157,7 +157,13 @@ export class ResponseTape {
    * valid JSON as far as the tape can tell. A `shared` body, one other requests add too, like the
    * consumers of a deduplicated subgraph request, is tokenized once for all of them.
    */
+  /** How many of its bodies aren't `shared`, see {@link add}. */
+  unsharedBodies = 0;
+
   add(body: Uint8Array, shared = false): number {
+    if (!shared) {
+      this.unsharedBodies++;
+    }
     const bodyIndex = this.bodies.length;
     this.bodies.push(body);
     const top = this.length;
@@ -460,6 +466,7 @@ export class ResponseTape {
   reset() {
     this.length = 0;
     this.bodies = [];
+    this.unsharedBodies = 0;
     this.cursorTop = 0;
     this.indexTop = 0;
   }
@@ -566,6 +573,22 @@ export class ResponseTape {
   }
 
   /** Calls `fn` with every item of the list, merged with the items of the lists merged into it. */
+  /**
+   * The first item of a list, -1 for none, and with {@link nextItem} the ones after: its items
+   * without a callback, which costs its caller a context for what the callback captures on every
+   * call. The items of a merged list are its {@link itemOf}s instead.
+   */
+  firstItem(list: number): number {
+    const k = list + SLOTS;
+    return k < this.tape[list + 3]! ? k : -1;
+  }
+
+  /** The item after `item` of a list, -1 for none, see {@link firstItem}. */
+  nextItem(list: number, item: number): number {
+    const k = this.tape[item + 3]!;
+    return k < this.tape[list + 3]! ? k : -1;
+  }
+
   forEachItem(list: number, fn: (item: number, index: number) => void) {
     const tape = this.tape;
     const merged = tape[list + 5] !== -1;
@@ -848,6 +871,30 @@ export class ResponseTape {
   }
 
   /** The bytes of a scalar, for {@link ResponseWriter.copy}. */
+  /** Whether the value is a string, a number, `true`, `false` or `null`. */
+  isScalar(node: number): boolean {
+    const kind = this.tape[node]!;
+    return kind === K_STR || kind === K_PRIM;
+  }
+
+  /** Whether the member of the value `next` comes right after the member of `value`. */
+  follows(value: number, next: number): boolean {
+    return this.tape[value + 3] === next - SLOTS;
+  }
+
+  /**
+   * Writes the members of an object from the one of the value `first` to the one of `last`, keys
+   * and commas included, as they are in their body.
+   */
+  copyMembers(writer: ResponseWriter, first: number, last: number) {
+    const tape = this.tape;
+    writer.copy(
+      this.bodies[tape[first + 4]!]!,
+      tape[first - SLOTS + 1]!,
+      tape[last + 2]!,
+    );
+  }
+
   /** Writes the bytes of a value as they are. */
   copyTo(writer: ResponseWriter, node: number) {
     const tape = this.tape;

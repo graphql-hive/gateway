@@ -229,7 +229,7 @@ export function executeQueryPlan({
   ) {
     executionContext.tape = tapePool.pop() ?? new ResponseTape();
     // what the root fetches merge into, the data is an object even when none ran
-    executionContext.tapeRoot = executionContext.tape.add(EMPTY_OBJECT);
+    executionContext.tapeRoot = executionContext.tape.add(EMPTY_OBJECT, true);
   }
   if (!subscription) {
     return handleMaybePromise(
@@ -1586,8 +1586,10 @@ function traverseFlattenPath(
         const typename = (current as Record<string, unknown>)['__typename'];
         if (
           typeof typename !== 'string' ||
-          segment.typeCondition.some((typeCondition) =>
-            satisfiesTypeCondition(possibleTypes, typename, typeCondition),
+          satisfiesSomeTypeCondition(
+            possibleTypes,
+            typename,
+            segment.typeCondition,
           )
         ) {
           traverseFlattenPath(
@@ -3401,6 +3403,20 @@ function addSubgraphResult(
   };
 }
 
+/** Whether `typename` satisfies one of the type conditions, without a callback, see {@link traverseTape}. */
+function satisfiesSomeTypeCondition(
+  possibleTypes: PossibleTypes,
+  typename: string,
+  typeConditions: string[],
+): boolean {
+  for (let i = 0; i < typeConditions.length; i++) {
+    if (satisfiesTypeCondition(possibleTypes, typename, typeConditions[i]!)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Like {@link traverseFlattenPath}, over the tape: calls `callback` with every value at the path,
  * from `index` on, and its path.
@@ -3422,19 +3438,25 @@ function traverseTape(
     callback(current, path);
     return;
   }
+  // loops without callbacks, a callback capturing its locals costs every call a context
   const kind = tape.kind(current);
   if (kind === K_ARR && segment.kind !== 'List') {
-    tape.forEachItem(current, (item) =>
+    const merged = tape.isMerged(current);
+    for (
+      let k = tape.firstItem(current), i = 0;
+      k !== -1;
+      k = tape.nextItem(current, k), i++
+    ) {
       traverseTape(
         tape,
-        item,
+        merged ? tape.itemOf(current, i) : k,
         flattenPath,
         index,
         possibleTypes,
         path,
         callback,
-      ),
-    );
+      );
+    }
     return;
   }
   switch (segment.kind) {
@@ -3459,11 +3481,16 @@ function traverseTape(
       if (kind !== K_ARR) {
         return;
       }
-      tape.forEachItem(current, (item, i) => {
+      const merged = tape.isMerged(current);
+      for (
+        let k = tape.firstItem(current), i = 0;
+        k !== -1;
+        k = tape.nextItem(current, k), i++
+      ) {
         path.push(i);
         traverseTape(
           tape,
-          item,
+          merged ? tape.itemOf(current, i) : k,
           flattenPath,
           index + 1,
           possibleTypes,
@@ -3471,7 +3498,7 @@ function traverseTape(
           callback,
         );
         path.pop();
-      });
+      }
       return;
     }
     case 'Cast': {
@@ -3482,8 +3509,10 @@ function traverseTape(
       const typename = tape.typename(tape.memberOf(current, TYPENAME_KEY));
       if (
         typename === undefined ||
-        segment.typeCondition.some((typeCondition) =>
-          satisfiesTypeCondition(possibleTypes, typename, typeCondition),
+        satisfiesSomeTypeCondition(
+          possibleTypes,
+          typename,
+          segment.typeCondition,
         )
       ) {
         traverseTape(
@@ -3550,8 +3579,9 @@ function hashEntityKey(
   possibleTypes: PossibleTypes,
   values: number[],
 ): number | undefined {
-  values.length = 0;
-  values.push(typenameNode);
+  // written over, `length = 0` would drop its memory and every entity would grow it again
+  let length = 0;
+  values[length++] = typenameNode;
   let hash = tape.hashBytes(typenameNode, 0x811c9dc5);
   for (const { typeCondition, quotedNames } of flat) {
     if (!appliesTo(typeCondition, typename, possibleTypes)) {
@@ -3559,7 +3589,7 @@ function hashEntityKey(
     }
     for (const name of quotedNames) {
       const value = tape.get(entity, name);
-      values.push(value);
+      values[length++] = value;
       // a missing field and every byte are told apart by what's mixed in before them
       hash = Math.imul(hash ^ (value === -1 ? 0x75 : 0x2c), 0x01000193);
       if (value === -1) {
@@ -3573,6 +3603,7 @@ function hashEntityKey(
       hash = tape.hashBytes(value, hash);
     }
   }
+  values.length = length;
   return hash;
 }
 
@@ -3768,6 +3799,19 @@ function writeResponseFromTape(
   executionContext: QueryPlanExecutionContext,
   projection: QueryPlan['projection'],
 ): ExecutionResult {
+  const tape = executionContext.tape!;
+  // the same bodies, every one of them shared with another request in flight, write the same
+  // response, the last one written for the plan is taken as it is
+  const reusable =
+    tape.unsharedBodies === 0 &&
+    executionContext.errors.length === 0 &&
+    !readsVariables(projection);
+  const last = reusable ? lastWrittenResponses.get(projection) : undefined;
+  if (last && sameBodies(last.bodies, tape.bodies)) {
+    releaseToPool(tapePool, tape);
+    executionContext.tape = undefined;
+    return createWrittenResult(last.response, undefined);
+  }
   const fields = getProjectedFields(projection);
   const writer = writerPool.pop() ?? new ResponseWriter();
   executionContext.missedNonNullField = false;
@@ -3795,6 +3839,12 @@ function writeResponseFromTape(
   }
   writer.byte(125);
   const response = writer.take();
+  if (reusable && executionContext.errors.length === 0) {
+    lastWrittenResponses.set(projection, {
+      bodies: tape.bodies.slice(),
+      response,
+    });
+  }
   // nothing reads them after the response is written, the next request can have them
   releaseToPool(writerPool, writer);
   releaseToPool(tapePool, executionContext.tape!);
@@ -3808,6 +3858,40 @@ function writeResponseFromTape(
       : undefined,
   );
 }
+
+/**
+ * The last response written from bodies all shared, by the plan's projection, see
+ * {@link writeResponseFromTape}. A body is shared only by requests in flight at once, so taking
+ * its response is like deduplicating the request, nothing older than what a request got is sent.
+ */
+const lastWrittenResponses = new WeakMap<
+  QueryPlan['projection'],
+  { bodies: Uint8Array[]; response: Uint8Array }
+>();
+
+function sameBodies(a: Uint8Array[], b: Uint8Array[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Whether a field of the projection has a condition, which reads the request's variables. */
+const readsVariables = memoize1(function readsVariables(
+  projection: QueryPlan['projection'],
+): boolean {
+  const reads = (fields: ProjectionField[]): boolean =>
+    fields.some(
+      (field) =>
+        !!field.condition || (!!field.selections && reads(field.selections)),
+    );
+  return reads(projection.fields);
+});
 
 /** Tapes and writers ready for the next request, so their memory doesn't have to grow again. */
 const tapePool: ResponseTape[] = [];
@@ -3838,6 +3922,12 @@ function writeObjectFromTape(
   const cursors = merged ? -1 : tape.openCursors(view);
   writer.byte(123);
   let first = true;
+  // scalar fields whose members follow each other in a subgraph's body are written as a run of
+  // its bytes at once, keys and commas included: a field is found by its response key, so the
+  // bytes are what writing them one by one would write. From the value of the first member of the
+  // run to the value of the last one
+  let runFirst = -1;
+  let runLast = -1;
   for (let i = 0; i < fields.length; i++) {
     const field = fields[i]!;
     if (field.parentTypes && !field.parentTypes.includes(typeName)) {
@@ -3856,6 +3946,36 @@ function writeObjectFromTape(
     if (failure === 'skip') {
       continue;
     }
+    const value =
+      failure || field.typename
+        ? -1
+        : merged
+          ? tape.resolved(index + i)
+          : tape.memberAt(view, field.quotedResponseKey, cursors);
+    if (
+      value !== -1 &&
+      !field.projectedSelections &&
+      tape.isScalar(value) &&
+      !(field.nonNull && tape.isNull(value))
+    ) {
+      if (runLast !== -1 && tape.follows(runLast, value)) {
+        runLast = value;
+        continue;
+      }
+      if (runFirst !== -1) {
+        tape.copyMembers(writer, runFirst, runLast);
+      }
+      if (!first) {
+        writer.byte(44);
+      }
+      first = false;
+      runFirst = runLast = value;
+      continue;
+    }
+    if (runFirst !== -1) {
+      tape.copyMembers(writer, runFirst, runLast);
+      runFirst = runLast = -1;
+    }
     writer.bytes(field.responseKeyPrefix, first ? 1 : 0);
     first = false;
     let written: boolean;
@@ -3866,9 +3986,6 @@ function writeObjectFromTape(
       writer.string(typeName);
       written = true;
     } else {
-      const value = merged
-        ? tape.resolved(index + i)
-        : tape.memberAt(view, field.quotedResponseKey, cursors);
       if (value === -1) {
         writer.null();
         written = false;
@@ -3913,6 +4030,9 @@ function writeObjectFromTape(
       writer.null();
       return false;
     }
+  }
+  if (runFirst !== -1) {
+    tape.copyMembers(writer, runFirst, runLast);
   }
   closeLookups(tape, merged, index, cursors);
   writer.byte(125);

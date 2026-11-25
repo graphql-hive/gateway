@@ -1,10 +1,10 @@
 // Load tests the gateway on the Hive Router runtime and reports, per scenario and run: requests
 // per second, latency, and the gateway's CPU time, GC time and memory per request.
 //
-//   node bench/router-runtime/run.mjs [--scenarios dedup,no-dedup] [--runs 2] [--duration 30s] [--vus 50] [--cpu-prof]
+//   node bench/router-runtime/run.mjs [--scenarios dedup,no-dedup] [--runs 2] [--duration 30s] [--vus 50] [--cpu-prof] [--heap-prof]
 //
-// With `--cpu-prof`, every run writes the gateway's CPU profile to its own directory next to the
-// logs, see `profile.mjs`.
+// With `--cpu-prof` or `--heap-prof`, every run writes the gateway's CPU or sampled allocation
+// profile to its own directory next to the logs, see `profile.mjs`.
 //
 // See README.md for what it needs.
 
@@ -26,6 +26,7 @@ const { values: args } = parseArgs({
     vus: { type: 'string', default: '50' },
     port: { type: 'string', default: '4000' },
     'cpu-prof': { type: 'boolean', default: false },
+    'heap-prof': { type: 'boolean', default: false },
   },
 });
 const subgraphsBin = path.resolve(
@@ -114,6 +115,7 @@ for (const scenario of args.scenarios.split(',')) {
         ...(args['cpu-prof']
           ? ['--cpu-prof', `--cpu-prof-dir=${path.join(tmp, `${scenario}-${run}.prof`)}`]
           : []),
+        ...(args['heap-prof'] ? ['--import', path.join(here, 'heap-prof.mjs')] : []),
         '--import',
         'tsx',
         '--import',
@@ -127,7 +129,13 @@ for (const scenario of args.scenarios.split(',')) {
         '--config-path',
         config,
       ],
-      { NODE_ENV: 'production', ROUTER_RUNTIME_BENCH_STATS: stats },
+      {
+        NODE_ENV: 'production',
+        ROUTER_RUNTIME_BENCH_STATS: stats,
+        ...(args['heap-prof'] && {
+          ROUTER_RUNTIME_BENCH_HEAP_PROF: path.join(tmp, `${scenario}-${run}.heap`),
+        }),
+      },
       gatewayLog,
     );
     await ready(() =>

@@ -1,4 +1,8 @@
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
+import {
+  cloneRawExecutionResult,
+  createRawExecutionResult,
+} from '@graphql-tools/executor-common';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import { buildSchema, parse } from 'graphql';
 import { expect, it } from 'vitest';
@@ -158,4 +162,45 @@ it('gives the response tape written response to the server as bytes, a string wh
   // once `data` is read, it can be changed and the bytes no longer tell it
   expect(result.data).toEqual(expected.data);
   expect(typeof result.stringify(result)).toBe('string');
+});
+
+it('takes the last response written from the same shared bodies, and writes it from other ones', async () => {
+  const encoder = new TextEncoder();
+  const raw = (json: unknown) =>
+    createRawExecutionResult(encoder.encode(JSON.stringify(json)), (bytes) =>
+      JSON.parse(new TextDecoder().decode(bytes)),
+    );
+  const users = raw({ data: { users: [{ __typename: 'User', id: '1' }] } });
+  const one = raw({ data: { _entities: [{ name: 'one' }] } });
+  const two = raw({ data: { _entities: [{ name: 'two' }] } });
+  const execute = (entities: ExecutionResult) =>
+    executeQueryPlan({
+      responseTape: true,
+      queryPlan,
+      supergraphSchema,
+      entityKeys: { b: { User: [['id']] } },
+      possibleTypes: {},
+      executionRequest: { document: parse('{ users { id name } }') },
+      // shared, like the consumers of a deduplicated request get them
+      onSubgraphExecute: (subgraph) =>
+        cloneRawExecutionResult(subgraph === 'a' ? users : entities),
+    }) as Promise<ExecutionResult & { stringify(r: ExecutionResult): unknown }>;
+  const send = (
+    result: ExecutionResult & { stringify(r: ExecutionResult): unknown },
+  ) => String(result.stringify(result));
+  const bytes = async (entities: ExecutionResult) => {
+    const result = await execute(entities);
+    return result.stringify(result) as Uint8Array;
+  };
+  const first = send(await execute(one));
+  expect(send(await execute(one))).toBe(first);
+  // the very bytes written before
+  expect((await bytes(one)).buffer).toBe((await bytes(one)).buffer);
+  expect((await bytes(two)).buffer).not.toBe((await bytes(one)).buffer);
+  expect(JSON.parse(first)).toEqual({
+    data: { users: [{ id: '1', name: 'one' }] },
+  });
+  expect(JSON.parse(send(await execute(two)))).toEqual({
+    data: { users: [{ id: '1', name: 'two' }] },
+  });
 });
