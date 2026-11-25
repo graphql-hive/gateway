@@ -57,6 +57,7 @@ export function getLazyFactory<T extends (...args: any) => any>(
   } as T;
 }
 
+/** Runs the subgraph request through its subschema's `transforms`, there must be some. */
 export function onSubgraphExecuteWithTransforms(
   subgraphName: string,
   executionRequest: ExecutionRequest,
@@ -64,39 +65,34 @@ export function onSubgraphExecuteWithTransforms(
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>,
-  getSubschema: (subgraphName: string) => SubschemaConfig,
+  transforms: NonNullable<SubschemaConfig['transforms']>,
 ) {
-  const subschema = getSubschema(subgraphName);
-  if (subschema.transforms?.length) {
-    const transforms = subschema.transforms;
-    const transformationContext = Object.create(null);
-    const delegationContext = undefined as unknown as DelegationContext;
-    for (const transform of transforms) {
-      if (transform.transformRequest) {
-        executionRequest = transform.transformRequest(
-          executionRequest,
-          delegationContext,
-          transformationContext,
-        );
-      }
+  const transformationContext = Object.create(null);
+  const delegationContext = undefined as unknown as DelegationContext;
+  for (const transform of transforms) {
+    if (transform.transformRequest) {
+      executionRequest = transform.transformRequest(
+        executionRequest,
+        delegationContext,
+        transformationContext,
+      );
     }
-    return handleMaybePromiseMaybeAsyncIterable(
-      () => onSubgraphExecute(subgraphName, executionRequest),
-      (executionResult: ExecutionResult) => {
-        for (const transform of transforms.toReversed()) {
-          if (transform.transformResult) {
-            executionResult = transform.transformResult(
-              executionResult,
-              delegationContext,
-              transformationContext,
-            );
-          }
-        }
-        return executionResult;
-      },
-    );
   }
-  return onSubgraphExecute(subgraphName, executionRequest);
+  return handleMaybePromiseMaybeAsyncIterable(
+    () => onSubgraphExecute(subgraphName, executionRequest),
+    (executionResult: ExecutionResult) => {
+      for (const transform of transforms.toReversed()) {
+        if (transform.transformResult) {
+          executionResult = transform.transformResult(
+            executionResult,
+            delegationContext,
+            transformationContext,
+          );
+        }
+      }
+      return executionResult;
+    },
+  );
 }
 
 export function handleMaybePromiseMaybeAsyncIterable<

@@ -286,9 +286,99 @@ interface EntityTarget {
   /** The flatten paths to the entities, without duplicates. */
   paths: NormalizedFlattenNodePathSegment[][];
   requires: RequiresSelection[];
+  /** The `requires` when they're flat, see {@link getFlatRequires}. */
+  flatRequires: FlatRequires | null;
   inputRewrites: FetchRewrite[] | undefined;
   context: PreparedContext;
   reuse: PreparedEntityReuse | undefined;
+}
+
+/**
+ * Requires of scalar fields only, under an inline fragment or not, like the most common
+ * `... on User { __typename id }`. The fields of each fragment, by name.
+ */
+type FlatRequires = { typeCondition: string | undefined; names: string[] }[];
+
+/** The requires as {@link FlatRequires}, `null` when they select any object. */
+function getFlatRequires(requires: RequiresSelection[]): FlatRequires | null {
+  const flat: FlatRequires = [];
+  const fields = (selections: RequiresSelection[]) => {
+    const names: string[] = [];
+    for (const selection of selections) {
+      if (selection.kind !== 'Field' || selection.selections?.length) {
+        return null;
+      }
+      names.push(selection.name);
+    }
+    return names;
+  };
+  for (const selection of requires) {
+    const names =
+      selection.kind === 'InlineFragment'
+        ? fields(selection.selections)
+        : fields([selection]);
+    if (!names) {
+      return null;
+    }
+    flat.push({
+      typeCondition:
+        selection.kind === 'InlineFragment'
+          ? selection.typeCondition
+          : undefined,
+      names,
+    });
+  }
+  return flat;
+}
+
+/**
+ * What the representation of an entity with flat requires depends on: its typename and the
+ * values of the fields that apply to it, read like {@link applyRequires} reads them. Strings are
+ * length prefixed so no value can pass for another. `undefined` when a value isn't a scalar.
+ */
+function getEntityKey(
+  entity: EntityRepresentation,
+  flat: FlatRequires,
+  possibleTypes: PossibleTypes,
+): string | undefined {
+  const typename = entity.__typename;
+  if (typeof typename !== 'string') {
+    return undefined;
+  }
+  let key = `${typename.length}:${typename}`;
+  for (const { typeCondition, names } of flat) {
+    // like `applyRequires`, both directions count
+    if (
+      typeCondition !== undefined &&
+      !satisfiesTypeCondition(possibleTypes, typename, typeCondition) &&
+      !satisfiesTypeCondition(possibleTypes, typeCondition, typename)
+    ) {
+      continue;
+    }
+    for (const name of names) {
+      const value = (entity as Record<string, unknown>)[name];
+      switch (typeof value) {
+        case 'string':
+          key += `s${value.length}:${value}`;
+          break;
+        case 'number':
+          key += `n${value};`;
+          break;
+        case 'boolean':
+          key += value ? 't' : 'f';
+          break;
+        case 'undefined':
+          key += 'u';
+          break;
+        default:
+          if (value !== null) {
+            return undefined;
+          }
+          key += 'z';
+      }
+    }
+  }
+  return key;
 }
 
 /**
@@ -421,6 +511,7 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
           target: {
             paths: [path],
             requires: fetchNode.requires ?? [],
+            flatRequires: getFlatRequires(fetchNode.requires ?? []),
             inputRewrites: fetchNode.inputRewrites,
             context: prepareContext(fetchNode),
             reuse: prepareEntityReuse(fetchNode),
@@ -438,6 +529,7 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
             alias,
             paths: alias.paths.map(normalizeFlattenNodePath),
             requires: alias.requires,
+            flatRequires: getFlatRequires(alias.requires),
             inputRewrites: alias.inputRewrites,
             context: prepareContext(alias),
             reuse: prepareEntityReuse(alias),
@@ -951,7 +1043,7 @@ function selectContextValue(
  */
 function collectEntities(
   data: Record<string, any>,
-  { paths, requires, inputRewrites, context, reuse }: EntityTarget,
+  { paths, requires, flatRequires, inputRewrites, context, reuse }: EntityTarget,
   { possibleTypes, errors }: QueryPlanExecutionContext,
   subgraphKeys: Record<string, string[][]> | undefined,
 ): CollectedEntities {
@@ -966,6 +1058,13 @@ function collectEntities(
     reuse && !errors.length
       ? indexReusableEntities(data, reuse, requires, possibleTypes, keysOf)
       : undefined;
+  // with flat requires the representation of an entity only depends on its typename and the
+  // values of its required fields, so an entity like one seen before is resolved by those alone,
+  // without projecting and serializing it again. Not with context groups or reuse, they need
+  // more than the representation
+  const flat = !names.length && !reusable ? flatRequires : null;
+  // the index of the representation of the entities with the same key, -1 when not sent
+  const indexByEntityKey = new Map<string, number>();
   const groups: ContextGroup[] = [];
   const groupIndexByValues = new Map<string, number>();
   if (!names.length) {
@@ -1038,6 +1137,22 @@ function collectEntities(
     if (!isEntityRepresentation(entity)) {
       return;
     }
+    const entityKey = flat
+      ? getEntityKey(entity, flat, possibleTypes)
+      : undefined;
+    if (entityKey !== undefined) {
+      const known = indexByEntityKey.get(entityKey);
+      if (known !== undefined) {
+        if (known !== -1) {
+          entities.push(entity);
+          indexes.push(known);
+          groupIndexes.push(0);
+          pathPrefixes.push(pathPrefix);
+          listIndexes.push(listIndex);
+        }
+        return;
+      }
+    }
     const groupIndex = resolveGroupIndex(entity, ancestors);
     const group = groups[groupIndex]!;
     const representation = projectRequires(
@@ -1047,6 +1162,9 @@ function collectEntities(
       keysOf(entity),
     );
     if (!representation) {
+      if (entityKey !== undefined) {
+        indexByEntityKey.set(entityKey, -1);
+      }
       return;
     }
     if (inputRewrites?.length) {
@@ -1068,6 +1186,9 @@ function collectEntities(
       indexInGroup = group.representations.length;
       group.identityToIndex.set(identity, indexInGroup);
       group.representations.push(representation);
+    }
+    if (entityKey !== undefined) {
+      indexByEntityKey.set(entityKey, indexInGroup);
     }
     entities.push(entity);
     indexes.push(indexInGroup);

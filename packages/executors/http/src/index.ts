@@ -1,4 +1,4 @@
-import { abortSignalAny } from '@graphql-hive/signal';
+import { abortSignalAny, disposeAbortSignal } from '@graphql-hive/signal';
 import {
   defaultPrintFn,
   SerializedExecutionRequest,
@@ -16,6 +16,7 @@ import {
   getMultipartContentType,
   getOperationASTFromRequest,
   INCREMENTAL_DELIVERY_SPECS,
+  isAsyncIterable,
   MaybeAsyncIterable,
   type IncrementalSpec,
 } from '@graphql-tools/utils';
@@ -732,6 +733,16 @@ export function buildHTTPExecutor(
       );
     }
 
+    // once the result is in, the request's signal is done with. a stream still reads with it
+    const releaseSignal = <TResult>(result: TResult): TResult => {
+      if (!isAsyncIterable(result)) {
+        // it would otherwise keep a listener on the executor's dispose signal until it's
+        // garbage collected, and every request adding one makes adding them slower
+        disposeAbortSignal(signal);
+      }
+      return result;
+    };
+
     return handleMaybePromise(
       () => serializeFn(),
       (body: SerializedExecutionRequest) => {
@@ -756,10 +767,14 @@ export function buildHTTPExecutor(
               credentials: options?.credentials,
             };
             upstreamErrorExtensions.request.url = finalUrl;
-            return handleInflightRequest(
-              inflightRequestOptions,
-              request.context,
-              request.info,
+            return handleMaybePromise(
+              () =>
+                handleInflightRequest(
+                  inflightRequestOptions,
+                  request.context,
+                  request.info,
+                ),
+              releaseSignal,
             );
           }
           case 'POST': {
@@ -783,10 +798,14 @@ export function buildHTTPExecutor(
                   credentials: options?.credentials,
                   signal,
                 };
-                return handleInflightRequest(
-                  inflightRequestOptions,
-                  request.context,
-                  request.info,
+                return handleMaybePromise(
+                  () =>
+                    handleInflightRequest(
+                      inflightRequestOptions,
+                      request.context,
+                      request.info,
+                    ),
+                  releaseSignal,
                 );
               },
               handleError,

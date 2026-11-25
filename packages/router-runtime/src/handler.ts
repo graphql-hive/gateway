@@ -8,6 +8,7 @@ import {
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import type { SubschemaConfig } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
   filterInternalFieldsAndTypes,
@@ -255,6 +256,62 @@ export async function unifiedGraphHandler(
     return plan;
   }
 
+  // a subgraph's transforms never change, so they're looked up once per subgraph instead of
+  // finding the subgraph by name on every request. `null` when it has none
+  const transformsBySubgraph = new Map<
+    string,
+    NonNullable<SubschemaConfig['transforms']> | null
+  >();
+  function executeSubgraph(
+    subgraphName: string,
+    executionRequest: ExecutionRequest,
+  ) {
+    let transforms = transformsBySubgraph.get(subgraphName);
+    if (transforms === undefined) {
+      transforms = getSubschema(subgraphName).transforms || null;
+      if (!transforms?.length) {
+        transforms = null;
+      }
+      transformsBySubgraph.set(subgraphName, transforms);
+    }
+    return transforms
+      ? onSubgraphExecuteWithTransforms(
+          subgraphName,
+          executionRequest,
+          opts.onSubgraphExecute,
+          transforms,
+        )
+      : opts.onSubgraphExecute(subgraphName, executionRequest);
+  }
+
+  // without `@pubsubOperation` or `@pubsubPublish` fields every request goes straight to the
+  // subgraph, without wrapping it in the pubsub handling
+  const onSubgraphExecute =
+    pubsubOperationMetadataMap.size || pubsubPublishMetadataMap.size
+      ? (subgraphName: string, executionRequest: ExecutionRequest) =>
+          handlePubsubOperationField(
+            supergraphSchema,
+            addEntityResolutionFieldsForPubsubPublish(
+              supergraphSchema,
+              executionRequest,
+              subgraphName,
+              pubsubPublishMetadataMap,
+            ),
+            pubsubOperationMetadataMap,
+            (executionRequest) =>
+              handleMaybePromiseMaybeAsyncIterable(
+                () => executeSubgraph(subgraphName, executionRequest),
+                (executionResult: ExecutionResult) =>
+                  handleResultWithPubSubPublish(
+                    supergraphSchema,
+                    pubsubPublishMetadataMap,
+                    executionRequest,
+                    executionResult,
+                  ),
+              ),
+          )
+      : executeSubgraph;
+
   return {
     unifiedGraph: supergraphSchema,
     getSubgraphSchema(subgraphName: string) {
@@ -278,34 +335,7 @@ export async function unifiedGraphHandler(
             entityKeys,
             possibleTypes,
             executionRequest,
-            onSubgraphExecute: (subgraphName, executionRequest) =>
-              handlePubsubOperationField(
-                supergraphSchema,
-                addEntityResolutionFieldsForPubsubPublish(
-                  supergraphSchema,
-                  executionRequest,
-                  subgraphName,
-                  pubsubPublishMetadataMap,
-                ),
-                pubsubOperationMetadataMap,
-                (executionRequest) =>
-                  handleMaybePromiseMaybeAsyncIterable(
-                    () =>
-                      onSubgraphExecuteWithTransforms(
-                        subgraphName,
-                        executionRequest,
-                        opts.onSubgraphExecute,
-                        getSubschema,
-                      ),
-                    (executionResult: ExecutionResult) =>
-                      handleResultWithPubSubPublish(
-                        supergraphSchema,
-                        pubsubPublishMetadataMap,
-                        executionRequest,
-                        executionResult,
-                      ),
-                  ),
-              ),
+            onSubgraphExecute,
             queryPlan,
           });
         },

@@ -293,7 +293,7 @@ it('gives every copy its own objects', async () => {
     b: authorsOfReviews(['2', '2'], []),
   });
 
-  const data = (await result).data as any;
+  const data = ((await result) as ExecutionResult).data as any;
   const [first, second] = data.users[0].reviews;
   expect(first.author.address).toEqual({ city: 'Rome' });
   expect(first.author.address).not.toBe(second.author.address);
@@ -318,7 +318,7 @@ it('copies with a batch alias', async () => {
     b: authorsOfReviews(['2', '3'], ['1']),
   });
 
-  const data = (await result).data as any;
+  const data = ((await result) as ExecutionResult).data as any;
   expect(data.users[0].reviews.map((review: any) => review.author)).toEqual([
     { id: '2', name: 'Bob', address: { city: 'Rome' } },
     { id: '3', name: 'fetched 3', address: null },
@@ -381,7 +381,7 @@ it('sends the entities whose source misses a copied field or has a null key', as
     b: authorsOfReviews(['1', '2'], []),
   });
 
-  const data = (await result).data as any;
+  const data = ((await result) as ExecutionResult).data as any;
   expect(data.users[0].reviews.map((review: any) => review.author)).toEqual([
     { id: '1', name: 'fetched', address: null },
     // a null is copied like any other value

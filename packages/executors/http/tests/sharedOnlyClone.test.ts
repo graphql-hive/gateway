@@ -1,3 +1,4 @@
+import { getEventListeners } from 'node:events';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
@@ -53,6 +54,24 @@ describe('HTTP deduplication result copying', () => {
       expect(data).toEqual({ node: { value: 'original', list: [1] } });
     }
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves no listener on the request signal once the result is in', async () => {
+    await using executor = buildHTTPExecutor({
+      endpoint: 'http://signal-release-test/graphql',
+      fetch: async () => Response.json({ data: { node: { value: 'v' } } }),
+    });
+    const ctrl = new AbortController();
+    for (let i = 0; i < 3; i++) {
+      const result = await executor({
+        document: parse('{ node { value } }'),
+        signal: ctrl.signal,
+      });
+      assertSingleExecutionValue(result);
+      expect(result.data).toEqual({ node: { value: 'v' } });
+    }
+    // every request combined it with the executor's own signal, and let go of it once done
+    expect(getEventListeners(ctrl.signal, 'abort')).toHaveLength(0);
   });
 
   it('keeps an own __proto__ key of the response as data in the copies', async () => {
