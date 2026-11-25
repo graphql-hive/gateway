@@ -120,10 +120,11 @@ export class ToolRegistry {
     ctx: PluginContext,
     configs: ResolvedToolConfig[],
     schema: GraphQLSchema,
+    customScalars?: Record<string, JsonSchema>,
   ) {
     for (const config of configs) {
       const query = config.query;
-      let inputSchema = operationToInputSchema(query, schema);
+      let inputSchema = operationToInputSchema(query, schema, customScalars);
       let argumentAliases: Record<string, string> | undefined;
 
       // Apply @mcpHeader directives: hide mapped variables from input schema
@@ -254,7 +255,11 @@ export class ToolRegistry {
       // Generate output schema
       let outputSchema: JsonSchema | undefined;
       try {
-        outputSchema = selectionSetToOutputSchema(parse(query), schema);
+        outputSchema = selectionSetToOutputSchema(
+          parse(query),
+          schema,
+          customScalars,
+        );
       } catch (err) {
         ctx.log.error(
           `Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}. Tool will be registered without output schema.`,

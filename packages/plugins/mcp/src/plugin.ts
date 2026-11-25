@@ -41,6 +41,7 @@ import {
 } from './protocol.js';
 import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { ToolRegistry, type RegisteredTool } from './registry.js';
+import type { JsonSchema } from './schema-converter.js';
 import type { PluginContext } from './types.js';
 
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
@@ -495,6 +496,8 @@ export interface MCPConfig {
   };
   /** Suppress outputSchema from all tools in tools/list responses */
   suppressOutputSchema?: boolean;
+  /** Maps custom GraphQL scalar names to JSON Schema, used in both inputSchema and outputSchema (e.g. `{ DateTime: { type: 'string', format: 'date-time' } }`). Built-in scalars cannot be overridden. Takes precedence over `extensions.jsonSchema` on the scalar type */
+  customScalars?: Record<string, JsonSchema>;
   /** Dynamic operations source. Called on every MCP request; results are cached by the returned string so identical sources reuse the same ToolRegistry. */
   loader?: MCPOperationsLoader;
 }
@@ -1225,7 +1228,12 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
   return {
     onSchemaChange({ schema: newSchema }) {
       try {
-        const newRegistry = new ToolRegistry(ctx, resolvedTools, newSchema);
+        const newRegistry = new ToolRegistry(
+          ctx,
+          resolvedTools,
+          newSchema,
+          config.customScalars,
+        );
         const newOptions = buildHandlerOptions(newRegistry, resolvedTools);
         schema = newSchema;
         registry = newRegistry;
@@ -1333,6 +1341,7 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
                     ctx,
                     loaderTools,
                     schema,
+                    config.customScalars,
                   );
                   const loaderHandlerOptions = buildHandlerOptions(
                     loaderRegistry,
