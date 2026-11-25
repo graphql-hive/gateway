@@ -16,21 +16,24 @@ import { expect, it } from 'vitest';
 it.skipIf(globalThis.Bun)(
   'should be sync if there is no async operations',
   async () => {
-    const upstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          hello() {
-            return 'Hello world!';
+    const upstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            hello() {
+              return 'Hello world!';
+            },
           },
         },
       },
-    });
+    ]);
     await using upstreamYoga = createYoga({
+      logging: false,
       schema: upstreamSchema,
       // the body size limit streams the request body which is always async
       maxRequestBodySize: false,
@@ -43,7 +46,9 @@ it.skipIf(globalThis.Bun)(
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
+      maxRequestBodySize: false, // needs to be disabled to get sync response
       transports(kind) {
         if (kind !== 'http') {
           throw new Error(`Unsupported transport ${kind}`);

@@ -102,7 +102,7 @@ describe('HTTP request batching on a stitched schema', () => {
     });
   }
 
-  async function runReporterQueries(client: ApolloClient<object>) {
+  async function runReporterQueries(client: ApolloClient) {
     return Promise.all([
       client.query({
         query: OME_CLIENT_ASSESSMENTS,
@@ -116,15 +116,17 @@ describe('HTTP request batching on a stitched schema', () => {
   }
 
   test('BatchHttpLink fails against a stitched schema without HTTP batching', async () => {
-    await using yoga = createYoga({ schema });
+    await using yoga = createYoga({ logging: false, schema });
     const { fetch } = wrapFetch(yoga);
     const client = batchClient(fetch);
 
-    await expect(runReporterQueries(client)).rejects.toThrow(/400|batch|JSON/i);
+    await expect(runReporterQueries(client)).rejects.toThrow(
+      /server returned results with length 1, expected length of 2/,
+    );
   });
 
   test('BatchHttpLink resolves both operations when the stitched server batches', async () => {
-    await using yoga = createYoga({ schema, batching: true });
+    await using yoga = createYoga({ logging: false, schema, batching: true });
     const { fetch, bodies } = wrapFetch(yoga);
     const client = batchClient(fetch);
 
@@ -156,7 +158,7 @@ describe('HTTP request batching on a stitched schema', () => {
   });
 
   test('HttpLink still works with batching on', async () => {
-    await using yoga = createYoga({ schema, batching: true });
+    await using yoga = createYoga({ logging: false, schema, batching: true });
     const { fetch, bodies } = wrapFetch(yoga);
     const client = new ApolloClient({
       link: ApolloLink.from([

@@ -19,54 +19,56 @@ describe.skipIf(process.env['LEAK_TEST'])(
       { id: '2', name: 'Product 2', price: 200 },
       { id: '3', name: 'Product 3', price: 300 },
     ];
-    const productsSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        enum CacheControlScope {
-          PUBLIC
-          PRIVATE
-        }
+    const productsSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
 
-        directive @cacheControl(
-          maxAge: Int
-          scope: CacheControlScope
-          inheritMaxAge: Boolean
-        ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+            inheritMaxAge: Boolean
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
-        type Product @key(fields: "id") @cacheControl(maxAge: 3) {
-          id: ID!
-          name: String!
-          price: Int!
-        }
+          type Product @key(fields: "id") @cacheControl(maxAge: 3) {
+            id: ID!
+            name: String!
+            price: Int!
+          }
 
-        extend type Query {
-          products: [Product!]!
-          product(id: ID!): Product
-        }
+          extend type Query {
+            products: [Product!]!
+            product(id: ID!): Product
+          }
 
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.6"
-            import: ["@key", "@composeDirective"]
-          )
-          @link(
-            url: "https://the-guild.dev/mesh/v1.0"
-            import: ["@cacheControl"]
-          )
-          @composeDirective(name: "@cacheControl") {
-          query: Query
-        }
-      `),
-      resolvers: {
-        Query: {
-          product(_root, { id }) {
-            return products.find((product) => product.id === id);
-          },
-          products() {
-            return products;
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key", "@composeDirective"]
+            )
+            @link(
+              url: "https://the-guild.dev/mesh/v1.0"
+              import: ["@cacheControl"]
+            )
+            @composeDirective(name: "@cacheControl") {
+            query: Query
+          }
+        `),
+        resolvers: {
+          Query: {
+            product(_root, { id }) {
+              return products.find((product) => product.id === id);
+            },
+            products() {
+              return products;
+            },
           },
         },
       },
-    });
+    ]);
     let supergraph: string;
     let apolloServer: ApolloServer;
     let requestDidStart: Mock;
@@ -100,6 +102,7 @@ describe.skipIf(process.env['LEAK_TEST'])(
     it('response caching plugin respect @cacheControl(maxAge:) w/ @composeDirective', async () => {
       await using cache = new InmemoryLRUCache();
       await using gw = createGatewayRuntime({
+        logging: false,
         supergraph,
         cache,
         responseCaching: {
@@ -171,6 +174,7 @@ describe.skipIf(process.env['LEAK_TEST'])(
     it('http caching plugin should respect cache control headers', async () => {
       await using cache = new InmemoryLRUCache();
       await using gw = createGatewayRuntime({
+        logging: false,
         supergraph,
         cache,
         plugins: (ctx) => [useHttpCache(ctx)],

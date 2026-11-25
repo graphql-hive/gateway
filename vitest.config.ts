@@ -1,8 +1,8 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { createPathsMatcher, getTsconfig } from 'get-tsconfig';
 import { defineConfig } from 'vitest/config';
-import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI, usingHiveRouterRuntime } from './internal/env/src/index';
-import { isNotPlatform } from './internal/env/src/node';
+import { timeout as testTimeout } from './internal/e2e/src/timeout.mts';
+import { isCI, usingHiveRouterRuntime } from './internal/env/src/index.ts';
+import { isNotPlatform } from './internal/env/src/node.ts';
 
 // By default, Vite bypasses node_packages to native Node; meaning, imports to
 // packages that match the tsconfig paths wont work because Node will require the
@@ -14,14 +14,53 @@ const inline = [
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
   /@graphql-hive\/yoga/,
+  // Yoga depends on @graphql-hive/logger; inline so Vite applies tsconfig
+  // paths to the workspace package instead of requiring a prebuilt dist/.
+  /@graphql-hive\/logger/,
+  /graphql-yoga/,
   /@whatwg-node\/server/,
+  // the audit runs its subgraphs with yoga, inline it so that yoga is inlined too
+  /@graphql-hive\/federation-gateway-audit/,
 ];
 
+// vite's native resolve.tsconfigPaths skips importers outside the project (like
+// inlined node_modules), so we resolve tsconfig paths ourselves for every importer.
+// same matcher as the e2e child processes use in internal/e2e/src/workspace-paths-hook.mts
+const matchTsconfigPaths = createPathsMatcher(
+  getTsconfig(import.meta.dirname)!,
+)!;
+
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [
+    {
+      name: 'tsconfig-paths',
+      enforce: 'pre',
+      async resolveId(id, importer) {
+        for (const candidate of matchTsconfigPaths(id)) {
+          // let vite resolve the candidate too because wildcard targets have no extension
+          const resolved = await this.resolve(candidate, importer, {
+            skipSelf: true,
+          });
+          if (resolved) return resolved;
+        }
+        return null;
+      },
+    },
+  ],
   resolve: {
-    alias: {
-      graphql: 'graphql/index.js', // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
+    alias: [
+      // graphql 16 has no exports map, vite would pick the esm build from the `module`
+      // field while node loads the cjs one for externalized deps. graphql 17 resolves
+      // this path through its exports map using the conditions below
+      { find: /^graphql$/, replacement: 'graphql/index.js' },
+    ],
+  },
+  ssr: {
+    resolve: {
+      // node resolves graphql 17 through `module-sync` to its esm build, vite has to
+      // pick the same build or there will be two graphql instances. vitest also passes
+      // these conditions to node for externalized deps
+      conditions: ['module-sync', 'node', 'development|production'],
     },
   },
   test: {
@@ -32,6 +71,8 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['**/*.(test|spec).ts'],
+          // localforage probes localStorage which warns on node 25+ without --localstorage-file
+          execArgv: ['--no-experimental-webstorage'],
         },
       },
       {
@@ -94,11 +135,11 @@ export default defineConfig({
         test: {
           name: 'bench',
           hookTimeout: testTimeout,
-          testTimeout,
+          // benches run inside the test body and every bench takes benchConfig's warmup + time
+          // (35s in ci), so the test needs way more than the e2e timeout. this just guards hangs
+          testTimeout: 10 * 60 * 1000,
           benchmark: {
             include: ['bench/**/*.bench.ts', 'e2e/**/*.bench.ts'],
-            reporters: ['verbose'],
-            outputJson: 'bench/results.json',
           },
         },
       },

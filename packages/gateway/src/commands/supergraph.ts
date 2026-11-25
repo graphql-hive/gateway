@@ -127,8 +127,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
         opentelemetryExporterType,
         hiveCdnEndpoint,
         hiveCdnKey,
-        hiveRegistryToken,
-        hiveUsageTarget,
         hiveTarget,
         hiveAccessToken,
         hiveUsageAccessToken,
@@ -269,8 +267,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveTarget,
         hiveAccessToken,
         hiveTraceAccessToken,
-        hiveRegistryToken,
-        hiveUsageTarget,
         hiveUsageAccessToken,
         apolloGraphRef: apolloGraphRef || schemaPathOrUrl,
         apolloKey,
@@ -381,7 +377,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
       if (maskedErrors != null) {
         // overwrite masked errors from loaded config only when provided
-        // @ts-expect-error maskedErrors is a boolean but incorrectly inferred
         config.maskedErrors = maskedErrors;
       }
       if (

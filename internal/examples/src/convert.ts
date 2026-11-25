@@ -303,7 +303,25 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies['@apollo/rover'] = `^${roverVersion}`;
     }
 
-    const overridesPkgs = ['minimatch', 'fast-uri', 'protobufjs', 'esbuild'];
+    if (packageJson.dependencies['graphql']) {
+      // the e2es run on graphql 17 but examples are installed with npm, which enforces peers.
+      // @apollo/server 5 and the stable gateway releases only allow graphql 16, so examples stay on it
+      const graphqlVersion = '16.15.0';
+      console.log(
+        `Setting "graphql@^${graphqlVersion}" dependency because npm installs examples with strict peers...`,
+      );
+      packageJson.dependencies['graphql'] = `^${graphqlVersion}`;
+    }
+
+    const overridesPkgs = [
+      'minimatch',
+      'fast-uri',
+      'protobufjs',
+      'esbuild',
+      // @graphql-hive/yoga@0.50.1 ships plugin-persisted-operations v3 which breaks on graphql-yoga@6
+      // TODO: drop this when https://github.com/graphql-hive/console/pull/8939 is released
+      '@graphql-yoga/plugin-persisted-operations',
+    ];
 
     for (const pkgName of overridesPkgs) {
       const pkgJson = await import(`${pkgName}/package.json`);
@@ -503,7 +521,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       JSON.stringify(
         {
           name: 'Node.js',
-          image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
+          image: 'mcr.microsoft.com/devcontainers/javascript-node:22',
         },
         null,
         '  ',

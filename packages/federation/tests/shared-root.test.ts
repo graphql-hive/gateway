@@ -1,8 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { createGraphQLError, ExecutionRequest } from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
-import { ExecutionResult, parse } from 'graphql';
+import { ExecutionResult, GraphQLError, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
@@ -42,62 +42,66 @@ describe('Shared Root Fields', () => {
       },
     };
 
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          testNestedField: TestNestedField
-        }
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            testNestedField: TestNestedField
+          }
 
-        type TestNestedField {
-          subgraph1: TestUser1!
-        }
+          type TestNestedField {
+            subgraph1: TestUser1!
+          }
 
-        type TestUser1 {
-          id: String!
-          email: String!
-          sub1: Boolean!
-        }
-      `),
-      resolvers: {
-        Query: {
-          testNestedField: () => ({
-            subgraph1: () => ({
-              id: 'user1',
-              email: 'user1@example.com',
-              sub1: true,
+          type TestUser1 {
+            id: String!
+            email: String!
+            sub1: Boolean!
+          }
+        `),
+        resolvers: {
+          Query: {
+            testNestedField: () => ({
+              subgraph1: () => ({
+                id: 'user1',
+                email: 'user1@example.com',
+                sub1: true,
+              }),
             }),
-          }),
+          },
         },
       },
-    });
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          testNestedField: TestNestedField
-        }
+    ]);
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            testNestedField: TestNestedField
+          }
 
-        type TestNestedField {
-          subgraph2: TestUser2!
-        }
+          type TestNestedField {
+            subgraph2: TestUser2!
+          }
 
-        type TestUser2 {
-          id: String!
-          email: String!
-          sub2: Boolean!
-        }
-      `),
-      resolvers: {
-        Query: {
-          testNestedField: () => ({
-            subgraph2: () => ({
-              id: 'user2',
-              email: 'user2@example.com',
-              sub2: true,
+          type TestUser2 {
+            id: String!
+            email: String!
+            sub2: Boolean!
+          }
+        `),
+        resolvers: {
+          Query: {
+            testNestedField: () => ({
+              subgraph2: () => ({
+                id: 'user2',
+                email: 'user2@example.com',
+                sub2: true,
+              }),
             }),
-          }),
+          },
         },
       },
-    });
+    ]);
 
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
@@ -114,44 +118,48 @@ describe('Shared Root Fields', () => {
     expect(result).toEqual(expectedResult);
   });
   it('Mutations should not be batched', async () => {
-    const SUBGRAPHA = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          test: String
-        }
+    const SUBGRAPHA = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            test: String
+          }
 
-        type Mutation {
-          testMutation: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          test: () => 'test',
-        },
-        Mutation: {
-          testMutation: () => 'testMutation',
+          type Mutation {
+            testMutation: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            test: () => 'test',
+          },
+          Mutation: {
+            testMutation: () => 'testMutation',
+          },
         },
       },
-    });
-    const SUBGRAPHB = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          test: String
-        }
+    ]);
+    const SUBGRAPHB = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            test: String
+          }
 
-        type Mutation {
-          testMutation: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          test: () => 'test',
-        },
-        Mutation: {
-          testMutation: () => 'testMutation',
+          type Mutation {
+            testMutation: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            test: () => 'test',
+          },
+          Mutation: {
+            testMutation: () => 'testMutation',
+          },
         },
       },
-    });
+    ]);
     const onSubgraphExecuteFn =
       vi.fn<
         (
@@ -186,60 +194,64 @@ describe('Shared Root Fields', () => {
     expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(1);
   });
   it('should choose the best mutation root field', async () => {
-    const SUBGRAPHA = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          test: String
-        }
+    const SUBGRAPHA = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            test: String
+          }
 
-        type Mutation {
-          testMutation: TestMutationResult
-        }
+          type Mutation {
+            testMutation: TestMutationResult
+          }
 
-        type TestMutationResult @key(fields: "shared") {
-          onlyA: String
-          shared: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          test: () => 'test',
-        },
-        Mutation: {
-          testMutation: () => ({
-            onlyA: 'onlyA',
-            shared: 'shared',
-          }),
-        },
-      },
-    });
-    const SUBGRAPHB = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          test: String
-        }
-
-        type Mutation {
-          testMutation: TestMutationResult
-        }
-
-        type TestMutationResult @key(fields: "shared") {
-          onlyB: String
-          shared: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          test: () => 'test',
-        },
-        Mutation: {
-          testMutation: () => ({
-            onlyB: 'onlyB',
-            shared: 'shared',
-          }),
+          type TestMutationResult @key(fields: "shared") {
+            onlyA: String
+            shared: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            test: () => 'test',
+          },
+          Mutation: {
+            testMutation: () => ({
+              onlyA: 'onlyA',
+              shared: 'shared',
+            }),
+          },
         },
       },
-    });
+    ]);
+    const SUBGRAPHB = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            test: String
+          }
+
+          type Mutation {
+            testMutation: TestMutationResult
+          }
+
+          type TestMutationResult @key(fields: "shared") {
+            onlyB: String
+            shared: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            test: () => 'test',
+          },
+          Mutation: {
+            testMutation: () => ({
+              onlyB: 'onlyB',
+              shared: 'shared',
+            }),
+          },
+        },
+      },
+    ]);
     const onSubgraphExecuteFn =
       vi.fn<
         (
@@ -317,33 +329,35 @@ describe('Shared Root Fields', () => {
         comment: 'Washing machine 👎',
       },
     ];
-    const REVIEWS = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          allReviews: [Review!]!
-        }
-        type Subscription {
-          newReview: Review!
-        }
-        type Review @key(fields: "id") @key(fields: "url") {
-          id: ID!
-          url: String!
-          comment: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          allReviews: () => reviews,
-        },
-        Subscription: {
-          newReview: {
-            async *subscribe() {
-              yield { newReview: reviews[reviews.length - 1] };
+    const REVIEWS = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            allReviews: [Review!]!
+          }
+          type Subscription {
+            newReview: Review!
+          }
+          type Review @key(fields: "id") @key(fields: "url") {
+            id: ID!
+            url: String!
+            comment: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            allReviews: () => reviews,
+          },
+          Subscription: {
+            newReview: {
+              async *subscribe() {
+                yield { newReview: reviews[reviews.length - 1] };
+              },
             },
           },
         },
       },
-    });
+    ]);
 
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
@@ -402,80 +416,84 @@ describe('Shared Root Fields', () => {
         time: 2,
       },
     ];
-    const EVENTSWITHMESSAGES = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.5"
-            import: ["@key", "@shareable"]
-          ) {
-          query: Query
-          subscription: Subscription
-        }
+    const EVENTSWITHMESSAGES = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.5"
+              import: ["@key", "@shareable"]
+            ) {
+            query: Query
+            subscription: Subscription
+          }
 
-        type Query {
-          allEventsWithMessage: [Event!]!
-        }
-        type Subscription {
-          newEvent: Event! @shareable
-        }
-        type Event @key(fields: "id") {
-          id: ID!
-          message: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          allEventsWithMessage: () => allEvents,
-        },
-        Subscription: {
-          newEvent: {
-            async *subscribe() {
-              for (const event of allEvents) {
-                yield { newEvent: event };
-              }
+          type Query {
+            allEventsWithMessage: [Event!]!
+          }
+          type Subscription {
+            newEvent: Event! @shareable
+          }
+          type Event @key(fields: "id") {
+            id: ID!
+            message: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            allEventsWithMessage: () => allEvents,
+          },
+          Subscription: {
+            newEvent: {
+              async *subscribe() {
+                for (const event of allEvents) {
+                  yield { newEvent: event };
+                }
+              },
             },
           },
         },
       },
-    });
-    const EVENTSWITHTIME = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.5"
-            import: ["@key", "@shareable"]
-          ) {
-          query: Query
-          subscription: Subscription
-        }
+    ]);
+    const EVENTSWITHTIME = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.5"
+              import: ["@key", "@shareable"]
+            ) {
+            query: Query
+            subscription: Subscription
+          }
 
-        type Query {
-          allEventsWithTime: [Event!]!
-        }
-        type Subscription {
-          newEvent: Event! @shareable
-        }
-        type Event @key(fields: "id") {
-          id: ID!
-          time: Int!
-        }
-      `),
-      resolvers: {
-        Query: {
-          allEventsWithTime: () => allEvents,
-        },
-        Subscription: {
-          newEvent: {
-            async *subscribe() {
-              for (const event of allEvents) {
-                yield { newEvent: event };
-              }
+          type Query {
+            allEventsWithTime: [Event!]!
+          }
+          type Subscription {
+            newEvent: Event! @shareable
+          }
+          type Event @key(fields: "id") {
+            id: ID!
+            time: Int!
+          }
+        `),
+        resolvers: {
+          Query: {
+            allEventsWithTime: () => allEvents,
+          },
+          Subscription: {
+            newEvent: {
+              async *subscribe() {
+                for (const event of allEvents) {
+                  yield { newEvent: event };
+                }
+              },
             },
           },
         },
       },
-    });
+    ]);
 
     let subgraphCalls: Record<string, number> = {};
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
@@ -536,79 +554,83 @@ describe('Shared Root Fields', () => {
   });
 
   it('returns the correct error for non-nullable fields when it is a shared root field', async () => {
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          testNestedField: TestNestedField
-        }
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            testNestedField: TestNestedField
+          }
 
-        type TestNestedField {
-          subgraph1: TestUser1
-          nonNullableFail: TestUser1!
-          nullableFail: TestUser1
-        }
+          type TestNestedField {
+            subgraph1: TestUser1
+            nonNullableFail: TestUser1!
+            nullableFail: TestUser1
+          }
 
-        type TestUser1 {
-          id: String!
-          email: String!
-          sub1: Boolean!
-        }
-      `),
-      resolvers: {
-        Query: {
-          testNestedField: () => ({
-            subgraph1: () => ({
-              id: 'user1',
-              email: 'user1@example.com',
-              sub1: true,
+          type TestUser1 {
+            id: String!
+            email: String!
+            sub1: Boolean!
+          }
+        `),
+        resolvers: {
+          Query: {
+            testNestedField: () => ({
+              subgraph1: () => ({
+                id: 'user1',
+                email: 'user1@example.com',
+                sub1: true,
+              }),
+              nonNullableFail: () => {
+                throw new GraphQLError('My original subgraph error!', {
+                  extensions: {
+                    code: 'BAD_REQUEST',
+                  },
+                });
+              },
+              nullableFail: () => {
+                throw new GraphQLError('My original subgraph error!', {
+                  extensions: {
+                    code: 'BAD_REQUEST',
+                  },
+                });
+              },
             }),
-            nonNullableFail: () => {
-              throw createGraphQLError('My original subgraph error!', {
-                extensions: {
-                  code: 'BAD_REQUEST',
-                },
-              });
-            },
-            nullableFail: () => {
-              throw createGraphQLError('My original subgraph error!', {
-                extensions: {
-                  code: 'BAD_REQUEST',
-                },
-              });
-            },
-          }),
+          },
         },
       },
-    });
+    ]);
 
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          testNestedField: TestNestedField
-        }
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            testNestedField: TestNestedField
+          }
 
-        type TestNestedField {
-          subgraph2: TestUser2
-        }
+          type TestNestedField {
+            subgraph2: TestUser2
+          }
 
-        type TestUser2 {
-          id: String!
-          email: String!
-          sub2: Boolean!
-        }
-      `),
-      resolvers: {
-        Query: {
-          testNestedField: () => ({
-            subgraph2: () => ({
-              id: 'user2',
-              email: 'user2@example.com',
-              sub2: true,
+          type TestUser2 {
+            id: String!
+            email: String!
+            sub2: Boolean!
+          }
+        `),
+        resolvers: {
+          Query: {
+            testNestedField: () => ({
+              subgraph2: () => ({
+                id: 'user2',
+                email: 'user2@example.com',
+                sub2: true,
+              }),
             }),
-          }),
+          },
         },
       },
-    });
+    ]);
     const stitchedSchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
         subgraph1,
@@ -648,64 +670,68 @@ describe('Shared Root Fields', () => {
   });
 
   it('Aliased shared root fields named after object built-ins', async () => {
-    const subgraphA = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.3"
-            import: ["@key", "@shareable"]
-          )
+    const subgraphA = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.3"
+              import: ["@key", "@shareable"]
+            )
 
-        type Query {
-          shared: Shared @shareable
-        }
+          type Query {
+            shared: Shared @shareable
+          }
 
-        type Shared @key(fields: "id") {
-          id: ID!
-          fieldA: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          shared: () => ({ id: '1', fieldA: 'from subgraph A' }),
+          type Shared @key(fields: "id") {
+            id: ID!
+            fieldA: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            shared: () => ({ id: '1', fieldA: 'from subgraph A' }),
+          },
         },
       },
-    });
+    ]);
 
-    const subgraphB = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.3"
-            import: ["@key", "@shareable"]
-          )
+    const subgraphB = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.3"
+              import: ["@key", "@shareable"]
+            )
 
-        type Query {
-          shared: Shared @shareable
-        }
+          type Query {
+            shared: Shared @shareable
+          }
 
-        type Shared @key(fields: "id") {
-          id: ID!
-          fieldB: Child1
-        }
+          type Shared @key(fields: "id") {
+            id: ID!
+            fieldB: Child1
+          }
 
-        type Child1 {
-          child: Child2
-        }
+          type Child1 {
+            child: Child2
+          }
 
-        type Child2 {
-          value: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          shared: () => ({
-            id: '1',
-            fieldB: { child: { value: 'from subgraph B' } },
-          }),
+          type Child2 {
+            value: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            shared: () => ({
+              id: '1',
+              fieldB: { child: { value: 'from subgraph B' } },
+            }),
+          },
         },
       },
-    });
+    ]);
 
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: { a: subgraphA, b: subgraphB },
@@ -743,68 +769,72 @@ describe('Shared Root Fields', () => {
   });
 
   it('Aliased entity fields named after object built-ins', async () => {
-    const subgraphA = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.3"
-            import: ["@key", "@shareable"]
-          )
+    const subgraphA = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.3"
+              import: ["@key", "@shareable"]
+            )
 
-        type Query {
-          user: User
-        }
+          type Query {
+            user: User
+          }
 
-        type User @key(fields: "id") {
-          id: ID!
-          profile: Profile @shareable
-        }
+          type User @key(fields: "id") {
+            id: ID!
+            profile: Profile @shareable
+          }
 
-        type Profile @shareable {
-          name: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          user: () => ({ id: '1', profile: { name: 'from subgraph A' } }),
+          type Profile @shareable {
+            name: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            user: () => ({ id: '1', profile: { name: 'from subgraph A' } }),
+          },
         },
       },
-    });
+    ]);
 
-    const subgraphB = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        extend schema
-          @link(
-            url: "https://specs.apollo.dev/federation/v2.3"
-            import: ["@key", "@shareable"]
-          )
+    const subgraphB = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.3"
+              import: ["@key", "@shareable"]
+            )
 
-        type User @key(fields: "id") {
-          id: ID!
-          profile: Profile @shareable
-        }
+          type User @key(fields: "id") {
+            id: ID!
+            profile: Profile @shareable
+          }
 
-        type Profile @shareable {
-          deep: Deep
-        }
+          type Profile @shareable {
+            deep: Deep
+          }
 
-        type Deep {
-          inner: Inner
-        }
+          type Deep {
+            inner: Inner
+          }
 
-        type Inner {
-          value: String
-        }
-      `),
-      resolvers: {
-        User: {
-          __resolveReference: (ref: { id: string }) => ({
-            id: ref.id,
-            profile: { deep: { inner: { value: 'from subgraph B' } } },
-          }),
+          type Inner {
+            value: String
+          }
+        `),
+        resolvers: {
+          User: {
+            __resolveReference: (ref: { id: string }) => ({
+              id: ref.id,
+              profile: { deep: { inner: { value: 'from subgraph B' } } },
+            }),
+          },
         },
       },
-    });
+    ]);
 
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: { a: subgraphA, b: subgraphB },

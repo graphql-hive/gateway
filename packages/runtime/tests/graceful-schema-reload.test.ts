@@ -7,7 +7,6 @@ import {
 import { Logger, MemoryLogWriter } from '@graphql-hive/logger';
 import { handleFederationSupergraph } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
-import { createDeferred } from '@graphql-tools/utils';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -85,27 +84,31 @@ async function waitForGeneration(
 
 describe('Graceful schema reload (generation overlap)', () => {
   it('completes an in-flight QUERY on the previous generation instead of retrying on the new one', async () => {
-    const slowEntered = createDeferred<void>();
-    const releaseSlow = createDeferred<string>();
+    const slowEntered = Promise.withResolvers<void>();
+    const releaseSlow = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: {
-          ping: () => 'genA',
-          slow: () => {
-            slowEntered.resolve();
-            return releaseSlow.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: {
+            ping: () => 'genA',
+            slow: () => {
+              slowEntered.resolve();
+              return releaseSlow.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genB', slow: () => 'fromB' },
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genB', slow: () => 'fromB' },
+        },
       },
-    });
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -154,28 +157,32 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('completes an in-flight MUTATION across a schema reload (mutations are never retried)', async () => {
-    const mutationEntered = createDeferred<void>();
-    const releaseMutation = createDeferred<string>();
+    const mutationEntered = Promise.withResolvers<void>();
+    const releaseMutation = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genA' },
-        Mutation: {
-          slowMutation: () => {
-            mutationEntered.resolve();
-            return releaseMutation.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genA' },
+          Mutation: {
+            slowMutation: () => {
+              mutationEntered.resolve();
+              return releaseMutation.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genB' },
-        Mutation: { slowMutation: () => 'fromB' },
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genB' },
+          Mutation: { slowMutation: () => 'fromB' },
+        },
       },
-    });
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -220,25 +227,29 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('force-disposes the previous generation after the drain timeout', async () => {
-    const slowEntered = createDeferred<void>();
-    const releaseSlow = createDeferred<string>();
+    const slowEntered = Promise.withResolvers<void>();
+    const releaseSlow = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: {
-          ping: () => 'genA',
-          slow: () => {
-            slowEntered.resolve();
-            return releaseSlow.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: {
+            ping: () => 'genA',
+            slow: () => {
+              slowEntered.resolve();
+              return releaseSlow.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
-    });
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
+      },
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -286,25 +297,29 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('caps concurrent generations — cap of 1 disables overlap', async () => {
-    const slowEntered = createDeferred<void>();
-    const releaseSlow = createDeferred<string>();
+    const slowEntered = Promise.withResolvers<void>();
+    const releaseSlow = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: {
-          ping: () => 'genA',
-          slow: () => {
-            slowEntered.resolve();
-            return releaseSlow.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: {
+            ping: () => 'genA',
+            slow: () => {
+              slowEntered.resolve();
+              return releaseSlow.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
-    });
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
+      },
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -353,10 +368,10 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('executes on the generation it pinned when the handler provides an executor (router-runtime path)', async () => {
-    const slowEntered = createDeferred<void>();
-    const releaseSlow = createDeferred<string>();
-    const victimEntered = createDeferred<void>();
-    const releaseVictim = createDeferred<void>();
+    const slowEntered = Promise.withResolvers<void>();
+    const releaseSlow = Promise.withResolvers<string>();
+    const victimEntered = Promise.withResolvers<void>();
+    const releaseVictim = Promise.withResolvers<void>();
 
     const typeDefs = parse(/* GraphQL */ `
       type Query {
@@ -365,29 +380,33 @@ describe('Graceful schema reload (generation overlap)', () => {
         pinned: String
       }
     `);
-    const schemaA = buildSubgraphSchema({
-      typeDefs,
-      resolvers: {
-        Query: {
-          ping: () => 'genA',
-          pinned: () => 'fromA',
-          slow: () => {
-            slowEntered.resolve();
-            return releaseSlow.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs,
+        resolvers: {
+          Query: {
+            ping: () => 'genA',
+            pinned: () => 'fromA',
+            slow: () => {
+              slowEntered.resolve();
+              return releaseSlow.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs,
-      resolvers: {
-        Query: {
-          ping: () => 'genB',
-          pinned: () => 'fromB',
-          slow: () => 'fromB',
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs,
+        resolvers: {
+          Query: {
+            ping: () => 'genB',
+            pinned: () => 'fromB',
+            slow: () => 'fromB',
+          },
         },
       },
-    });
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -478,25 +497,29 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('does not overlap when graceful reload is not configured (opt-in)', async () => {
-    const slowEntered = createDeferred<void>();
-    const releaseSlow = createDeferred<string>();
+    const slowEntered = Promise.withResolvers<void>();
+    const releaseSlow = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: {
-          ping: () => 'genA',
-          slow: () => {
-            slowEntered.resolve();
-            return releaseSlow.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: {
+            ping: () => 'genA',
+            slow: () => {
+              slowEntered.resolve();
+              return releaseSlow.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
-    });
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: { Query: { ping: () => 'genB', slow: () => 'fromB' } },
+      },
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -542,28 +565,32 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('disposes draining generations on shutdown (aborts their in-flight work)', async () => {
-    const mutationEntered = createDeferred<void>();
-    const releaseMutation = createDeferred<string>();
+    const mutationEntered = Promise.withResolvers<void>();
+    const releaseMutation = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genA' },
-        Mutation: {
-          slowMutation: () => {
-            mutationEntered.resolve();
-            return releaseMutation.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genA' },
+          Mutation: {
+            slowMutation: () => {
+              mutationEntered.resolve();
+              return releaseMutation.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genB' },
-        Mutation: { slowMutation: () => 'fromB' },
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genB' },
+          Mutation: { slowMutation: () => 'fromB' },
+        },
       },
-    });
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -620,62 +647,68 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('completes an in-flight MULTI-HOP operation across a reload', async () => {
-    const hop1Entered = createDeferred<void>();
-    const releaseHop1 = createDeferred<void>();
+    const hop1Entered = Promise.withResolvers<void>();
+    const releaseHop1 = Promise.withResolvers<void>();
 
     // Subgraph "products": owns Product and the blocking mutation (hop 1).
-    const productsSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          ping: String
-        }
-        type Mutation {
-          makeProduct: Product
-        }
-        type Product @key(fields: "id") {
-          id: ID!
-        }
-      `),
-      resolvers: {
-        Query: { ping: () => 'genA' },
-        Mutation: {
-          makeProduct: async () => {
-            hop1Entered.resolve();
-            await releaseHop1.promise;
-            return { id: '1' };
+    const productsSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            ping: String
+          }
+          type Mutation {
+            makeProduct: Product
+          }
+          type Product @key(fields: "id") {
+            id: ID!
+          }
+        `),
+        resolvers: {
+          Query: { ping: () => 'genA' },
+          Mutation: {
+            makeProduct: async () => {
+              hop1Entered.resolve();
+              await releaseHop1.promise;
+              return { id: '1' };
+            },
           },
         },
       },
-    });
+    ]);
     // Subgraph "reviews": resolves Product.review via an entity reference (hop 2).
-    const reviewsSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          _reviewsPing: String
-        }
-        type Product @key(fields: "id") {
-          id: ID!
-          review: String
-        }
-      `),
-      resolvers: {
-        Product: {
-          __resolveReference: (ref: { id: string }) => ({
-            id: ref.id,
-            review: 'reviewFromReviews',
-          }),
+    const reviewsSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            _reviewsPing: String
+          }
+          type Product @key(fields: "id") {
+            id: ID!
+            review: String
+          }
+        `),
+        resolvers: {
+          Product: {
+            __resolveReference: (ref: { id: string }) => ({
+              id: ref.id,
+              review: 'reviewFromReviews',
+            }),
+          },
         },
       },
-    });
+    ]);
     // The reload target — a different, unrelated supergraph.
-    const otherSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          ping: String
-        }
-      `),
-      resolvers: { Query: { ping: () => 'genB' } },
-    });
+    const otherSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            ping: String
+          }
+        `),
+        resolvers: { Query: { ping: () => 'genB' } },
+      },
+    ]);
 
     await using productsYoga = createYoga({
       schema: productsSchema,
@@ -748,28 +781,32 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('does not overlap an in-flight MUTATION when graceful reload is not configured (default-off)', async () => {
-    const mutationEntered = createDeferred<void>();
-    const releaseMutation = createDeferred<string>();
+    const mutationEntered = Promise.withResolvers<void>();
+    const releaseMutation = Promise.withResolvers<string>();
 
-    const schemaA = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genA' },
-        Mutation: {
-          slowMutation: () => {
-            mutationEntered.resolve();
-            return releaseMutation.promise;
+    const schemaA = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genA' },
+          Mutation: {
+            slowMutation: () => {
+              mutationEntered.resolve();
+              return releaseMutation.promise;
+            },
           },
         },
       },
-    });
-    const schemaB = buildSubgraphSchema({
-      typeDefs: parse(TYPE_DEFS),
-      resolvers: {
-        Query: { ping: () => 'genB' },
-        Mutation: { slowMutation: () => 'fromB' },
+    ]);
+    const schemaB = buildSubgraphSchema([
+      {
+        typeDefs: parse(TYPE_DEFS),
+        resolvers: {
+          Query: { ping: () => 'genB' },
+          Mutation: { slowMutation: () => 'fromB' },
+        },
       },
-    });
+    ]);
 
     await using yogaA = createYoga({ schema: schemaA, logging: false });
     await using serverA = await createDisposableServer(yogaA);
@@ -816,16 +853,18 @@ describe('Graceful schema reload (generation overlap)', () => {
   });
 
   it('overlaps multiple generations and force-disposes the OLDEST when the cap is exceeded', async () => {
-    const slowAEntered = createDeferred<void>();
-    const releaseSlowA = createDeferred<string>();
-    const slowBEntered = createDeferred<void>();
-    const releaseSlowB = createDeferred<string>();
+    const slowAEntered = Promise.withResolvers<void>();
+    const releaseSlowA = Promise.withResolvers<string>();
+    const slowBEntered = Promise.withResolvers<void>();
+    const releaseSlowB = Promise.withResolvers<string>();
 
     const makeSchema = (gen: string, slow: () => string | Promise<string>) =>
-      buildSubgraphSchema({
-        typeDefs: parse(TYPE_DEFS),
-        resolvers: { Query: { ping: () => gen, slow } },
-      });
+      buildSubgraphSchema([
+        {
+          typeDefs: parse(TYPE_DEFS),
+          resolvers: { Query: { ping: () => gen, slow } },
+        },
+      ]);
     const schemaA = makeSchema('genA', () => {
       slowAEntered.resolve();
       return releaseSlowA.promise;
@@ -934,14 +973,16 @@ describe('Graceful schema reload — untracked (plugin-replaced) schemas', () =>
   }
 
   async function pingUpstream() {
-    const schema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          ping: String
-        }
-      `),
-      resolvers: { Query: { ping: () => 'pong' } },
-    });
+    const schema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            ping: String
+          }
+        `),
+        resolvers: { Query: { ping: () => 'pong' } },
+      },
+    ]);
     const yoga = createYoga({ schema, logging: false });
     const server = await createDisposableServer(yoga);
     const sdl = await composeLocalSchemasWithApollo([
@@ -993,14 +1034,16 @@ describe('Graceful schema reload — untracked (plugin-replaced) schemas', () =>
 describe('Graceful schema reload — config validation', () => {
   let supergraph: string;
   beforeAll(async () => {
-    const schema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          ok: Boolean
-        }
-      `),
-      resolvers: { Query: { ok: () => true } },
-    });
+    const schema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            ok: Boolean
+          }
+        `),
+        resolvers: { Query: { ok: () => true } },
+      },
+    ]);
     supergraph = await composeLocalSchemasWithApollo([
       { name: 'upstream', schema, url: 'http://localhost:9999/graphql' },
     ]);

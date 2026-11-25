@@ -1,15 +1,14 @@
 import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import { Logger } from '@graphql-hive/logger';
-import { Context } from '@opentelemetry/api';
+import { Context, HrTime } from '@opentelemetry/api';
 import { hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   BatchSpanProcessor,
-  BufferConfig,
+  BatchSpanProcessorOptions,
   Span,
   SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
-import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
+} from '@opentelemetry/sdk-trace';
 import {
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
@@ -19,6 +18,11 @@ import {
   SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
 } from './attributes';
 import { CircuitBreakerExporter } from './circuit-breaker-exporter';
+
+/**
+ * The batching options of a `BatchSpanProcessor`, without the exporter which is provided separately.
+ */
+export type BufferConfig = Omit<BatchSpanProcessorOptions, 'exporter'>;
 
 export type HiveTracingSpanProcessorOptions =
   | {
@@ -33,6 +37,10 @@ export type HiveTracingSpanProcessorOptions =
   | {
       processor: SpanProcessor;
     };
+
+// sdk-trace-base doesnt expose the internal SpanImpl class, so we describe
+// the mutable bits we touch ourselves (endTime is writable on the real impl)
+type SpanImpl = Span & { endTime: HrTime };
 
 type TraceState = {
   traceId: string;
@@ -50,8 +58,10 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     if (config.processor) {
       this.processor = config.processor;
     } else {
-      this.processor = new BatchSpanProcessor(
-        new CircuitBreakerExporter(
+      // sdk-trace processors take the exporter and the batching options in one object
+      this.processor = new BatchSpanProcessor({
+        ...config.batching,
+        exporter: new CircuitBreakerExporter(
           new OTLPTraceExporter({
             url: config.endpoint,
             headers: {
@@ -62,8 +72,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
           config.circuitBreaker,
           config.log,
         ),
-        config.batching,
-      );
+      });
     }
   }
 

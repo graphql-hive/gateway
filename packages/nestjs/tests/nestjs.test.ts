@@ -9,6 +9,7 @@ import {
   GraphQLModule,
   GraphQLSchemaHost,
 } from '@nestjs/graphql';
+import { NodeAdapter, NodeRequest, NodeResponse } from '@nestjs/platform-node';
 import { Test } from '@nestjs/testing';
 import {
   AsyncDisposableStack,
@@ -16,6 +17,7 @@ import {
 } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
+import { createClient } from 'graphql-ws';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
@@ -24,22 +26,38 @@ const schemaSDL = /* GraphQL */ `
   type Query {
     hello: String!
   }
+
+  type Subscription {
+    countdown(from: Int!): Int!
+  }
 `;
 
 async function createNestApp(
   opts: Omit<HiveGatewayDriverConfig, 'supergraph'> &
     Omit<GqlModuleOptions, 'driver'> = {},
+  httpAdapter?: NodeAdapter,
 ) {
   const disposableStack = new AsyncDisposableStack();
-  const upstreamSchema = buildSubgraphSchema({
-    typeDefs: parse(schemaSDL),
-    resolvers: {
-      Query: {
-        hello: () => 'world',
+  const upstreamSchema = buildSubgraphSchema([
+    {
+      typeDefs: parse(schemaSDL),
+      resolvers: {
+        Query: {
+          hello: () => 'world',
+        },
+        Subscription: {
+          countdown: {
+            async *subscribe(_: unknown, { from }: { from: number }) {
+              for (let i = from; i >= 0; i--) {
+                yield { countdown: i };
+              }
+            },
+          },
+        },
       },
     },
-  });
-  const upstreamYoga = createYoga({ schema: upstreamSchema });
+  ]);
+  const upstreamYoga = createYoga({ logging: false, schema: upstreamSchema });
   disposableStack.use(upstreamYoga);
   const upstreamServer = await createDisposableServer(upstreamYoga);
   disposableStack.use(upstreamServer);
@@ -60,7 +78,9 @@ async function createNestApp(
       }),
     ],
   }).compile();
-  const app = moduleRef.createNestApplication();
+  const app = httpAdapter
+    ? moduleRef.createNestApplication(httpAdapter)
+    : moduleRef.createNestApplication();
   disposableStack.defer(() => app.close());
 
   const port = await getAvailablePort();
@@ -146,5 +166,69 @@ describe('NestJS', () => {
     });
     await runQuery(nestApp.port);
     expect(onCacheSetErrorFn).not.toHaveBeenCalled();
+  });
+
+  describe('with @nestjs/platform-node', () => {
+    it('should serve graphql-ws subscriptions', async () => {
+      await using nestApp = await createNestApp(
+        { subscriptions: { 'graphql-ws': true } },
+        new NodeAdapter(),
+      );
+      const client = createClient({
+        url: `ws://localhost:${nestApp.port}/graphql`,
+        retryAttempts: 0,
+      });
+      const values: unknown[] = [];
+      try {
+        for await (const result of client.iterate({
+          query: /* GraphQL */ `
+            subscription {
+              countdown(from: 2)
+            }
+          `,
+        })) {
+          values.push(result);
+        }
+      } finally {
+        await client.dispose();
+      }
+      expect(values).toEqual([
+        { data: { countdown: 2 } },
+        { data: { countdown: 1 } },
+        { data: { countdown: 0 } },
+      ]);
+    });
+
+    it('should execute queries and have the correct schema', async () => {
+      await using nestApp = await createNestApp({}, new NodeAdapter());
+      await runQuery(nestApp.port);
+      const { schema } = nestApp.app.get(GraphQLSchemaHost);
+      expect(stripIgnoredCharacters(printSchema(schema))).toBe(
+        stripIgnoredCharacters(schemaSDL),
+      );
+    });
+
+    it('should put the node request and response in the context', async () => {
+      const onContextBuildingFn = vi.fn();
+      await using nestApp = await createNestApp(
+        {
+          plugins: () => [
+            {
+              onContextBuilding: onContextBuildingFn,
+            },
+          ],
+        },
+        new NodeAdapter(),
+      );
+      await runQuery(nestApp.port);
+      expect(onContextBuildingFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: expect.objectContaining({
+            req: expect.any(NodeRequest),
+            res: expect.any(NodeResponse),
+          }),
+        }),
+      );
+    });
   });
 });

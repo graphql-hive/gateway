@@ -1,15 +1,18 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createGraphQLError } from '@graphql-tools/utils';
+import { serialized } from '@internal/testing';
 import {
   buildSchema,
   DocumentNode,
   graphql,
+  GraphQLError,
+  GraphQLResolveInfo,
   Kind,
   OperationTypeNode,
   parse,
   print,
   validate,
 } from 'graphql';
+import '@internal/testing/to-be-similar-gql-doc';
 import { describe, expect, test } from 'vitest';
 import { createRequest } from '../src/createRequest.js';
 import { delegateRequest } from '../src/delegateToSchema.js';
@@ -272,16 +275,18 @@ describe('bare requests', () => {
       `,
     });
 
-    expect(result).toEqual({
-      data: {
-        delegate: null,
-      },
-      errors: [
-        createGraphQLError('test', {
-          path: ['delegate'],
-        }),
-      ],
-    });
+    expect(serialized(result)).toEqual(
+      serialized({
+        data: {
+          delegate: null,
+        },
+        errors: [
+          new GraphQLError('test', {
+            path: ['delegate'],
+          }),
+        ],
+      }),
+    );
   });
 });
 
@@ -317,11 +322,11 @@ test('creates a target-compatible variable when reusing an argument value', () =
     targetFieldName: 'identity',
     targetSchema,
     fieldNodes: [fieldNode],
-    // @ts-expect-error we are testing the creation of a request with a variable
+    // we are testing the creation of a request with a variable
     info: {
       operation,
       variableValues: { identityId: 'identity-abc-123' },
-    },
+    } as unknown as GraphQLResolveInfo,
     args: { id: 'identity-abc-123' },
   });
 
@@ -387,12 +392,12 @@ test('does not inline enum arguments as quoted strings when the delegated field 
       targetFieldName: 'createThing',
       targetSchema,
       fieldNodes: [fieldNode],
-      // @ts-expect-error only the fields read by createRequest are needed here
+      // only the fields read by createRequest are needed here
       info: {
         schema: gatewaySchema,
         operation,
         variableValues,
-      },
+      } as unknown as GraphQLResolveInfo,
       args: variableValues,
     });
   }
@@ -431,12 +436,12 @@ test('does not inline enum arguments as quoted strings when the delegated field 
     `),
     variableValues,
   );
-  expect(print(requestInl.document)).toMatchInlineSnapshot(`
-    "mutation {
-      createThing(input: {name: "x", color: RED}) {
+  expect(print(requestInl.document)).toBeSimilarGqlDoc(/* GraphQL */ `
+    mutation {
+      createThing(input: { name: "x", color: RED }) {
         id
       }
-    }"
+    }
   `);
 });
 
@@ -497,12 +502,12 @@ test('keeps the original variable definition when it is still used inside a frag
     targetSchema,
     fieldNodes: [fieldNode],
     fragments: [fragment],
-    // @ts-expect-error only the fields read by createRequest are needed here
+    // only the fields read by createRequest are needed here
     info: {
       schema: targetSchema,
       operation,
       variableValues,
-    },
+    } as unknown as GraphQLResolveInfo,
     args: { filter: variableValues.filter },
   });
 
@@ -572,12 +577,12 @@ test('keeps the original variable definition when it is still used by a sibling 
     targetFieldName: 'grouping',
     targetSchema,
     fieldNodes: [fieldNode],
-    // @ts-expect-error only the fields read by createRequest are needed here
+    // only the fields read by createRequest are needed here
     info: {
       schema: targetSchema,
       operation,
       variableValues,
-    },
+    } as unknown as GraphQLResolveInfo,
     args: { filter: variableValues.filter },
   });
 
@@ -622,12 +627,12 @@ test('keeps the original variable definition when it is still used by a root fie
     targetFieldName: 'check',
     targetSchema,
     fieldNodes: [fieldNode],
-    // @ts-expect-error only the fields read by createRequest are needed here
+    // only the fields read by createRequest are needed here
     info: {
       schema: targetSchema,
       operation,
       variableValues: { flag: true },
-    },
+    } as unknown as GraphQLResolveInfo,
     args: { flag: true },
   });
 
@@ -671,12 +676,12 @@ test('keeps a variable forwarded by another root argument', () => {
     targetFieldName: 'field',
     targetSchema,
     fieldNodes: [fieldNode],
-    // @ts-expect-error only the fields read by createRequest are needed here
+    // only the fields read by createRequest are needed here
     info: {
       schema: gatewaySchema,
       operation,
       variableValues: { value: 'x' },
-    },
+    } as unknown as GraphQLResolveInfo,
     args: { a: 'x', b: 'x' },
   });
 

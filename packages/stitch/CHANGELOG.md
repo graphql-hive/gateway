@@ -1,5 +1,292 @@
 # @graphql-tools/stitch
 
+## 11.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - **Breaking:** Remove `isolateComputedFieldsTransformer` and isolation-clone planning.
+  
+  ### What changed
+  
+  Computed / `@requires` fields used to live on **cloned** subschema copies so the initial Query hop could not select them early. That N-clone tax is gone. Computed fields stay on the single subschema schema; `deferComputedFieldsTransformer` strips them from non-merge outbound requests and injects merge-key fields (including nested selections) so later entity hops still have identity. Aliased key fields (for example `aliasId: id`) are not treated as the literal merge key.
+  
+  Default `stitchSchemas` / federation presets already include deferral. Most apps need no config change.
+  
+  ### Migration
+  
+  If you previously passed isolation explicitly, drop it:
+  
+  ```ts
+  // before
+  import {
+    isolateComputedFieldsTransformer,
+    stitchSchemas,
+  } from '@graphql-tools/stitch';
+  
+  stitchSchemas({
+    subschemas,
+    subschemaConfigTransforms: [isolateComputedFieldsTransformer],
+  });
+  
+  // after
+  import { stitchSchemas } from '@graphql-tools/stitch';
+  
+  stitchSchemas({ subschemas });
+  // defaults already defer computed fields without cloning
+  ```
+  
+  Computed field config is unchanged. Example inventory-style merge:
+  
+  ```ts
+  merge: {
+    Product: {
+      selectionSet: '{ upc }',
+      fieldName: 'products',
+      key: ({ upc }) => upc,
+      argsFromKeys: (upcs) => ({ upcs }),
+      fields: {
+        shippingEstimate: {
+          selectionSet: '{ price weight }',
+          computed: true,
+        },
+      },
+    },
+  }
+  ```
+  
+  `shippingEstimate` stays on the schema for merge hops, but the initial `products` selection no longer resolves it before `price` / `weight` are available.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Minor Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep multiple merged-type `entryPoints` on **one** subschema instead of cloning a `SubschemaConfig` per entry.
+  
+  ### Before
+  
+  Two keys on the same subgraph used to become two registered subschemas (via `splitMergedTypeEntryPointsTransformer`). That duplicated stitching bookkeeping and could split work that should be one merge.
+  
+  ### After
+  
+  Declare every key on the same `merge` config. The planner treats the target as proxiable when **any** entry's keys are present; at hop time stitching picks the entry that matches the parent (including nested keys like `{ organization { id } }`). Parent merge defaults (`argsFromKeys`, `valuesFromResults`, `dataLoaderOptions`, shared `key` / `args` / `fieldName`) overlay onto each entry, and a per-entry custom `resolve` is honored when set.
+  
+  ```ts
+  stitchSchemas({
+    subschemas: [
+      {
+        schema: vendorSchema,
+        merge: {
+          Product: {
+            // shared batching defaults apply to every entry unless overridden
+            argsFromKeys: (keys) => ({ keys }),
+            valuesFromResults: (results) => results,
+            entryPoints: [
+              {
+                selectionSet: '{ upc }',
+                fieldName: 'productsByKey',
+                key: ({ upc }) => ({ upc }),
+              },
+              {
+                selectionSet: '{ id }',
+                fieldName: 'productsByKey',
+                key: ({ id }) => ({ id }),
+              },
+            ],
+          },
+        },
+      },
+    ],
+  });
+  ```
+  
+  With a parent that only has `upc`, the first entry runs; with only `id`, the second. Nested keys work the same way:
+  
+  ```ts
+  entryPoints: [
+    {
+      selectionSet: '{ organization { id } }',
+      fieldName: 'productByOrg',
+      key: ({ organization }) => organization?.id,
+      argsFromKeys: (ids) => ({ ids }),
+    },
+    {
+      selectionSet: '{ upc }',
+      fieldName: 'productByUpc',
+      key: ({ upc }) => upc,
+      argsFromKeys: (upcs) => ({ upcs }),
+    },
+  ]
+  ```
+  
+  No caller API change is required if you already used `entryPoints`; clones simply stop happening.
+
+
+- [#2763](https://github.com/graphql-hive/gateway/pull/2763) [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL v17
+  
+  Hive Gateway and the stitching, wrapping and federation packages work with GraphQL v17 alongside v16. The `graphql` peer dependency range stays `^16 || ^17`, so projects that install the packages themselves keep the GraphQL version they already use.
+  
+  Schema stitching, schema wrapping (including `TransformEnumValues` with defaults defined in SDL), `federationToStitchingSDL` and demand control behave the same on both versions.
+  
+  ## Docker images and binary ship GraphQL v17
+  
+  The Hive Gateway Docker images and the standalone binary come with `graphql@17.1.0`. Custom code loaded by the gateway configuration, like plugins, additional resolvers, transforms and hooks, runs against GraphQL v17. Code that only uses the gateway APIs needs no changes. Code that uses GraphQL internals directly might, see the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) for all changes.
+  
+  ### Variable values in resolver info
+  
+  `info.variableValues` is an object of `{ sources, coerced }` instead of a flat map of variable names to values. Read the variable values from `info.variableValues.coerced`, or use `getCoercedVariableValues` from `@graphql-tools/delegate` to support both versions.
+  
+  ```ts
+  import { getCoercedVariableValues } from '@graphql-tools/delegate';
+  
+  const variables = getCoercedVariableValues(info.variableValues);
+  ```
+  
+  ### Calling `getArgumentValues` and `getDirectiveValues`
+  
+  The `variableValues` argument of `getArgumentValues` and `getDirectiveValues` from `graphql` expects the `{ sources, coerced }` shape too. Wrap a flat map of variables with `asGetArgumentValuesVariables` from `@graphql-tools/utils`, which works with both versions.
+  
+  ```ts
+  import { asGetArgumentValuesVariables } from '@graphql-tools/utils';
+  import { getArgumentValues } from 'graphql';
+  
+  const args = getArgumentValues(
+    field,
+    fieldNode,
+    asGetArgumentValuesVariables(variables),
+  );
+  ```
+  
+  ### Empty lists in parsed documents
+  
+  Parsed documents leave out empty lists. For example, a field without arguments has `arguments` set to `undefined` instead of `[]`, and the same goes for `directives`, `variableDefinitions`, `interfaces` and `fields`. Use optional chaining or a fallback like `node.directives ?? []` when reading them.
+  
+  ### Default values defined in SDL
+  
+  Default values of arguments and input fields defined in SDL are kept as an AST node in `default.literal`, and `defaultValue` is `undefined`. Read `default` first and fall back to `defaultValue` to support both versions. When mapping a schema and changing a default, set `default` to `undefined` next to the new `defaultValue`, otherwise the literal from SDL is still used.
+  
+  ### Custom scalars
+  
+  Scalars have the `coerceOutputValue`, `coerceInputValue`, `coerceInputLiteral` and `valueToLiteral` functions next to the deprecated `serialize`, `parseValue` and `parseLiteral`. When building a scalar from another scalar's `toConfig()` and replacing its coercion, replace the new functions too, otherwise they keep coercing with the original implementation.
+  
+  ### Errors
+  
+  `GraphQLError` sets the standard `cause` property to its original error. Errors from subgraphs that the gateway relays to clients have the subgraph error as `cause`. What clients receive stays the same.
+  
+  ### Printing and introspection
+  
+  `print` formats object values with spaces, like `{ a: 1 }` instead of `{a: 1}`, and breaks long ones over several lines. The `reason` argument of `@deprecated` and the `includeDeprecated` argument of introspection fields are non-nullable. Update snapshots or string comparisons of printed documents and introspection results.
+  
+  Closes [#2750](https://github.com/graphql-hive/gateway/issues/2750)
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - **Breaking:** Remove the `onDelegationPlan` and `onDelegationStageExecute` plugin hooks (and the debug plugin that only existed for them). Those hooks blocked delegation-plan memoization and were rarely used.
+  
+  Delegation-plan memoization is restored with a parent field-presence seed key:
+  
+  - Types **without** computed / `@requires` field selections ignore parent shape and share one cached plan per `(schema, sourceSubschema, variables, fragments, fieldNodes)` tuple (same as the previous always-on `memoize5of7` path).
+  - Types **with** `fieldSelectionSets` (computed / `@requires`) still memoize when parents expose the same fields, so list merges reuse plans without breaking clone-less requires.
+  - Progressive override still skips memoize.
+  
+  `onDelegate` is unchanged.
+  
+  ### Migration
+  
+  Delete hook usage from gateway / fusion plugins:
+  
+  ```ts
+  // before
+  const gateway = createGatewayRuntime({
+    supergraph,
+    plugins: [
+      {
+        onDelegationPlan() {
+          /* ... */
+        },
+        onDelegationStageExecute() {
+          /* ... */
+        },
+      },
+    ],
+  });
+  
+  // after: remove those hooks
+  const gateway = createGatewayRuntime({
+    supergraph,
+    plugins: [
+      {
+        onDelegate({ typeName, fieldName }) {
+          // still supported for per-delegation instrumentation
+        },
+      },
+    ],
+  });
+  ```
+  
+  If you relied on plan/stage hooks only for debugging, use existing logging / OpenTelemetry plugins instead. No stitchSchemas merge-config change is required for the memoize restore.
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/delegate@13.0.0
+  - @graphql-tools/batch-delegate@11.0.0
+  - @graphql-tools/wrap@12.0.0
+
+## 10.4.6
+### Patch Changes
+
+- Updated dependencies [[`a0bd5e8`](https://github.com/graphql-hive/gateway/commit/a0bd5e8882d04c1211c244adc991e62bb4e5c369)]:
+  - @graphql-tools/delegate@12.3.6
+  - @graphql-tools/batch-delegate@10.1.8
+  - @graphql-tools/wrap@11.2.8
+
+## 10.4.5
+### Patch Changes
+
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Keep fields of named fragments spread on an interface when fetching the concrete type from the implementing subgraph
+  
+  For example, `node { ...NodeFields }` with `fragment NodeFields on Node { ... on Leaf { extra } }` now fetches `extra` instead of returning `null` for it.
+  
+  Closes [#2463](https://github.com/graphql-hive/gateway/issues/2463)
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Fetch `@requires` fields of an `@interfaceObject` field when it is selected through an inline fragment on an implementation
+  
+  For example, `location { ... on Store { events } }` where `events` is `@requires(fields: "code")` on the `Location` interface object now sends `code` to the contributing subgraph.
+  
+  Closes [#2737](https://github.com/graphql-hive/gateway/issues/2737)
+- Updated dependencies [[`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2)]:
+  - @graphql-tools/delegate@12.3.5
+  - @graphql-tools/batch-delegate@10.1.7
+  - @graphql-tools/wrap@11.2.7
+
 ## 10.4.4
 ### Patch Changes
 

@@ -218,8 +218,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
   >;
 
   const subschemaOrSubschemaConfig:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, any> =
+    GraphQLSchema | SubschemaConfig<any, any, any, any> =
     stitchingInfo?.subschemaMap.get(schema) ?? schema;
 
   const operation = operationDefinition.operation;
@@ -398,6 +397,14 @@ async function* streamListIterable<TContext extends Record<string, any>>(
           yield await transformer.transformResult({ data });
         }
       }
+      if (result.hasNext === false) {
+        return;
+      }
+      continue;
+    }
+    // A part with neither data nor errors carries no list item: the closing
+    // `{ hasNext: false }`, or `{ completed, hasNext }` in incrementalSpec v0.2.
+    if (result.data === undefined && !result.errors?.length) {
       if (result.hasNext === false) {
         return;
       }
@@ -691,7 +698,12 @@ function setObjectKeyPath(
     ) {
       return;
     }
-    if (current[key] == null) {
+    // path segments are client response keys (aliases), so only follow own props.
+    // inherited members like `hasOwnProperty` would otherwise make us descend into shared builtins
+    if (
+      !Object.prototype.hasOwnProperty.call(current, key) ||
+      current[key] == null
+    ) {
       current[key] = typeof path[i + 1] === 'number' ? [] : {};
     }
     current = current[key];
@@ -705,6 +717,9 @@ function setObjectKeyPath(
   ) {
     return;
   }
-  const existingValue = current[lastKey];
+  // same deal for the leaf, never merge into an inherited value
+  const existingValue = Object.prototype.hasOwnProperty.call(current, lastKey)
+    ? current[lastKey]
+    : undefined;
   current[lastKey] = existingValue ? mergeDeep([existingValue, value]) : value;
 }

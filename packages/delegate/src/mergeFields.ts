@@ -43,9 +43,7 @@ export function annotateExternalObject<TContext>(
   object: any,
   errors: Array<GraphQLError>,
   subschema:
-    | GraphQLSchema
-    | SubschemaConfig<any, any, any, TContext>
-    | undefined,
+    GraphQLSchema | SubschemaConfig<any, any, any, TContext> | undefined,
   subschemaMap: Record<
     string,
     GraphQLSchema | SubschemaConfig<any, any, any, Record<string, any>>
@@ -86,6 +84,7 @@ export function mergeFields<TContext>(
   context: any,
   info: GraphQLResolveInfo,
   fieldNodes = info.fieldNodes as FieldNode[],
+  skipSubschema?: (subschema: Subschema) => boolean,
 ): MaybePromise<any> {
   const variableValues = getCoercedVariableValues(info.variableValues);
   const delegationMaps = mergedTypeInfo.delegationPlanBuilder(
@@ -102,6 +101,7 @@ export function mergeFields<TContext>(
       : fieldNodes,
     context,
     info,
+    object,
   );
 
   const leftOver = leftOverByDelegationPlan.get(delegationMaps);
@@ -111,12 +111,18 @@ export function mergeFields<TContext>(
 
   return handleMaybePromise(
     () =>
-      promiseReduce<any, any>(
+      promiseReduce<Map<Subschema, SelectionSetNode>, any>(
         delegationMaps,
         (_, delegationMap) =>
           executeDelegationStage(
             mergedTypeInfo,
-            delegationMap,
+            skipSubschema
+              ? new Map(
+                  Array.from(delegationMap).filter(
+                    ([subschema]) => !skipSubschema(subschema),
+                  ),
+                )
+              : delegationMap,
             object,
             context,
             info,

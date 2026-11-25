@@ -20,7 +20,7 @@ export function getServiceInputs() {
   return Object.entries(services).map(([name, module]) => ({
     name,
     typeDefs: module.typeDefs,
-    schema: buildSubgraphSchema(module),
+    schema: buildSubgraphSchema([module]),
   }));
 }
 

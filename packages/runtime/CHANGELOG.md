@@ -1,5 +1,331 @@
 # @graphql-hive/gateway-runtime
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Enable `executionCancellation` and `upstreamCancellation` by default
+  
+  When the client disconnects or aborts the request, the gateway now stops executing the operation and aborts the in-flight upstream subgraph requests by default.
+  
+  To restore the previous behaviour, explicitly disable them:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    executionCancellation: false,
+    upstreamCancellation: false,
+  });
+  ```
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Incremental delivery (`@defer` / `@stream`) Accept negotiation uses the shared `INCREMENTAL_DELIVERY_SPECS` table from `@graphql-tools/utils`.
+  
+  Client Accept (gateway responses) and upstream Accept (subgraph calls) are separate:
+  
+  | Direction | Default | Force |
+  | --- | --- | --- |
+  | Client → Gateway (Yoga) | Negotiate from `Accept`; echo spec on `Content-Type` | n/a (client-driven) |
+  | Gateway → Subgraph (`executor-http`) | Bare `multipart/mixed` (no spec param) | `incrementalSpec: 'v0.1' \| 'v0.2'` on executor or `ExecutionRequest` |
+  
+  | Spec | Accept / Content-Type parameter | Payload |
+  | --- | --- | --- |
+  | `'v0.1'` | `multipart/mixed;deferSpec=20220824` | `{ incremental: [{ path, label, data \| items }], hasNext }` |
+  | `'v0.2'` | `multipart/mixed;incrementalSpec=v0.2` | `pending` / `id` / `subPath` / `completed` |
+  
+  `mergeIncrementalResult` merges both formats. Force `'v0.1'` when stitching `IncrementalReceiver` needs path/label patches. Client `Accept` is never copied onto upstream `Accept`.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - **Breaking:** Remove the `onDelegationPlan` and `onDelegationStageExecute` plugin hooks (and the debug plugin that only existed for them). Those hooks blocked delegation-plan memoization and were rarely used.
+  
+  Delegation-plan memoization is restored with a parent field-presence seed key:
+  
+  - Types **without** computed / `@requires` field selections ignore parent shape and share one cached plan per `(schema, sourceSubschema, variables, fragments, fieldNodes)` tuple (same as the previous always-on `memoize5of7` path).
+  - Types **with** `fieldSelectionSets` (computed / `@requires`) still memoize when parents expose the same fields, so list merges reuse plans without breaking clone-less requires.
+  - Progressive override still skips memoize.
+  
+  `onDelegate` is unchanged.
+  
+  ### Migration
+  
+  Delete hook usage from gateway / fusion plugins:
+  
+  ```ts
+  // before
+  const gateway = createGatewayRuntime({
+    supergraph,
+    plugins: [
+      {
+        onDelegationPlan() {
+          /* ... */
+        },
+        onDelegationStageExecute() {
+          /* ... */
+        },
+      },
+    ],
+  });
+  
+  // after: remove those hooks
+  const gateway = createGatewayRuntime({
+    supergraph,
+    plugins: [
+      {
+        onDelegate({ typeName, fieldName }) {
+          // still supported for per-delegation instrumentation
+        },
+      },
+    ],
+  });
+  ```
+  
+  If you relied on plan/stage hooks only for debugging, use existing logging / OpenTelemetry plugins instead. No stitchSchemas merge-config change is required for the memoize restore.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove deprecated gateway options and CLI flags:
+  
+  - Persisted documents: `allowArbitraryOperations` → use `allowArbitraryDocuments`
+  - Rate limiting: bare `rateLimiting: [...]` → `rateLimiting: { config: [...] }`
+  - Hive Console `usage.clientInfo`: object form removed; pass `(context) => ClientInfo | null`
+  - CLI: `--hive-registry-token` / `--hive-usage-target` removed; use `--hive-access-token` with `--hive-target` (or usage/trace-specific tokens)
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Do not trust the incoming `x-request-id` header by default
+  
+  The request ID is taken from the ID the server framework already assigned to the request (for example Fastify's `request.id`), otherwise a new one is generated. The incoming `x-request-id` header is ignored, so clients reaching the gateway directly cannot pick request IDs that collide with other requests in the logs.
+  
+  If the gateway is reachable only through a proxy or another gateway that sets the header itself, trust the header:
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    requestId: {
+      trustHeader: true,
+    },
+  });
+  ```
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove `TransportContext.logger`. Use `TransportContext.log` (`@graphql-hive/logger`) only.
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Align with GraphQL Yoga 6 / GraphQL Tools majors / whatwg-node: stop using removed helpers.
+  
+  | Removed | Replacement |
+  | --- | --- |
+  | `createGraphQLError` | `new GraphQLError(...)` |
+  | `YogaLogger` / `createLogger` / `yoga.logger` | `Logger` / `yoga.log` |
+  | `crypto` from `@whatwg-node/fetch` | platform `crypto` (Node >=22.15); Gateway still exposes it on `fetchAPI` for Yoga 5 peers |
+  | `mapMaybePromise` and related utils re-exports | `@whatwg-node/promise-helpers` (`handleMaybePromise`, …) |
+  | `createDeferred` / `createDeferredPromise` | `Promise.withResolvers()` |
+  
+  See [graphql-tools#8515](https://github.com/ardatan/graphql-tools/pull/8515) and [yoga#4623](https://github.com/graphql-hive/graphql-yoga/pull/4623).
+
+### Minor Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Expose Yoga's `maxRequestBodySize` option in the gateway configuration. The default limit is 25,000,000 bytes
+  
+  Set a different byte limit, or use `false` to disable it:
+  
+  ```ts
+  import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+  
+  const gateway = createGatewayRuntime({
+    supergraph,
+    maxRequestBodySize: 5_000_000,
+  });
+  ```
+  
+  Enforcing the limit streams request bodies through a byte counter, making POST body parsing asynchronous even for in-memory bodies. Code that previously received a synchronous `Response` from `gateway.fetch()` must await the result:
+  
+  ```ts
+  const response = await gateway.fetch('http://localhost/graphql', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ query: '{ hello }' }),
+  });
+  const result = await response.json();
+  ```
+  
+  To retain synchronous execution for in-memory requests, disable the limit:
+  
+  ```ts
+  import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+  
+  const gateway = createGatewayRuntime({
+    supergraph,
+    maxRequestBodySize: false,
+  });
+  ```
+  
+  Disabling the gateway's limit alone is not enough if an upstream server still performs asynchronous body parsing. Disabling all such limits removes this particular asynchronous step; it does not guarantee synchronous execution if resolvers, plugins, network requests, or other processing are asynchronous.
+  
+  Only disable the limit if an appropriate request-body limit is enforced elsewhere.
+
+
+- [#2763](https://github.com/graphql-hive/gateway/pull/2763) [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support GraphQL v17
+  
+  Hive Gateway and the stitching, wrapping and federation packages work with GraphQL v17 alongside v16. The `graphql` peer dependency range stays `^16 || ^17`, so projects that install the packages themselves keep the GraphQL version they already use.
+  
+  Schema stitching, schema wrapping (including `TransformEnumValues` with defaults defined in SDL), `federationToStitchingSDL` and demand control behave the same on both versions.
+  
+  ## Docker images and binary ship GraphQL v17
+  
+  The Hive Gateway Docker images and the standalone binary come with `graphql@17.1.0`. Custom code loaded by the gateway configuration, like plugins, additional resolvers, transforms and hooks, runs against GraphQL v17. Code that only uses the gateway APIs needs no changes. Code that uses GraphQL internals directly might, see the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) for all changes.
+  
+  ### Variable values in resolver info
+  
+  `info.variableValues` is an object of `{ sources, coerced }` instead of a flat map of variable names to values. Read the variable values from `info.variableValues.coerced`, or use `getCoercedVariableValues` from `@graphql-tools/delegate` to support both versions.
+  
+  ```ts
+  import { getCoercedVariableValues } from '@graphql-tools/delegate';
+  
+  const variables = getCoercedVariableValues(info.variableValues);
+  ```
+  
+  ### Calling `getArgumentValues` and `getDirectiveValues`
+  
+  The `variableValues` argument of `getArgumentValues` and `getDirectiveValues` from `graphql` expects the `{ sources, coerced }` shape too. Wrap a flat map of variables with `asGetArgumentValuesVariables` from `@graphql-tools/utils`, which works with both versions.
+  
+  ```ts
+  import { asGetArgumentValuesVariables } from '@graphql-tools/utils';
+  import { getArgumentValues } from 'graphql';
+  
+  const args = getArgumentValues(
+    field,
+    fieldNode,
+    asGetArgumentValuesVariables(variables),
+  );
+  ```
+  
+  ### Empty lists in parsed documents
+  
+  Parsed documents leave out empty lists. For example, a field without arguments has `arguments` set to `undefined` instead of `[]`, and the same goes for `directives`, `variableDefinitions`, `interfaces` and `fields`. Use optional chaining or a fallback like `node.directives ?? []` when reading them.
+  
+  ### Default values defined in SDL
+  
+  Default values of arguments and input fields defined in SDL are kept as an AST node in `default.literal`, and `defaultValue` is `undefined`. Read `default` first and fall back to `defaultValue` to support both versions. When mapping a schema and changing a default, set `default` to `undefined` next to the new `defaultValue`, otherwise the literal from SDL is still used.
+  
+  ### Custom scalars
+  
+  Scalars have the `coerceOutputValue`, `coerceInputValue`, `coerceInputLiteral` and `valueToLiteral` functions next to the deprecated `serialize`, `parseValue` and `parseLiteral`. When building a scalar from another scalar's `toConfig()` and replacing its coercion, replace the new functions too, otherwise they keep coercing with the original implementation.
+  
+  ### Errors
+  
+  `GraphQLError` sets the standard `cause` property to its original error. Errors from subgraphs that the gateway relays to clients have the subgraph error as `cause`. What clients receive stays the same.
+  
+  ### Printing and introspection
+  
+  `print` formats object values with spaces, like `{ a: 1 }` instead of `{a: 1}`, and breaks long ones over several lines. The `reason` argument of `@deprecated` and the `includeDeprecated` argument of introspection fields are non-nullable. Update snapshots or string comparisons of printed documents and introspection results.
+  
+  Closes [#2750](https://github.com/graphql-hive/gateway/issues/2750)
+
+
+- [#2768](https://github.com/graphql-hive/gateway/pull/2768) [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Run every subgraph fetch as soon as the fetches it needs data from are done
+  
+  The query plan now says which fetches each fetch waits for, so a fetch no longer waits for unrelated siblings. In `{ topProducts { inStock reviews { author { name } } } }`, the authors are fetched as soon as the reviews arrive, even when the stock is still loading.
+  
+  The router runtime also takes the entity keys, the possible types of abstract types and the shape of the response straight from the query planner, instead of working them out from the supergraph for every request.
+  
+  `@fromContext` fetches now respect a configurable alias limit. Such a fetch sends one aliased `_entities` field per group of distinct context values, so a subgraph that caps the aliases of an operation could reject it. With `maxAliasesPerRequest` the groups are split into as many requests as it takes to stay within the limit, like the Hive Router's `traffic_shaping` `max_aliases_per_request` does. There is no limit by default. Requests to a subgraph with a limit are not batched, because batching would merge the split requests back into one.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    // at most 15 aliases per request, and 4 for the accounts subgraph
+    maxAliasesPerRequest: { '*': 15, accounts: 4 },
+    // or the same limit for all subgraphs
+    // maxAliasesPerRequest: 15,
+  });
+  ```
+  
+  The query planner decides how many groups go in one request now. Contextual arguments that are non-null are still fetched with one request per group.
+  
+  Other changes you may notice:
+  
+  - Query plans exposed through `onQueryPlan`, `extensions.queryPlan` and the shared query plan cache now include the shape of the response (`projection`), the `id` and `dependsOn` of every fetch, and the `completes` of every batch fetch.
+  - Query plans in the shared cache are now kept per query planner version and alias limits. Plans cached by an earlier version or with other limits are not reused, they are planned again.
+  - A custom scalar holding an object is replaced as a whole when two subgraphs return it for the same field, instead of being merged.
+  - When two subgraphs return the same field, a `null` from one of them no longer overwrites the value from the other.
+
+### Patch Changes
+
+
+
+- [#2777](https://github.com/graphql-hive/gateway/pull/2777) [`5144835`](https://github.com/graphql-hive/gateway/commit/51448354ac5c0a3369b051a6fc0708a2461cd212) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Clear the upstream timeout timer as soon as a non-streaming subgraph request settles
+  
+  The upstream timeout signal stays referenced only for as long as the subgraph request is in flight, so the request and everything around it can be garbage collected right after it completes instead of being retained until the timeout expires.
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`4eb4a6c`](https://github.com/graphql-hive/gateway/commit/4eb4a6c89176a04a38ced9cd99608e6c639fd5ee), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`75d12e5`](https://github.com/graphql-hive/gateway/commit/75d12e51fc84d13991a78349ad563329fb292459), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/stitch@11.0.0
+  - @graphql-tools/delegate@13.0.0
+  - @graphql-tools/batch-delegate@11.0.0
+  - @graphql-tools/executor-common@2.0.0
+  - @graphql-tools/executor-http@4.0.0
+  - @graphql-tools/federation@5.0.0
+  - @graphql-mesh/fusion-runtime@2.0.0
+  - @graphql-mesh/hmac-upstream-signature@3.0.0
+  - @graphql-mesh/transport-common@2.0.0
+  - @graphql-tools/wrap@12.0.0
+  - @graphql-hive/logger@2.0.0
+  - @graphql-hive/pubsub@3.0.0
+  - @graphql-hive/signal@3.0.0
+
+## 2.14.4
+### Patch Changes
+
+- Updated dependencies [[`a0bd5e8`](https://github.com/graphql-hive/gateway/commit/a0bd5e8882d04c1211c244adc991e62bb4e5c369)]:
+  - @graphql-tools/delegate@12.3.6
+  - @graphql-tools/batch-delegate@10.1.8
+  - @graphql-tools/federation@4.6.7
+  - @graphql-mesh/fusion-runtime@1.15.1
+  - @graphql-tools/stitch@10.4.6
+  - @graphql-tools/wrap@11.2.8
+
+## 2.14.3
+### Patch Changes
+
+
+
+- [#2774](https://github.com/graphql-hive/gateway/pull/2774) [`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8) Thanks [@ardatan](https://github.com/ardatan)! - Support the incoming Mesh v2 supergraph shape (join transport, core `@link` / `@source`, Connectors without bare `@transport`).
+
+- Updated dependencies [[`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8)]:
+  - @graphql-mesh/fusion-runtime@1.15.0
+
+## 2.14.2
+### Patch Changes
+
+
+
+- [#2767](https://github.com/graphql-hive/gateway/pull/2767) [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@theguild/federation-composition@^0.27.2` ↗︎](https://www.npmjs.com/package/@theguild/federation-composition/v/0.27.2) (from `^0.26.1`, in `dependencies`)
+- Updated dependencies [[`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2)]:
+  - @graphql-tools/delegate@12.3.5
+  - @graphql-tools/stitch@10.4.5
+  - @graphql-tools/batch-delegate@10.1.7
+  - @graphql-tools/federation@4.6.6
+  - @graphql-mesh/fusion-runtime@1.14.2
+  - @graphql-tools/wrap@11.2.7
+
 ## 2.14.1
 ### Patch Changes
 

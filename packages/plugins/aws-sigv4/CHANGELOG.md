@@ -1,5 +1,49 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+### Patch Changes
+
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-mesh/fusion-runtime@2.0.0
+
+## 2.0.80
+### Patch Changes
+
+
+
+- [#2779](https://github.com/graphql-hive/gateway/pull/2779) [`923f786`](https://github.com/graphql-hive/gateway/commit/923f786ebe6c2c158ecab3e65ee1039240815a5d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Validate incoming AWS SigV4 signatures for GraphQL operations over WebSockets
+  
+  WebSocket operations do not go through the request parsing phase, so the plugin validates the WebSocket upgrade request before executing each operation. Unsigned WebSocket clients are rejected the same way unsigned HTTP requests are.
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.15.1
+
+## 2.0.79
+### Patch Changes
+
+- Updated dependencies [[`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8)]:
+  - @graphql-mesh/fusion-runtime@1.15.0
+
+## 2.0.78
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.14.2
+
 ## 2.0.77
 ### Patch Changes
 

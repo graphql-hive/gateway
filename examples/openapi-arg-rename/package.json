@@ -2,21 +2,22 @@
   "name": "@example/openapi-arg-rename",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.8.2",
-    "@omnigraph/openapi": "^0.109.49",
-    "graphql": "16.14.0",
-    "moment": "^2.30.1",
-    "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.15.10"
+    "@graphql-mesh/compose-cli": "^1.8.4",
+    "@omnigraph/openapi": "^0.112.7",
+    "graphql": "^16.15.0",
+    "moment": "^2.31.0",
+    "tslib": "^2.9.1",
+    "@graphql-hive/gateway": "^3.0.0"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "minimatch": "^10.2.5",
-    "fast-uri": "^3.1.6",
-    "protobufjs": "^8.2.1",
-    "esbuild": "^0.25.12"
+    "minimatch": "^10.2.6",
+    "fast-uri": "^3.1.9",
+    "protobufjs": "^8.8.1",
+    "esbuild": "^0.25.12",
+    "@graphql-yoga/plugin-persisted-operations": "^4.1.0"
   },
   "scripts": {
     "service:Wiki": "tsx services/Wiki.ts",

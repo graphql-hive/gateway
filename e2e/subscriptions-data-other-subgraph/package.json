@@ -2,8 +2,8 @@
   "name": "@e2e/subscriptions-data-other-subgraph",
   "private": true,
   "dependencies": {
-    "@apollo/subgraph": "^2.13.3",
-    "graphql": "^16.12.0",
-    "graphql-sse": "^2.6.0"
+    "@apollo/subgraph": "^2.17.0",
+    "graphql": "^17.1.0",
+    "graphql-sse": "^2.6.4"
   }
 }

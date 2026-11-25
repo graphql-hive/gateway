@@ -1,5 +1,132 @@
 # @graphql-hive/router-runtime
 
+## 2.0.0
+### Major Changes
+
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop GraphQL v15 (and older) support. Only GraphQL v16 and v17 are supported now.
+  
+  Upgrade to `graphql@^16` or `graphql@^17`. Hive Gateway packages require `graphql@^16.9.0` or later.
+  
+  `@graphql-tools/stitch` no longer reads legacy `#` comment descriptions (`commentDescriptions`, removed in GraphQL v16) from type definitions; use string descriptions (`"""..."""`) instead.
+
+
+- [#2670](https://github.com/graphql-hive/gateway/pull/2670) [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Drop Node.js 20 support. The minimum supported Node.js version is now 22.15.0.
+  
+  Upgrade to Node.js 22.15.0 or later.
+
+### Minor Changes
+
+
+
+- [#2768](https://github.com/graphql-hive/gateway/pull/2768) [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Run every subgraph fetch as soon as the fetches it needs data from are done
+  
+  The query plan now says which fetches each fetch waits for, so a fetch no longer waits for unrelated siblings. In `{ topProducts { inStock reviews { author { name } } } }`, the authors are fetched as soon as the reviews arrive, even when the stock is still loading.
+  
+  The router runtime also takes the entity keys, the possible types of abstract types and the shape of the response straight from the query planner, instead of working them out from the supergraph for every request.
+  
+  `@fromContext` fetches now respect a configurable alias limit. Such a fetch sends one aliased `_entities` field per group of distinct context values, so a subgraph that caps the aliases of an operation could reject it. With `maxAliasesPerRequest` the groups are split into as many requests as it takes to stay within the limit, like the Hive Router's `traffic_shaping` `max_aliases_per_request` does. There is no limit by default. Requests to a subgraph with a limit are not batched, because batching would merge the split requests back into one.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  
+  export const gatewayConfig = defineConfig({
+    // at most 15 aliases per request, and 4 for the accounts subgraph
+    maxAliasesPerRequest: { '*': 15, accounts: 4 },
+    // or the same limit for all subgraphs
+    // maxAliasesPerRequest: 15,
+  });
+  ```
+  
+  The query planner decides how many groups go in one request now. Contextual arguments that are non-null are still fetched with one request per group.
+  
+  Other changes you may notice:
+  
+  - Query plans exposed through `onQueryPlan`, `extensions.queryPlan` and the shared query plan cache now include the shape of the response (`projection`), the `id` and `dependsOn` of every fetch, and the `completes` of every batch fetch.
+  - Query plans in the shared cache are now kept per query planner version and alias limits. Plans cached by an earlier version or with other limits are not reused, they are planned again.
+  - A custom scalar holding an object is replaced as a whole when two subgraphs return it for the same field, instead of being merged.
+  - When two subgraphs return the same field, a `null` from one of them no longer overwrites the value from the other.
+
+
+- [#2703](https://github.com/graphql-hive/gateway/pull/2703) [`4d59e51`](https://github.com/graphql-hive/gateway/commit/4d59e515c1134dc5bc68930aac85a64b109dd331) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support Federation `@context` and `@fromContext`
+  
+  Contextual arguments are resolved for every entity from the ancestor setting the context and sent to the subgraph as variables. Entities whose ancestors hold different values are grouped by those values, and all groups are sent in one request using an aliased `_entities` field per group. Contextual arguments that are non-null are fetched with one request per group instead.
+  
+  Requires `@graphql-hive/router-query-planner` v0.0.51 or later, which plans `@fromContext` fields.
+
+### Patch Changes
+
+
+
+- [#2768](https://github.com/graphql-hive/gateway/pull/2768) [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Respond like the default handler to bad variables and failed subgraph requests, and send the operation name to subgraphs
+  
+  A variable that can't be coerced, like a string for an `Int` or an `@oneOf` input with two keys, is now responded to with HTTP 400 instead of 200.
+  
+  When every fetch of an operation failed, like when the connection to the subgraph dropped, the response now has `data` with the failed fields set to `null`, and HTTP 200, instead of no `data` and HTTP 500.
+  
+  The subgraph operations are named after the client's operation, and the name is sent as the `operationName` to the subgraph, like with the default handler. For `query Orders { orders }`, the subgraph receives `query Orders{orders}` with `"operationName": "Orders"`, which also shows up in the subgraph metrics and traces instead of `Anonymous`.
+  
+  Closes [#2773](https://github.com/graphql-hive/gateway/issues/2773)
+
+
+- [#2753](https://github.com/graphql-hive/gateway/pull/2753) [`e30a911`](https://github.com/graphql-hive/gateway/commit/e30a91193e53ea685c47adcc6226767bd594192e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Execute query plans of `@graphql-hive/router-query-planner` v0.0.53
+  
+  ### Fetches under `@include` and `@skip`
+  
+  Query plans have no `Condition` nodes. The `@include`/`@skip` around a fetch and on its fields are in the optional `runIf` of the fetch, and of every alias of a `BatchFetch`. A fetch whose conditions don't hold is not sent, and a batch alias whose conditions don't hold sends no representations. A batch with every alias off is not sent at all.
+  
+  A query plan without a node, when no fetch can ever run, responds with empty data instead of failing.
+  
+  ### Aliased required fields
+  
+  A required field the planner fetched under an internal alias is read only from that alias. When it's missing, whatever the client selected under the field's name is not sent in its place.
+  
+  ### Entities with a missing required field
+  
+  An entity is left out of an entity call only when it has none of its keys in that subgraph. A required field it misses, like one whose subgraph returned `null` for the entity, is sent as `null`. An entity keyed by `@key(fields: "__typename")` alone is no longer dropped when its required field is missing.
+  
+  An object inside a representation that misses a selected field is sent as `null`, and a list item with nothing to send keeps its place as `null`.
+  
+  ### Error paths
+  
+  Error paths stop at the closest field the client asked for. A path into a field the gateway fetched for itself, like a `@requires` field or `_entities`, is cut there, and an error with no such field has no path.
+
+
+- [#2768](https://github.com/graphql-hive/gateway/pull/2768) [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Propagate the `null` of an unresolved entity to the nearest nullable parent
+  
+  When the subgraph owning an entity can't resolve it and a non-nullable field of the entity was selected, the `null` now goes up to the nearest nullable parent, like with the default handler, instead of stopping at the field referencing the entity.
+  
+  Closes [#2772](https://github.com/graphql-hive/gateway/issues/2772)
+- Updated dependencies [[`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`abde25d`](https://github.com/graphql-hive/gateway/commit/abde25d02f1cf0494210121b0aa6426513ac90e3), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2), [`1204709`](https://github.com/graphql-hive/gateway/commit/12047092208631559c48d147d861815d63d953c2)]:
+  - @graphql-tools/delegate@13.0.0
+  - @graphql-tools/executor-common@2.0.0
+  - @graphql-tools/federation@5.0.0
+  - @graphql-mesh/fusion-runtime@2.0.0
+  - @graphql-mesh/transport-common@2.0.0
+
+## 1.6.16
+### Patch Changes
+
+- Updated dependencies [[`a0bd5e8`](https://github.com/graphql-hive/gateway/commit/a0bd5e8882d04c1211c244adc991e62bb4e5c369)]:
+  - @graphql-tools/delegate@12.3.6
+  - @graphql-tools/federation@4.6.7
+  - @graphql-mesh/fusion-runtime@1.15.1
+
+## 1.6.15
+### Patch Changes
+
+- Updated dependencies [[`5cb2482`](https://github.com/graphql-hive/gateway/commit/5cb2482881397af69c81111f04797ff8adbc12c8)]:
+  - @graphql-mesh/fusion-runtime@1.15.0
+
+## 1.6.14
+### Patch Changes
+
+- Updated dependencies [[`b180423`](https://github.com/graphql-hive/gateway/commit/b1804230911a8cd047ee0953304469ff4cb6b131), [`ad89e84`](https://github.com/graphql-hive/gateway/commit/ad89e8443b1839e79fa6c34a0347a2f3c67d3ec2)]:
+  - @graphql-tools/delegate@12.3.5
+  - @graphql-tools/federation@4.6.6
+  - @graphql-mesh/fusion-runtime@1.14.2
+
 ## 1.6.13
 ### Patch Changes
 

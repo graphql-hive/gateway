@@ -10,14 +10,7 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### tsx
 
 1. https://github.com/privatenumber/tsx/issues/159#issuecomment-2473632866 (did what was suggested)
-
-### vitest-tsconfig-paths
-
-1. Resolve tsconfig paths in modules that have been [inlined](https://vitest.dev/config/#server-deps-inline).
-
-### @opentelemetry/otlp-exporter-base
-
-1. Use `import` instead of `require` for dynamic resolution in ES Module
+2. `require()` of `.mjs` files is left to Node when it supports requiring ES modules. Otherwise tsx compiles them to CommonJS and loads a second instance next to the one loaded with `import`. GraphQL v17 resolves to its `.mjs` build for both `require()` and `import`, so CommonJS packages like `graphql-compose` and `@apollo/subgraph` would get a different `graphql` instance than ES modules.
 
 ### @rollup/plugin-node-resolve
 
@@ -27,3 +20,48 @@ Here we collect reasons and write explanations about why some resolutions or pat
 
 1. Used by OTEl packages (NodeSDK).
 2. Contains a legacy byte code syntax, forbidden in strict mode used by Hive Gateway.
+
+### @babel/template
+
+1. Applies only to Babel 8 (`@babel/template@npm:^8.0.0`). Babel 7 consumers are left untouched.
+2. For every template it builds, `extendedTrace` keeps an unformatted `new Error()`. V8 keeps the call sites of an unformatted error, including their receivers, alive until the stack is read. When Babel builds templates during a Jest transform, that stack includes Jest's module executor, so the whole test environment of the suite stays in memory and `yarn test:leaks` reports a leak.
+3. The patch formats the stack to a string as soon as the template is built and keeps only the string. Babel 7 behaves the same way.
+
+### jest-circus
+
+1. jest-circus runs every test and hook inside an `AsyncLocalStorage` whose store holds the test, hook and describe block.
+2. Every timer, socket or other async resource created during a test captures the current async context. Some of them live for the whole process and keep the last captured context, for example the fast timer in Node's bundled undici (used by the global `fetch`) and the default DNS resolver channel. Through the store they keep the test environment of a finished suite alive, so `yarn test:leaks` reports a leak.
+3. Storing weak references or objects with getters is not enough. Any object or function created inside jest-circus belongs to the test realm, and the realm references the test environment.
+4. The patch stores only a numeric id in the `AsyncLocalStorage`. The contexts live in a `Map` inside the jest-circus module, which is released together with the suite's runtime. `getTestExecutionContext` returns the same objects as before, so attributing errors to tests behaves the same.
+
+### jest-leak-detector
+
+1. Triggers garbage collection with `%CollectGarbage(true)` on every tick instead of exposing `gc` once.
+
+### @graphql-hive/federation-gateway-audit/@apollo/subgraph
+
+1. Since `@apollo/subgraph` 2.15, `buildSubgraphSchema` accepts only a list of modules or a document, not a single `{ typeDefs, resolvers }` module.
+2. The audit still passes a single module, so it's kept on the last `@apollo/subgraph` version that accepts it.
+
+### @internal/e2e/@apollo/subgraph and @e2e/federation-mixed/@apollo/subgraph
+
+1. The example services in `internal/e2e/src/services` are Federation 1 subgraphs that declare entities only with `extend type`, like `extend type Product @key(fields: "upc")`.
+2. Since `@apollo/subgraph` 2.16, `_service { sdl }` of a Federation 1 subgraph also contains a fieldless `type Product` for every type that is only extended. This is valid GraphQL, Apollo composition accepts it.
+3. `@graphql-mesh/compose-cli` (`loadGraphQLHTTPSubgraph`) turns every `extend type` into `type ... @extends` before building the subgraph schema. The fieldless `type Product` then replaces the extended one and composition fails with "Type Product must define one or more fields".
+4. The services are kept on the last `@apollo/subgraph` version that publishes only the `extend type` until `@graphql-mesh/compose-cli` handles it. `@e2e/federation-mixed` is pinned too because the generated example installs the services' dependencies from its `package.json`.
+
+### got
+
+1. `@yarnpkg/core` 4.9.2 was published with a dependency on `patch:got@npm%3A11.8.2#~/.yarn/patches/got-npm-11.8.2-c1eb105458.patch`, a patch that only exists in the Yarn repository.
+2. `~/` resolves to this project's root, so the patch is copied as is from [yarnpkg/berry](https://github.com/yarnpkg/berry/blob/master/.yarn/patches/got-npm-11.8.2-c1eb105458.patch) to make the install work.
+
+### vitest
+
+1. Writes snapshot files with the Jest header instead of the Vitest one.
+2. Names snapshots like Jest does, joining the test name and the snapshot hint with `: ` and without `>` between nested test names. This keeps the snapshot files shared with `bun test`.
+3. Vitest 5 bundles `@vitest/snapshot`, so the patch is applied on `vitest` itself.
+
+### @graphql-hive/federation-gateway-audit/graphql-yoga
+
+1. The audit serves its subgraphs with `graphql-yoga` v5, which does not work with GraphQL v17.
+2. It's resolved to the same `graphql-yoga` major the rest of the repository uses, which supports GraphQL v16 and v17.

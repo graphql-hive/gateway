@@ -8,28 +8,30 @@ import {
   createDisposableServer,
 } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
-import { parse } from 'graphql';
-import { createGraphQLError, createYoga } from 'graphql-yoga';
+import { GraphQLError, parse } from 'graphql';
+import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
 describe('Subgraph Errors', () => {
   it('shows the error with the subgraph name', async () => {
     const upstreamServiceName = Math.random().toString(36).substring(7);
     const randomErrorMessage = Math.random().toString(36).substring(7);
-    const upstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-      `),
-      resolvers: {
-        Query: {
-          hello() {
-            return createGraphQLError(randomErrorMessage);
+    const upstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String!
+          }
+        `),
+        resolvers: {
+          Query: {
+            hello() {
+              return new GraphQLError(randomErrorMessage);
+            },
           },
         },
       },
-    });
+    ]);
     await using upstreamYoga = createYoga({
       schema: upstreamSchema,
       logging: false,
@@ -76,13 +78,15 @@ describe('Subgraph Errors', () => {
   });
   it('does not leak the error to the client when the subgraph returns an unexpected result', async () => {
     const upstreamServiceName = Math.random().toString(36).substring(7);
-    const upstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-      `),
-    });
+    const upstreamSchema = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            hello: String!
+          }
+        `),
+      },
+    ]);
     const supergraph = await composeLocalSchemasWithApollo([
       {
         name: upstreamServiceName,
@@ -91,6 +95,7 @@ describe('Subgraph Errors', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: true,
       plugins: () => [

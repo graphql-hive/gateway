@@ -34,9 +34,7 @@ describe('Demand Control', () => {
     },
     introspectFromEndpoint = false,
   ) {
-    const subgraphServer = createYoga({
-      schema: subgraph,
-    });
+    const subgraphServer = createYoga({ logging: false, schema: subgraph });
     const plugins = () => [
       // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
       useCustomFetch(subgraphServer.fetch),
@@ -44,6 +42,7 @@ describe('Demand Control', () => {
     ];
     return mode === 'proxy'
       ? createGatewayRuntime({
+          logging: false,
           proxy: {
             endpoint: 'http://upstream/graphql',
           },
@@ -51,6 +50,7 @@ describe('Demand Control', () => {
           plugins,
         })
       : createGatewayRuntime({
+          logging: false,
           supergraph: composeLocalSchemasWithApollo([
             {
               name: 'subgraph',
@@ -68,42 +68,44 @@ describe('Demand Control', () => {
        * 1 Query (0) + 1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (1) = 4 total cost
        */
       it('basic query', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              book(id: ID): Book
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                book(id: ID): Book
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address {
-              zipCode: Int!
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address {
+                zipCode: Int!
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
               },
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(mode, booksSubgraph);
         const query = /* GraphQL */ `
           query BookQuery {
@@ -144,49 +146,51 @@ describe('Demand Control', () => {
        * 1 Query (0) + 1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (5) = 8 total cost
        */
       it('@cost in object', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              book(id: ID): Book
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                book(id: ID): Book
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address @cost(weight: 5) {
-              zipCode: Int!
-            }
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@cost"]
-              ) {
-              query: Query
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address @cost(weight: 5) {
+                zipCode: Int!
+              }
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@cost"]
+                ) {
+                query: Query
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
               },
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(mode, booksSubgraph);
         const query = /* GraphQL */ `
           query BookQuery {
@@ -227,50 +231,52 @@ describe('Demand Control', () => {
        * 1 Query (0) + 5 book objects (5 * (1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (5))) = 40 total cost
        */
       it('@listSize(assumedSize:)', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              bestsellers: [Book] @listSize(assumedSize: 5)
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                bestsellers: [Book] @listSize(assumedSize: 5)
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address @cost(weight: 5) {
-              zipCode: Int!
-            }
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@cost", "@listSize"]
-              ) {
-              query: Query
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address @cost(weight: 5) {
+                zipCode: Int!
+              }
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@cost", "@listSize"]
+                ) {
+                query: Query
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
+                bestsellers: () => [book],
               },
-              bestsellers: () => [book],
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(mode, booksSubgraph);
         const query = /* GraphQL */ `
           query BestsellersQuery {
@@ -315,52 +321,54 @@ describe('Demand Control', () => {
        * 1 Query (0) + 3 book objects (7 * (1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (5))) = 56 total cost
        */
       it('@listSize(slicingArguments:)', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              newestAdditions(after: ID, limit: Int!): [Book]
-                @listSize(slicingArguments: ["limit"])
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                newestAdditions(after: ID, limit: Int!): [Book]
+                  @listSize(slicingArguments: ["limit"])
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address @cost(weight: 5) {
-              zipCode: Int!
-            }
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@cost", "@listSize"]
-              ) {
-              query: Query
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address @cost(weight: 5) {
+                zipCode: Int!
+              }
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@cost", "@listSize"]
+                ) {
+                query: Query
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
+                bestsellers: () => [book],
+                newestAdditions: () => [book],
               },
-              bestsellers: () => [book],
-              newestAdditions: () => [book],
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(mode, booksSubgraph);
         /* Querying 3 books start */
         const queryWith3 = /* GraphQL */ `
@@ -443,42 +451,44 @@ describe('Demand Control', () => {
       });
 
       it('"max" option', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              book(id: ID): Book
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                book(id: ID): Book
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address {
-              zipCode: Int!
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address {
+                zipCode: Int!
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
               },
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(
           mode,
           booksSubgraph,
@@ -530,50 +540,52 @@ describe('Demand Control', () => {
       });
 
       it('"defaultAssumedListSize" option', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              bestsellers: [Book]
-            }
+        const booksSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                bestsellers: [Book]
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address @cost(weight: 5) {
-              zipCode: Int!
-            }
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@cost"]
-              ) {
-              query: Query
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address @cost(weight: 5) {
+                zipCode: Int!
+              }
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@cost"]
+                ) {
+                query: Query
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
+                bestsellers: () => [book],
               },
-              bestsellers: () => [book],
             },
           },
-        });
+        ]);
         await using gateway = createTestGateway(mode, booksSubgraph, {
           includeExtensionMetadata: true,
           listSize: 5,
@@ -615,35 +627,39 @@ describe('Demand Control', () => {
       });
 
       it('@listSize(slicingArguments:, requireOneSlicingArgument:true)', async () => {
-        const itemsSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@listSize"]
-              ) {
-              query: Query
-            }
+        const itemsSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@listSize"]
+                ) {
+                query: Query
+              }
 
-            type Query {
-              items(first: Int, last: Int): [Item!]
-                @listSize(slicingArguments: ["first", "last"])
-            }
+              type Query {
+                items(first: Int, last: Int): [Item!]
+                  @listSize(slicingArguments: ["first", "last"])
+              }
 
-            type Item {
-              id: ID
-            }
-          `),
-          resolvers: {
-            Query: {
-              items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+              type Item {
+                id: ID
+              }
+            `),
+            resolvers: {
+              Query: {
+                items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+              },
             },
           },
-        });
+        ]);
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -676,6 +692,9 @@ describe('Demand Control', () => {
         const result = await response.json();
         if (usingHiveRouterRuntime()) {
           expect(result).toEqual({
+            data: {
+              items: null,
+            },
             errors: [
               {
                 message:
@@ -721,38 +740,42 @@ describe('Demand Control', () => {
         }
       });
       it('@listSize(slicingArguments:, requireOneSlicingArgument:false)', async () => {
-        const itemsSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@listSize"]
-              ) {
-              query: Query
-            }
+        const itemsSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@listSize"]
+                ) {
+                query: Query
+              }
 
-            type Query {
-              items(first: Int, last: Int): [Item!]
-                @listSize(
-                  slicingArguments: ["first", "last"]
-                  requireOneSlicingArgument: false
-                )
-            }
+              type Query {
+                items(first: Int, last: Int): [Item!]
+                  @listSize(
+                    slicingArguments: ["first", "last"]
+                    requireOneSlicingArgument: false
+                  )
+              }
 
-            type Item {
-              id: ID
-            }
-          `),
-          resolvers: {
-            Query: {
-              items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+              type Item {
+                id: ID
+              }
+            `),
+            resolvers: {
+              Query: {
+                items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+              },
             },
           },
-        });
+        ]);
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -795,43 +818,47 @@ describe('Demand Control', () => {
         });
       });
       it('@listSize(sizedFields:)', async () => {
-        const itemsSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: ["@listSize"]
-              ) {
-              query: Query
-            }
+        const itemsSubgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: ["@listSize"]
+                ) {
+                query: Query
+              }
 
-            type Query {
-              items(first: Int): Cursor!
-                @listSize(slicingArguments: ["first"], sizedFields: ["page"])
-            }
+              type Query {
+                items(first: Int): Cursor!
+                  @listSize(slicingArguments: ["first"], sizedFields: ["page"])
+              }
 
-            type Cursor {
-              page: [Item!]
-              nextPageToken: String
-            }
+              type Cursor {
+                page: [Item!]
+                nextPageToken: String
+              }
 
-            type Item {
-              id: ID
-            }
-          `),
-          resolvers: {
-            Query: {
-              items: () => ({
-                page: [{ id: 'Item 1' }, { id: 'Item 2' }],
-                nextPageToken: 'token',
-              }),
+              type Item {
+                id: ID
+              }
+            `),
+            resolvers: {
+              Query: {
+                items: () => ({
+                  page: [{ id: 'Item 1' }, { id: 'Item 2' }],
+                  nextPageToken: 'token',
+                }),
+              },
             },
           },
-        });
+        ]);
         await using itemsServer = createYoga({
+          logging: false,
           schema: itemsSubgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'items',
@@ -887,49 +914,51 @@ describe('Demand Control', () => {
       it.skipIf(mode === 'proxy')(
         '@cost in object but aliased as @myCost',
         async () => {
-          const booksSubgraph = buildSubgraphSchema({
-            typeDefs: parse(/* GraphQL */ `
-              type Query {
-                book(id: ID): Book
-              }
+          const booksSubgraph = buildSubgraphSchema([
+            {
+              typeDefs: parse(/* GraphQL */ `
+                type Query {
+                  book(id: ID): Book
+                }
 
-              type Book {
-                title: String
-                author: Author
-                publisher: Publisher
-              }
+                type Book {
+                  title: String
+                  author: Author
+                  publisher: Publisher
+                }
 
-              type Author {
-                name: String
-              }
+                type Author {
+                  name: String
+                }
 
-              type Publisher {
-                name: String
-                address: Address
-              }
+                type Publisher {
+                  name: String
+                  address: Address
+                }
 
-              type Address @myCost(weight: 5) {
-                zipCode: Int!
-              }
-              extend schema
-                @link(
-                  url: "https://specs.apollo.dev/federation/v2.9"
-                  import: [{ name: "@cost", as: "@myCost" }]
-                ) {
-                query: Query
-              }
-            `),
-            resolvers: {
-              Query: {
-                book: (_root, { id }) => {
-                  if (id === '1') {
-                    return book;
-                  }
-                  throw new Error('Book not found');
+                type Address @myCost(weight: 5) {
+                  zipCode: Int!
+                }
+                extend schema
+                  @link(
+                    url: "https://specs.apollo.dev/federation/v2.9"
+                    import: [{ name: "@cost", as: "@myCost" }]
+                  ) {
+                  query: Query
+                }
+              `),
+              resolvers: {
+                Query: {
+                  book: (_root, { id }) => {
+                    if (id === '1') {
+                      return book;
+                    }
+                    throw new Error('Book not found');
+                  },
                 },
               },
             },
-          });
+          ]);
           await using gateway = createTestGateway(mode, booksSubgraph);
           const query = /* GraphQL */ `
             query BookQuery {
@@ -972,17 +1001,21 @@ describe('Demand Control', () => {
       );
 
       it('returns cost even if it does not hit the subgraph', async () => {
-        const subgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              foo: String
-            }
-          `),
-        });
+        const subgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                foo: String
+              }
+            `),
+          },
+        ]);
         await using subgraphServer = createYoga({
+          logging: false,
           schema: subgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'subgraph',
@@ -1026,32 +1059,36 @@ describe('Demand Control', () => {
       });
 
       it('handles batched requests', async () => {
-        const subgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              foo: Foo
-              bar: Bar
-            }
+        const subgraph = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                foo: Foo
+                bar: Bar
+              }
 
-            type Foo {
-              id: ID
-            }
+              type Foo {
+                id: ID
+              }
 
-            type Bar {
-              id: ID
-            }
-          `),
-          resolvers: {
-            Query: {
-              foo: async () => ({ id: 'foo' }),
-              bar: async () => ({ id: 'bar' }),
+              type Bar {
+                id: ID
+              }
+            `),
+            resolvers: {
+              Query: {
+                foo: async () => ({ id: 'foo' }),
+                bar: async () => ({ id: 'bar' }),
+              },
             },
           },
-        });
+        ]);
         await using subgraphServer = createYoga({
+          logging: false,
           schema: subgraph,
         });
         await using gateway = createGatewayRuntime({
+          logging: false,
           supergraph: await composeLocalSchemasWithApollo([
             {
               name: 'subgraph',
@@ -1088,7 +1125,10 @@ describe('Demand Control', () => {
         const result = await response.json();
         if (usingHiveRouterRuntime()) {
           expect(result).toEqual({
-            // data field completely omitted on errors from hive router qp
+            data: {
+              foo: null,
+              bar: null,
+            },
             errors: [
               {
                 extensions: {

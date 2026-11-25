@@ -1,6 +1,6 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
-  createGraphQLError,
+  asGetArgumentValuesVariables,
   getDirective,
   getDirectiveExtensions,
   memoize1,
@@ -11,6 +11,7 @@ import {
   FieldNode,
   getArgumentValues,
   getNamedType,
+  GraphQLError,
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
@@ -145,10 +146,11 @@ export function createCalculateCost({
                     if ('slicingArguments' in listSizeAnnotation) {
                       const slicingArguments =
                         listSizeAnnotation.slicingArguments;
+                      // graphql 17 expects `{ coerced, sources }` instead of a flat map
                       const argValues = getArgumentValues(
                         field,
                         node,
-                        variables,
+                        asGetArgumentValuesVariables(variables),
                       );
                       let factorSet = false;
                       let slicingArgumentFactor: number = 1;
@@ -165,7 +167,7 @@ export function createCalculateCost({
                             listSizeAnnotation.requireOneSlicingArgument !==
                               false
                           ) {
-                            throw createGraphQLError(
+                            throw new GraphQLError(
                               `Only one slicing argument is allowed on field "${field.name}"; found multiple slicing arguments "${slicingArguments.join(', ')}"`,
                               {
                                 extensions: {

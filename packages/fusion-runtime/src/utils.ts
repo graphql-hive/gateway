@@ -1,5 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import {
   defaultPrintFn,
   type Transport,
@@ -11,11 +11,6 @@ import {
 import { isDisposable, iterateAsync } from '@graphql-mesh/utils';
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
-  DelegationPlanBuilder,
-  MergedTypeResolver,
-  Subschema,
-} from '@graphql-tools/delegate';
-import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
@@ -25,24 +20,23 @@ import {
   type Executor,
   type GraphQLResolveInfoHelpers,
   type Maybe,
-  type MaybePromise,
 } from '@graphql-tools/utils';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   handleMaybePromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
 import {
-  FragmentDefinitionNode,
   GraphQLError,
   isEnumType,
-  SelectionNode,
-  SelectionSetNode,
+  isInterfaceType,
+  isObjectType,
   type DocumentNode,
   type ExecutionResult,
   type GraphQLSchema,
 } from 'graphql';
-import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
+import type { GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
 import {
   Instrumentation,
@@ -147,7 +141,6 @@ function getTransportExecutor({
         transportContext?.log ||
         // if the logger is not provided by the context, create a new silent one just for consistency in the hooks
         new Logger({ level: false });
-      const logger = transportContext?.logger || LegacyLogger.from(log);
       return getSubgraphExecutor({
         subgraphName,
         subgraph,
@@ -165,7 +158,6 @@ function getTransportExecutor({
         getDisposeReason,
         ...transportContext,
         log,
-        logger,
       });
     },
   );
@@ -193,7 +185,11 @@ export function getOnSubgraphExecute({
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
-  batch?: boolean;
+  /**
+   * Whether to batch the executions of subgraphs. A function decides it for every subgraph by
+   * its name.
+   */
+  batch?: boolean | ((subgraphName: string) => boolean);
   instrumentation: () => Instrumentation | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
@@ -266,7 +262,7 @@ export function getOnSubgraphExecute({
       subgraphExecutorMap.set(subgraphName, executor);
     }
 
-    if (batch) {
+    if (typeof batch === 'function' ? batch(subgraphName) : batch) {
       executor = getBatchingExecutor(
         executionRequest.context || subgraphExecutorMap,
         executor,
@@ -441,8 +437,6 @@ export function wrapExecutorWithHooks({
 
 export interface UnifiedGraphPlugin<TContext> {
   onSubgraphExecute?: OnSubgraphExecuteHook<TContext>;
-  onDelegationPlan?: OnDelegationPlanHook<TContext>;
-  onDelegationStageExecute?: OnDelegationStageExecuteHook<TContext>;
 }
 
 export type OnSubgraphExecuteHook<TContext = any> = (
@@ -485,67 +479,6 @@ export type OnSubgraphExecuteDoneResult = {
   onEnd?: OnSubgraphExecuteDoneResultOnEnd;
 };
 
-export type OnDelegationPlanHook<TContext> = (
-  payload: OnDelegationPlanHookPayload<TContext>,
-) => Maybe<OnDelegationPlanDoneHook | void>;
-
-export interface OnDelegationPlanHookPayload<TContext> {
-  supergraph: GraphQLSchema;
-  subgraph: string;
-  sourceSubschema: Subschema<any, any, any, TContext>;
-  typeName: string;
-  variables: Record<string, any>;
-  fragments: Record<string, FragmentDefinitionNode>;
-  fieldNodes: SelectionNode[];
-  context: TContext;
-  log: Logger;
-  info?: GraphQLResolveInfo;
-  delegationPlanBuilder: DelegationPlanBuilder;
-  setDelegationPlanBuilder(delegationPlanBuilder: DelegationPlanBuilder): void;
-}
-
-export type OnDelegationPlanDoneHook = (
-  payload: OnDelegationPlanDonePayload,
-) => Maybe<void>;
-
-export interface OnDelegationPlanDonePayload {
-  delegationPlan: ReturnType<DelegationPlanBuilder>;
-  setDelegationPlan: (
-    delegationPlan: ReturnType<DelegationPlanBuilder>,
-  ) => void;
-}
-
-export type OnDelegationStageExecuteHook<TContext> = (
-  payload: OnDelegationStageExecutePayload<TContext>,
-) => Maybe<OnDelegationStageExecuteDoneHook>;
-
-export interface OnDelegationStageExecutePayload<TContext> {
-  object: any;
-  context: TContext;
-  info: GraphQLResolveInfo;
-  subgraph: string;
-  subschema: Subschema<any, any, any, TContext>;
-  selectionSet: SelectionSetNode;
-  key?: any;
-  type: GraphQLOutputType;
-
-  resolver: MergedTypeResolver<TContext>;
-  setResolver: (resolver: MergedTypeResolver<TContext>) => void;
-
-  typeName: string;
-
-  log: Logger;
-}
-
-export type OnDelegationStageExecuteDoneHook = (
-  payload: OnDelegationStageExecuteDonePayload,
-) => void;
-
-export interface OnDelegationStageExecuteDonePayload {
-  result: any;
-  setResult: (result: any) => void;
-}
-
 export function compareSchemas(
   a: DocumentNode | string | GraphQLSchema,
   b: DocumentNode | string | GraphQLSchema,
@@ -577,78 +510,6 @@ export function compareSubgraphNames(name1: string, name2: string) {
   return constantCase(name1) === constantCase(name2);
 }
 
-export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
-  originalResolver: MergedTypeResolver<TContext>,
-  typeName: string,
-  onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[],
-  log: Logger,
-): MergedTypeResolver<TContext> {
-  return (
-    object,
-    context,
-    info,
-    subschema,
-    selectionSet,
-    key,
-    type,
-    skipTypeMerging,
-  ) => {
-    if (subschema.name) {
-      log = log.child({ subgraph: subschema.name });
-    }
-    let resolver = originalResolver as MergedTypeResolver<TContext>;
-    function setResolver(newResolver: MergedTypeResolver<TContext>) {
-      resolver = newResolver;
-    }
-    const onDelegationStageExecuteDoneHooks: OnDelegationStageExecuteDoneHook[] =
-      [];
-    for (const onDelegationStageExecute of onDelegationStageExecuteHooks) {
-      const onDelegationStageExecuteDone = onDelegationStageExecute({
-        object,
-        context: context as TContext,
-        info,
-        subgraph: subschema.name!,
-        subschema: subschema as Subschema<any, any, any, TContext>,
-        selectionSet,
-        key,
-        typeName,
-        type,
-        log,
-        resolver,
-        setResolver,
-      });
-      if (onDelegationStageExecuteDone) {
-        onDelegationStageExecuteDoneHooks.push(onDelegationStageExecuteDone);
-      }
-    }
-    return handleMaybePromise(
-      () =>
-        resolver(
-          object,
-          context as TContext,
-          info,
-          subschema as Subschema<any, any, any, TContext>,
-          selectionSet,
-          key,
-          type,
-          skipTypeMerging,
-        ),
-      (result) => {
-        function setResult(newResult: any) {
-          result = newResult;
-        }
-        for (const onDelegationStageExecuteDone of onDelegationStageExecuteDoneHooks) {
-          onDelegationStageExecuteDone({
-            result,
-            setResult,
-          });
-        }
-        return result;
-      },
-    );
-  };
-}
-
 // Taken from https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
 export function millisecondsToStr(milliseconds: number): string {
   // TIP: to find current time in milliseconds, use:
@@ -678,16 +539,53 @@ export function millisecondsToStr(milliseconds: number): string {
   return 'less than a second'; //'just now' //or other string you like;
 }
 
+type JoinDirective = {
+  name?: string;
+  graphs?: string[];
+  args?: Record<string, unknown>;
+};
+
 export function getTransportEntryMapUsingFusionAndFederationDirectives(
   unifiedGraph: GraphQLSchema,
   transportEntryAdditions?: TransportEntryAdditions,
 ) {
   unifiedGraph = restoreExtraDirectives(unifiedGraph);
+  // Mesh spec contract: reject unsupported specs.graphql-mesh.com versions on @link.
+  {
+    const links =
+      getDirectiveExtensions<{
+        link: { url?: string };
+      }>(unifiedGraph)?.link || [];
+    for (const link of links) {
+      const url = link?.url;
+      if (
+        typeof url !== 'string' ||
+        !url.startsWith('https://specs.graphql-mesh.com/')
+      ) {
+        continue;
+      }
+      const mm = url.match(
+        /^https:\/\/specs\.graphql-mesh\.com\/([^/]+)\/(v\d+(?:\.\d+)*)\/?$/,
+      );
+      if (!mm) {
+        throw new Error(
+          `@graphql-mesh/fusion-runtime: unrecognized Mesh @link URL: ${url}`,
+        );
+      }
+      if (mm[2] !== 'v0.1') {
+        throw new Error(
+          `@graphql-mesh/fusion-runtime: unsupported Mesh spec "${mm[1]}" version ${mm[2]} (supported: v0.1). Found: ${url}`,
+        );
+      }
+    }
+  }
   const transportEntryMap: Record<string, TransportEntry> = {};
   const joinGraph = unifiedGraph.getType('join__Graph');
   const schemaDirectives = getDirectiveExtensions<{
     transport: TransportEntry;
+    join__directive: JoinDirective;
   }>(unifiedGraph);
+  const graphEnumToName: Record<string, string> = {};
   if (isEnumType(joinGraph)) {
     for (const enumValue of joinGraph.getValues()) {
       const enumValueDirectives = getDirectiveExtensions<{
@@ -698,6 +596,9 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
       }>(enumValue);
       if (enumValueDirectives?.join__graph?.length) {
         for (const joinGraphDirective of enumValueDirectives.join__graph) {
+          if (joinGraphDirective.name) {
+            graphEnumToName[enumValue.name] = joinGraphDirective.name;
+          }
           if (joinGraphDirective.url) {
             transportEntryMap[joinGraphDirective.name] = {
               subgraph: joinGraphDirective.name,
@@ -711,7 +612,118 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
   }
   if (schemaDirectives?.transport?.length) {
     for (const transportDirective of schemaDirectives.transport) {
-      transportEntryMap[transportDirective.subgraph] = transportDirective;
+      const existing = transportEntryMap[transportDirective.subgraph] || {
+        subgraph: transportDirective.subgraph,
+        kind: 'http',
+      };
+      transportEntryMap[transportDirective.subgraph] = {
+        ...existing,
+        ...transportDirective,
+        subgraph: transportDirective.subgraph,
+        kind: transportDirective.kind ?? existing.kind ?? 'http',
+        location: transportDirective.location ?? existing.location,
+      };
+    }
+  }
+  // Mesh Compose rewrites schema `@transport` → `@join__directive(name: "transport")`.
+  const graphsWithConnect = new Set<string>();
+  function rememberGraphs(graphs: string[] | undefined) {
+    for (const graphEnum of graphs || []) {
+      graphsWithConnect.add(graphEnumToName[graphEnum] || graphEnum);
+    }
+  }
+  function applyJoinTransportDirective(dir: JoinDirective | undefined) {
+    if (!dir || typeof dir !== 'object') {
+      return;
+    }
+    if (dir.name === 'transport') {
+      const args =
+        dir.args && typeof dir.args === 'object'
+          ? (dir.args as Partial<TransportEntry>)
+          : {};
+      for (const graphEnum of dir.graphs || []) {
+        const subgraphName = graphEnumToName[graphEnum] || graphEnum;
+        const existing = transportEntryMap[subgraphName] || {
+          subgraph: subgraphName,
+          kind: 'http',
+        };
+        transportEntryMap[subgraphName] = {
+          ...existing,
+          ...args,
+          subgraph: subgraphName,
+          kind: args.kind ?? existing.kind ?? 'http',
+          location: args.location ?? existing.location,
+        };
+      }
+      return;
+    }
+    // Connectors `@connect` on fields/schema.
+    if (dir.name === 'connect') {
+      rememberGraphs(dir.graphs);
+      return;
+    }
+    // Connectors SCHEMA `@source` carries `http.baseURL`. Mesh stitching
+    // `@source` / `@meshSource` (rename) is also join-ified as name "source" /
+    // "meshSource" on types/fields - those must NOT flip transport to connect.
+    if (dir.name === 'source') {
+      const baseURL = (dir.args as { http?: { baseURL?: string } } | undefined)
+        ?.http?.baseURL;
+      if (typeof baseURL !== 'string') {
+        return;
+      }
+      rememberGraphs(dir.graphs);
+      for (const graphEnum of dir.graphs || []) {
+        const subgraphName = graphEnumToName[graphEnum] || graphEnum;
+        // Connectors may omit `join__graph(url:)` and rely on SCHEMA `@source`
+        // `http.baseURL` for location - seed the entry when missing.
+        const existing = transportEntryMap[subgraphName] || {
+          subgraph: subgraphName,
+          kind: 'http',
+        };
+        if (!existing.location) {
+          existing.location = baseURL;
+        }
+        transportEntryMap[subgraphName] = existing;
+      }
+    }
+  }
+  for (const dir of schemaDirectives?.join__directive || []) {
+    applyJoinTransportDirective(dir);
+  }
+  for (const type of Object.values(unifiedGraph.getTypeMap())) {
+    if (!type || type.name?.startsWith('__')) {
+      continue;
+    }
+    for (const dir of getDirectiveExtensions<{
+      join__directive: JoinDirective;
+    }>(type)?.join__directive || []) {
+      applyJoinTransportDirective(dir);
+    }
+    if (isObjectType(type) || isInterfaceType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        for (const dir of getDirectiveExtensions<{
+          join__directive: JoinDirective;
+        }>(field)?.join__directive || []) {
+          applyJoinTransportDirective(dir);
+        }
+      }
+    }
+  }
+  // Connectors `@connect` / SCHEMA `@source` imply `kind: "connect"` - no Mesh
+  // `@transport` needed. Selection-only / virtual connectors may have empty
+  // `join__graph(url:)` (no SCHEMA `@source`), so they never get a join-url
+  // seed entry - still create connect transport.
+  for (const subgraphName of graphsWithConnect) {
+    const entry: TransportEntry = transportEntryMap[subgraphName] || {
+      subgraph: subgraphName,
+      kind: 'http',
+    };
+    if (!entry.kind || entry.kind === 'http') {
+      transportEntryMap[subgraphName] = {
+        ...entry,
+        subgraph: subgraphName,
+        kind: 'connect',
+      };
     }
   }
   if (transportEntryAdditions) {

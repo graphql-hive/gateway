@@ -7,6 +7,7 @@ import { MeshFetch } from '@graphql-mesh/types';
 import {
   context,
   diag,
+  logs,
   metrics,
   propagation,
   ProxyTracerProvider,
@@ -15,17 +16,16 @@ import {
   TraceState,
   type TextMapPropagator,
 } from '@opentelemetry/api';
-import { logs } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import { LogRecordExporter, ReadableLogRecord } from '@opentelemetry/sdk-logs';
 import {
-  BasicTracerProvider,
+  TracerProvider as SdkTracerProvider,
   SimpleSpanProcessor,
   type ReadableSpan,
   type SpanExporter,
-  type TracerConfig,
-} from '@opentelemetry/sdk-trace-base';
+  type TracerProviderOptions,
+} from '@opentelemetry/sdk-trace';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
@@ -276,8 +276,8 @@ export type Span = ReadableSpan & {
 };
 
 export const spanExporter = new MockSpanExporter();
-const traceProvider = new BasicTracerProvider({
-  spanProcessors: [new SimpleSpanProcessor(spanExporter)],
+const traceProvider = new SdkTracerProvider({
+  spanProcessors: [new SimpleSpanProcessor({ exporter: spanExporter })],
 });
 
 export function setupOtelForTests({
@@ -307,11 +307,15 @@ export const getPropagator = () => {
   return propagation._getGlobalPropagator() as TextMapPropagator;
 };
 
-export const getTracerProviderConfig = () => {
-  return (
-    // @ts-expect-error Access to private method for test purpose
-    (getTracerProvider() as BasicTracerProvider)._config as TracerConfig
-  );
+export const getTracerProviderConfig = (): TracerProviderOptions => {
+  // access to private fields for test purpose
+  const provider = getTracerProvider() as any;
+  return {
+    resource: provider._resource,
+    sampler: provider._tracerOptions.sampler,
+    spanLimits: provider._tracerOptions.spanLimits,
+    spanProcessors: provider._activeSpanProcessor._spanProcessors,
+  };
 };
 
 export const getSampler = () => {
@@ -327,8 +331,8 @@ export const getResource = () => {
 };
 
 export const getLimits = () => {
-  const { spanLimits, generalLimits } = getTracerProviderConfig();
-  return { spanLimits, generalLimits };
+  const { spanLimits } = getTracerProviderConfig();
+  return { spanLimits };
 };
 
 export const disableAll = () => {

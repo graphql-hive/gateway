@@ -884,22 +884,7 @@ class Multimap {
 }
 
 function withResolvers() {
-  if (Promise.withResolvers) return Promise.withResolvers();
-  let resolveFn;
-  let rejectFn;
-  const promise = new Promise(function deferredPromiseExecutor(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  });
-  return {
-    promise,
-    get resolve() {
-      return resolveFn;
-    },
-    get reject() {
-      return rejectFn;
-    }
-  };
+  return Promise.withResolvers();
 }
 
 class HeapSnapshotEdge {
@@ -4162,96 +4147,138 @@ var HeapSnapshot$1 = /*#__PURE__*/Object.freeze({
 
 const kFakePromise = Symbol.for('@whatwg-node/promise-helpers/FakePromise');
 function isPromise(value) {
-    return value?.then != null;
+    const maybePromise = value;
+    return typeof maybePromise?.then === 'function';
 }
 function isActualPromise(value) {
     const maybePromise = value;
     return maybePromise && maybePromise.then && maybePromise.catch && maybePromise.finally;
+}
+/**
+ * Resolved fake-promise instances share one hidden class: methods live on the
+ * prototype instead of as own properties of a fresh object literal each call.
+ */
+class FakePromise {
+    __fakePromiseValue;
+    // Brand checked by unfakePromise / isFakePromise
+    [kFakePromise];
+    constructor(value) {
+        this.__fakePromiseValue = value;
+        this[kFakePromise] = 'resolved';
+    }
+    then(onfulfilled, _onrejected) {
+        if (onfulfilled) {
+            try {
+                return fakePromise(onfulfilled(this.__fakePromiseValue));
+            }
+            catch (err) {
+                return fakeRejectPromise(err);
+            }
+        }
+        return this;
+    }
+    catch(_onrejected) {
+        return this;
+    }
+    finally(onfinally) {
+        if (onfinally) {
+            try {
+                const value = this.__fakePromiseValue;
+                return fakePromise(onfinally()).then(() => value, () => value);
+            }
+            catch (err) {
+                return fakeRejectPromise(err);
+            }
+        }
+        return this;
+    }
+    get [Symbol.toStringTag]() {
+        return 'Promise';
+    }
+}
+/**
+ * Rejected fake-promise instances - same shared-prototype rationale as
+ * {@link FakePromise}.
+ */
+class FakeRejectPromise {
+    __fakeRejectError;
+    [kFakePromise];
+    constructor(error) {
+        this.__fakeRejectError = error;
+        this[kFakePromise] = 'rejected';
+    }
+    then(_onfulfilled, onrejected) {
+        if (onrejected) {
+            try {
+                return fakePromise(onrejected(this.__fakeRejectError));
+            }
+            catch (err) {
+                return fakeRejectPromise(err);
+            }
+        }
+        return this;
+    }
+    catch(onrejected) {
+        if (onrejected) {
+            try {
+                return fakePromise(onrejected(this.__fakeRejectError));
+            }
+            catch (err) {
+                return fakeRejectPromise(err);
+            }
+        }
+        return this;
+    }
+    finally(onfinally) {
+        if (onfinally) {
+            try {
+                onfinally();
+            }
+            catch (err) {
+                return fakeRejectPromise(err);
+            }
+        }
+        return this;
+    }
+    get [Symbol.toStringTag]() {
+        return 'Promise';
+    }
+}
+/**
+ * Thin wrapper around a foreign thenable so method shapes stay on a shared
+ * prototype (same V8 rationale as {@link FakePromise}).
+ */
+class ThenableFakePromise {
+    _thenable;
+    constructor(thenable) {
+        this._thenable = thenable;
+    }
+    then(onfulfilled, onrejected) {
+        return fakePromise(this._thenable.then(onfulfilled, onrejected));
+    }
+    catch(onrejected) {
+        return fakePromise(this._thenable.then(res => res, onrejected));
+    }
+    finally(onfinally) {
+        return fakePromise(onfinally ? promiseLikeFinally(this._thenable, onfinally) : this._thenable);
+    }
+    get [Symbol.toStringTag]() {
+        return 'Promise';
+    }
 }
 function fakePromise(value) {
     if (value && isActualPromise(value)) {
         return value;
     }
     if (isPromise(value)) {
-        return {
-            then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
-            catch: reject => fakePromise(value.then(res => res, reject)),
-            finally: cb => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
-            [Symbol.toStringTag]: 'Promise',
-        };
+        return new ThenableFakePromise(value);
     }
-    // Write a fake promise to avoid the promise constructor
-    // being called with `new Promise` in the browser.
-    return {
-        then(resolve) {
-            if (resolve) {
-                try {
-                    return fakePromise(resolve(value));
-                }
-                catch (err) {
-                    return fakeRejectPromise(err);
-                }
-            }
-            return this;
-        },
-        catch() {
-            return this;
-        },
-        finally(cb) {
-            if (cb) {
-                try {
-                    return fakePromise(cb()).then(() => value, () => value);
-                }
-                catch (err) {
-                    return fakeRejectPromise(err);
-                }
-            }
-            return this;
-        },
-        [Symbol.toStringTag]: 'Promise',
-        __fakePromiseValue: value,
-        [kFakePromise]: 'resolved',
-    };
+    // Avoid `new Promise` for already-resolved values; shared prototype keeps a
+    // stable V8 hidden class across hot sync call sites.
+    return new FakePromise(value);
 }
 function fakeRejectPromise(error) {
-    return {
-        then(_resolve, reject) {
-            if (reject) {
-                try {
-                    return fakePromise(reject(error));
-                }
-                catch (err) {
-                    return fakeRejectPromise(err);
-                }
-            }
-            return this;
-        },
-        catch(reject) {
-            if (reject) {
-                try {
-                    return fakePromise(reject(error));
-                }
-                catch (err) {
-                    return fakeRejectPromise(err);
-                }
-            }
-            return this;
-        },
-        finally(cb) {
-            if (cb) {
-                try {
-                    cb();
-                }
-                catch (err) {
-                    return fakeRejectPromise(err);
-                }
-            }
-            return this;
-        },
-        __fakeRejectError: error,
-        [Symbol.toStringTag]: 'Promise',
-        [kFakePromise]: 'rejected',
-    };
+    return new FakeRejectPromise(error);
 }
 function promiseLikeFinally(value, onFinally) {
     if ('finally' in value) {

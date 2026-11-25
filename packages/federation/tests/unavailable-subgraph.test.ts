@@ -1,7 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { dispose } from '@graphql-mesh/utils';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-import { createGraphQLError } from '@graphql-tools/utils';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -9,7 +8,7 @@ import {
 } from '@internal/testing';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
-import { FormattedExecutionResult, parse } from 'graphql';
+import { FormattedExecutionResult, GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -19,101 +18,107 @@ describe('Yoga gateway - subgraph unavailable', () => {
       const disposableStack = new AsyncDisposableStack();
       let gatewayServer: DisposableServer;
       beforeAll(async () => {
-        const subgraph1Schema = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              testNestedField: TestNestedField
-            }
+        const subgraph1Schema = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                testNestedField: TestNestedField
+              }
 
-            type TestNestedField {
-              subgraph1: TestSubgraph1Query
-            }
+              type TestNestedField {
+                subgraph1: TestSubgraph1Query
+              }
 
-            type TestSubgraph1Query {
-              testSuccessQuery: TestUser1
-              testErrorQuery: TestUser1
-            }
+              type TestSubgraph1Query {
+                testSuccessQuery: TestUser1
+                testErrorQuery: TestUser1
+              }
 
-            type TestUser1 {
-              id: String!
-              email: String!
-              sub1: Boolean!
-            }
-          `),
-          resolvers: {
-            Query: {
-              testNestedField: () => ({
-                subgraph1: () => ({
-                  testSuccessQuery: () => {
-                    return {
-                      id: 'user1',
-                      email: 'user1@example.com',
-                      sub1: true,
-                    };
-                  },
-                  testErrorQuery: () => {
-                    throw createGraphQLError('My original subgraph1 error!', {
-                      extensions: {
-                        code: 'BAD_REQUEST',
-                      },
-                    });
-                  },
+              type TestUser1 {
+                id: String!
+                email: String!
+                sub1: Boolean!
+              }
+            `),
+            resolvers: {
+              Query: {
+                testNestedField: () => ({
+                  subgraph1: () => ({
+                    testSuccessQuery: () => {
+                      return {
+                        id: 'user1',
+                        email: 'user1@example.com',
+                        sub1: true,
+                      };
+                    },
+                    testErrorQuery: () => {
+                      throw new GraphQLError('My original subgraph1 error!', {
+                        extensions: {
+                          code: 'BAD_REQUEST',
+                        },
+                      });
+                    },
+                  }),
                 }),
-              }),
+              },
             },
           },
-        });
+        ]);
         const subgraph1Yoga = createYoga({
+          logging: false,
           schema: subgraph1Schema,
         });
         disposableStack.use(subgraph1Yoga);
         const subgraph1Server = await createDisposableServer(subgraph1Yoga);
         disposableStack.use(subgraph1Server);
-        const subgraph2Schema = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              testNestedField: TestNestedField
-            }
+        const subgraph2Schema = buildSubgraphSchema([
+          {
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                testNestedField: TestNestedField
+              }
 
-            type TestNestedField {
-              subgraph2: TestSubgraph2Query
-            }
+              type TestNestedField {
+                subgraph2: TestSubgraph2Query
+              }
 
-            type TestSubgraph2Query {
-              testSuccessQuery: TestUser2
-              testErrorQuery: TestUser2
-            }
+              type TestSubgraph2Query {
+                testSuccessQuery: TestUser2
+                testErrorQuery: TestUser2
+              }
 
-            type TestUser2 {
-              id: String!
-              email: String!
-              sub2: Boolean!
-            }
-          `),
-          resolvers: {
-            Query: {
-              testNestedField: () => ({
-                subgraph2: () => ({
-                  testSuccessQuery: () => {
-                    return {
-                      id: 'user2',
-                      email: 'user1@example.com',
-                      sub2: true,
-                    };
-                  },
-                  testErrorQuery: () => {
-                    throw createGraphQLError('My original subgraph2 error!', {
-                      extensions: {
-                        code: 'BAD_REQUEST',
-                      },
-                    });
-                  },
+              type TestUser2 {
+                id: String!
+                email: String!
+                sub2: Boolean!
+              }
+            `),
+            resolvers: {
+              Query: {
+                testNestedField: () => ({
+                  subgraph2: () => ({
+                    testSuccessQuery: () => {
+                      return {
+                        id: 'user2',
+                        email: 'user1@example.com',
+                        sub2: true,
+                      };
+                    },
+                    testErrorQuery: () => {
+                      throw new GraphQLError('My original subgraph2 error!', {
+                        extensions: {
+                          code: 'BAD_REQUEST',
+                        },
+                      });
+                    },
+                  }),
                 }),
-              }),
+              },
             },
           },
-        });
+        ]);
         const subgraph2Yoga = createYoga({
+          logging: false,
           schema: subgraph2Schema,
         });
         disposableStack.use(subgraph2Yoga);
@@ -131,6 +136,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
           },
         ]);
         const gatewayYoga = createYoga({
+          logging: false,
           schema: getStitchedSchemaFromSupergraphSdl({ supergraphSdl }),
           maskedErrors: false,
         });

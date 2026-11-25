@@ -38,7 +38,10 @@ jobs:
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
-    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }}
+        graphql-version:
+          - 16
+          - 17
+    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }} / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,6 +58,9 @@ jobs:
           # TODO: should we test more node versions? we usually always recommend upgrading to
           #       latest when people suspect leaks - latest is always the most stable
           node-version-file: .node-version
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - if: runner.os == 'Linux'
         name: Hash Docker Images
         id: hash-docker-images
@@ -66,6 +72,9 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
+      # Same as Test e2e: Yoga resolves @graphql-hive/logger to workspace dist/.
+      - name: Build
+        run: yarn build
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
@@ -77,9 +86,10 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
       - name: Upload heap snapshots
         if: failure()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
-          name: ${{matrix.test.name}}-heap-snapshots
+          name: ${{matrix.test.name}}-${{matrix.test.hive-router-runtime}}-graphql-${{matrix.graphql-version}}-heap-snapshots
+          retention-days: 7
           path: |
             e2e/${{matrix.test.name}}/*.heapsnapshot
             packages/logger/tests/*.heapsnapshot

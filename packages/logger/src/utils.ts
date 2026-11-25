@@ -5,8 +5,7 @@ export type MaybeLazy<T> = T | (() => T);
 export type AttributeValue = any;
 
 export type Attributes =
-  | AttributeValue[]
-  | { [key: string | number]: AttributeValue };
+  AttributeValue[] | { [key: string | number]: AttributeValue };
 
 export const logLevel: { [level in LogLevel]: number } = {
   trace: 0,

@@ -294,3 +294,86 @@ it('nulls an entity whose lookup failed and keeps the list index in the error pa
     },
   ]);
 });
+
+it('propagates null from an unresolved entity to the nearest nullable parent', async () => {
+  await using gw = createGatewayTester({
+    unifiedGraphHandler,
+    subgraphs: [
+      {
+        name: 'files',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            extend schema
+              @link(
+                url: "https://specs.apollo.dev/federation/v2.3"
+                import: ["@key"]
+              )
+            type Query {
+              file: File
+            }
+            type File @key(fields: "id") {
+              id: ID!
+              issue: Issue!
+            }
+            type Issue @key(fields: "id", resolvable: false) {
+              id: ID!
+            }
+          `,
+          resolvers: {
+            Query: {
+              file: () => ({ id: 'f1', issue: { id: 'i1' } }),
+            },
+          },
+        },
+      },
+      {
+        name: 'issues',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            extend schema
+              @link(
+                url: "https://specs.apollo.dev/federation/v2.3"
+                import: ["@key"]
+              )
+            type Query {
+              issues: [Issue]
+            }
+            type Issue @key(fields: "id") {
+              id: ID!
+              title: String!
+            }
+          `,
+          resolvers: {
+            Issue: {
+              __resolveReference: () => null,
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  const result = await gw.execute({
+    query: /* GraphQL */ `
+      {
+        file {
+          id
+          issue {
+            title
+          }
+        }
+      }
+    `,
+  });
+
+  assertSingleExecutionValue(result);
+  expect(result.data).toEqual({ file: null });
+  expect(
+    result.errors?.map(({ message, path }) => ({ message, path })),
+  ).toEqual([
+    {
+      message: 'Cannot return null for non-nullable field Issue.title.',
+      path: ['file', 'issue', 'title'],
+    },
+  ]);
+});

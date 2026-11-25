@@ -12,23 +12,24 @@ describe('Persisted Documents', () => {
   const store: Record<string, string> = {
     '1': 'query { foo }',
   };
-  const subgraphSchema = buildSubgraphSchema({
-    typeDefs: parse(/* GraphQL */ `
-      type Query {
-        foo: String
-      }
-    `),
-    resolvers: {
-      Query: {
-        foo: () => 'bar',
+  const subgraphSchema = buildSubgraphSchema([
+    {
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          foo: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          foo: () => 'bar',
+        },
       },
     },
-  });
+  ]);
 
-  const subgraphServer = createYoga({
-    schema: subgraphSchema,
-  });
+  const subgraphServer = createYoga({ logging: false, schema: subgraphSchema });
   const gateway = createGatewayRuntime({
+    logging: false,
     supergraph: getUnifiedGraphGracefully([
       {
         name: 'foo',
@@ -101,6 +102,7 @@ describe('Persisted Documents', () => {
   });
   it('supports `allowArbitraryDocuments` option with custom store', async () => {
     const gatewayWithArbitraryDocs = createGatewayRuntime({
+      logging: false,
       supergraph: getUnifiedGraphGracefully([
         {
           name: 'foo',

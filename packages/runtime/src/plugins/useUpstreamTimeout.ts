@@ -1,14 +1,9 @@
 import { abortSignalAny } from '@graphql-hive/signal';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import {
-  createDeferred,
-  createGraphQLError,
-  ExecutionRequest,
-  ExecutionResult,
-  isAsyncIterable,
-  isPromise,
-} from '@graphql-tools/utils';
+import { ExecutionRequest, isAsyncIterable } from '@graphql-tools/utils';
+import { isPromise } from '@whatwg-node/promise-helpers';
+import { GraphQLError } from 'graphql';
 import { GatewayPlugin } from '../types';
 
 export interface TimeoutFactoryPayload {
@@ -17,8 +12,7 @@ export interface TimeoutFactoryPayload {
 }
 
 export type UpstreamTimeoutPluginOptions =
-  | number
-  | ((payload: TimeoutFactoryPayload) => number | undefined);
+  number | ((payload: TimeoutFactoryPayload) => number | undefined);
 
 export function useUpstreamTimeout<TContext extends Record<string, any>>(
   opts: UpstreamTimeoutPluginOptions,
@@ -46,14 +40,33 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
         ) {
           let timeoutSignal =
             timeoutSignalsByExecutionRequest.get(executionRequest);
+          let timer: ReturnType<typeof setTimeout> | undefined;
           if (!timeoutSignal) {
-            timeoutSignal = AbortSignal.timeout(timeout);
+            // a clearable timer instead of AbortSignal.timeout because node keeps timeout signals
+            // with abort listeners (like the ones from abortSignalAny) alive until they fire, which
+            // would retain everything around the request for the whole timeout even after it's done
+            const timeoutCtrl = new AbortController();
+            timer = setTimeout(
+              () =>
+                timeoutCtrl.abort(
+                  new DOMException(
+                    'The operation was aborted due to timeout',
+                    'TimeoutError',
+                  ),
+                ),
+              timeout,
+            );
+            // dont keep the process alive just for the timeout, same as AbortSignal.timeout
+            (timer as { unref?(): void }).unref?.();
+            timeoutSignal = timeoutCtrl.signal;
             timeoutSignalsByExecutionRequest.set(
               executionRequest,
               timeoutSignal,
             );
           }
-          const timeoutDeferred = createDeferred<ExecutionResult>();
+          let streaming = false;
+          const timeoutDeferred =
+            Promise.withResolvers<Awaited<ReturnType<typeof executor>>>();
           function rejectDeferred() {
             timeoutDeferred.reject(timeoutSignal?.reason);
           }
@@ -78,6 +91,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           return Promise.race([timeoutDeferred.promise, res$])
             .then((result) => {
               if (isAsyncIterable(result)) {
+                streaming = true;
                 return {
                   [Symbol.asyncIterator]() {
                     const iterator = result[Symbol.asyncIterator]();
@@ -102,7 +116,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               if (e === timeoutSignal.reason) {
                 const upstreamErrorExtensions =
                   errorExtensionsByExecRequest.get(executionRequest);
-                throw createGraphQLError(e.message, {
+                throw new GraphQLError(e.message, {
                   extensions: {
                     ...upstreamErrorExtensions,
                     code: 'GATEWAY_TIMEOUT',
@@ -115,6 +129,11 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
+              // streams keep the timer so the timeout can still cut them off, everything
+              // else is settled here and the timer would only hold on to the request
+              if (!streaming) {
+                clearTimeout(timer);
+              }
               timeoutDeferred.resolve(undefined as any);
               timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again

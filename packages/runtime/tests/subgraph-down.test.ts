@@ -17,41 +17,46 @@ describe('Error handling', () => {
    * }
    */
   it('when a subgraph is down and Query.subgraph1 is nullable', async () => {
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph1: Subgraph1
-        }
-        type Subgraph1 {
-          subgraph1Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph1: () => ({
-            subgraph1Field: 'hello from subgraph1',
-          }),
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph1: Subgraph1
+          }
+          type Subgraph1 {
+            subgraph1Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph1: () => ({
+              subgraph1Field: 'hello from subgraph1',
+            }),
+          },
         },
       },
-    });
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph2: Subgraph2
-        }
-        type Subgraph2 {
-          subgraph2Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph2: () => ({
-            subgraph2Field: 'hello from subgraph2',
-          }),
+    ]);
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph2: Subgraph2
+          }
+          type Subgraph2 {
+            subgraph2Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph2: () => ({
+              subgraph2Field: 'hello from subgraph2',
+            }),
+          },
         },
       },
-    });
+    ]);
     await using subgraph2server = createYoga({
+      logging: false,
       schema: subgraph2,
     });
     const supergraph = await composeLocalSchemasWithApollo([
@@ -67,6 +72,7 @@ describe('Error handling', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: false,
       plugins: () => [
@@ -138,41 +144,46 @@ describe('Error handling', () => {
    * }
    */
   it('when a subgraph is down and Query.subgraph1 is non-nullable', async () => {
-    const subgraph1 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph1: Subgraph1!
-        }
-        type Subgraph1 {
-          subgraph1Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph1: () => ({
-            subgraph1Field: 'hello from subgraph1',
-          }),
+    const subgraph1 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph1: Subgraph1!
+          }
+          type Subgraph1 {
+            subgraph1Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph1: () => ({
+              subgraph1Field: 'hello from subgraph1',
+            }),
+          },
         },
       },
-    });
-    const subgraph2 = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          subgraph2: Subgraph2
-        }
-        type Subgraph2 {
-          subgraph2Field: String
-        }
-      `),
-      resolvers: {
-        Query: {
-          subgraph2: () => ({
-            subgraph2Field: 'hello from subgraph2',
-          }),
+    ]);
+    const subgraph2 = buildSubgraphSchema([
+      {
+        typeDefs: parse(/* GraphQL */ `
+          type Query {
+            subgraph2: Subgraph2
+          }
+          type Subgraph2 {
+            subgraph2Field: String
+          }
+        `),
+        resolvers: {
+          Query: {
+            subgraph2: () => ({
+              subgraph2Field: 'hello from subgraph2',
+            }),
+          },
         },
       },
-    });
+    ]);
     await using subgraph2server = createYoga({
+      logging: false,
       schema: subgraph2,
     });
     const supergraph = await composeLocalSchemasWithApollo([
@@ -188,6 +199,7 @@ describe('Error handling', () => {
       },
     ]);
     await using gw = createGatewayRuntime({
+      logging: false,
       supergraph,
       maskedErrors: false,
       plugins: () => [
@@ -199,12 +211,18 @@ describe('Error handling', () => {
             });
           }
           if (url === 'http://subgraph2:4000/graphql') {
-            return subgraph2server.fetch(url, options as RequestInit);
+            return (subgraph2Res = subgraph2server.fetch(
+              url,
+              options as RequestInit,
+            ));
           }
           return new Response(null, { status: 404 });
         }),
       ],
     });
+    // stitching responds as soon as non-nullable subgraph1 fails without waiting for subgraph2,
+    // so we wait for it ourselves or else its yoga logs after the test is done and jest exits with 1
+    let subgraph2Res: Promise<Response> | Response | undefined;
     const resp = await gw.fetch('http://gateway:4000/graphql', {
       method: 'POST',
       headers: {
@@ -224,6 +242,7 @@ describe('Error handling', () => {
       }),
     });
     const res = await resp.json();
+    await subgraph2Res;
     expect(res).toEqual({
       data: null,
       errors: [

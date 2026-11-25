@@ -53,12 +53,15 @@ export function handleUnifiedGraphSchema(
     typeof unifiedGraphSchema === 'string' &&
     (isValidPath(unifiedGraphSchema) || isUrl(unifiedGraphSchema))
   ) {
+    // Prefer Hive `log` (Mesh tip `@graphql-mesh/utils`); keep `logger` for
+    // published utils that still require the legacy key.
     return readFileOrUrl<string>(unifiedGraphSchema, {
       fetch: configContext.fetch,
       cwd: configContext.cwd,
       logger: LegacyLogger.from(configContext.log),
       allowUnknownExtensions: true,
       importFn: defaultImportFn,
+      ...({ log: configContext.log } as object),
     });
   }
   return unifiedGraphSchema;

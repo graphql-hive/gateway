@@ -1,4 +1,7 @@
-import { QueryPlan } from '@graphql-hive/router-query-planner';
+import type {
+  QueryPlan,
+  QueryPlannerOptions,
+} from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -11,7 +14,7 @@ import {
   getRngFromEnv,
 } from '@graphql-tools/federation';
 import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
-import { crypto, TextEncoder } from '@whatwg-node/fetch';
+import { TextEncoder } from '@whatwg-node/fetch';
 import {
   handleMaybePromise,
   isPromise,
@@ -49,6 +52,12 @@ function sha256(str: string) {
     },
   );
 }
+
+/**
+ * The version of `@graphql-hive/router-query-planner` the executor runs the plans of. It is part
+ * of the key of the plans in the shared cache. The executor can't run plans of another version.
+ */
+const QUERY_PLANNER_VERSION = '0.0.56';
 
 /** Query plans only depend on the supergraph and the operation, so they're safe to keep for a while. */
 const QUERY_PLAN_CACHE_TTL_SECONDS = 60 * 60 * 24;
@@ -89,7 +98,18 @@ export async function unifiedGraphHandler(
   const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
     await import(moduleName);
   const supergraphSdl = opts.getUnifiedGraphSDL();
-  const queryPlanner = new QueryPlanner(supergraphSdl);
+  // the planner validates the limits and throws on invalid ones
+  let plannerOptions: QueryPlannerOptions | undefined;
+  if (typeof opts.maxAliasesPerRequest === 'object') {
+    const { '*': all, ...subgraphs } = opts.maxAliasesPerRequest;
+    plannerOptions = {
+      maxAliasesPerRequest: all,
+      subgraphMaxAliasesPerRequest: subgraphs,
+    };
+  } else if (opts.maxAliasesPerRequest != null) {
+    plannerOptions = { maxAliasesPerRequest: opts.maxAliasesPerRequest };
+  }
+  const queryPlanner = new QueryPlanner(supergraphSdl, plannerOptions);
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
   const pubsubOperationMetadataMap = getPubsubOperationRootFields(
     opts.unifiedGraph,
@@ -99,6 +119,8 @@ export async function unifiedGraphHandler(
     opts.unifiedGraph,
     entityResolutionMap,
   );
+  const entityKeys = queryPlanner.entityKeys;
+  const possibleTypes = queryPlanner.possibleTypes;
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
@@ -107,8 +129,18 @@ export async function unifiedGraphHandler(
   // Scoping the key by the supergraph itself means a schema reload (or a
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
+  // the planner version keeps plans of other versions out, their shape may differ.
+  // plans carry the alias limits they were planned with, so gateways with other limits can't
+  // share them either
   const remotePlanCacheKeyPrefix = opts.cache
-    ? `hive-gateway:query-plan:${await sha256(supergraphSdl)}:`
+    ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:${await sha256(
+        JSON.stringify([
+          plannerOptions?.maxAliasesPerRequest ?? null,
+          Object.entries(
+            plannerOptions?.subgraphMaxAliasesPerRequest ?? {},
+          ).sort(),
+        ]),
+      )}:`
     : undefined;
 
   const documentOperationPlanCache = new WeakMap<
@@ -118,9 +150,11 @@ export async function unifiedGraphHandler(
 
   // without progressive override the plan depends only on the document and
   // operation name, so we can skip the costly native cache key on in-memory hits
+  // read once because the labels never change for a planner, and the native getter
+  // throws when called while a `planAsync` of a concurrent request is in flight
+  const overrideLabels = queryPlanner.overrideLabels;
   const hasProgressiveOverride =
-    queryPlanner.overrideLabels.length > 0 ||
-    queryPlanner.overridePercentages.length > 0;
+    overrideLabels.length > 0 || queryPlanner.overridePercentages.length > 0;
 
   function planDocument(executionRequest: ExecutionRequest) {
     let operationCache = documentOperationPlanCache.get(
@@ -134,7 +168,7 @@ export async function unifiedGraphHandler(
       }
     }
     const activeLabels = new Set<string>();
-    for (const label of queryPlanner.overrideLabels) {
+    for (const label of overrideLabels) {
       if (opts.handleProgressiveOverride?.(label, executionRequest.context)) {
         activeLabels.add(label);
       }
@@ -225,6 +259,8 @@ export async function unifiedGraphHandler(
           );
           return executeQueryPlan({
             supergraphSchema,
+            entityKeys,
+            possibleTypes,
             executionRequest,
             onSubgraphExecute: (subgraphName, executionRequest) =>
               handlePubsubOperationField(
@@ -259,7 +295,7 @@ export async function unifiedGraphHandler(
         },
       );
     },
-    overrideLabels: queryPlanner.overrideLabels,
+    overrideLabels,
   };
 }
 

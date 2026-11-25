@@ -23,11 +23,11 @@ import {
 } from '@graphql-hive/plugin-opentelemetry/setup';
 import {
   ROOT_CONTEXT,
+  SeverityNumber,
   SpanStatusCode,
   TextMapPropagator,
   TracerProvider,
 } from '@opentelemetry/api';
-import { SeverityNumber } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
   CompositePropagator,
@@ -44,15 +44,14 @@ import {
 import {
   AlwaysOffSampler,
   AlwaysOnSampler,
-  BasicTracerProvider,
   BatchSpanProcessor,
   ConsoleSpanExporter,
   ParentBasedSampler,
+  TracerProvider as SdkTracerProvider,
   SimpleSpanProcessor,
   SpanProcessor,
   TraceIdRatioBasedSampler,
-} from '@opentelemetry/sdk-trace-base';
-import { usingHiveRouterRuntime } from '~internal/env';
+} from '@opentelemetry/sdk-trace';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
 import { CircuitBreakerExporter } from '../src/circuit-breaker-exporter';
@@ -69,6 +68,7 @@ import {
   getSampler,
   getSpanProcessors,
   getTracerProvider,
+  getTracerProviderConfig,
   MockLogRecordExporter,
   setupOtelForTests,
   spanExporter,
@@ -99,7 +99,7 @@ describe('useOpenTelemetry', () => {
       });
 
       // Check context manager
-      expect(getTracerProvider()).toBeInstanceOf(BasicTracerProvider);
+      expect(getTracerProvider()).toBeInstanceOf(SdkTracerProvider);
       expect(getContextManager()).toBeInstanceOf(
         AsyncLocalStorageContextManager,
       );
@@ -193,7 +193,9 @@ describe('useOpenTelemetry', () => {
         log: silentLog,
         contextManager: null,
         traces: {
-          processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
+          processors: [
+            new SimpleSpanProcessor({ exporter: new OTLPTraceExporter() }),
+          ],
           console: true,
         },
       });
@@ -372,15 +374,9 @@ describe('useOpenTelemetry', () => {
             linkCountLimit: 6,
           },
         },
-        generalLimits: {
-          attributeCountLimit: 7,
-          attributeValueLengthLimit: 8,
-        },
       });
 
-      // @ts-ignore access private field
-      const registeredConfig = getTracerProvider()._config;
-      expect(registeredConfig).toMatchObject({
+      expect(getTracerProviderConfig()).toMatchObject({
         spanLimits: {
           attributeCountLimit: 1,
           attributePerEventCountLimit: 2,
@@ -388,10 +384,6 @@ describe('useOpenTelemetry', () => {
           attributeValueLengthLimit: 4,
           eventCountLimit: 5,
           linkCountLimit: 6,
-        },
-        generalLimits: {
-          attributeCountLimit: 7,
-          attributeValueLengthLimit: 8,
         },
       });
     });
@@ -838,10 +830,10 @@ describe('useOpenTelemetry', () => {
 
       it('should handle validation error with hive processor', async () => {
         disableAll();
-        const traceProvider = new BasicTracerProvider({
+        const traceProvider = new SdkTracerProvider({
           spanProcessors: [
             new HiveTracingSpanProcessor({
-              processor: new SimpleSpanProcessor(spanExporter),
+              processor: new SimpleSpanProcessor({ exporter: spanExporter }),
             }),
           ],
         });
@@ -1259,7 +1251,7 @@ describe('useOpenTelemetry', () => {
         log: silentLog,
         target: 'test-target',
         contextManager: new AsyncLocalStorageContextManager(),
-        processor: new SimpleSpanProcessor(spanExporter),
+        processor: new SimpleSpanProcessor({ exporter: spanExporter }),
       });
     });
 
@@ -1300,10 +1292,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: usingHiveRouterRuntime()
-          ? // 500 because there wont be a data field with hive router query planner and it's a application graphql response json
-            500
-          : 200,
+        [SEMATTRS_HTTP_STATUS_CODE]: 200,
 
         // Hive specific
         ['hive.client.name']: 'test-client-name',
@@ -1337,16 +1326,9 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        ...(usingHiveRouterRuntime()
-          ? {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-            }
-          : {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
-              [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-              [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
-            }),
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 
         // Federation attributes
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',

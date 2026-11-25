@@ -20,14 +20,16 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
         hive-router-runtime:
           - 0
           - 1
-    name: Unit / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
+        graphql-version:
+          - 16
+          - 17
+    name: Unit / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,13 +38,16 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - name: Test
         run: yarn test
         env:
           HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
 
   unit-bun:
-    name: Unit / Bun / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
+    name: Unit / Bun / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime / GraphQL v${{matrix.graphql-version}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -50,6 +55,9 @@ jobs:
         hive-router-runtime:
           - 0
           - 1
+        graphql-version:
+          - 16
+          - 17
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -57,6 +65,9 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - name: Test with Stitching Runtime
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         env:
@@ -71,14 +82,16 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 20
           - 22
           - 24
           - 26
         hive-router-runtime:
           - 0
           - 1
-    name: Leaks / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
+        graphql-version:
+          - 16
+          - 17
+    name: Leaks / Node v${{matrix.node-version}} / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime / GraphQL v${{matrix.graphql-version}}
     needs: [unit] # leak tests run unit tests but check for leaks; if unit tests fail, leaks will fail too - avoid confusion by running them in series
     runs-on: ubuntu-latest
     steps:
@@ -88,6 +101,9 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         env:
@@ -104,11 +120,6 @@ jobs:
       matrix:
         setup:
           # Node
-          - workflow-name: Node 20 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            hive-router-runtime: 0
-            node-version: 20
           - workflow-name: Node 22 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
@@ -157,10 +168,6 @@ jobs:
           #   os: macos-15 # MacOS Arm64
           #   gateway-runner: bin
           #   hive-router-runtime: 0
-          # - workflow-name: Node Binary on MacOS x86_64
-          #   os: macos-15-intel # MacOS x86_64
-          #   gateway-runner: bin
-          #   hive-router-runtime: 0
 
           # Bun
           - workflow-name: Bun on Ubuntu
@@ -175,8 +182,11 @@ jobs:
             os: ubuntu-latest
             gateway-runner: bun-docker
             hive-router-runtime: 0
+        graphql-version:
+          - 16
+          - 17
 
-    name: E2E / ${{matrix.setup.workflow-name}}
+    name: E2E / ${{matrix.setup.workflow-name}} / GraphQL v${{matrix.graphql-version}}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -193,6 +203,9 @@ jobs:
         with:
           node-version-file: .node-version # if matrix.setup.node-version is not provided, the version from the file will be used
           node-version: ${{matrix.setup.node-version}}
+      - if: matrix.graphql-version != 17
+        name: Use GraphQL v${{matrix.graphql-version}}
+        run: yarn match-graphql ^${{matrix.graphql-version}}.0.0 && yarn install --no-immutable
       - if: runner.os == 'Linux'
         name: Hash Docker Images
         id: hash-docker-images
@@ -204,8 +217,10 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
-        name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
+      # Workspace packages (incl. @graphql-hive/logger) ship dist/ via package
+      # exports; Yoga imports the logger from node_modules, so node/bun e2e
+      # children need a build too.
+      - name: Build
         run: yarn build
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
@@ -214,7 +229,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0
         with:
           source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
@@ -265,7 +280,7 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
-        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0
         with:
           source: .
           # we build the e2e image because the release image cant be loaded due to annotations and platforms

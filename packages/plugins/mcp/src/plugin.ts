@@ -1372,10 +1372,12 @@ export function useMCP(ctx: PluginContext, config: MCPConfig): GatewayPlugin {
         }
       }
 
-      // Parse JSON-RPC body
+      // Parse JSON-RPC body. Clone first so Yoga's body-size limiter (and other
+      // onRequestParse hooks) can still pipeThrough the original stream. Bun's
+      // native Request locks `body` after `text()`; Node's whatwg-node ponyfill
+      // does not.
       let body: JsonRpcRequest;
       try {
-        // read a clone, yoga's body size limit pipes the original body later and bun throws if it's already consumed
         const bodyText = await request.clone().text();
         const parsed = JSON.parse(bodyText);
         if (

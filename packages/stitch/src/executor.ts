@@ -6,13 +6,13 @@ import {
 } from '@graphql-tools/delegate';
 import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
+  asGetArgumentValuesVariables,
   collectFields,
   ExecutionRequest,
-  getArgumentValues,
   getDefinedRootType,
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
-import { GraphQLSchema } from 'graphql';
+import { getArgumentValues, GraphQLSchema } from 'graphql';
 
 /**
  * Creates an executor that uses the schema created by stitching together multiple subschemas.
@@ -39,6 +39,10 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
       rootType,
       operation.selectionSet,
     );
+    // graphql 17 expects variables as `{ coerced, sources }` instead of a flat map
+    const variableValues = asGetArgumentValuesVariables(
+      executorRequest.variables ?? {},
+    )!;
     const data: Record<string, any> = {};
     for (const [fieldName, fieldNodes] of fields) {
       const fieldNode = fieldNodes[0];
@@ -60,11 +64,7 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
         );
         return rootType.getFields()[fieldName] != null;
       });
-      const args = getArgumentValues(
-        fieldInstance,
-        fieldNode!,
-        executorRequest.variables,
-      );
+      const args = getArgumentValues(fieldInstance, fieldNode!, variableValues);
       const info = {
         schema: stitchedSchema,
         fieldName,
@@ -73,7 +73,7 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
         fragments,
         parentType: rootType,
         returnType: fieldInstance.type,
-        variableValues: executorRequest.variables,
+        variableValues,
         rootValue: executorRequest.rootValue,
         path: { typename: undefined, key: responseKey, prev: undefined },
         getAbortSignal: () => executorRequest.signal,

@@ -31,9 +31,9 @@ describe('merge canonical types', () => {
       "first"
       interface IProduct @mydir(value: "first") {
         "first"
-        id: ID! @mydir(value: "first")
+        id: ID! @mydir(value: "first") @deprecated(reason: "first")
         "first"
-        url: String @mydir(value: "first")
+        url: String @mydir(value: "first") @deprecated(reason: "first")
       }
 
       "first"
@@ -91,9 +91,9 @@ describe('merge canonical types', () => {
       "second"
       interface IProduct @mydir(value: "second") {
         "second"
-        id: ID! @mydir(value: "second")
+        id: ID! @mydir(value: "second") @deprecated(reason: "second")
         "second"
-        url: String @mydir(value: "second")
+        url: String @mydir(value: "second") @deprecated(reason: "second")
       }
 
       "second"
@@ -420,11 +420,11 @@ describe('merge canonical types', () => {
 });
 
 describe('merge @canonical directives', () => {
-  const { stitchingDirectivesTransformer, stitchingDirectivesTypeDefs } =
+  const { stitchingDirectivesTransformer, allStitchingDirectivesTypeDefs } =
     stitchingDirectives();
   const firstSchema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
-      ${stitchingDirectivesTypeDefs}
+      ${allStitchingDirectivesTypeDefs}
       "first"
       type Product @canonical {
         "first"
@@ -450,7 +450,7 @@ describe('merge @canonical directives', () => {
   });
   const secondSchema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
-      ${stitchingDirectivesTypeDefs}
+      ${allStitchingDirectivesTypeDefs}
       "second"
       type Product {
         "second"

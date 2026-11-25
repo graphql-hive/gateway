@@ -15,7 +15,6 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
-  Logger as LegacyLogger,
   MeshFetch,
   MeshFetchRequestInit,
 } from '@graphql-mesh/types';
@@ -24,12 +23,12 @@ import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   ExecutionRequest,
   IResolvers,
-  MaybePromise,
   TypeSource,
   ValidationRule,
 } from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 import type {
   DocumentNode,
   GraphQLSchema,
@@ -39,6 +38,7 @@ import type {
 import type {
   BatchingOptions,
   FetchAPI,
+  RequestIdOptions,
   YogaInitialContext,
   Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
@@ -53,7 +53,6 @@ import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { InboundInflightRequestDeduplicationYogaPluginOptions } from './plugins/useInboundInflightReqDedupe';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
-import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
@@ -141,8 +140,6 @@ export interface OnFetchHookPayload<TContext> {
    * The logger will be available in all cases.
    */
   context: (GatewayContext & TContext) | { log: Logger };
-  /** @deprecated Please use `log` from the {@link context} instead. */
-  logger: LegacyLogger;
   info: GraphQLResolveInfo;
   fetchFn: MeshFetch;
   setFetchFn: (fetchFn: MeshFetch) => void;
@@ -275,6 +272,35 @@ export interface GatewayConfigSupergraph<
    * @experimental This option is experimental and may change in the future.
    */
   unifiedGraphHandler?: UnifiedGraphHandler;
+
+  /**
+   * The most aliases one entity request to a subgraph may carry, like the Hive Router's
+   * `traffic_shaping.all.max_aliases_per_request` and
+   * `traffic_shaping.subgraphs.<name>.max_aliases_per_request`. Subgraphs that limit the aliases
+   * of an operation can reject requests with more.
+   *
+   * A number applies to all subgraphs. A record sets it by subgraph name, with `"*"` applying to
+   * the subgraphs that are not named. Every limit is an integer from 0 to 4294967295, where 0
+   * counts as 1. There is no limit by default.
+   *
+   * Only the Hive Router runtime (`@graphql-hive/router-runtime`) uses it. Batched entity fetches
+   * are planned to stay within the limit, and a `@fromContext` fetch, which sends one aliased
+   * `_entities` field per group of distinct context values, is split into as many requests as it
+   * takes.
+   *
+   * Requests to a subgraph with a limit are not batched (see `__experimental__batchExecution`),
+   * because batching would merge the split requests back into one.
+   *
+   * @example Allow at most 15 aliases per request, and 4 for the `accounts` subgraph.
+   * ```ts
+   * import { defineConfig } from '@graphql-hive/gateway';
+   *
+   * export const gatewayConfig = defineConfig({
+   *   maxAliasesPerRequest: { '*': 15, accounts: 4 },
+   * });
+   * ```
+   */
+  maxAliasesPerRequest?: number | Record<string, number>;
 
   /**
    * Gracefully reload the supergraph by letting in-flight operations finish on
@@ -542,19 +568,6 @@ export interface GatewayHivePersistedDocumentsOptions {
     // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
     | ((request: Request) => MaybePromise<boolean>);
   /**
-   * Whether arbitrary documents should be allowed along-side persisted documents.
-   *
-   * Alternatively, you can provide a function that returns a boolean value based on
-   * the request's headers.
-   *
-   * @default false
-   *
-   * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
-   */
-  allowArbitraryOperations?:
-    | boolean
-    | ((request: Request) => MaybePromise<boolean>);
-  /**
    * TTL in seconds for cached persisted documents.
    * When set (and the gateway cache is configured), enables Layer 2 caching.
    * Requires a cache backend to be configured via the `cache` option.
@@ -642,19 +655,6 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
         allowArbitraryDocuments?:
           | boolean
           // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
-          | ((request: Request) => MaybePromise<boolean>);
-        /**
-         * Whether arbitrary documents should be allowed along-side persisted documents.
-         *
-         * Alternatively, you can provide a function that returns a boolean value based on
-         * the request's headers.
-         *
-         * @default false
-         *
-         * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
-         */
-        allowArbitraryOperations?:
-          | boolean
           | ((request: Request) => MaybePromise<boolean>);
       });
   /**
@@ -885,14 +885,38 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   multipart?: boolean;
 
   /**
-   * Enable execution cancellation
+   * Maximum request body size in bytes. Set to `false` to disable the limit.
+   *
+   * @default 25000000
+   */
+  maxRequestBodySize?: number | false;
+
+  /**
+   * Enable execution cancellation.
+   *
+   * When the client disconnects or aborts the request, the gateway stops
+   * executing the operation instead of continuing to resolve fields whose
+   * results would never be delivered. This frees up resources early.
+   *
+   * Set to `false` to keep executing operations even after the client went away.
+   *
+   * @default true
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/execution-cancellation)
    */
   executionCancellation?: boolean;
 
   /**
-   * Enable upstream cancellation
+   * Enable upstream cancellation.
+   *
+   * When the client disconnects or aborts the request, the gateway also aborts
+   * the in-flight requests it made to the upstream subgraphs, so that they
+   * can stop doing work whose results would never be used.
+   *
+   * Set to `false` to let upstream requests run to completion even after the
+   * client went away.
+   *
+   * @default true
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/upstream-cancellation)
    */
@@ -973,6 +997,9 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Configure the request ID for the gateway
    *
+   * The incoming request ID header is not trusted by default. Set `trustHeader` to `true`
+   * when the gateway is reachable only through a proxy that sets the header itself.
+   *
    * @default true
    */
   requestId?: boolean | RequestIdOptions<Partial<TContext>>;
@@ -1051,8 +1078,7 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default false
    */
   inboundInflightRequestDeduplication?:
-    | boolean
-    | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
+    boolean | InboundInflightRequestDeduplicationYogaPluginOptions<TContext>;
 }
 
 interface DisableIntrospectionOptions<TContext extends Record<string, any>> {

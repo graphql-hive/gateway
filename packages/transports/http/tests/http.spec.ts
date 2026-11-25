@@ -1,4 +1,4 @@
-import { LegacyLogger, Logger } from '@graphql-hive/logger';
+import { Logger } from '@graphql-hive/logger';
 import { TransportEntry } from '@graphql-mesh/transport-common';
 import type { MeshFetch } from '@graphql-mesh/types';
 import { assertAsyncIterable } from '@internal/testing';
@@ -8,7 +8,6 @@ import httpTransport from '../src';
 
 describe('HTTP Transport', () => {
   const log = new Logger({ level: false });
-  const logger = new LegacyLogger(log);
 
   const subgraphName = 'test';
 
@@ -40,7 +39,6 @@ describe('HTTP Transport', () => {
 
     const executor = httpTransport.getSubgraphExecutor({
       log,
-      logger,
       subgraphName,
       transportEntry: {
         kind: 'http',
@@ -87,7 +85,6 @@ describe('HTTP Transport', () => {
     const getTransportExecutor = (transportEntry: TransportEntry) =>
       httpTransport.getSubgraphExecutor({
         log,
-        logger,
         subgraphName,
         transportEntry,
         fetch,
@@ -128,7 +125,6 @@ describe('HTTP Transport', () => {
     const getTransportExecutor = (transportEntry: TransportEntry) =>
       httpTransport.getSubgraphExecutor({
         log,
-        logger,
         subgraphName,
         transportEntry,
         fetch,
