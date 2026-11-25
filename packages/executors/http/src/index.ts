@@ -220,6 +220,37 @@ export interface InflightRequestOptions {
 
 type InflightRequestId = string;
 
+/**
+ * Deep copies a value parsed from JSON, many times faster than `structuredClone`.
+ */
+function copyJson<T>(value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const copy = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      copy[i] = copyJson(value[i]);
+    }
+    return copy as T;
+  }
+  const copy: Record<string, unknown> = {};
+  for (const key in value) {
+    if (key === '__proto__') {
+      // an own `__proto__` from JSON is data, assigning it would set the prototype
+      Object.defineProperty(copy, key, {
+        value: copyJson(value[key]),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      copy[key] = copyJson(value[key]);
+    }
+  }
+  return copy as T;
+}
+
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
@@ -694,7 +725,7 @@ export function buildHTTPExecutor(
             ...result,
           };
           if (result.data) {
-            clonedResult.data = structuredClone(result.data);
+            clonedResult.data = copyJson(result.data);
           }
           return clonedResult;
         },
