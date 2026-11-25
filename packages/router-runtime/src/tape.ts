@@ -13,8 +13,8 @@
  * - its body
  * - for a value, the next value merged into it, -1 for none. A merge links a value into the chain
  *   of another one, and reading a key across a chain links the objects (or lists) under that key
- *   into one chain the first time, which is what `deepMerge` makes of them. For a key, the hash
- *   of its bytes, see {@link TapeKey}, so looking a key up compares numbers.
+ *   into one chain the first time, which is what `deepMerge` makes of them. For a key, its id,
+ *   see {@link keyId}, so looking a key up compares numbers.
  *
  * Members of an object are a key followed by its value.
  */
@@ -45,10 +45,59 @@ function hashKey(body: Uint8Array, start: number, end: number): number {
   );
 }
 
-/** A key to look up in an object, `"key"` as bytes and their hash. */
+/** A key to look up in an object, `"key"` as bytes and their id, see {@link keyId}. */
 export interface TapeKey {
   bytes: Uint8Array;
-  hash: number;
+  id: number;
+}
+
+/** At most this many keys get an id, so a subgraph sending made-up keys can't grow it forever. */
+const MAX_KEY_IDS = 1 << 16;
+/** Longer keys get no id, nearly all keys are names of fields. */
+const MAX_ID_KEY_LENGTH = 64;
+/** Open addressing, by {@link hashKey}, of key ids, half full when every id is given. */
+const keyIdTable = new Int32Array(MAX_KEY_IDS * 2).fill(-1);
+const keyIdBytes: Uint8Array[] = [];
+/** Type names by the id of their bytes, see {@link ResponseTape.typename}. */
+const typenamesById: (string | undefined)[] = [];
+
+/**
+ * The id of `"key"` at `body[start..end]`: the same for the same bytes in every body of every
+ * tape, so finding a key compares ids, and the bytes are compared once when it's tokenized
+ * instead of on every lookup. A key without an id, a long one or one after every id is given,
+ * gets its negative hash, the same for the same bytes too, and lookups compare its bytes.
+ */
+export function keyId(body: Uint8Array, start: number, end: number): number {
+  const hash = hashKey(body, start, end);
+  const length = end - start;
+  if (length > MAX_ID_KEY_LENGTH) {
+    return hash | 0x80000000;
+  }
+  const mask = keyIdTable.length - 1;
+  let slot = Math.imul(hash, 0x9e3779b1) >>> 15;
+  for (;;) {
+    const id = keyIdTable[slot]!;
+    if (id === -1) {
+      // a key not seen yet, ids are never taken back
+      if (keyIdBytes.length === MAX_KEY_IDS) {
+        return hash | 0x80000000;
+      }
+      keyIdTable[slot] = keyIdBytes.length;
+      keyIdBytes.push(body.slice(start, end));
+      return keyIdBytes.length - 1;
+    }
+    const known = keyIdBytes[id]!;
+    if (known.length === length) {
+      let j = 0;
+      while (j < length && known[j] === body[start + j]) {
+        j++;
+      }
+      if (j === length) {
+        return id;
+      }
+    }
+    slot = (slot + 1) & mask;
+  }
 }
 
 const encoder = new TextEncoder();
@@ -83,7 +132,7 @@ export function quotedKey(key: string): TapeKey {
   let quoted = quotedKeys.get(key);
   if (!quoted) {
     const bytes = encoder.encode(JSON.stringify(key));
-    quoted = { bytes, hash: hashKey(bytes, 0, bytes.length) };
+    quoted = { bytes, id: keyId(bytes, 0, bytes.length) };
     quotedKeys.set(key, quoted);
   }
   return quoted;
@@ -196,7 +245,7 @@ export class ResponseTape {
         tape[open + 3] = length;
         keyNext = false;
       } else if (keyNext) {
-        // a key, hashed on the way so looking it up compares numbers, see `hashKey`
+        // a key, its id found on the way so looking it up compares numbers, see `keyId`
         if (c !== 34) {
           this.length = length;
           return -1;
@@ -218,7 +267,7 @@ export class ResponseTape {
         tape[at + 2] = i + 1;
         tape[at + 3] = at + SLOTS;
         tape[at + 4] = bodyIndex;
-        tape[at + 5] = hashKey(body, start, i + 1);
+        tape[at + 5] = keyId(body, start, i + 1);
         length += SLOTS;
         keyNext = false;
       } else {
@@ -323,13 +372,16 @@ export class ResponseTape {
     const body = this.bodies[tape[obj + 4]!]!;
     const end = tape[obj + 3]!;
     const bytes = key.bytes;
-    const hash = key.hash;
+    const id = key.id;
     const len = bytes.length;
     for (let k = obj + SLOTS; k < end;) {
-      const start = tape[k + 1]!;
-      if (tape[k + 5] === hash && tape[k + 2]! - start === len) {
-        let j = 0;
-        while (j < len && body[start + j] === bytes[j]) {
+      if (tape[k + 5] === id) {
+        if (id >= 0) {
+          return k + SLOTS;
+        }
+        const start = tape[k + 1]!;
+        let j = tape[k + 2]! - start === len ? 0 : -1;
+        while (j !== -1 && j < len && body[start + j] === bytes[j]) {
           j++;
         }
         if (j === len) {
@@ -371,45 +423,27 @@ export class ResponseTape {
     return true;
   }
 
-  private typenames = new Map<number, string[]>();
   /**
-   * The string at `node` when it's a type name, which repeats a lot: decoded once per request and
-   * found by its bytes after.
+   * The string at `node` when it's a type name, which repeats a lot: decoded once and found by
+   * the id of its bytes after.
    */
   typename(node: number): string | undefined {
     if (node === -1 || this.tape[node] !== K_STR) {
       return undefined;
     }
     const tape = this.tape;
-    const body = this.bodies[tape[node + 4]!]!;
-    const start = tape[node + 1]! + 1;
-    const end = tape[node + 2]! - 1;
-    const hash = this.hashBytes(node, 0x811c9dc5);
-    let candidates = this.typenames.get(hash);
-    if (candidates) {
-      for (const candidate of candidates) {
-        if (candidate.length !== end - start) {
-          continue;
-        }
-        let i = 0;
-        while (
-          i < candidate.length &&
-          candidate.charCodeAt(i) === body[start + i]
-        ) {
-          i++;
-        }
-        if (i === candidate.length) {
-          return candidate;
-        }
-      }
+    // a type name's bytes have an id like a key's, decoded once
+    const id = keyId(
+      this.bodies[tape[node + 4]!]!,
+      tape[node + 1]!,
+      tape[node + 2]!,
+    );
+    if (id < 0) {
+      return this.string(node);
     }
-    const typename = this.string(node)!;
-    if (!candidates) {
-      this.typenames.set(hash, (candidates = []));
-    }
-    // only one written as its chars, without escapes or beyond ASCII, is found by its bytes
-    if (typename.length === end - start && !/[^\x20-\x7e]/.test(typename)) {
-      candidates.push(typename);
+    let typename = typenamesById[id];
+    if (typename === undefined) {
+      typename = typenamesById[id] = this.string(node)!;
     }
     return typename;
   }
@@ -418,7 +452,6 @@ export class ResponseTape {
   reset() {
     this.length = 0;
     this.bodies = [];
-    this.typenames.clear();
     this.cursorTop = 0;
     this.indexTop = 0;
   }
@@ -433,15 +466,18 @@ export class ResponseTape {
     const body = this.bodies[tape[obj + 4]!]!;
     const end = tape[obj + 3]!;
     const bytes = key.bytes;
-    const hash = key.hash;
+    const id = key.id;
     const len = bytes.length;
     for (let pass = 0; pass < 2; pass++) {
       const stop = pass === 0 ? end : from;
       for (let k = pass === 0 ? from : obj + SLOTS; k < stop;) {
-        const start = tape[k + 1]!;
-        if (tape[k + 5] === hash && tape[k + 2]! - start === len) {
-          let j = 0;
-          while (j < len && body[start + j] === bytes[j]) {
+        if (tape[k + 5] === id) {
+          if (id >= 0) {
+            return k + SLOTS;
+          }
+          const start = tape[k + 1]!;
+          let j = tape[k + 2]! - start === len ? 0 : -1;
+          while (j !== -1 && j < len && body[start + j] === bytes[j]) {
             j++;
           }
           if (j === len) {
@@ -612,8 +648,8 @@ export class ResponseTape {
         k < end;
         k = tape[k + SLOTS + 3]!
       ) {
-        const hash = tape[k + 5]!;
-        let slot = hash & mask;
+        const id = tape[k + 5]!;
+        let slot = id & mask;
         for (;;) {
           const at = base + 1 + slot * 2;
           const keyNode = index[at]!;
@@ -622,7 +658,10 @@ export class ResponseTape {
             index[at + 1] = k + SLOTS;
             break;
           }
-          if (tape[keyNode + 5] === hash && this.sameBytes(keyNode, k)) {
+          if (
+            tape[keyNode + 5] === id &&
+            (id >= 0 || this.sameBytes(keyNode, k))
+          ) {
             index[at + 1] = this.foldPair(index[at + 1]!, k + SLOTS);
             break;
           }
@@ -638,17 +677,20 @@ export class ResponseTape {
     const index = this.index;
     const tape = this.tape;
     const mask = index[base]!;
-    const hash = key.hash;
+    const id = key.id;
     const bytes = key.bytes;
     const len = bytes.length;
-    let slot = hash & mask;
+    let slot = id & mask;
     for (;;) {
       const at = base + 1 + slot * 2;
       const keyNode = index[at]!;
       if (keyNode === -1) {
         return -1;
       }
-      if (tape[keyNode + 5] === hash) {
+      if (tape[keyNode + 5] === id) {
+        if (id >= 0) {
+          return index[at + 1]!;
+        }
         const start = tape[keyNode + 1]!;
         if (tape[keyNode + 2]! - start === len) {
           const body = this.bodies[tape[keyNode + 4]!]!;
@@ -669,14 +711,8 @@ export class ResponseTape {
     this.indexTop = base;
   }
 
-  /**
-   * The value of the key at `view`: from its index when it has one, -1 for none, see
-   * {@link openIndex}, or looked up in its objects.
-   */
-  get(view: number, key: TapeKey, index: number): number {
-    if (index !== -1) {
-      return this.indexGet(index, key);
-    }
+  /** The value of the key at `view`, looked up in its objects. */
+  get(view: number, key: TapeKey): number {
     return this.tape[view + 5] === -1
       ? this.tape[view] === K_OBJ
         ? this.member(view, key)
@@ -847,7 +883,11 @@ export class ResponseTape {
   /** Writes the bytes of a value as they are. */
   copyTo(writer: ResponseWriter, node: number) {
     const tape = this.tape;
-    writer.copy(this.bodies[tape[node + 4]!]!, tape[node + 1]!, tape[node + 2]!);
+    writer.copy(
+      this.bodies[tape[node + 4]!]!,
+      tape[node + 1]!,
+      tape[node + 2]!,
+    );
   }
 }
 

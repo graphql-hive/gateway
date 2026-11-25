@@ -110,7 +110,9 @@ function execute(responseTape: boolean) {
 function send(result: ExecutionResult) {
   const stringify = (result as { stringify?: (r: ExecutionResult) => string })
     .stringify;
-  return encoder.encode(stringify ? stringify(result) : JSON.stringify(result));
+  const body: unknown = stringify ? stringify(result) : JSON.stringify(result);
+  // the tape's response is its bytes, a `Response` takes them as they are
+  return body instanceof Uint8Array ? body : encoder.encode(body as string);
 }
 
 const modes = {

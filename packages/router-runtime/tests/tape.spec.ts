@@ -94,6 +94,27 @@ describe('ResponseTape', () => {
     tape.closeIndex(index);
   });
 
+  it('finds keys too long for an id by their bytes, alone and merged', () => {
+    const long = 'k'.repeat(80);
+    const value = { [long + 'a']: 1, [long + 'b']: 2, short: 3 };
+    const tape = new ResponseTape();
+    const top = add(tape, value);
+    expect(tape.read(tape.member(top, quotedKey(long + 'b')))).toBe(2);
+    expect(tape.member(top, quotedKey(long + 'c'))).toBe(-1);
+    tape.link(top, add(tape, { [long + 'a']: 4, [long + 'c']: 5 }));
+    const index = tape.openIndex(top);
+    expect(tape.read(tape.indexGet(index, quotedKey(long + 'a')))).toBe(4);
+    expect(tape.read(tape.indexGet(index, quotedKey(long + 'b')))).toBe(2);
+    expect(tape.read(tape.indexGet(index, quotedKey(long + 'c')))).toBe(5);
+    expect(tape.indexGet(index, quotedKey(long + 'd'))).toBe(-1);
+    tape.closeIndex(index);
+    expect(tape.read(top)).toEqual({
+      ...value,
+      [long + 'a']: 4,
+      [long + 'c']: 5,
+    });
+  });
+
   it('finds every key by its hash, escaped ones and ones after nested lists too', () => {
     const value = {
       'a"b': 1,

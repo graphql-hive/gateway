@@ -132,3 +132,30 @@ it.each([
     });
   },
 );
+
+it('gives the response tape written response to the server as bytes, a string where made one', async () => {
+  const result = (await executeQueryPlan({
+    responseTape: true,
+    queryPlan,
+    supergraphSchema,
+    entityKeys: { b: { User: [['id']] } },
+    possibleTypes: {},
+    executionRequest: { document: parse('{ users { id name } }') },
+    onSubgraphExecute(subgraph) {
+      return subgraph === 'a'
+        ? { data: { users: [{ __typename: 'User', id: '1', org: 'é"' }] } }
+        : { data: { _entities: [{ name: 'one' }] } };
+    },
+  })) as ExecutionResult & { stringify(r: ExecutionResult): unknown };
+  const expected = { data: { users: [{ id: '1', name: 'one' }] } };
+  const body = result.stringify(result);
+  expect(body).toBeInstanceOf(Uint8Array);
+  expect(
+    JSON.parse(await new Response(body as Uint8Array<ArrayBuffer>).text()),
+  ).toEqual(expected);
+  // like Yoga joining a batch's responses
+  expect(JSON.parse(`[${body}]`)).toEqual([expected]);
+  // once `data` is read, it can be changed and the bytes no longer tell it
+  expect(result.data).toEqual(expected.data);
+  expect(typeof result.stringify(result)).toBe('string');
+});

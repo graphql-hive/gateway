@@ -3539,7 +3539,6 @@ const appliesTo = (
 function hashEntityKey(
   tape: ResponseTape,
   entity: number,
-  index: number,
   typenameNode: number,
   typename: string,
   flat: FlatRequires,
@@ -3554,7 +3553,7 @@ function hashEntityKey(
       continue;
     }
     for (const name of quotedNames) {
-      const value = tape.get(entity, name, index);
+      const value = tape.get(entity, name);
       values.push(value);
       // a missing field and every byte are told apart by what's mixed in before them
       hash = Math.imul(hash ^ (value === -1 ? 0x75 : 0x2c), 0x01000193);
@@ -3629,9 +3628,8 @@ function collectEntitiesFromTape(
     if (tape.kind(entity) !== K_OBJ) {
       return;
     }
-    // a merged entity is indexed once for its typename and key fields
-    const lookup = tape.isMerged(entity) ? tape.openIndex(entity) : -1;
-    const typenameNode = tape.get(entity, TYPENAME_KEY, lookup);
+    // a few fields, reading them across a merged entity costs less than indexing it
+    const typenameNode = tape.get(entity, TYPENAME_KEY);
     const typename =
       typenameNode === -1 || tape.isNull(typenameNode)
         ? undefined
@@ -3641,7 +3639,6 @@ function collectEntitiesFromTape(
         ? hashEntityKey(
             tape,
             entity,
-            lookup,
             typenameNode,
             typename,
             flatRequires,
@@ -3649,9 +3646,6 @@ function collectEntitiesFromTape(
             key,
           )
         : undefined;
-    if (lookup !== -1) {
-      tape.closeIndex(lookup);
-    }
     if (typename === undefined) {
       return;
     }
@@ -3772,6 +3766,8 @@ function writeResponseFromTape(
   const fields = getProjectedFields(projection);
   const writer = writerPool.pop() ?? new ResponseWriter();
   executionContext.missedNonNullField = false;
+  // the whole response, `{"data":...}`, its data is between the two
+  writer.bytes(DATA_PREFIX);
   writeObjectFromTape(
     writer,
     executionContext,
@@ -3782,6 +3778,7 @@ function writeResponseFromTape(
   );
   if (executionContext.missedNonNullField) {
     writer.reset();
+    writer.bytes(DATA_PREFIX);
     writeObjectFromTape(
       writer,
       executionContext,
@@ -3791,13 +3788,14 @@ function writeResponseFromTape(
       [],
     );
   }
-  const data = writer.take();
+  writer.byte(125);
+  const response = writer.take();
   // nothing reads them after the response is written, the next request can have them
   releaseToPool(writerPool, writer);
   releaseToPool(tapePool, executionContext.tape!);
   executionContext.tape = undefined;
   return createWrittenResult(
-    data,
+    response,
     executionContext.errors.length > 0
       ? executionContext.errors.map((error) =>
           trimErrorPath(error, projection.fields),
@@ -3988,9 +3986,10 @@ function writeValueFromTape(
  * `stringify` writes the response from the written bytes when nothing did.
  */
 function createWrittenResult(
-  data: Uint8Array,
+  response: Uint8Array,
   errors: GraphQLError[] | undefined,
 ): ExecutionResult {
+  const data = response.subarray(DATA_PREFIX.length, response.length - 1);
   let parsed: unknown;
   let read = false;
   const result = {} as ExecutionResult;
@@ -4018,6 +4017,14 @@ function createWrittenResult(
       if (toStringify !== result || read) {
         return JSON.stringify(toStringify);
       }
+      if (!result.errors && !result.extensions) {
+        // the bytes as they are, the server sends them without encoding a string again
+        return new JsonBytes(
+          response.buffer as ArrayBuffer,
+          response.byteOffset,
+          response.length,
+        ) as unknown as string;
+      }
       let json = `{"data":${textDecoder.decode(data)}`;
       if (result.errors) {
         json += `,"errors":${JSON.stringify(result.errors)}`;
@@ -4029,6 +4036,18 @@ function createWrittenResult(
     },
   });
   return result;
+}
+
+const DATA_PREFIX = textEncoder.encode('{"data":');
+
+/**
+ * JSON as bytes, where a string is expected: a `Response` takes it as bytes, and it's the JSON
+ * string where it's made one, like Yoga joining a batch's responses.
+ */
+class JsonBytes extends Uint8Array {
+  override toString() {
+    return textDecoder.decode(this);
+  }
 }
 
 function closeLookups(

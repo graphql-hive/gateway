@@ -1,7 +1,10 @@
 // Load tests the gateway on the Hive Router runtime and reports, per scenario and run: requests
 // per second, latency, and the gateway's CPU time, GC time and memory per request.
 //
-//   node bench/router-runtime/run.mjs [--scenarios dedup,no-dedup] [--runs 2] [--duration 30s] [--vus 50]
+//   node bench/router-runtime/run.mjs [--scenarios dedup,no-dedup] [--runs 2] [--duration 30s] [--vus 50] [--cpu-prof]
+//
+// With `--cpu-prof`, every run writes the gateway's CPU profile to its own directory next to the
+// logs, see `profile.mjs`.
 //
 // See README.md for what it needs.
 
@@ -22,6 +25,7 @@ const { values: args } = parseArgs({
     warmup: { type: 'string', default: '10s' },
     vus: { type: 'string', default: '50' },
     port: { type: 'string', default: '4000' },
+    'cpu-prof': { type: 'boolean', default: false },
   },
 });
 const subgraphsBin = path.resolve(
@@ -107,6 +111,9 @@ for (const scenario of args.scenarios.split(',')) {
     const gateway = start(
       process.execPath,
       [
+        ...(args['cpu-prof']
+          ? ['--cpu-prof', `--cpu-prof-dir=${path.join(tmp, `${scenario}-${run}.prof`)}`]
+          : []),
         '--import',
         'tsx',
         '--import',
