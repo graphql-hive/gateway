@@ -276,6 +276,40 @@ it('reuses the in-memory query plan for the same document', async () => {
   expect(computeCacheKey).toHaveBeenCalledTimes(1);
 });
 
+it('plans the document again after its plan failed', async () => {
+  const planAsync = vi.spyOn(QueryPlanner.prototype, 'planAsync');
+  // like a plan aborted by the request that asked for it first
+  planAsync.mockRejectedValueOnce(new Error('The operation was aborted'));
+  await using gw = createGatewayTester({
+    unifiedGraphHandler,
+    subgraphs: [
+      {
+        name: 'upstream',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello: () => 'world',
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  await expect(gw.execute({ query: '{ hello }' })).resolves.toMatchObject({
+    errors: [expect.anything()],
+  });
+  await expect(gw.execute({ query: '{ hello }' })).resolves.toEqual({
+    data: { hello: 'world' },
+  });
+  expect(planAsync).toHaveBeenCalledTimes(2);
+});
+
 it('plans concurrent operations', async () => {
   await using gw = createGatewayTester({
     unifiedGraphHandler,

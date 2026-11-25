@@ -246,7 +246,11 @@ export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
-  const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
+  /** How many consumers of an inflight request haven't taken its result yet. */
+  const inflightRequestConsumers = new WeakMap<
+    Promise<ExecutionResult>,
+    number
+  >();
   // inflight requests are scoped per executor and per context because the fetch
   // fn receives the context and may behave differently for each
   const inflightRequestsByContext = new WeakMap<
@@ -654,13 +658,16 @@ export function buildHTTPExecutor(
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
       if (inflightRequest) {
-        // Isolate every consumer when a request is actually shared, including
-        // the consumer that originally started the request.
-        sharedInflightRequests.add(inflightRequest as Promise<ExecutionResult>);
+        const promise = inflightRequest as Promise<ExecutionResult>;
+        inflightRequestConsumers.set(
+          promise,
+          inflightRequestConsumers.get(promise)! + 1,
+        );
       }
       if (!inflightRequest) {
         inflightRequest = runInflightRequest();
         if (isPromise(inflightRequest)) {
+          inflightRequestConsumers.set(inflightRequest, 1);
           inflightRequests.set(inflightRequestId, inflightRequest);
           inflightRequest.finally(() => {
             inflightRequests.delete(inflightRequestId);
@@ -671,13 +678,16 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
-          if (
-            result == null ||
-            !result.data ||
-            !sharedInflightRequests.has(
-              inflightRequest as Promise<ExecutionResult>,
-            )
-          ) {
+          const promise = inflightRequest as Promise<ExecutionResult>;
+          const consumers = inflightRequestConsumers.get(promise);
+          if (consumers == null) {
+            return result;
+          }
+          inflightRequestConsumers.set(promise, consumers - 1);
+          // consumers may change the result, every one gets its own copy. the consumers take
+          // the result in the order they came, after the request left the inflight requests,
+          // so the last one can take the original
+          if (result == null || !result.data || consumers === 1) {
             return result;
           }
           const clonedResult: ExecutionResult = {

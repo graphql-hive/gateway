@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';
 
 describe('HTTP deduplication result cloning', () => {
-  it('clones data for every consumer of a shared inflight request', async () => {
+  it('gives every consumer of a shared inflight request its own data, cloning for all but the last', async () => {
     const clone = vi.spyOn(globalThis, 'structuredClone');
     try {
       let finish!: (response: Response) => void;
@@ -18,15 +18,23 @@ describe('HTTP deduplication result cloning', () => {
         fetch,
       });
       const document = parse('{ node { value } }');
-      const first = executor({ document });
-      const second = executor({ document });
+      const pending = [
+        executor({ document }),
+        executor({ document }),
+        executor({ document }),
+      ];
       finish(Response.json({ data: { node: { value: 'original' } } }));
-      const [firstResult, secondResult] = await Promise.all([first, second]);
-      assertSingleExecutionValue(firstResult);
-      assertSingleExecutionValue(secondResult);
-      expect(firstResult).toEqual({ data: { node: { value: 'original' } } });
-      expect(secondResult).toEqual({ data: { node: { value: 'original' } } });
-      expect(firstResult.data).not.toBe(secondResult.data);
+      const results = await Promise.all(pending);
+      for (const result of results) {
+        assertSingleExecutionValue(result);
+        expect(result).toEqual({ data: { node: { value: 'original' } } });
+      }
+      const datas = results.map((result) => (result as any).data);
+      expect(new Set(datas).size).toBe(3);
+      // changing one consumer's data leaves the others as they are
+      datas[2].node.value = 'changed';
+      expect(datas[0].node.value).toBe('original');
+      expect(datas[1].node.value).toBe('original');
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(clone).toHaveBeenCalledTimes(2);
     } finally {

@@ -234,6 +234,12 @@ export async function unifiedGraphHandler(
         operationCache.set(memoryCacheKey, queryPlan);
         return queryPlan;
       },
+      (err) => {
+        // a failed plan, like one aborted by the request that asked for it first, is planned
+        // again for the next request
+        operationCache.delete(memoryCacheKey);
+        throw err;
+      },
     );
     operationCache.set(memoryCacheKey, plan);
     return plan;

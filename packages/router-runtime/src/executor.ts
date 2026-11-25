@@ -718,22 +718,89 @@ interface ContextGroup {
   identityToIndex: Map<string, number>;
 }
 
-interface CollectedEntity {
-  entity: EntityRepresentation;
-  path: (string | number)[];
-  /**
-   * The index of the entity's representation in the representations of all groups,
-   * concatenated in group order.
-   */
-  index: number;
-}
-
+/**
+ * The collected entities, as parallel arrays indexed by the entity's position in the collection
+ * order, so there is no object per entity.
+ */
 interface CollectedEntities {
   groups: ContextGroup[];
   /** Where the representations of every group start, plus where the last group ends. */
   offsets: number[];
-  entities: CollectedEntity[];
-  entityPathsByIndex: Map<number, (string | number)[][]>;
+  entities: EntityRepresentation[];
+  /**
+   * The index of every entity's representation in the representations of all groups,
+   * concatenated in group order.
+   */
+  indexes: number[];
+  /**
+   * The path to every entity is its prefix, followed by its list index when it isn't `-1`.
+   * Entities of the same list share the prefix.
+   */
+  pathPrefixes: (string | number)[][];
+  listIndexes: number[];
+}
+
+function getEntityPath(
+  collected: CollectedEntities,
+  position: number,
+): (string | number)[] {
+  const prefix = collected.pathPrefixes[position]!;
+  const listIndex = collected.listIndexes[position]!;
+  return listIndex === -1 ? prefix : [...prefix, listIndex];
+}
+
+/**
+ * The positions of the entities of every representation, as `positions[starts[i]..starts[i+1]]`
+ * for the representation `i`, in collection order. Only errors need it.
+ */
+function getEntityPositionsByIndex(collected: CollectedEntities): {
+  starts: Int32Array;
+  positions: Int32Array;
+} {
+  const { indexes } = collected;
+  const representations = collected.offsets[collected.offsets.length - 1]!;
+  const starts = new Int32Array(representations + 1);
+  for (const index of indexes) {
+    starts[index + 1]!++;
+  }
+  for (let i = 0; i < representations; i++) {
+    starts[i + 1]! += starts[i]!;
+  }
+  const next = starts.slice(0, representations);
+  const positions = new Int32Array(indexes.length);
+  for (let position = 0; position < indexes.length; position++) {
+    positions[next[indexes[position]!]!++] = position;
+  }
+  return { starts, positions };
+}
+
+/** The error at every entity that sent a representation in `range`. */
+function relocateToEntities(
+  error: GraphQLError,
+  collected: CollectedEntities,
+  range: RepresentationRange,
+): GraphQLError[] {
+  const relocated: GraphQLError[] = [];
+  for (let position = 0; position < collected.indexes.length; position++) {
+    const index = collected.indexes[position]!;
+    if (index >= range.start && index < range.end) {
+      relocated.push(relocatedError(error, getEntityPath(collected, position)));
+    }
+  }
+  return relocated;
+}
+
+/** The paths of the entities that sent the representation `index`. */
+function getRepresentationPaths(
+  collected: CollectedEntities,
+  byIndex: ReturnType<typeof getEntityPositionsByIndex>,
+  index: number,
+): (string | number)[][] {
+  const paths: (string | number)[][] = [];
+  for (let i = byIndex.starts[index]!; i < byIndex.starts[index + 1]!; i++) {
+    paths.push(getEntityPath(collected, byIndex.positions[i]!));
+  }
+  return paths;
 }
 
 interface BatchAliasPreparedContext extends CollectedEntities {
@@ -914,15 +981,16 @@ function collectEntities(
     return index;
   }
 
-  const located: {
-    entity: EntityRepresentation;
-    path: (string | number)[];
-    groupIndex: number;
-    indexInGroup: number;
-  }[] = [];
+  const entities: EntityRepresentation[] = [];
+  // the index in the group until the groups are known, then the index in all groups
+  const indexes: number[] = [];
+  const groupIndexes: number[] = [];
+  const pathPrefixes: (string | number)[][] = [];
+  const listIndexes: number[] = [];
   function collect(
     entity: unknown,
-    path: (string | number)[],
+    pathPrefix: (string | number)[],
+    listIndex: number,
     ancestors: object[],
   ) {
     if (!isEntityRepresentation(entity)) {
@@ -944,14 +1012,18 @@ function collectEntities(
     if (inputRewrites?.length) {
       applyRewrites(representation, inputRewrites, possibleTypes);
     }
-    const identity = stableStringify(representation);
+    const identity = getRepresentationIdentity(representation);
     let indexInGroup = group.identityToIndex.get(identity);
     if (indexInGroup == null) {
       indexInGroup = group.representations.length;
       group.identityToIndex.set(identity, indexInGroup);
       group.representations.push(representation);
     }
-    located.push({ entity, path, groupIndex, indexInGroup });
+    entities.push(entity);
+    indexes.push(indexInGroup);
+    groupIndexes.push(groupIndex);
+    pathPrefixes.push(pathPrefix);
+    listIndexes.push(listIndex);
   }
 
   for (const path of paths) {
@@ -963,12 +1035,14 @@ function collectEntities(
       [],
       [],
       (value, valuePath, ancestors) => {
+        // the path is changed as the traversal goes on, the entities keep a copy
+        const pathPrefix = valuePath.slice();
         if (Array.isArray(value)) {
           for (let index = 0; index < value.length; index++) {
-            collect(value[index], [...valuePath, index], ancestors);
+            collect(value[index], pathPrefix, index, ancestors);
           }
         } else {
-          collect(value, valuePath.slice(), ancestors);
+          collect(value, pathPrefix, -1, ancestors);
         }
       },
     );
@@ -978,18 +1052,51 @@ function collectEntities(
   for (const group of groups) {
     offsets.push(offsets[offsets.length - 1]! + group.representations.length);
   }
-  const entityPathsByIndex = new Map<number, (string | number)[][]>();
-  const entities = located.map(({ entity, path, groupIndex, indexInGroup }) => {
-    const index = offsets[groupIndex]! + indexInGroup;
-    const paths = entityPathsByIndex.get(index);
-    if (paths) {
-      paths.push(path);
-    } else {
-      entityPathsByIndex.set(index, [path]);
+  if (groups.length > 1) {
+    for (let position = 0; position < indexes.length; position++) {
+      indexes[position]! += offsets[groupIndexes[position]!]!;
     }
-    return { entity, path, index };
-  });
-  return { groups, offsets, entities, entityPathsByIndex };
+  }
+  return { groups, offsets, entities, indexes, pathPrefixes, listIndexes };
+}
+
+/**
+ * The key that tells representations apart. A representation of a single scalar key field, the
+ * most common, gets one without serializing it. A representation that is the same as another
+ * but has its fields in another order gets another key and is sent twice, the planner's requires
+ * give the fields of all representations of a fetch the same order.
+ */
+function getRepresentationIdentity(representation: EntityRepresentation) {
+  let field: string | undefined;
+  for (const key in representation) {
+    if (key === '__typename') {
+      continue;
+    }
+    if (field !== undefined) {
+      return serializeRepresentation(representation);
+    }
+    field = key;
+  }
+  if (field !== undefined) {
+    // can't be mistaken for JSON, which starts with `{`
+    const value = representation[field];
+    if (typeof value === 'string') {
+      return `${representation.__typename}\0${field}\0s${value}`;
+    }
+    if (typeof value === 'number') {
+      return `${representation.__typename}\0${field}\0n${value}`;
+    }
+  }
+  return serializeRepresentation(representation);
+}
+
+function serializeRepresentation(representation: EntityRepresentation) {
+  try {
+    return JSON.stringify(representation);
+  } catch {
+    // like a bigint of a custom scalar
+    return stableStringify(representation);
+  }
 }
 
 /**
@@ -1125,7 +1232,9 @@ function prepareBatchFetchContext(
         groups: [],
         offsets: [0],
         entities: [],
-        entityPathsByIndex: new Map(),
+        indexes: [],
+        pathPrefixes: [],
+        listIndexes: [],
         alias,
       });
       continue;
@@ -1211,11 +1320,14 @@ function mergeEntities(
   range: RepresentationRange,
   customScalarPaths: CustomScalarPaths | undefined,
 ) {
-  for (const { entity: target, index } of collected.entities) {
+  const { entities, indexes } = collected;
+  for (let position = 0; position < entities.length; position++) {
+    const index = indexes[position]!;
     if (index < range.start || index >= range.end) {
       continue;
     }
     const entity = returnedEntities[index - range.start];
+    const target = entities[position];
     if (!target || !entity) {
       continue;
     }
@@ -1233,6 +1345,10 @@ function normalizeBatchFetchErrors(
   }
 
   const relocated: GraphQLError[] = [];
+  const byIndexOfAlias = new Map<
+    string,
+    ReturnType<typeof getEntityPositionsByIndex>
+  >();
   for (const error of errors) {
     const errorPath = error.path;
     if (!errorPath || errorPath.length === 0) {
@@ -1256,11 +1372,7 @@ function normalizeBatchFetchErrors(
     const entityIndex = errorPath[1];
     if (entityIndex === undefined) {
       // the whole aliased _entities field failed, so every entity in it failed
-      for (const { path, index } of aliasContext.entities) {
-        if (index >= range.start && index < range.end) {
-          relocated.push(relocatedError(error, path));
-        }
-      }
+      relocated.push(...relocateToEntities(error, aliasContext, range));
       continue;
     }
     if (typeof entityIndex !== 'number') {
@@ -1269,8 +1381,15 @@ function normalizeBatchFetchErrors(
     }
 
     const index = range.start + entityIndex;
+    let byIndex = byIndexOfAlias.get(aliasName);
+    if (!byIndex) {
+      byIndex = getEntityPositionsByIndex(aliasContext);
+      byIndexOfAlias.set(aliasName, byIndex);
+    }
     const mappedPaths =
-      index < range.end ? aliasContext.entityPathsByIndex.get(index) : null;
+      index < range.end
+        ? getRepresentationPaths(aliasContext, byIndex, index)
+        : null;
     if (!mappedPaths?.length) {
       relocated.push(error);
       continue;
@@ -1987,6 +2106,7 @@ function normalizeFetchErrors(
 
   const { collected, range } = entities;
   const relocated: GraphQLError[] = [];
+  let byIndex: ReturnType<typeof getEntityPositionsByIndex> | undefined;
 
   for (const error of errors) {
     const errorPath = error.path;
@@ -1997,11 +2117,7 @@ function normalizeFetchErrors(
         entityIndexPosition === errorPath.length - 1
       ) {
         // the whole _entities field failed, so every entity in the fetch failed
-        for (const { path, index } of collected.entities) {
-          if (index >= range.start && index < range.end) {
-            relocated.push(relocatedError(error, path));
-          }
-        }
+        relocated.push(...relocateToEntities(error, collected, range));
         continue;
       }
       if (entityIndexPosition !== -1) {
@@ -2010,7 +2126,10 @@ function normalizeFetchErrors(
           typeof dedupIndex === 'number' &&
           range.start + dedupIndex < range.end
         ) {
-          const mappedPaths = collected.entityPathsByIndex.get(
+          byIndex ??= getEntityPositionsByIndex(collected);
+          const mappedPaths = getRepresentationPaths(
+            collected,
+            byIndex,
             range.start + dedupIndex,
           );
           if (mappedPaths && mappedPaths.length) {
@@ -2475,11 +2594,18 @@ function projectRequires(
   possibleTypes: PossibleTypes,
   typeKeys: string[][] | undefined,
 ): EntityRepresentation | null {
+  // the representation is built in place, `__typename` first
   const applied = applyRequires(
     requiresSelections,
     entity,
     possibleTypes,
     !!typeKeys,
+    {
+      result: { __typename: entity.__typename },
+      typename: false,
+      missingField: false,
+      found: new Set(),
+    },
   );
   if (
     typeKeys &&
@@ -2490,14 +2616,14 @@ function projectRequires(
   // only an entity found by its `__typename` alone is sent with nothing else, without keys for
   // its type the subgraph is trusted to find it like that
   if (
-    !Object.keys(applied.result).length &&
+    Object.keys(applied.result).length === 1 &&
     (!applied.typename ||
       applied.missingField ||
       (typeKeys && !typeKeys.some((key) => !key.length)))
   ) {
     return null;
   }
-  return { __typename: entity.__typename, ...applied.result };
+  return applied.result as EntityRepresentation;
 }
 
 /**
