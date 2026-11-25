@@ -45,7 +45,7 @@
     "@graphql-mesh/cross-helpers": "^0.4.18",
     "@graphql-mesh/types": "^0.107.3",
     "@graphql-mesh/utils": "^0.107.3",
-    "@graphql-tools/executor-common": "workspace:^",
+    "@graphql-tools/executor-common": "^2.0.0",
     "@graphql-tools/utils": "^13.2.2",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "tslib": "^2.9.1"

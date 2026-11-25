@@ -139,7 +139,7 @@ export default defineConfig({
           // (35s in ci), so the test needs way more than the e2e timeout. this just guards hangs
           testTimeout: 10 * 60 * 1000,
           benchmark: {
-            include: ['bench/**/*.bench.ts', 'e2e/**/*.bench.ts'],
+            include: ['e2e/**/*.bench.ts'],
           },
         },
       },

@@ -4,9 +4,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "packages/transports/*",
     "packages/plugins/*",
-    "packages/executors/*",
     "internal/*",
     "e2e/*"
   ],
@@ -80,7 +78,7 @@
     "@graphql-hive/federation-gateway-audit/graphql-yoga": "^6.1.0",
     "@graphql-mesh/transport-rest": "^0.12.5",
     "@graphql-mesh/types": "^0.107.3",
-    "@graphql-tools/delegate": "workspace:*",
+    "@graphql-tools/delegate": "^13.0.0",
     "@graphql-yoga/plugin-persisted-operations": "4.1.0",
     "@isaacs/brace-expansion": "5.0.1",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A^16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
@@ -114,6 +112,20 @@
     "tmp": "0.2.7",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
     "undici": "7.30.2",
-    "vite": "8.3.8"
+    "vite": "8.3.8",
+    "@graphql-tools/wrap": "^12.0.0",
+    "@graphql-tools/stitch": "^11.0.0",
+    "@graphql-tools/stitching-directives": "^5.0.0",
+    "@graphql-tools/batch-delegate": "^11.0.0",
+    "@graphql-tools/batch-execute": "^11.0.0",
+    "@graphql-tools/federation": "^5.0.0",
+    "@graphql-tools/executor-common": "^2.0.0",
+    "@graphql-tools/executor-http": "^4.0.0",
+    "@graphql-tools/executor-graphql-ws": "^4.0.0",
+    "@graphql-mesh/fusion-runtime": "^2.0.0",
+    "@graphql-mesh/transport-common": "^2.0.0",
+    "@graphql-mesh/transport-http": "^2.0.0",
+    "@graphql-mesh/transport-http-callback": "^2.0.0",
+    "@graphql-mesh/transport-ws": "^3.0.0"
   }
 }
