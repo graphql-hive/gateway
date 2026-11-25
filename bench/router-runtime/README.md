@@ -38,6 +38,21 @@ less. Compare runs made back to back.
 | `no-dedup`              | every request sends its own subgraph requests, so parsing and merging their responses is paid per request, like with traffic that rarely repeats an operation at the same time                                        |
 | `entity-reuse`          | `entityReuse: true`, which copies entities already in the response instead of fetching them again. It needs a `@graphql-hive/router-query-planner` that emits `entityReuse`, with older ones it's the same as `dedup` |
 | `entity-reuse-no-dedup` | both                                                                                                                                                                                                                  |
+| `tape`                  | the data as the subgraphs' response bytes, `HIVE_ROUTER_RUNTIME_RESPONSE_TAPE=1`                                                                                                                                      |
+| `tape-no-dedup`         | both                                                                                                                                                                                                                  |
+| `whatwg-dedup`          | `dedup` with `@whatwg-node/fetch` for subgraph requests, the gateway's fetch before undici's                                                                                                                          |
+| `whatwg-no-dedup`       | both                                                                                                                                                                                                                  |
+
+To compare with another checkout of the repo, like `origin/main`, give it with `--other` and prefix
+the scenarios to run there with `other:`. It runs that checkout's gateway with this checkout's
+configs and dependencies, link them into it:
+
+```sh
+git worktree add --detach ../gateway-main origin/main
+ln -s "$PWD/node_modules" ../gateway-main/node_modules
+ln -s "$PWD/packages/gateway/node_modules" ../gateway-main/packages/gateway/node_modules
+node bench/router-runtime/run.mjs --other ../gateway-main --scenarios other:dedup,dedup
+```
 
 ## Checking the responses
 

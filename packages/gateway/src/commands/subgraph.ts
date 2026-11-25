@@ -22,6 +22,7 @@ import {
   loadConfig,
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
+import { withDefaultFetch } from '../undiciFetch';
 import { handleFork } from './handleFork';
 import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
@@ -208,6 +209,7 @@ export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
     return;
   }
 
+  config.fetchAPI = withDefaultFetch(config.fetchAPI);
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {

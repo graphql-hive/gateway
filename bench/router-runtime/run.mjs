@@ -3,6 +3,9 @@
 //
 //   node bench/router-runtime/run.mjs [--scenarios dedup,no-dedup] [--runs 2] [--duration 30s] [--vus 50] [--cpu-prof] [--heap-prof]
 //
+// With `--other <dir>`, a scenario named `other:<scenario>` runs the gateway of another checkout
+// of the repo, like one of `origin/main`, with the scenario's config. See README.md.
+//
 // With `--cpu-prof` or `--heap-prof`, every run writes the gateway's CPU or sampled allocation
 // profile to its own directory next to the logs, see `profile.mjs`.
 //
@@ -25,6 +28,7 @@ const { values: args } = parseArgs({
     warmup: { type: 'string', default: '10s' },
     vus: { type: 'string', default: '50' },
     port: { type: 'string', default: '4000' },
+    other: { type: 'string' },
     'cpu-prof': { type: 'boolean', default: false },
     'heap-prof': { type: 'boolean', default: false },
   },
@@ -51,9 +55,9 @@ if (spawnSync(k6, ['version'], { stdio: 'ignore' }).error) {
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'router-runtime-bench-'));
 const children = new Set();
-const start = (command, argv, env = {}, log) => {
+const start = (command, argv, env = {}, log, cwd = root) => {
   const child = spawn(command, argv, {
-    cwd: root,
+    cwd,
     env: { ...process.env, ...env },
     stdio: ['ignore', log, log],
   });
@@ -101,7 +105,12 @@ await ready(() =>
 
 const rows = [];
 for (const scenario of args.scenarios.split(',')) {
-  const config = path.join(here, `configs/${scenario}.config.ts`);
+  const other = scenario.startsWith('other:');
+  if (other && !args.other) throw new Error(`${scenario} needs --other`);
+  const config = path.join(
+    here,
+    `configs/${other ? scenario.slice('other:'.length) : scenario}.config.ts`,
+  );
   if (!fs.existsSync(config)) throw new Error(`no scenario ${scenario}`);
   for (let run = 1; run <= Number(args.runs); run++) {
     const stats = path.join(tmp, `${scenario}-${run}.stats.jsonl`);
@@ -113,9 +122,14 @@ for (const scenario of args.scenarios.split(',')) {
       process.execPath,
       [
         ...(args['cpu-prof']
-          ? ['--cpu-prof', `--cpu-prof-dir=${path.join(tmp, `${scenario}-${run}.prof`)}`]
+          ? [
+              '--cpu-prof',
+              `--cpu-prof-dir=${path.join(tmp, `${scenario}-${run}.prof`)}`,
+            ]
           : []),
-        ...(args['heap-prof'] ? ['--import', path.join(here, 'heap-prof.mjs')] : []),
+        ...(args['heap-prof']
+          ? ['--import', path.join(here, 'heap-prof.mjs')]
+          : []),
         '--import',
         'tsx',
         '--import',
@@ -133,10 +147,14 @@ for (const scenario of args.scenarios.split(',')) {
         NODE_ENV: 'production',
         ROUTER_RUNTIME_BENCH_STATS: stats,
         ...(args['heap-prof'] && {
-          ROUTER_RUNTIME_BENCH_HEAP_PROF: path.join(tmp, `${scenario}-${run}.heap`),
+          ROUTER_RUNTIME_BENCH_HEAP_PROF: path.join(
+            tmp,
+            `${scenario}-${run}.heap`,
+          ),
         }),
       },
       gatewayLog,
+      other ? path.resolve(args.other) : root,
     );
     await ready(() =>
       fetch(`http://localhost:${args.port}/healthcheck`).then((res) => {

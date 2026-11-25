@@ -27,6 +27,7 @@ import {
   loadConfig,
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
+import { withDefaultFetch } from '../undiciFetch';
 import {
   collectByServiceName,
   collectDevServiceSource,
@@ -500,6 +501,7 @@ export async function runSupergraph(
     );
   }
 
+  config.fetchAPI = withDefaultFetch(config.fetchAPI);
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {
