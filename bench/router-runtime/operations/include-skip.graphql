@@ -1,0 +1,12 @@
+query IncludeSkip($withReviews: Boolean!, $skipPrice: Boolean!) {
+  topProducts(first: 4) {
+    upc
+    price @skip(if: $skipPrice)
+    reviews @include(if: $withReviews) {
+      body
+      author {
+        username
+      }
+    }
+  }
+}

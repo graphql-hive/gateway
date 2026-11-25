@@ -1,0 +1,17 @@
+query AliasesAndTypename {
+  topProducts(first: 3) {
+    __typename
+    upc
+    productName: name
+    cost: price
+    reviews {
+      __typename
+      id
+      writtenBy: author {
+        __typename
+        id
+        name
+      }
+    }
+  }
+}

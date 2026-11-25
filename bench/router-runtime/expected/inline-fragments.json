@@ -1,0 +1,126 @@
+{
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "name": "Uri Goldshtein",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "name": "Dotan Simha",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "Kamil Kisiela",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "name": "Arda Tanrikulu",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "name": "Gil Gardosh",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "name": "Laurin Quast",
+        "reviews": [
+          {
+            "id": "1",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          },
+          {
+            "id": "2",
+            "product": {
+              "upc": "1",
+              "inStock": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

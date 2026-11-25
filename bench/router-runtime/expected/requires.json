@@ -1,0 +1,106 @@
+{
+  "data": {
+    "topProducts": [
+      {
+        "upc": "1",
+        "inStock": true,
+        "shippingEstimate": 50,
+        "reviews": [
+          {
+            "product": {
+              "upc": "1",
+              "shippingEstimate": 50
+            }
+          },
+          {
+            "product": {
+              "upc": "1",
+              "shippingEstimate": 50
+            }
+          },
+          {
+            "product": {
+              "upc": "1",
+              "shippingEstimate": 50
+            }
+          },
+          {
+            "product": {
+              "upc": "1",
+              "shippingEstimate": 50
+            }
+          }
+        ]
+      },
+      {
+        "upc": "2",
+        "inStock": false,
+        "shippingEstimate": 0,
+        "reviews": [
+          {
+            "product": {
+              "upc": "2",
+              "shippingEstimate": 0
+            }
+          },
+          {
+            "product": {
+              "upc": "2",
+              "shippingEstimate": 0
+            }
+          },
+          {
+            "product": {
+              "upc": "2",
+              "shippingEstimate": 0
+            }
+          },
+          {
+            "product": {
+              "upc": "2",
+              "shippingEstimate": 0
+            }
+          }
+        ]
+      },
+      {
+        "upc": "3",
+        "inStock": false,
+        "shippingEstimate": 10,
+        "reviews": [
+          {
+            "product": {
+              "upc": "3",
+              "shippingEstimate": 10
+            }
+          }
+        ]
+      },
+      {
+        "upc": "4",
+        "inStock": false,
+        "shippingEstimate": 50,
+        "reviews": [
+          {
+            "product": {
+              "upc": "4",
+              "shippingEstimate": 50
+            }
+          },
+          {
+            "product": {
+              "upc": "4",
+              "shippingEstimate": 50
+            }
+          }
+        ]
+      },
+      {
+        "upc": "5",
+        "inStock": true,
+        "shippingEstimate": 0,
+        "reviews": []
+      }
+    ]
+  }
+}
