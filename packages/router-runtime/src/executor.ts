@@ -2593,9 +2593,9 @@ function projectObject(
   executionContext: QueryPlanExecutionContext,
   path: (string | number)[],
 ): Record<string, unknown> | null {
-  // null proto because response keys come from client-controlled aliases, `__proto__` would
-  // otherwise hit Object.prototype on read and merge attacker data into it
-  const result: Record<string, unknown> = Object.create(null);
+  // a plain object, not a null prototype one: V8 keeps those in dictionary mode, which makes
+  // building and stringifying the response about twice as slow
+  const result: Record<string, unknown> = {};
   for (const field of fields) {
     if (field.parentTypes && !field.parentTypes.includes(typeName)) {
       continue;
@@ -2659,7 +2659,18 @@ function projectObject(
     if (projected === null && field.nonNull) {
       return null;
     }
-    result[responseKey] = projected;
+    if (responseKey === '__proto__') {
+      // response keys come from client-controlled aliases, assigning `__proto__` would set the
+      // prototype instead of adding the field
+      Object.defineProperty(result, responseKey, {
+        value: projected,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      result[responseKey] = projected;
+    }
   }
   return result;
 }
