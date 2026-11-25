@@ -21,7 +21,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, visit } from 'graphql';
+import { DocumentNode, Kind } from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
   addEntityResolutionFieldsForPubsubPublish,
@@ -351,25 +351,25 @@ export async function unifiedGraphHandler(
  * - checking if it only queries for __typename fields on the Query type.
  */
 function isIntrospection(document: DocumentNode): boolean {
+  // only the top-level fields of the operations count, so there's no need to visit the document
   let onlyQueryTypenameFields = false;
-  let containsIntrospectionField = false;
-  visit(document, {
-    OperationDefinition(node) {
-      for (const sel of node.selectionSet.selections) {
-        if (sel.kind !== 'Field') return BREAK;
-        if (sel.name.value === '__schema' || sel.name.value === '__type') {
-          containsIntrospectionField = true;
-          return BREAK;
-        }
-        if (sel.name.value === '__typename') {
-          onlyQueryTypenameFields = true;
-        } else {
-          onlyQueryTypenameFields = false;
-          return BREAK;
-        }
+  for (const definition of document.definitions) {
+    if (definition.kind !== Kind.OPERATION_DEFINITION) {
+      continue;
+    }
+    for (const selection of definition.selectionSet.selections) {
+      if (selection.kind !== Kind.FIELD) {
+        return onlyQueryTypenameFields;
       }
-      return;
-    },
-  });
-  return containsIntrospectionField || onlyQueryTypenameFields;
+      const name = selection.name.value;
+      if (name === '__schema' || name === '__type') {
+        return true;
+      }
+      if (name !== '__typename') {
+        return false;
+      }
+      onlyQueryTypenameFields = true;
+    }
+  }
+  return onlyQueryTypenameFields;
 }

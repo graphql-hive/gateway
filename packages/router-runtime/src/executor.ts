@@ -96,6 +96,12 @@ export interface QueryPlanExecutionContext {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+
+  /**
+   * Whether projecting the response without paths found a missing non-null field, whose error
+   * needs its path.
+   */
+  missedNonNullField?: boolean;
 }
 
 export interface EntityRepresentation {
@@ -233,16 +239,30 @@ function toExecutionResult(
   executionContext: QueryPlanExecutionContext,
   { projection }: QueryPlan,
 ): ExecutionResult {
-  const executionResult: ExecutionResult = {
-    // nothing fetched without errors means every field was skipped, which is still `data: {}`
-    // and the fields of failed fetches are null, like in the default executor
-    data: projectObject(
+  const fields = getProjectedFields(projection);
+  // without the paths first, only a missing non-null field needs them for its error, then the
+  // response is projected again with them
+  executionContext.missedNonNullField = false;
+  let data = projectObject(
+    executionContext.data,
+    fields,
+    projection.rootType,
+    executionContext,
+    null,
+  );
+  if (executionContext.missedNonNullField) {
+    data = projectObject(
       executionContext.data,
-      projection.fields,
+      fields,
       projection.rootType,
       executionContext,
       [],
-    ),
+    );
+  }
+  const executionResult: ExecutionResult = {
+    // nothing fetched without errors means every field was skipped, which is still `data: {}`
+    // and the fields of failed fetches are null, like in the default executor
+    data,
   };
   if (executionContext.errors.length > 0) {
     executionResult.errors = executionContext.errors.map((error) =>
@@ -2702,6 +2722,34 @@ function getFieldTypeName(
   return getNamedType(field.type).name;
 }
 
+/** A field of the projection with what projecting it needs worked out once per plan. */
+interface ProjectedField extends ProjectionField {
+  responseKey: string;
+  /** Whether `Object.prototype` has the response key, so reading it needs an own check. */
+  inheritedKey: boolean;
+  projectedSelections: ProjectedField[] | undefined;
+}
+
+function prepareProjectedFields(fields: ProjectionField[]): ProjectedField[] {
+  return fields.map((field) => {
+    const responseKey = field.alias ?? field.name;
+    return {
+      ...field,
+      responseKey,
+      inheritedKey: responseKey in Object.prototype,
+      projectedSelections: field.selections
+        ? prepareProjectedFields(field.selections)
+        : undefined,
+    };
+  });
+}
+
+const getProjectedFields = memoize1(function getProjectedFields(
+  projection: QueryPlan['projection'],
+): ProjectedField[] {
+  return prepareProjectedFields(projection.fields);
+});
+
 /**
  * Shapes `object`, of type `typeName`, into the response as the plan's projection says, see
  * `ResponseProjection` of the query planner for the rules. Returns `null` when a `null` in a
@@ -2709,22 +2757,26 @@ function getFieldTypeName(
  */
 function projectObject(
   object: Record<string, unknown>,
-  fields: ProjectionField[],
+  fields: ProjectedField[],
   typeName: string,
   executionContext: QueryPlanExecutionContext,
-  path: (string | number)[],
+  /** The path to `object` for errors, `null` when not tracked. */
+  path: (string | number)[] | null,
 ): Record<string, unknown> | null {
   // a plain object, not a null prototype one: V8 keeps those in dictionary mode, which makes
   // building and stringifying the response about twice as slow
   const result: Record<string, unknown> = {};
-  for (const field of fields) {
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i]!;
     if (field.parentTypes && !field.parentTypes.includes(typeName)) {
       continue;
     }
-    const responseKey = field.alias ?? field.name;
-    const value = Object.hasOwn(object, responseKey)
-      ? object[responseKey]
-      : undefined;
+    const responseKey = field.responseKey;
+    // only a key `Object.prototype` has can be read from it, like `constructor`
+    const value =
+      field.inheritedKey && !Object.hasOwn(object, responseKey)
+        ? undefined
+        : object[responseKey];
     const failure =
       field.condition &&
       evaluateCondition(
@@ -2746,7 +2798,9 @@ function projectObject(
       projected = typeName;
     } else if (value === undefined) {
       projected = null;
-      if (field.nonNull) {
+      if (field.nonNull && !path) {
+        executionContext.missedNonNullField = true;
+      } else if (field.nonNull && path) {
         const fieldPath = [...path, responseKey];
         // an upstream error (like a failed entity lookup) already explains the missing value
         const explained = executionContext.errors.some(
@@ -2765,7 +2819,7 @@ function projectObject(
         }
       }
     } else {
-      path.push(responseKey);
+      path?.push(responseKey);
       projected = projectValue(
         value,
         field,
@@ -2774,7 +2828,7 @@ function projectObject(
         executionContext,
         path,
       );
-      path.pop();
+      path?.pop();
     }
     // a `null` in a non-null field makes the parent `null`
     if (projected === null && field.nonNull) {
@@ -2801,11 +2855,11 @@ function projectObject(
  */
 function projectValue(
   value: unknown,
-  field: ProjectionField,
+  field: ProjectedField,
   parentTypeName: string,
   depth: number,
   executionContext: QueryPlanExecutionContext,
-  path: (string | number)[],
+  path: (string | number)[] | null,
 ): unknown {
   if (value == null) {
     return null;
@@ -2814,7 +2868,7 @@ function projectValue(
     const itemNonNull = field.itemNonNull?.[depth];
     const items = new Array(value.length);
     for (let i = 0; i < value.length; i++) {
-      path.push(i);
+      path?.push(i);
       const item = projectValue(
         value[i],
         field,
@@ -2823,7 +2877,7 @@ function projectValue(
         executionContext,
         path,
       );
-      path.pop();
+      path?.pop();
       // a `null` in a list of non-null items makes the list `null`
       if (item === null && itemNonNull) {
         return null;
@@ -2839,7 +2893,7 @@ function projectValue(
   const object = value as Record<string, unknown>;
   return projectObject(
     object,
-    field.selections,
+    field.projectedSelections!,
     typeof object['__typename'] === 'string'
       ? object['__typename']
       : getFieldTypeName(executionContext, parentTypeName, field.name),

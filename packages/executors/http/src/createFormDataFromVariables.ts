@@ -35,6 +35,69 @@ function collectAsyncIterableValues<T>(
   return iterate();
 }
 
+/** What `extractFiles` takes out of the variables to send as a file. */
+function isUpload(v: any) {
+  return (
+    isExtractableFile(v) ||
+    v?.promise ||
+    isAsyncIterable(v) ||
+    v?.then ||
+    typeof v?.arrayBuffer === 'function'
+  );
+}
+
+/** Like `is-plain-obj`, which `extractFiles` goes into. */
+function isPlainObject(value: object): boolean {
+  const prototype = Object.getPrototypeOf(value);
+  return (
+    (prototype === null ||
+      prototype === Object.prototype ||
+      Object.getPrototypeOf(prototype) === null) &&
+    !(Symbol.toStringTag in value) &&
+    !(Symbol.iterator in value)
+  );
+}
+
+/**
+ * Whether `extractFiles` might find an upload in `value`, going into the same lists and plain
+ * objects, but without cloning them or tracking their paths. Very deep values, like cyclic
+ * ones, are left to `extractFiles`.
+ */
+function mayHaveUpload(value: unknown, depth: number): boolean {
+  // only objects and functions can be uploads
+  if (
+    value === null ||
+    (typeof value !== 'object' && typeof value !== 'function')
+  ) {
+    return false;
+  }
+  if (isUpload(value)) {
+    return true;
+  }
+  if (depth > 64) {
+    return true;
+  }
+  if (
+    Array.isArray(value) ||
+    (typeof FileList !== 'undefined' && value instanceof FileList)
+  ) {
+    for (const item of value as ArrayLike<unknown> & Iterable<unknown>) {
+      if (mayHaveUpload(item, depth + 1)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (typeof value === 'object' && isPlainObject(value)) {
+    for (const key in value) {
+      if (mayHaveUpload((value as Record<string, unknown>)[key], depth + 1)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function createFormDataFromVariables(
   body: SerializedExecutionRequest,
   {
@@ -49,16 +112,18 @@ export function createFormDataFromVariables(
     return JSON.stringify(body);
   }
   const vars = Object.assign({}, body.variables);
-  const { clone, files } = extractFiles(
-    vars,
-    ((v: any) =>
-      isExtractableFile(v) ||
-      v?.promise ||
-      isAsyncIterable(v) ||
-      v?.then ||
-      typeof v?.arrayBuffer === 'function') as any,
-    'variables',
-  );
+  // nearly every request has no files, finding that out shouldn't clone all its variables
+  let mayHaveFiles = false;
+  for (const key in vars) {
+    if (mayHaveUpload(vars[key], 0)) {
+      mayHaveFiles = true;
+      break;
+    }
+  }
+  if (!mayHaveFiles) {
+    return JSON.stringify(body);
+  }
+  const { clone, files } = extractFiles(vars, isUpload as any, 'variables');
   if (files.size === 0) {
     return JSON.stringify(body);
   }
