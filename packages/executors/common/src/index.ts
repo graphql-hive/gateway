@@ -78,3 +78,5 @@ export interface UpstreamErrorExtensions {
     body?: unknown;
   };
 }
+
+export * from './rawExecutionResult';

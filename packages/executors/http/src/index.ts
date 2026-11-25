@@ -1,9 +1,12 @@
 import { abortSignalAny, disposeAbortSignal } from '@graphql-hive/signal';
 import {
+  cloneRawExecutionResult,
+  createRawExecutionResult,
   defaultPrintFn,
   SerializedExecutionRequest,
   serializeExecutionRequest,
   UpstreamErrorExtensions,
+  wantsRawResponse,
 } from '@graphql-tools/executor-common';
 import {
   DisposableAsyncExecutor,
@@ -220,6 +223,8 @@ export interface InflightRequestOptions {
 }
 
 type InflightRequestId = string;
+
+const textDecoder = new TextDecoder();
 
 /**
  * Deep copies a value parsed from JSON, many times faster than `structuredClone`.
@@ -485,6 +490,67 @@ export function buildHTTPExecutor(
       };
     }
 
+    function parseResponseText(result: string): ExecutionResult {
+      upstreamErrorExtensions.response ||= {};
+      upstreamErrorExtensions.response.body = result;
+      if (!result) {
+        const message = 'No response returned';
+        upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+        return {
+          errors: [
+            new GraphQLError(message, {
+              extensions: upstreamErrorExtensions,
+              originalError: new Error(message),
+            }),
+          ],
+        };
+      }
+      try {
+        const parsedResult = JSON.parse(result);
+        upstreamErrorExtensions.response.body = parsedResult;
+        if (
+          parsedResult.data == null &&
+          (parsedResult.errors == null || parsedResult.errors.length === 0)
+        ) {
+          const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
+          upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+          return {
+            errors: [
+              new GraphQLError(message, {
+                originalError: new Error(message),
+                extensions: upstreamErrorExtensions,
+              }),
+            ],
+          };
+        }
+        if (Array.isArray(parsedResult.errors)) {
+          return {
+            ...parsedResult,
+            errors: parsedResult.errors.map(
+              ({
+                message,
+                ...options
+              }: {
+                message: string;
+                extensions: Record<string, unknown>;
+              }) => new GraphQLError(message, options),
+            ),
+          };
+        }
+        return parsedResult;
+      } catch (e: any) {
+        upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+        return {
+          errors: [
+            new GraphQLError(`Unexpected response: ${JSON.stringify(result)}`, {
+              extensions: upstreamErrorExtensions,
+              originalError: e,
+            }),
+          ],
+        };
+      }
+    }
+
     function handleInflightRequest(
       inflightRequestOptions: InflightRequestOptions,
       context?: any,
@@ -563,79 +629,28 @@ export function buildHTTPExecutor(
                   });
                 }
 
+                if (
+                  wantsRawResponse(request) &&
+                  fetchResult.ok &&
+                  contentType?.includes('json') &&
+                  !options?.exposeHTTPDetailsInExtensions
+                ) {
+                  // the body as bytes, parsed only if something reads it
+                  return handleMaybePromise(
+                    () => fetchResult.arrayBuffer(),
+                    (body) =>
+                      createRawExecutionResult(new Uint8Array(body), (bytes) =>
+                        parseResponseText(textDecoder.decode(bytes)),
+                      ),
+                  );
+                }
+
                 return fetchResult.text();
               },
-              (result) => {
-                if (typeof result === 'string') {
-                  upstreamErrorExtensions.response ||= {};
-                  upstreamErrorExtensions.response.body = result;
-                  if (result) {
-                    try {
-                      const parsedResult = JSON.parse(result);
-                      upstreamErrorExtensions.response.body = parsedResult;
-                      if (
-                        parsedResult.data == null &&
-                        (parsedResult.errors == null ||
-                          parsedResult.errors.length === 0)
-                      ) {
-                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
-                        upstreamErrorExtensions.code =
-                          'RESPONSE_VALIDATION_FAILED';
-                        return {
-                          errors: [
-                            new GraphQLError(message, {
-                              originalError: new Error(message),
-                              extensions: upstreamErrorExtensions,
-                            }),
-                          ],
-                        };
-                      }
-                      if (Array.isArray(parsedResult.errors)) {
-                        return {
-                          ...parsedResult,
-                          errors: parsedResult.errors.map(
-                            ({
-                              message,
-                              ...options
-                            }: {
-                              message: string;
-                              extensions: Record<string, unknown>;
-                            }) => new GraphQLError(message, options),
-                          ),
-                        };
-                      }
-                      return parsedResult;
-                    } catch (e: any) {
-                      upstreamErrorExtensions.code =
-                        'RESPONSE_VALIDATION_FAILED';
-                      return {
-                        errors: [
-                          new GraphQLError(
-                            `Unexpected response: ${JSON.stringify(result)}`,
-                            {
-                              extensions: upstreamErrorExtensions,
-                              originalError: e,
-                            },
-                          ),
-                        ],
-                      };
-                    }
-                  } else {
-                    const message = 'No response returned';
-                    upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
-                    return {
-                      errors: [
-                        new GraphQLError(message, {
-                          extensions: upstreamErrorExtensions,
-                          originalError: new Error(message),
-                        }),
-                      ],
-                    };
-                  }
-                } else {
-                  return result;
-                }
-              },
+              (result) =>
+                typeof result === 'string'
+                  ? parseResponseText(result)
+                  : (result as ExecutionResult),
               handleError,
             ),
           handleError,
@@ -719,7 +734,15 @@ export function buildHTTPExecutor(
           // consumers may change the result, every one gets its own copy. the consumers take
           // the result in the order they came, after the request left the inflight requests,
           // so the last one can take the original
-          if (result == null || !result.data || consumers === 1) {
+          if (result == null || consumers === 1) {
+            return result;
+          }
+          // the body as bytes is never changed, every consumer parses its own copy if it needs one
+          const raw = cloneRawExecutionResult(result);
+          if (raw) {
+            return raw;
+          }
+          if (!result.data) {
             return result;
           }
           const clonedResult: ExecutionResult = {
