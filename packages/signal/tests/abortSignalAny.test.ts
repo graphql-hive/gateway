@@ -1,6 +1,7 @@
+import { getEventListeners } from 'node:events';
 import LeakDetector from 'jest-leak-detector';
 import { describe, expect, it } from 'vitest';
-import { abortSignalAny } from '../src/abortSignalAny';
+import { abortSignalAny, disposeAbortSignal } from '../src/abortSignalAny';
 
 describe.skipIf(
   // doesnt report leaks locally, but does in the CI.
@@ -14,6 +15,54 @@ describe.skipIf(
     const signal = abortSignalAny([ctrl.signal]);
 
     expect(ctrl.signal).toBe(signal);
+  });
+
+  it('should return the signal passed more than once', () => {
+    const ctrl = new AbortController();
+
+    expect(abortSignalAny([ctrl.signal, ctrl.signal])).toBe(ctrl.signal);
+  });
+
+  it('should leave out the signals another one already follows', () => {
+    const ctrl1 = new AbortController();
+    const ctrl2 = new AbortController();
+    const ctrl3 = new AbortController();
+    const combined = abortSignalAny([ctrl1.signal, ctrl2.signal])!;
+    const nested = abortSignalAny([combined, ctrl3.signal])!;
+
+    // `combined` already follows `ctrl1`, and `nested` follows both
+    expect(abortSignalAny([ctrl1.signal, combined])).toBe(combined);
+    expect(abortSignalAny([ctrl2.signal, nested, ctrl1.signal])).toBe(nested);
+
+    // a signal it doesn't follow still gets combined
+    const other = new AbortController();
+    const withOther = abortSignalAny([combined, other.signal])!;
+    expect(withOther).not.toBe(combined);
+    other.abort('other');
+    expect(withOther.aborted).toBe(true);
+    expect(withOther.reason).toBe('other');
+
+    // and aborting a left out source still aborts what follows it
+    ctrl1.abort('first');
+    expect(combined.aborted).toBe(true);
+    expect(nested.aborted).toBe(true);
+    expect(nested.reason).toBe('first');
+  });
+
+  it('should stop following its signals once disposed', () => {
+    const ctrl1 = new AbortController();
+    const ctrl2 = new AbortController();
+    const combined = abortSignalAny([ctrl1.signal, ctrl2.signal])!;
+    expect(getEventListeners(ctrl1.signal, 'abort')).toHaveLength(1);
+
+    disposeAbortSignal(combined);
+
+    expect(getEventListeners(ctrl1.signal, 'abort')).toHaveLength(0);
+    expect(getEventListeners(ctrl2.signal, 'abort')).toHaveLength(0);
+    ctrl1.abort('first');
+    expect(combined.aborted).toBe(false);
+    // and it isn't taken for following them anymore
+    expect(abortSignalAny([ctrl2.signal, combined])).not.toBe(combined);
   });
 
   it('should return undefined if no signals have been passed', () => {

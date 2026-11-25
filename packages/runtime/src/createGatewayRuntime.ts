@@ -744,6 +744,7 @@ export function createGatewayRuntime<
           : undefined,
       handleProgressiveOverride: config.progressiveOverride,
       maxAliasesPerRequest: config.maxAliasesPerRequest,
+      entityReuse: config.entityReuse,
       // Public `gracefulSchemaReload` maps onto the manager's
       // schemaReloadDrainTimeout / maxConcurrentSchemaGenerations opts.
       schemaReloadDrainTimeout: gracefulSchemaReload?.drainTimeout,

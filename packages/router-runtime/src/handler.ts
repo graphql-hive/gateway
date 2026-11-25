@@ -8,6 +8,7 @@ import {
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import type { SubschemaConfig } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
   filterInternalFieldsAndTypes,
@@ -20,7 +21,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, visit } from 'graphql';
+import { DocumentNode, Kind } from 'graphql';
 import { executeQueryPlan } from './executor';
 import {
   addEntityResolutionFieldsForPubsubPublish,
@@ -99,7 +100,12 @@ export async function unifiedGraphHandler(
     await import(moduleName);
   const supergraphSdl = opts.getUnifiedGraphSDL();
   // the planner validates the limits and throws on invalid ones
-  let plannerOptions: QueryPlannerOptions | undefined;
+  let plannerOptions:
+    | (QueryPlannerOptions & {
+        /** Plans `entityReuse` on the fetches, see `executeQueryPlan`. */
+        entityReuse?: boolean;
+      })
+    | undefined;
   if (typeof opts.maxAliasesPerRequest === 'object') {
     const { '*': all, ...subgraphs } = opts.maxAliasesPerRequest;
     plannerOptions = {
@@ -108,6 +114,9 @@ export async function unifiedGraphHandler(
     };
   } else if (opts.maxAliasesPerRequest != null) {
     plannerOptions = { maxAliasesPerRequest: opts.maxAliasesPerRequest };
+  }
+  if (opts.entityReuse) {
+    plannerOptions = { ...plannerOptions, entityReuse: true };
   }
   const queryPlanner = new QueryPlanner(supergraphSdl, plannerOptions);
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
@@ -130,8 +139,8 @@ export async function unifiedGraphHandler(
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
   // the planner version keeps plans of other versions out, their shape may differ.
-  // plans carry the alias limits they were planned with, so gateways with other limits can't
-  // share them either
+  // plans carry the alias limits and the entity reuse they were planned with, so gateways with
+  // other options can't share them either
   const remotePlanCacheKeyPrefix = opts.cache
     ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:${await sha256(
         JSON.stringify([
@@ -139,6 +148,8 @@ export async function unifiedGraphHandler(
           Object.entries(
             plannerOptions?.subgraphMaxAliasesPerRequest ?? {},
           ).sort(),
+          // only when on, so the keys of the plans without it stay as they were
+          ...(plannerOptions?.entityReuse ? ['entityReuse'] : []),
         ]),
       )}:`
     : undefined;
@@ -153,6 +164,10 @@ export async function unifiedGraphHandler(
   // read once because the labels never change for a planner, and the native getter
   // throws when called while a `planAsync` of a concurrent request is in flight
   const overrideLabels = queryPlanner.overrideLabels;
+
+  // experimental, see `executeQueryPlan`
+  const responseTape =
+    globalThis.process?.env?.['HIVE_ROUTER_RUNTIME_RESPONSE_TAPE'] === '1';
   const hasProgressiveOverride =
     overrideLabels.length > 0 || queryPlanner.overridePercentages.length > 0;
 
@@ -234,10 +249,72 @@ export async function unifiedGraphHandler(
         operationCache.set(memoryCacheKey, queryPlan);
         return queryPlan;
       },
+      (err) => {
+        // a failed plan, like one aborted by the request that asked for it first, is planned
+        // again for the next request
+        operationCache.delete(memoryCacheKey);
+        throw err;
+      },
     );
     operationCache.set(memoryCacheKey, plan);
     return plan;
   }
+
+  // a subgraph's transforms never change, so they're looked up once per subgraph instead of
+  // finding the subgraph by name on every request. `null` when it has none
+  const transformsBySubgraph = new Map<
+    string,
+    NonNullable<SubschemaConfig['transforms']> | null
+  >();
+  function executeSubgraph(
+    subgraphName: string,
+    executionRequest: ExecutionRequest,
+  ) {
+    let transforms = transformsBySubgraph.get(subgraphName);
+    if (transforms === undefined) {
+      transforms = getSubschema(subgraphName).transforms || null;
+      if (!transforms?.length) {
+        transforms = null;
+      }
+      transformsBySubgraph.set(subgraphName, transforms);
+    }
+    return transforms
+      ? onSubgraphExecuteWithTransforms(
+          subgraphName,
+          executionRequest,
+          opts.onSubgraphExecute,
+          transforms,
+        )
+      : opts.onSubgraphExecute(subgraphName, executionRequest);
+  }
+
+  // without `@pubsubOperation` or `@pubsubPublish` fields every request goes straight to the
+  // subgraph, without wrapping it in the pubsub handling
+  const onSubgraphExecute =
+    pubsubOperationMetadataMap.size || pubsubPublishMetadataMap.size
+      ? (subgraphName: string, executionRequest: ExecutionRequest) =>
+          handlePubsubOperationField(
+            supergraphSchema,
+            addEntityResolutionFieldsForPubsubPublish(
+              supergraphSchema,
+              executionRequest,
+              subgraphName,
+              pubsubPublishMetadataMap,
+            ),
+            pubsubOperationMetadataMap,
+            (executionRequest) =>
+              handleMaybePromiseMaybeAsyncIterable(
+                () => executeSubgraph(subgraphName, executionRequest),
+                (executionResult: ExecutionResult) =>
+                  handleResultWithPubSubPublish(
+                    supergraphSchema,
+                    pubsubPublishMetadataMap,
+                    executionRequest,
+                    executionResult,
+                  ),
+              ),
+          )
+      : executeSubgraph;
 
   return {
     unifiedGraph: supergraphSchema,
@@ -262,35 +339,9 @@ export async function unifiedGraphHandler(
             entityKeys,
             possibleTypes,
             executionRequest,
-            onSubgraphExecute: (subgraphName, executionRequest) =>
-              handlePubsubOperationField(
-                supergraphSchema,
-                addEntityResolutionFieldsForPubsubPublish(
-                  supergraphSchema,
-                  executionRequest,
-                  subgraphName,
-                  pubsubPublishMetadataMap,
-                ),
-                pubsubOperationMetadataMap,
-                (executionRequest) =>
-                  handleMaybePromiseMaybeAsyncIterable(
-                    () =>
-                      onSubgraphExecuteWithTransforms(
-                        subgraphName,
-                        executionRequest,
-                        opts.onSubgraphExecute,
-                        getSubschema,
-                      ),
-                    (executionResult: ExecutionResult) =>
-                      handleResultWithPubSubPublish(
-                        supergraphSchema,
-                        pubsubPublishMetadataMap,
-                        executionRequest,
-                        executionResult,
-                      ),
-                  ),
-              ),
+            onSubgraphExecute,
             queryPlan,
+            responseTape,
           });
         },
       );
@@ -305,25 +356,25 @@ export async function unifiedGraphHandler(
  * - checking if it only queries for __typename fields on the Query type.
  */
 function isIntrospection(document: DocumentNode): boolean {
+  // only the top-level fields of the operations count, so there's no need to visit the document
   let onlyQueryTypenameFields = false;
-  let containsIntrospectionField = false;
-  visit(document, {
-    OperationDefinition(node) {
-      for (const sel of node.selectionSet.selections) {
-        if (sel.kind !== 'Field') return BREAK;
-        if (sel.name.value === '__schema' || sel.name.value === '__type') {
-          containsIntrospectionField = true;
-          return BREAK;
-        }
-        if (sel.name.value === '__typename') {
-          onlyQueryTypenameFields = true;
-        } else {
-          onlyQueryTypenameFields = false;
-          return BREAK;
-        }
+  for (const definition of document.definitions) {
+    if (definition.kind !== Kind.OPERATION_DEFINITION) {
+      continue;
+    }
+    for (const selection of definition.selectionSet.selections) {
+      if (selection.kind !== Kind.FIELD) {
+        return onlyQueryTypenameFields;
       }
-      return;
-    },
-  });
-  return containsIntrospectionField || onlyQueryTypenameFields;
+      const name = selection.name.value;
+      if (name === '__schema' || name === '__type') {
+        return true;
+      }
+      if (name !== '__typename') {
+        return false;
+      }
+      onlyQueryTypenameFields = true;
+    }
+  }
+  return onlyQueryTypenameFields;
 }

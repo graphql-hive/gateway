@@ -1,3 +1,4 @@
+import { addRawErrorTransform } from '@graphql-tools/executor-common';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { GraphQLError } from 'graphql';
 import { GatewayPlugin } from '../types';
@@ -51,6 +52,15 @@ export function useSubgraphErrorPlugin<
               }
             },
           };
+        }
+        // a result that's still the response's bytes gets its errors changed once they're parsed,
+        // reading them would parse it all now
+        if (
+          addRawErrorTransform(result, (error) =>
+            extendError(error, subgraphName),
+          )
+        ) {
+          return;
         }
         if (result.errors) {
           for (const error of result.errors) {

@@ -1,0 +1,13 @@
+query Requires {
+  topProducts(first: 5) {
+    upc
+    inStock
+    shippingEstimate
+    reviews {
+      product {
+        upc
+        shippingEstimate
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "data": {
+    "topProducts": [
+      {
+        "__typename": "Product",
+        "upc": "1",
+        "productName": "Table",
+        "cost": 899,
+        "reviews": [
+          {
+            "__typename": "Review",
+            "id": "1",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "2",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "3",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "4",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          }
+        ]
+      },
+      {
+        "__typename": "Product",
+        "upc": "2",
+        "productName": "Couch",
+        "cost": 1299,
+        "reviews": [
+          {
+            "__typename": "Review",
+            "id": "5",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "6",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "7",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          },
+          {
+            "__typename": "Review",
+            "id": "8",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          }
+        ]
+      },
+      {
+        "__typename": "Product",
+        "upc": "3",
+        "productName": "Glass",
+        "cost": 15,
+        "reviews": [
+          {
+            "__typename": "Review",
+            "id": "9",
+            "writtenBy": {
+              "__typename": "User",
+              "id": "1",
+              "name": "Uri Goldshtein"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -303,6 +303,19 @@ export interface GatewayConfigSupergraph<
   maxAliasesPerRequest?: number | Record<string, number>;
 
   /**
+   * Copies entities an earlier fetch already put in the response, instead of asking a subgraph
+   * for them again, like Hive Router's `traffic_shaping.entity_reuse`. An entity fetch leaves out
+   * the entities it can copy, and a fetch with nothing left to ask for isn't sent at all.
+   *
+   * Only the Hive Router runtime (`@graphql-hive/router-runtime`) uses it. It never copies once
+   * the request has an error, in mutations, fields a subgraph only has through `@provides`, or
+   * entities whose representation has a missing or null field.
+   *
+   * @default false
+   */
+  entityReuse?: boolean;
+
+  /**
    * Gracefully reload the supergraph by letting in-flight operations finish on
    * the previous schema generation instead of aborting them. Disabled by
    * default (previous generation is disposed immediately on reload).

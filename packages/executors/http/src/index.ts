@@ -1,9 +1,12 @@
-import { abortSignalAny } from '@graphql-hive/signal';
+import { abortSignalAny, disposeAbortSignal } from '@graphql-hive/signal';
 import {
+  cloneRawExecutionResult,
+  createRawExecutionResult,
   defaultPrintFn,
   SerializedExecutionRequest,
   serializeExecutionRequest,
   UpstreamErrorExtensions,
+  wantsRawResponse,
 } from '@graphql-tools/executor-common';
 import {
   DisposableAsyncExecutor,
@@ -16,6 +19,7 @@ import {
   getMultipartContentType,
   getOperationASTFromRequest,
   INCREMENTAL_DELIVERY_SPECS,
+  isAsyncIterable,
   MaybeAsyncIterable,
   type IncrementalSpec,
 } from '@graphql-tools/utils';
@@ -220,6 +224,39 @@ export interface InflightRequestOptions {
 
 type InflightRequestId = string;
 
+const textDecoder = new TextDecoder();
+
+/**
+ * Deep copies a value parsed from JSON, many times faster than `structuredClone`.
+ */
+function copyJson<T>(value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const copy = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      copy[i] = copyJson(value[i]);
+    }
+    return copy as T;
+  }
+  const copy: Record<string, unknown> = {};
+  for (const key in value) {
+    if (key === '__proto__') {
+      // an own `__proto__` from JSON is data, assigning it would set the prototype
+      Object.defineProperty(copy, key, {
+        value: copyJson(value[key]),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      copy[key] = copyJson(value[key]);
+    }
+  }
+  return copy as T;
+}
+
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
@@ -246,7 +283,11 @@ export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
-  const sharedInflightRequests = new WeakSet<Promise<ExecutionResult>>();
+  /** How many consumers of an inflight request haven't taken its result yet. */
+  const inflightRequestConsumers = new WeakMap<
+    Promise<ExecutionResult>,
+    number
+  >();
   // inflight requests are scoped per executor and per context because the fetch
   // fn receives the context and may behave differently for each
   const inflightRequestsByContext = new WeakMap<
@@ -449,6 +490,67 @@ export function buildHTTPExecutor(
       };
     }
 
+    function parseResponseText(result: string): ExecutionResult {
+      upstreamErrorExtensions.response ||= {};
+      upstreamErrorExtensions.response.body = result;
+      if (!result) {
+        const message = 'No response returned';
+        upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+        return {
+          errors: [
+            new GraphQLError(message, {
+              extensions: upstreamErrorExtensions,
+              originalError: new Error(message),
+            }),
+          ],
+        };
+      }
+      try {
+        const parsedResult = JSON.parse(result);
+        upstreamErrorExtensions.response.body = parsedResult;
+        if (
+          parsedResult.data == null &&
+          (parsedResult.errors == null || parsedResult.errors.length === 0)
+        ) {
+          const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
+          upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+          return {
+            errors: [
+              new GraphQLError(message, {
+                originalError: new Error(message),
+                extensions: upstreamErrorExtensions,
+              }),
+            ],
+          };
+        }
+        if (Array.isArray(parsedResult.errors)) {
+          return {
+            ...parsedResult,
+            errors: parsedResult.errors.map(
+              ({
+                message,
+                ...options
+              }: {
+                message: string;
+                extensions: Record<string, unknown>;
+              }) => new GraphQLError(message, options),
+            ),
+          };
+        }
+        return parsedResult;
+      } catch (e: any) {
+        upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
+        return {
+          errors: [
+            new GraphQLError(`Unexpected response: ${JSON.stringify(result)}`, {
+              extensions: upstreamErrorExtensions,
+              originalError: e,
+            }),
+          ],
+        };
+      }
+    }
+
     function handleInflightRequest(
       inflightRequestOptions: InflightRequestOptions,
       context?: any,
@@ -527,79 +629,28 @@ export function buildHTTPExecutor(
                   });
                 }
 
+                if (
+                  wantsRawResponse(request) &&
+                  fetchResult.ok &&
+                  contentType?.includes('json') &&
+                  !options?.exposeHTTPDetailsInExtensions
+                ) {
+                  // the body as bytes, parsed only if something reads it
+                  return handleMaybePromise(
+                    () => fetchResult.arrayBuffer(),
+                    (body) =>
+                      createRawExecutionResult(new Uint8Array(body), (bytes) =>
+                        parseResponseText(textDecoder.decode(bytes)),
+                      ),
+                  );
+                }
+
                 return fetchResult.text();
               },
-              (result) => {
-                if (typeof result === 'string') {
-                  upstreamErrorExtensions.response ||= {};
-                  upstreamErrorExtensions.response.body = result;
-                  if (result) {
-                    try {
-                      const parsedResult = JSON.parse(result);
-                      upstreamErrorExtensions.response.body = parsedResult;
-                      if (
-                        parsedResult.data == null &&
-                        (parsedResult.errors == null ||
-                          parsedResult.errors.length === 0)
-                      ) {
-                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
-                        upstreamErrorExtensions.code =
-                          'RESPONSE_VALIDATION_FAILED';
-                        return {
-                          errors: [
-                            new GraphQLError(message, {
-                              originalError: new Error(message),
-                              extensions: upstreamErrorExtensions,
-                            }),
-                          ],
-                        };
-                      }
-                      if (Array.isArray(parsedResult.errors)) {
-                        return {
-                          ...parsedResult,
-                          errors: parsedResult.errors.map(
-                            ({
-                              message,
-                              ...options
-                            }: {
-                              message: string;
-                              extensions: Record<string, unknown>;
-                            }) => new GraphQLError(message, options),
-                          ),
-                        };
-                      }
-                      return parsedResult;
-                    } catch (e: any) {
-                      upstreamErrorExtensions.code =
-                        'RESPONSE_VALIDATION_FAILED';
-                      return {
-                        errors: [
-                          new GraphQLError(
-                            `Unexpected response: ${JSON.stringify(result)}`,
-                            {
-                              extensions: upstreamErrorExtensions,
-                              originalError: e,
-                            },
-                          ),
-                        ],
-                      };
-                    }
-                  } else {
-                    const message = 'No response returned';
-                    upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
-                    return {
-                      errors: [
-                        new GraphQLError(message, {
-                          extensions: upstreamErrorExtensions,
-                          originalError: new Error(message),
-                        }),
-                      ],
-                    };
-                  }
-                } else {
-                  return result;
-                }
-              },
+              (result) =>
+                typeof result === 'string'
+                  ? parseResponseText(result)
+                  : (result as ExecutionResult),
               handleError,
             ),
           handleError,
@@ -654,13 +705,16 @@ export function buildHTTPExecutor(
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
       if (inflightRequest) {
-        // Isolate every consumer when a request is actually shared, including
-        // the consumer that originally started the request.
-        sharedInflightRequests.add(inflightRequest as Promise<ExecutionResult>);
+        const promise = inflightRequest as Promise<ExecutionResult>;
+        inflightRequestConsumers.set(
+          promise,
+          inflightRequestConsumers.get(promise)! + 1,
+        );
       }
       if (!inflightRequest) {
         inflightRequest = runInflightRequest();
         if (isPromise(inflightRequest)) {
+          inflightRequestConsumers.set(inflightRequest, 1);
           inflightRequests.set(inflightRequestId, inflightRequest);
           inflightRequest.finally(() => {
             inflightRequests.delete(inflightRequestId);
@@ -671,25 +725,46 @@ export function buildHTTPExecutor(
       return handleMaybePromise(
         () => inflightRequest,
         (result) => {
-          if (
-            result == null ||
-            !result.data ||
-            !sharedInflightRequests.has(
-              inflightRequest as Promise<ExecutionResult>,
-            )
-          ) {
+          const promise = inflightRequest as Promise<ExecutionResult>;
+          const consumers = inflightRequestConsumers.get(promise);
+          if (consumers == null) {
+            return result;
+          }
+          inflightRequestConsumers.set(promise, consumers - 1);
+          // consumers may change the result, every one gets its own copy. the consumers take
+          // the result in the order they came, after the request left the inflight requests,
+          // so the last one can take the original
+          if (result == null || consumers === 1) {
+            return result;
+          }
+          // the body as bytes is never changed, every consumer parses its own copy if it needs one
+          const raw = cloneRawExecutionResult(result);
+          if (raw) {
+            return raw;
+          }
+          if (!result.data) {
             return result;
           }
           const clonedResult: ExecutionResult = {
             ...result,
           };
           if (result.data) {
-            clonedResult.data = structuredClone(result.data);
+            clonedResult.data = copyJson(result.data);
           }
           return clonedResult;
         },
       );
     }
+
+    // once the result is in, the request's signal is done with. a stream still reads with it
+    const releaseSignal = <TResult>(result: TResult): TResult => {
+      if (!isAsyncIterable(result)) {
+        // it would otherwise keep a listener on the executor's dispose signal until it's
+        // garbage collected, and every request adding one makes adding them slower
+        disposeAbortSignal(signal);
+      }
+      return result;
+    };
 
     return handleMaybePromise(
       () => serializeFn(),
@@ -715,10 +790,14 @@ export function buildHTTPExecutor(
               credentials: options?.credentials,
             };
             upstreamErrorExtensions.request.url = finalUrl;
-            return handleInflightRequest(
-              inflightRequestOptions,
-              request.context,
-              request.info,
+            return handleMaybePromise(
+              () =>
+                handleInflightRequest(
+                  inflightRequestOptions,
+                  request.context,
+                  request.info,
+                ),
+              releaseSignal,
             );
           }
           case 'POST': {
@@ -742,10 +821,14 @@ export function buildHTTPExecutor(
                   credentials: options?.credentials,
                   signal,
                 };
-                return handleInflightRequest(
-                  inflightRequestOptions,
-                  request.context,
-                  request.info,
+                return handleMaybePromise(
+                  () =>
+                    handleInflightRequest(
+                      inflightRequestOptions,
+                      request.context,
+                      request.info,
+                    ),
+                  releaseSignal,
                 );
               },
               handleError,

@@ -16,6 +16,11 @@ import type {
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
 import {
+  getRawResponseBytes,
+  isSharedRawResponse,
+  requestRawResponse,
+} from '@graphql-tools/executor-common';
+import {
   coerceGetVariableValuesResult,
   ExecutionRequest,
   getOperationASTFromDocument,
@@ -50,6 +55,14 @@ import {
   VariableDefinitionNode,
   visit,
 } from 'graphql';
+import {
+  K_ARR,
+  K_OBJ,
+  quotedKey,
+  ResponseTape,
+  ResponseWriter,
+  type TapeKey,
+} from './tape';
 import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
 export interface QueryPlanExecutionContext {
@@ -96,6 +109,20 @@ export interface QueryPlanExecutionContext {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+
+  /**
+   * Whether projecting the response without paths found a missing non-null field, whose error
+   * needs its path.
+   */
+  missedNonNullField?: boolean;
+
+  /**
+   * The data as the subgraphs' response bytes, when the plan runs on a {@link ResponseTape}
+   * instead of parsed objects. `data` isn't used then.
+   */
+  tape?: ResponseTape;
+  /** The tape index of the root object, what every root fetch's data is merged into. */
+  tapeRoot?: number;
 }
 
 export interface EntityRepresentation {
@@ -165,6 +192,11 @@ export interface QueryPlanExecutorOptions {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  /**
+   * Experimental: keeps the data as the subgraphs' response bytes and writes the response
+   * straight from them, see {@link ResponseTape}, for the plans it supports.
+   */
+  responseTape?: boolean;
 }
 
 export function executeQueryPlan({
@@ -174,6 +206,7 @@ export function executeQueryPlan({
   supergraphSchema,
   entityKeys,
   possibleTypes,
+  responseTape,
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
@@ -189,6 +222,15 @@ export function executeQueryPlan({
     return { errors: executionContext };
   }
   const subscription = schedule.subscription;
+  if (
+    responseTape &&
+    executionContext.operationType === OperationTypeNode.QUERY &&
+    supportsResponseTape(queryPlan)
+  ) {
+    executionContext.tape = tapePool.pop() ?? new ResponseTape();
+    // what the root fetches merge into, the data is an object even when none ran
+    executionContext.tapeRoot = executionContext.tape.add(EMPTY_OBJECT, true);
+  }
   if (!subscription) {
     return handleMaybePromise(
       () => runFetches(schedule, executionContext, schedule.waits),
@@ -233,16 +275,33 @@ function toExecutionResult(
   executionContext: QueryPlanExecutionContext,
   { projection }: QueryPlan,
 ): ExecutionResult {
-  const executionResult: ExecutionResult = {
-    // nothing fetched without errors means every field was skipped, which is still `data: {}`
-    // and the fields of failed fetches are null, like in the default executor
-    data: projectObject(
+  if (executionContext.tape) {
+    return writeResponseFromTape(executionContext, projection);
+  }
+  const fields = getProjectedFields(projection);
+  // without the paths first, only a missing non-null field needs them for its error, then the
+  // response is projected again with them
+  executionContext.missedNonNullField = false;
+  let data = projectObject(
+    executionContext.data,
+    fields,
+    projection.rootType,
+    executionContext,
+    null,
+  );
+  if (executionContext.missedNonNullField) {
+    data = projectObject(
       executionContext.data,
-      projection.fields,
+      fields,
       projection.rootType,
       executionContext,
       [],
-    ),
+    );
+  }
+  const executionResult: ExecutionResult = {
+    // nothing fetched without errors means every field was skipped, which is still `data: {}`
+    // and the fields of failed fetches are null, like in the default executor
+    data,
   };
   if (executionContext.errors.length > 0) {
     executionResult.errors = executionContext.errors.map((error) =>
@@ -286,8 +345,132 @@ interface EntityTarget {
   /** The flatten paths to the entities, without duplicates. */
   paths: NormalizedFlattenNodePathSegment[][];
   requires: RequiresSelection[];
+  /** The `requires` when they're flat, see {@link getFlatRequires}. */
+  flatRequires: FlatRequires | null;
   inputRewrites: FetchRewrite[] | undefined;
   context: PreparedContext;
+  reuse: PreparedEntityReuse | undefined;
+}
+
+/**
+ * Requires of scalar fields only, under an inline fragment or not, like the most common
+ * `... on User { __typename id }`. The fields of each fragment, by name.
+ */
+type FlatRequires = {
+  typeCondition: string | undefined;
+  names: string[];
+  /** The names as `"name"` bytes, to look for in a response, see {@link ResponseTape}. */
+  quotedNames: TapeKey[];
+}[];
+
+/** The requires as {@link FlatRequires}, `null` when they select any object. */
+function getFlatRequires(requires: RequiresSelection[]): FlatRequires | null {
+  const flat: FlatRequires = [];
+  const fields = (selections: RequiresSelection[]) => {
+    const names: string[] = [];
+    for (const selection of selections) {
+      if (selection.kind !== 'Field' || selection.selections?.length) {
+        return null;
+      }
+      names.push(selection.name);
+    }
+    return names;
+  };
+  for (const selection of requires) {
+    const names =
+      selection.kind === 'InlineFragment'
+        ? fields(selection.selections)
+        : fields([selection]);
+    if (!names) {
+      return null;
+    }
+    flat.push({
+      typeCondition:
+        selection.kind === 'InlineFragment'
+          ? selection.typeCondition
+          : undefined,
+      names,
+      quotedNames: names.map(quotedKey),
+    });
+  }
+  return flat;
+}
+
+/**
+ * What the representation of an entity with flat requires depends on: its typename and the
+ * values of the fields that apply to it, read like {@link applyRequires} reads them. Strings are
+ * length prefixed so no value can pass for another. `undefined` when a value isn't a scalar.
+ */
+function getEntityKey(
+  entity: EntityRepresentation,
+  flat: FlatRequires,
+  possibleTypes: PossibleTypes,
+): string | undefined {
+  const typename = entity.__typename;
+  if (typeof typename !== 'string') {
+    return undefined;
+  }
+  let key = `${typename.length}:${typename}`;
+  for (const { typeCondition, names } of flat) {
+    // like `applyRequires`, both directions count
+    if (
+      typeCondition !== undefined &&
+      !satisfiesTypeCondition(possibleTypes, typename, typeCondition) &&
+      !satisfiesTypeCondition(possibleTypes, typeCondition, typename)
+    ) {
+      continue;
+    }
+    for (const name of names) {
+      const value = (entity as Record<string, unknown>)[name];
+      switch (typeof value) {
+        case 'string':
+          key += `s${value.length}:${value}`;
+          break;
+        case 'number':
+          key += `n${value};`;
+          break;
+        case 'boolean':
+          key += value ? 't' : 'f';
+          break;
+        case 'undefined':
+          key += 'u';
+          break;
+        default:
+          if (value !== null) {
+            return undefined;
+          }
+          key += 'z';
+      }
+    }
+  }
+  return key;
+}
+
+/**
+ * Where the entities of a fetch or a batch alias might already be in the response, what the
+ * planner gives with its `entityReuse` option. `sources` are flatten paths to objects of the
+ * entity type, put there by the fetches it waits for. An entity whose representation is the same
+ * as one of those objects' gets the `copy` fields copied from it, instead of being sent.
+ */
+interface EntityReuse {
+  sources: FlattenNodePathSegment[][];
+  copy: RequiresSelection[];
+}
+
+interface PreparedEntityReuse {
+  sources: NormalizedFlattenNodePathSegment[][];
+  copy: RequiresSelection[];
+}
+
+function prepareEntityReuse(node: object): PreparedEntityReuse | undefined {
+  // only with the planner's `entityReuse` option, the planner types don't have it
+  const reuse = (node as { entityReuse?: EntityReuse }).entityReuse;
+  return reuse
+    ? {
+        sources: reuse.sources.map(normalizeFlattenNodePath),
+        copy: reuse.copy,
+      }
+    : undefined;
 }
 
 interface BatchAliasTarget extends EntityTarget {
@@ -391,8 +574,10 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
           target: {
             paths: [path],
             requires: fetchNode.requires ?? [],
+            flatRequires: getFlatRequires(fetchNode.requires ?? []),
             inputRewrites: fetchNode.inputRewrites,
             context: prepareContext(fetchNode),
+            reuse: prepareEntityReuse(fetchNode),
           },
         });
         ids.push({ completes: [fetchNode.id], dependsOn: fetchNode.dependsOn });
@@ -407,8 +592,10 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
             alias,
             paths: alias.paths.map(normalizeFlattenNodePath),
             requires: alias.requires,
+            flatRequires: getFlatRequires(alias.requires),
             inputRewrites: alias.inputRewrites,
             context: prepareContext(alias),
+            reuse: prepareEntityReuse(alias),
           })),
         });
         ids.push({ completes: node.completes, dependsOn: node.dependsOn });
@@ -578,12 +765,18 @@ function executeFetch(
       if (!fetch.node.requires) {
         return executeRootFetch(fetch, executionContext);
       }
-      const collected = collectEntities(
-        executionContext.data,
-        fetch.target,
-        executionContext,
-        executionContext.entityKeys[fetch.node.serviceName],
-      );
+      const collected = executionContext.tape
+        ? collectEntitiesFromTape(
+            fetch.target,
+            executionContext,
+            executionContext.entityKeys[fetch.node.serviceName],
+          )
+        : collectEntities(
+            executionContext.data,
+            fetch.target,
+            executionContext,
+            executionContext.entityKeys[fetch.node.serviceName],
+          );
       if (!collected.entities.length) {
         return;
       }
@@ -704,7 +897,7 @@ function createQueryPlanExecutionContext({
 }
 
 type NormalizedFlattenNodePathSegment =
-  | { kind: 'Field'; name: string }
+  | { kind: 'Field'; name: string; key: TapeKey }
   | { kind: 'Cast'; typeCondition: string[] }
   | { kind: 'List' };
 
@@ -718,22 +911,89 @@ interface ContextGroup {
   identityToIndex: Map<string, number>;
 }
 
-interface CollectedEntity {
-  entity: EntityRepresentation;
-  path: (string | number)[];
-  /**
-   * The index of the entity's representation in the representations of all groups,
-   * concatenated in group order.
-   */
-  index: number;
-}
-
+/**
+ * The collected entities, as parallel arrays indexed by the entity's position in the collection
+ * order, so there is no object per entity.
+ */
 interface CollectedEntities {
   groups: ContextGroup[];
   /** Where the representations of every group start, plus where the last group ends. */
   offsets: number[];
-  entities: CollectedEntity[];
-  entityPathsByIndex: Map<number, (string | number)[][]>;
+  entities: EntityRepresentation[];
+  /**
+   * The index of every entity's representation in the representations of all groups,
+   * concatenated in group order.
+   */
+  indexes: number[];
+  /**
+   * The path to every entity is its prefix, followed by its list index when it isn't `-1`.
+   * Entities of the same list share the prefix.
+   */
+  pathPrefixes: (string | number)[][];
+  listIndexes: number[];
+}
+
+function getEntityPath(
+  collected: CollectedEntities,
+  position: number,
+): (string | number)[] {
+  const prefix = collected.pathPrefixes[position]!;
+  const listIndex = collected.listIndexes[position]!;
+  return listIndex === -1 ? prefix : [...prefix, listIndex];
+}
+
+/**
+ * The positions of the entities of every representation, as `positions[starts[i]..starts[i+1]]`
+ * for the representation `i`, in collection order. Only errors need it.
+ */
+function getEntityPositionsByIndex(collected: CollectedEntities): {
+  starts: Int32Array;
+  positions: Int32Array;
+} {
+  const { indexes } = collected;
+  const representations = collected.offsets[collected.offsets.length - 1]!;
+  const starts = new Int32Array(representations + 1);
+  for (const index of indexes) {
+    starts[index + 1]!++;
+  }
+  for (let i = 0; i < representations; i++) {
+    starts[i + 1]! += starts[i]!;
+  }
+  const next = starts.slice(0, representations);
+  const positions = new Int32Array(indexes.length);
+  for (let position = 0; position < indexes.length; position++) {
+    positions[next[indexes[position]!]!++] = position;
+  }
+  return { starts, positions };
+}
+
+/** The error at every entity that sent a representation in `range`. */
+function relocateToEntities(
+  error: GraphQLError,
+  collected: CollectedEntities,
+  range: RepresentationRange,
+): GraphQLError[] {
+  const relocated: GraphQLError[] = [];
+  for (let position = 0; position < collected.indexes.length; position++) {
+    const index = collected.indexes[position]!;
+    if (index >= range.start && index < range.end) {
+      relocated.push(relocatedError(error, getEntityPath(collected, position)));
+    }
+  }
+  return relocated;
+}
+
+/** The paths of the entities that sent the representation `index`. */
+function getRepresentationPaths(
+  collected: CollectedEntities,
+  byIndex: ReturnType<typeof getEntityPositionsByIndex>,
+  index: number,
+): (string | number)[][] {
+  const paths: (string | number)[][] = [];
+  for (let i = byIndex.starts[index]!; i < byIndex.starts[index + 1]!; i++) {
+    paths.push(getEntityPath(collected, byIndex.positions[i]!));
+  }
+  return paths;
 }
 
 interface BatchAliasPreparedContext extends CollectedEntities {
@@ -764,7 +1024,11 @@ function normalizeFlattenNodePath(
       normalized.push({ kind: 'List' });
       continue;
     } else if ('Field' in segment) {
-      normalized.push({ kind: 'Field', name: segment.Field });
+      normalized.push({
+        kind: 'Field',
+        name: segment.Field,
+        key: quotedKey(segment.Field),
+      });
     } else if ('TypeCondition' in segment) {
       normalized.push({ kind: 'Cast', typeCondition: segment.TypeCondition });
     } else {
@@ -852,11 +1116,35 @@ function selectContextValue(
  */
 function collectEntities(
   data: Record<string, any>,
-  { paths, requires, inputRewrites, context }: EntityTarget,
-  { possibleTypes }: QueryPlanExecutionContext,
+  {
+    paths,
+    requires,
+    flatRequires,
+    inputRewrites,
+    context,
+    reuse,
+  }: EntityTarget,
+  { possibleTypes, errors }: QueryPlanExecutionContext,
   subgraphKeys: Record<string, string[][]> | undefined,
 ): CollectedEntities {
   const { names, sources, depths } = context;
+  const keysOf = (entity: EntityRepresentation) =>
+    subgraphKeys && Object.hasOwn(subgraphKeys, entity.__typename)
+      ? subgraphKeys[entity.__typename]
+      : undefined;
+  // once anything failed, a value in the response might be a `null` from the error, so the
+  // subgraph is asked like the router does
+  const reusable =
+    reuse && !errors.length
+      ? indexReusableEntities(data, reuse, requires, possibleTypes, keysOf)
+      : undefined;
+  // with flat requires the representation of an entity only depends on its typename and the
+  // values of its required fields, so an entity like one seen before is resolved by those alone,
+  // without projecting and serializing it again. Not with context groups or reuse, they need
+  // more than the representation
+  const flat = !names.length && !reusable ? flatRequires : null;
+  // the index of the representation of the entities with the same key, -1 when not sent
+  const indexByEntityKey = new Map<string, number>();
   const groups: ContextGroup[] = [];
   const groupIndexByValues = new Map<string, number>();
   if (!names.length) {
@@ -914,19 +1202,36 @@ function collectEntities(
     return index;
   }
 
-  const located: {
-    entity: EntityRepresentation;
-    path: (string | number)[];
-    groupIndex: number;
-    indexInGroup: number;
-  }[] = [];
+  const entities: EntityRepresentation[] = [];
+  // the index in the group until the groups are known, then the index in all groups
+  const indexes: number[] = [];
+  const groupIndexes: number[] = [];
+  const pathPrefixes: (string | number)[][] = [];
+  const listIndexes: number[] = [];
   function collect(
     entity: unknown,
-    path: (string | number)[],
+    pathPrefix: (string | number)[],
+    listIndex: number,
     ancestors: object[],
   ) {
     if (!isEntityRepresentation(entity)) {
       return;
+    }
+    const entityKey = flat
+      ? getEntityKey(entity, flat, possibleTypes)
+      : undefined;
+    if (entityKey !== undefined) {
+      const known = indexByEntityKey.get(entityKey);
+      if (known !== undefined) {
+        if (known !== -1) {
+          entities.push(entity);
+          indexes.push(known);
+          groupIndexes.push(0);
+          pathPrefixes.push(pathPrefix);
+          listIndexes.push(listIndex);
+        }
+        return;
+      }
     }
     const groupIndex = resolveGroupIndex(entity, ancestors);
     const group = groups[groupIndex]!;
@@ -934,24 +1239,42 @@ function collectEntities(
       requires,
       entity,
       possibleTypes,
-      subgraphKeys && Object.hasOwn(subgraphKeys, entity.__typename)
-        ? subgraphKeys[entity.__typename]
-        : undefined,
+      keysOf(entity),
     );
     if (!representation) {
+      if (entityKey !== undefined) {
+        indexByEntityKey.set(entityKey, -1);
+      }
       return;
     }
     if (inputRewrites?.length) {
       applyRewrites(representation, inputRewrites, possibleTypes);
     }
-    const identity = stableStringify(representation);
+    const identity = getRepresentationIdentity(representation);
+    if (reusable) {
+      const source = reusable.get(identity);
+      // the planner never reuses with rewrites or context, so the identities are comparable
+      const copied = source && copyFields(source, reuse!.copy, {});
+      if (copied) {
+        // nothing is sent for it, so there are no errors or rewrites to apply
+        deepMerge(entity, copied, undefined);
+        return;
+      }
+    }
     let indexInGroup = group.identityToIndex.get(identity);
     if (indexInGroup == null) {
       indexInGroup = group.representations.length;
       group.identityToIndex.set(identity, indexInGroup);
       group.representations.push(representation);
     }
-    located.push({ entity, path, groupIndex, indexInGroup });
+    if (entityKey !== undefined) {
+      indexByEntityKey.set(entityKey, indexInGroup);
+    }
+    entities.push(entity);
+    indexes.push(indexInGroup);
+    groupIndexes.push(groupIndex);
+    pathPrefixes.push(pathPrefix);
+    listIndexes.push(listIndex);
   }
 
   for (const path of paths) {
@@ -963,12 +1286,14 @@ function collectEntities(
       [],
       [],
       (value, valuePath, ancestors) => {
+        // the path is changed as the traversal goes on, the entities keep a copy
+        const pathPrefix = valuePath.slice();
         if (Array.isArray(value)) {
           for (let index = 0; index < value.length; index++) {
-            collect(value[index], [...valuePath, index], ancestors);
+            collect(value[index], pathPrefix, index, ancestors);
           }
         } else {
-          collect(value, valuePath.slice(), ancestors);
+          collect(value, pathPrefix, -1, ancestors);
         }
       },
     );
@@ -978,18 +1303,190 @@ function collectEntities(
   for (const group of groups) {
     offsets.push(offsets[offsets.length - 1]! + group.representations.length);
   }
-  const entityPathsByIndex = new Map<number, (string | number)[][]>();
-  const entities = located.map(({ entity, path, groupIndex, indexInGroup }) => {
-    const index = offsets[groupIndex]! + indexInGroup;
-    const paths = entityPathsByIndex.get(index);
-    if (paths) {
-      paths.push(path);
-    } else {
-      entityPathsByIndex.set(index, [path]);
+  if (groups.length > 1) {
+    for (let position = 0; position < indexes.length; position++) {
+      indexes[position]! += offsets[groupIndexes[position]!]!;
     }
-    return { entity, path, index };
-  });
-  return { groups, offsets, entities, entityPathsByIndex };
+  }
+  return { groups, offsets, entities, indexes, pathPrefixes, listIndexes };
+}
+
+/**
+ * The key that tells representations apart. A representation of a single scalar key field, the
+ * most common, gets one without serializing it. A representation that is the same as another
+ * but has its fields in another order gets another key and is sent twice, the planner's requires
+ * give the fields of all representations of a fetch the same order.
+ */
+function getRepresentationIdentity(representation: EntityRepresentation) {
+  let field: string | undefined;
+  for (const key in representation) {
+    if (key === '__typename') {
+      continue;
+    }
+    if (field !== undefined) {
+      return serializeRepresentation(representation);
+    }
+    field = key;
+  }
+  if (field !== undefined) {
+    // can't be mistaken for JSON, which starts with `{`
+    const value = representation[field];
+    if (typeof value === 'string') {
+      return `${representation.__typename}\0${field}\0s${value}`;
+    }
+    if (typeof value === 'number') {
+      return `${representation.__typename}\0${field}\0n${value}`;
+    }
+  }
+  return serializeRepresentation(representation);
+}
+
+/**
+ * The objects at the reuse sources that have every field of a representation, by the identity
+ * their representation would have. The first of the same identity is kept.
+ */
+function indexReusableEntities(
+  data: Record<string, any>,
+  reuse: PreparedEntityReuse,
+  requires: RequiresSelection[],
+  possibleTypes: PossibleTypes,
+  keysOf: (entity: EntityRepresentation) => string[][] | undefined,
+): Map<string, Record<string, unknown>> {
+  const reusable = new Map<string, Record<string, unknown>>();
+  const index = (source: unknown) => {
+    if (!isEntityRepresentation(source) || !holdsEveryField(source, requires)) {
+      return;
+    }
+    const representation = projectRequires(
+      requires,
+      source,
+      possibleTypes,
+      keysOf(source),
+    );
+    if (!representation) {
+      return;
+    }
+    const identity = getRepresentationIdentity(representation);
+    if (!reusable.has(identity)) {
+      reusable.set(identity, source);
+    }
+  };
+  for (const source of reuse.sources) {
+    traverseFlattenPath(data, source, 0, possibleTypes, [], [], (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(index);
+      } else {
+        index(value);
+      }
+    });
+  }
+  return reusable;
+}
+
+/**
+ * Whether `value` has every field of `selections`, none of them null, like the router checks. An
+ * entity with a missing or null key can't be told apart from another one like it, so it's never
+ * copied from. A field is read under its name, like the representation reads it.
+ */
+function holdsEveryField(
+  value: unknown,
+  selections: RequiresSelection[] | undefined,
+): boolean {
+  if (value == null) {
+    return false;
+  }
+  if (Array.isArray(value)) {
+    return value.every((item) => holdsEveryField(item, selections));
+  }
+  if (typeof value !== 'object') {
+    return !selections?.length;
+  }
+  return (selections ?? []).every((selection) =>
+    selection.kind === 'InlineFragment'
+      ? holdsEveryField(value, selection.selections)
+      : selection.kind === 'Field' &&
+        Object.hasOwn(value, selection.name) &&
+        holdsEveryField(
+          (value as Record<string, unknown>)[selection.name],
+          selection.selections,
+        ),
+  );
+}
+
+/**
+ * Copies the fields of `source` that `selections` select into `copied`, under their response
+ * keys like a subgraph would return them. `null` when any is missing, the subgraph is asked then.
+ */
+function copyFields(
+  source: Record<string, unknown>,
+  selections: RequiresSelection[],
+  copied: Record<string, unknown>,
+): Record<string, unknown> | null {
+  for (const selection of selections) {
+    if (selection.kind === 'InlineFragment') {
+      if (!copyFields(source, selection.selections, copied)) {
+        return null;
+      }
+      continue;
+    }
+    if (selection.kind !== 'Field') {
+      return null;
+    }
+    const key = selection.alias ?? selection.name;
+    if (!Object.hasOwn(source, key)) {
+      return null;
+    }
+    const value = selection.selections?.length
+      ? copyNestedValue(source[key], selection.selections)
+      : copyLeafValue(source[key]);
+    if (value === undefined) {
+      return null;
+    }
+    copied[key] = value;
+  }
+  return copied;
+}
+
+function copyNestedValue(
+  value: unknown,
+  selections: RequiresSelection[],
+): unknown {
+  if (value === null) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    const items = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      const item = copyNestedValue(value[i], selections);
+      if (item === undefined) {
+        return undefined;
+      }
+      items[i] = item;
+    }
+    return items;
+  }
+  if (typeof value === 'object') {
+    return (
+      copyFields(value as Record<string, unknown>, selections, {}) ?? undefined
+    );
+  }
+  return undefined;
+}
+
+/** A scalar, an object of a custom scalar gets its own copy so no merge changes the source. */
+function copyLeafValue(value: unknown): unknown {
+  return value !== null && typeof value === 'object'
+    ? structuredClone(value)
+    : value;
+}
+
+function serializeRepresentation(representation: EntityRepresentation) {
+  try {
+    return JSON.stringify(representation);
+  } catch {
+    // like a bigint of a custom scalar
+    return stableStringify(representation);
+  }
 }
 
 /**
@@ -1089,8 +1586,10 @@ function traverseFlattenPath(
         const typename = (current as Record<string, unknown>)['__typename'];
         if (
           typeof typename !== 'string' ||
-          segment.typeCondition.some((typeCondition) =>
-            satisfiesTypeCondition(possibleTypes, typename, typeCondition),
+          satisfiesSomeTypeCondition(
+            possibleTypes,
+            typename,
+            segment.typeCondition,
           )
         ) {
           traverseFlattenPath(
@@ -1125,7 +1624,9 @@ function prepareBatchFetchContext(
         groups: [],
         offsets: [0],
         entities: [],
-        entityPathsByIndex: new Map(),
+        indexes: [],
+        pathPrefixes: [],
+        listIndexes: [],
         alias,
       });
       continue;
@@ -1134,12 +1635,18 @@ function prepareBatchFetchContext(
       alias.alias.representationsVariableName,
     );
     if (!collected) {
-      collected = collectEntities(
-        executionContext.data,
-        alias,
-        executionContext,
-        executionContext.entityKeys[batchFetch.node.serviceName],
-      );
+      collected = executionContext.tape
+        ? collectEntitiesFromTape(
+            alias,
+            executionContext,
+            executionContext.entityKeys[batchFetch.node.serviceName],
+          )
+        : collectEntities(
+            executionContext.data,
+            alias,
+            executionContext,
+            executionContext.entityKeys[batchFetch.node.serviceName],
+          );
       collectedByVariableName.set(
         alias.alias.representationsVariableName,
         collected,
@@ -1211,11 +1718,14 @@ function mergeEntities(
   range: RepresentationRange,
   customScalarPaths: CustomScalarPaths | undefined,
 ) {
-  for (const { entity: target, index } of collected.entities) {
+  const { entities, indexes } = collected;
+  for (let position = 0; position < entities.length; position++) {
+    const index = indexes[position]!;
     if (index < range.start || index >= range.end) {
       continue;
     }
     const entity = returnedEntities[index - range.start];
+    const target = entities[position];
     if (!target || !entity) {
       continue;
     }
@@ -1233,6 +1743,10 @@ function normalizeBatchFetchErrors(
   }
 
   const relocated: GraphQLError[] = [];
+  const byIndexOfAlias = new Map<
+    string,
+    ReturnType<typeof getEntityPositionsByIndex>
+  >();
   for (const error of errors) {
     const errorPath = error.path;
     if (!errorPath || errorPath.length === 0) {
@@ -1256,11 +1770,7 @@ function normalizeBatchFetchErrors(
     const entityIndex = errorPath[1];
     if (entityIndex === undefined) {
       // the whole aliased _entities field failed, so every entity in it failed
-      for (const { path, index } of aliasContext.entities) {
-        if (index >= range.start && index < range.end) {
-          relocated.push(relocatedError(error, path));
-        }
-      }
+      relocated.push(...relocateToEntities(error, aliasContext, range));
       continue;
     }
     if (typeof entityIndex !== 'number') {
@@ -1269,8 +1779,15 @@ function normalizeBatchFetchErrors(
     }
 
     const index = range.start + entityIndex;
+    let byIndex = byIndexOfAlias.get(aliasName);
+    if (!byIndex) {
+      byIndex = getEntityPositionsByIndex(aliasContext);
+      byIndexOfAlias.set(aliasName, byIndex);
+    }
     const mappedPaths =
-      index < range.end ? aliasContext.entityPathsByIndex.get(index) : null;
+      index < range.end
+        ? getRepresentationPaths(aliasContext, byIndex, index)
+        : null;
     if (!mappedPaths?.length) {
       relocated.push(error);
       continue;
@@ -1346,6 +1863,30 @@ function executeBatchFetch(
             variablesForFetch,
           ),
         (fetchResult: ExecutionResult) => {
+          if (executionContext.tape) {
+            // the plan has no context groups, so nothing was aliased per group
+            const { data, errors } = addSubgraphResult(
+              executionContext.tape,
+              fetchResult,
+            );
+            if (errors?.length) {
+              executionContext.errors.push(
+                ...normalizeBatchFetchErrors(errors, batchContext, ranges),
+              );
+            }
+            if (data === -1) {
+              return;
+            }
+            for (const [aliasName, aliasContext] of byAlias) {
+              mergeEntitiesFromTape(
+                executionContext.tape,
+                executionContext.tape.member(data, quotedKey(aliasName)),
+                aliasContext,
+                ranges.get(aliasName)!,
+              );
+            }
+            return;
+          }
           if (aliased) {
             fetchResult = unaliasContextResult(
               fetchResult,
@@ -1462,6 +2003,29 @@ function executeFlattenFetch(
             variablesForFetch,
           ),
         (fetchResult: ExecutionResult) => {
+          if (executionContext.tape) {
+            const { data, errors } = addSubgraphResult(
+              executionContext.tape,
+              fetchResult,
+            );
+            if (errors?.length) {
+              executionContext.errors.push(
+                ...normalizeFetchErrors(errors, errorPath, {
+                  collected,
+                  range,
+                }),
+              );
+            }
+            if (data !== -1) {
+              mergeEntitiesFromTape(
+                executionContext.tape,
+                executionContext.tape.member(data, ENTITIES_KEY),
+                collected,
+                range,
+              );
+            }
+            return;
+          }
           if (aliased) {
             const counts = chunk.map(
               (groupIndex) =>
@@ -1526,7 +2090,7 @@ function executeSubgraphRequest(
   const operationName = getOperationASTFromRequest(
     executionContext.executionRequest,
   ).name?.value;
-  return executionContext.onSubgraphExecute(fetch.node.serviceName, {
+  const request: ExecutionRequest = {
     document: operationName
       ? getNamedDocument(document, operationName)
       : document,
@@ -1541,7 +2105,12 @@ function executeSubgraphRequest(
     subgraphName: fetch.node.serviceName,
     info: executionContext.executionRequest.info,
     signal: executionContext.executionRequest.signal,
-  });
+  };
+  return executionContext.onSubgraphExecute(
+    fetch.node.serviceName,
+    // the tape reads the response bytes, there's no need to parse them
+    executionContext.tape ? requestRawResponse(request) : request,
+  );
 }
 
 function waitAll(values: MaybePromise<unknown>[]): MaybePromise<unknown> {
@@ -1871,6 +2440,22 @@ function mergeRootFetchResult(
   executionContext: QueryPlanExecutionContext,
   fetchResult: ExecutionResult,
 ) {
+  if (executionContext.tape) {
+    // only root fetches of a query run on the tape, the root re-entries don't
+    const { data, errors } = addSubgraphResult(
+      executionContext.tape,
+      fetchResult,
+    );
+    if (errors?.length) {
+      executionContext.errors.push(
+        ...normalizeFetchErrors(errors, rootFetch.errorPath),
+      );
+    }
+    if (data !== -1) {
+      executionContext.tape.link(executionContext.tapeRoot!, data);
+    }
+    return;
+  }
   if (fetchResult.errors?.length) {
     executionContext.errors.push(
       ...normalizeFetchErrors(fetchResult.errors, rootFetch.errorPath),
@@ -1987,6 +2572,7 @@ function normalizeFetchErrors(
 
   const { collected, range } = entities;
   const relocated: GraphQLError[] = [];
+  let byIndex: ReturnType<typeof getEntityPositionsByIndex> | undefined;
 
   for (const error of errors) {
     const errorPath = error.path;
@@ -1997,11 +2583,7 @@ function normalizeFetchErrors(
         entityIndexPosition === errorPath.length - 1
       ) {
         // the whole _entities field failed, so every entity in the fetch failed
-        for (const { path, index } of collected.entities) {
-          if (index >= range.start && index < range.end) {
-            relocated.push(relocatedError(error, path));
-          }
-        }
+        relocated.push(...relocateToEntities(error, collected, range));
         continue;
       }
       if (entityIndexPosition !== -1) {
@@ -2010,7 +2592,10 @@ function normalizeFetchErrors(
           typeof dedupIndex === 'number' &&
           range.start + dedupIndex < range.end
         ) {
-          const mappedPaths = collected.entityPathsByIndex.get(
+          byIndex ??= getEntityPositionsByIndex(collected);
+          const mappedPaths = getRepresentationPaths(
+            collected,
+            byIndex,
             range.start + dedupIndex,
           );
           if (mappedPaths && mappedPaths.length) {
@@ -2273,6 +2858,62 @@ function getFieldTypeName(
   return getNamedType(field.type).name;
 }
 
+/** A field of the projection with what projecting it needs worked out once per plan. */
+interface ProjectedField extends ProjectionField {
+  responseKey: string;
+  /** Whether `Object.prototype` has the response key, so reading it needs an own check. */
+  inheritedKey: boolean;
+  /** `"responseKey"` as bytes, to look for in a subgraph's response, see {@link ResponseTape}. */
+  quotedResponseKey: TapeKey;
+  /** `,"responseKey":` as bytes, to write in the response, without the comma for the first field. */
+  responseKeyPrefix: Uint8Array;
+  projectedSelections: ProjectedField[] | undefined;
+  /**
+   * Whether projecting the selections needs the type name of the object: a field has a type
+   * condition, is `__typename` or has a condition, or a selection below needs it, since an object
+   * without `__typename` gets its type from its parent's.
+   */
+  selectionsNeedTypename: boolean;
+}
+
+function prepareProjectedFields(fields: ProjectionField[]): ProjectedField[] {
+  return fields.map((field) => {
+    const responseKey = field.alias ?? field.name;
+    const projectedSelections = field.selections
+      ? prepareProjectedFields(field.selections)
+      : undefined;
+    return {
+      ...field,
+      responseKey,
+      inheritedKey: responseKey in Object.prototype,
+      quotedResponseKey: quotedKey(responseKey),
+      responseKeyPrefix: textEncoder.encode(
+        ',' + JSON.stringify(responseKey) + ':',
+      ),
+      projectedSelections,
+      selectionsNeedTypename:
+        projectedSelections?.some(
+          (selection) =>
+            selection.parentTypes ||
+            selection.typename ||
+            selection.condition ||
+            selection.selectionsNeedTypename,
+        ) ?? false,
+    };
+  });
+}
+
+/** The keys of the fields, to resolve them in a merged object at once. */
+const fieldKeys = memoize1(function fieldKeys(fields: ProjectedField[]) {
+  return fields.map((field) => field.quotedResponseKey);
+});
+
+const getProjectedFields = memoize1(function getProjectedFields(
+  projection: QueryPlan['projection'],
+): ProjectedField[] {
+  return prepareProjectedFields(projection.fields);
+});
+
 /**
  * Shapes `object`, of type `typeName`, into the response as the plan's projection says, see
  * `ResponseProjection` of the query planner for the rules. Returns `null` when a `null` in a
@@ -2280,22 +2921,26 @@ function getFieldTypeName(
  */
 function projectObject(
   object: Record<string, unknown>,
-  fields: ProjectionField[],
+  fields: ProjectedField[],
   typeName: string,
   executionContext: QueryPlanExecutionContext,
-  path: (string | number)[],
+  /** The path to `object` for errors, `null` when not tracked. */
+  path: (string | number)[] | null,
 ): Record<string, unknown> | null {
-  // null proto because response keys come from client-controlled aliases, `__proto__` would
-  // otherwise hit Object.prototype on read and merge attacker data into it
-  const result: Record<string, unknown> = Object.create(null);
-  for (const field of fields) {
+  // a plain object, not a null prototype one: V8 keeps those in dictionary mode, which makes
+  // building and stringifying the response about twice as slow
+  const result: Record<string, unknown> = {};
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i]!;
     if (field.parentTypes && !field.parentTypes.includes(typeName)) {
       continue;
     }
-    const responseKey = field.alias ?? field.name;
-    const value = Object.hasOwn(object, responseKey)
-      ? object[responseKey]
-      : undefined;
+    const responseKey = field.responseKey;
+    // only a key `Object.prototype` has can be read from it, like `constructor`
+    const value =
+      field.inheritedKey && !Object.hasOwn(object, responseKey)
+        ? undefined
+        : object[responseKey];
     const failure =
       field.condition &&
       evaluateCondition(
@@ -2317,7 +2962,9 @@ function projectObject(
       projected = typeName;
     } else if (value === undefined) {
       projected = null;
-      if (field.nonNull) {
+      if (field.nonNull && !path) {
+        executionContext.missedNonNullField = true;
+      } else if (field.nonNull && path) {
         const fieldPath = [...path, responseKey];
         // an upstream error (like a failed entity lookup) already explains the missing value
         const explained = executionContext.errors.some(
@@ -2336,7 +2983,7 @@ function projectObject(
         }
       }
     } else {
-      path.push(responseKey);
+      path?.push(responseKey);
       projected = projectValue(
         value,
         field,
@@ -2345,13 +2992,24 @@ function projectObject(
         executionContext,
         path,
       );
-      path.pop();
+      path?.pop();
     }
     // a `null` in a non-null field makes the parent `null`
     if (projected === null && field.nonNull) {
       return null;
     }
-    result[responseKey] = projected;
+    if (responseKey === '__proto__') {
+      // response keys come from client-controlled aliases, assigning `__proto__` would set the
+      // prototype instead of adding the field
+      Object.defineProperty(result, responseKey, {
+        value: projected,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      result[responseKey] = projected;
+    }
   }
   return result;
 }
@@ -2361,11 +3019,11 @@ function projectObject(
  */
 function projectValue(
   value: unknown,
-  field: ProjectionField,
+  field: ProjectedField,
   parentTypeName: string,
   depth: number,
   executionContext: QueryPlanExecutionContext,
-  path: (string | number)[],
+  path: (string | number)[] | null,
 ): unknown {
   if (value == null) {
     return null;
@@ -2374,7 +3032,7 @@ function projectValue(
     const itemNonNull = field.itemNonNull?.[depth];
     const items = new Array(value.length);
     for (let i = 0; i < value.length; i++) {
-      path.push(i);
+      path?.push(i);
       const item = projectValue(
         value[i],
         field,
@@ -2383,7 +3041,7 @@ function projectValue(
         executionContext,
         path,
       );
-      path.pop();
+      path?.pop();
       // a `null` in a list of non-null items makes the list `null`
       if (item === null && itemNonNull) {
         return null;
@@ -2399,7 +3057,7 @@ function projectValue(
   const object = value as Record<string, unknown>;
   return projectObject(
     object,
-    field.selections,
+    field.projectedSelections!,
     typeof object['__typename'] === 'string'
       ? object['__typename']
       : getFieldTypeName(executionContext, parentTypeName, field.name),
@@ -2475,11 +3133,18 @@ function projectRequires(
   possibleTypes: PossibleTypes,
   typeKeys: string[][] | undefined,
 ): EntityRepresentation | null {
+  // the representation is built in place, `__typename` first
   const applied = applyRequires(
     requiresSelections,
     entity,
     possibleTypes,
     !!typeKeys,
+    {
+      result: { __typename: entity.__typename },
+      typename: false,
+      missingField: false,
+      found: new Set(),
+    },
   );
   if (
     typeKeys &&
@@ -2490,14 +3155,14 @@ function projectRequires(
   // only an entity found by its `__typename` alone is sent with nothing else, without keys for
   // its type the subgraph is trusted to find it like that
   if (
-    !Object.keys(applied.result).length &&
+    Object.keys(applied.result).length === 1 &&
     (!applied.typename ||
       applied.missingField ||
       (typeKeys && !typeKeys.some((key) => !key.length)))
   ) {
     return null;
   }
-  return { __typename: entity.__typename, ...applied.result };
+  return applied.result as EntityRepresentation;
 }
 
 /**
@@ -2628,4 +3293,897 @@ function applyRequires(
         : projected;
   }
   return applied;
+}
+
+// ---------------------------------------------------------------- the response tape
+// Experimental: a query whose plan only uses what's below runs on a `ResponseTape`, the data is
+// the subgraphs' response bytes and the response is written straight from them. Anything else
+// runs on parsed objects like before.
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+const EMPTY_OBJECT = textEncoder.encode('{}');
+const DATA_KEY = quotedKey('data');
+const ERRORS_KEY = quotedKey('errors');
+const ENTITIES_KEY = quotedKey('_entities');
+const TYPENAME_KEY = quotedKey('__typename');
+
+/** Whether the plan only uses what the tape supports. */
+const supportsResponseTape = memoize1(function supportsResponseTape(
+  queryPlan: QueryPlan,
+): boolean {
+  const schedule = getPlanSchedule(queryPlan);
+  if (schedule.subscription) {
+    return false;
+  }
+  const plainNode = (node: FetchNode | BatchFetchNode) =>
+    !node.customScalarPaths &&
+    !(node as { entityReuse?: unknown }).entityReuse &&
+    (node.operationKind ?? 'query') === 'query';
+  const plainTarget = (target: EntityTarget) =>
+    !target.inputRewrites?.length &&
+    !target.context.names.length &&
+    !target.reuse;
+  for (const fetch of schedule.fetches) {
+    if (!plainNode(fetch.node)) {
+      return false;
+    }
+    if (fetch.kind === 'Fetch') {
+      if (fetch.node.outputRewrites?.length) {
+        return false;
+      }
+    } else if (fetch.kind === 'Flatten') {
+      // a root type re-entry merges into every object it reaches
+      if (
+        !fetch.node.requires ||
+        fetch.node.outputRewrites?.length ||
+        !plainTarget(fetch.target)
+      ) {
+        return false;
+      }
+    } else if (
+      fetch.aliases.some(
+        (alias) => alias.alias.outputRewrites?.length || !plainTarget(alias),
+      )
+    ) {
+      return false;
+    }
+  }
+  // the conditions that read the value would need it parsed
+  const plainCondition = (condition: ProjectionCondition): boolean =>
+    'and' in condition
+      ? condition.and.every(plainCondition)
+      : 'or' in condition
+        ? condition.or.every(plainCondition)
+        : 'include' in condition ||
+          'skip' in condition ||
+          'parentType' in condition;
+  const plainFields = (fields: ProjectionField[]): boolean =>
+    fields.every(
+      (field) =>
+        (!field.condition || plainCondition(field.condition)) &&
+        (!field.selections || plainFields(field.selections)),
+    );
+  return plainFields(queryPlan.projection.fields);
+});
+
+/**
+ * Adds a subgraph's result to the tape: its response bytes when they're there, or its data
+ * written as JSON when something parsed it already. Returns the tape index of its data, -1 for
+ * none, and its errors. The errors are only parsed when the body has some.
+ */
+function addSubgraphResult(
+  tape: ResponseTape,
+  result: ExecutionResult,
+): { data: number; errors: readonly GraphQLError[] | undefined } {
+  const bytes = getRawResponseBytes(result);
+  if (bytes) {
+    const top = tape.add(bytes, isSharedRawResponse(result));
+    if (top !== -1 && tape.kind(top) === K_OBJ) {
+      const data = tape.member(top, DATA_KEY);
+      if (data !== -1 && tape.kind(data) === K_OBJ) {
+        const errors = tape.member(top, ERRORS_KEY);
+        return {
+          data,
+          errors:
+            errors !== -1 && !tape.isNull(errors) ? result.errors : undefined,
+        };
+      }
+    }
+    // no data, or not what the tape can read: the parsed result tells, like the http executor
+    // would, with its errors for an empty or broken response
+  }
+  const data = result.data;
+  return {
+    data:
+      data != null && typeof data === 'object'
+        ? tape.add(textEncoder.encode(JSON.stringify(data)))
+        : -1,
+    errors: result.errors,
+  };
+}
+
+/** Whether `typename` satisfies one of the type conditions, without a callback, see {@link traverseTape}. */
+function satisfiesSomeTypeCondition(
+  possibleTypes: PossibleTypes,
+  typename: string,
+  typeConditions: string[],
+): boolean {
+  for (let i = 0; i < typeConditions.length; i++) {
+    if (satisfiesTypeCondition(possibleTypes, typename, typeConditions[i]!)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Like {@link traverseFlattenPath}, over the tape: calls `callback` with every value at the path,
+ * from `index` on, and its path.
+ */
+function traverseTape(
+  tape: ResponseTape,
+  current: number,
+  flattenPath: NormalizedFlattenNodePathSegment[],
+  index: number,
+  possibleTypes: PossibleTypes,
+  path: (string | number)[],
+  callback: (value: number, path: (string | number)[]) => void,
+): void {
+  if (current === -1 || tape.isNull(current)) {
+    return;
+  }
+  const segment = flattenPath[index];
+  if (!segment) {
+    callback(current, path);
+    return;
+  }
+  // loops without callbacks, a callback capturing its locals costs every call a context
+  const kind = tape.kind(current);
+  if (kind === K_ARR && segment.kind !== 'List') {
+    const merged = tape.isMerged(current);
+    for (
+      let k = tape.firstItem(current), i = 0;
+      k !== -1;
+      k = tape.nextItem(current, k), i++
+    ) {
+      traverseTape(
+        tape,
+        merged ? tape.itemOf(current, i) : k,
+        flattenPath,
+        index,
+        possibleTypes,
+        path,
+        callback,
+      );
+    }
+    return;
+  }
+  switch (segment.kind) {
+    case 'Field': {
+      if (kind !== K_OBJ) {
+        return;
+      }
+      path.push(segment.name);
+      traverseTape(
+        tape,
+        tape.memberOf(current, segment.key),
+        flattenPath,
+        index + 1,
+        possibleTypes,
+        path,
+        callback,
+      );
+      path.pop();
+      return;
+    }
+    case 'List': {
+      if (kind !== K_ARR) {
+        return;
+      }
+      const merged = tape.isMerged(current);
+      for (
+        let k = tape.firstItem(current), i = 0;
+        k !== -1;
+        k = tape.nextItem(current, k), i++
+      ) {
+        path.push(i);
+        traverseTape(
+          tape,
+          merged ? tape.itemOf(current, i) : k,
+          flattenPath,
+          index + 1,
+          possibleTypes,
+          path,
+          callback,
+        );
+        path.pop();
+      }
+      return;
+    }
+    case 'Cast': {
+      if (kind !== K_OBJ) {
+        return;
+      }
+      // an object without `__typename` satisfies any type condition
+      const typename = tape.typename(tape.memberOf(current, TYPENAME_KEY));
+      if (
+        typename === undefined ||
+        satisfiesSomeTypeCondition(
+          possibleTypes,
+          typename,
+          segment.typeCondition,
+        )
+      ) {
+        traverseTape(
+          tape,
+          current,
+          flattenPath,
+          index + 1,
+          possibleTypes,
+          path,
+          callback,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * The fields of the entity that the requires select, read from the tape, for
+ * {@link projectRequires} to make the representation of.
+ */
+function readRequiredFields(
+  tape: ResponseTape,
+  entity: number,
+  requires: RequiresSelection[],
+  out: Record<string, unknown>,
+): Record<string, unknown> {
+  for (const selection of requires) {
+    if (selection.kind === 'InlineFragment') {
+      readRequiredFields(tape, entity, selection.selections, out);
+      continue;
+    }
+    if (selection.kind !== 'Field' || Object.hasOwn(out, selection.name)) {
+      continue;
+    }
+    const value = tape.memberOf(entity, quotedKey(selection.name));
+    if (value !== -1) {
+      out[selection.name] = tape.read(value);
+    }
+  }
+  return out;
+}
+
+const appliesTo = (
+  typeCondition: string | undefined,
+  typename: string,
+  possibleTypes: PossibleTypes,
+) =>
+  // like `applyRequires`, both directions count
+  typeCondition === undefined ||
+  satisfiesTypeCondition(possibleTypes, typename, typeCondition) ||
+  satisfiesTypeCondition(possibleTypes, typeCondition, typename);
+
+/**
+ * Like {@link getEntityKey}, a hash of the bytes of the typename and the fields, without making a
+ * string of them. The typename and the field values it read are left in `values`, for
+ * {@link sameKey} to confirm a match with. `undefined` when a field is an object.
+ */
+function hashEntityKey(
+  tape: ResponseTape,
+  entity: number,
+  typenameNode: number,
+  typename: string,
+  flat: FlatRequires,
+  possibleTypes: PossibleTypes,
+  values: number[],
+): number | undefined {
+  // written over, `length = 0` would drop its memory and every entity would grow it again
+  let length = 0;
+  values[length++] = typenameNode;
+  let hash = tape.hashBytes(typenameNode, 0x811c9dc5);
+  for (const { typeCondition, quotedNames } of flat) {
+    if (!appliesTo(typeCondition, typename, possibleTypes)) {
+      continue;
+    }
+    for (const name of quotedNames) {
+      const value = tape.get(entity, name);
+      values[length++] = value;
+      // a missing field and every byte are told apart by what's mixed in before them
+      hash = Math.imul(hash ^ (value === -1 ? 0x75 : 0x2c), 0x01000193);
+      if (value === -1) {
+        continue;
+      }
+      const kind = tape.kind(value);
+      if (kind === K_OBJ || kind === K_ARR) {
+        return undefined;
+      }
+      // the bytes as they are, a string keeps its quotes so it can't pass for a number
+      hash = tape.hashBytes(value, hash);
+    }
+  }
+  values.length = length;
+  return hash;
+}
+
+/**
+ * Whether two entities' fields, from {@link hashEntityKey}, have the same bytes. Their typenames,
+ * first, are compared by their strings by the caller.
+ */
+function sameKey(tape: ResponseTape, a: number[], b: number[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 1; i < a.length; i++) {
+    const aValue = a[i]!;
+    const bValue = b[i]!;
+    if (aValue === -1 || bValue === -1) {
+      if (aValue !== bValue) {
+        return false;
+      }
+      continue;
+    }
+    if (!tape.sameBytes(aValue, bValue)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Like {@link collectEntities}, for a target without context groups, rewrites or reuse. */
+function collectEntitiesFromTape(
+  { paths, requires, flatRequires }: EntityTarget,
+  executionContext: QueryPlanExecutionContext,
+  subgraphKeys: Record<string, string[][]> | undefined,
+): CollectedEntities {
+  const tape = executionContext.tape!;
+  const { possibleTypes } = executionContext;
+  const group: ContextGroup = {
+    variables: {},
+    representations: [],
+    identityToIndex: new Map(),
+  };
+  // by the hash of their key, the key of every entity seen first and its representation's index,
+  // -1 when it isn't sent
+  const seenByHash = new Map<
+    number,
+    { typename: string; key: number[]; index: number }[]
+  >();
+  const key: number[] = [];
+  // tape indexes, not objects
+  const entities: number[] = [];
+  const indexes: number[] = [];
+  const pathPrefixes: (string | number)[][] = [];
+  const listIndexes: number[] = [];
+  const collect = (
+    entity: number,
+    pathPrefix: (string | number)[],
+    listIndex: number,
+  ) => {
+    if (tape.kind(entity) !== K_OBJ) {
+      return;
+    }
+    // a few fields, reading them across a merged entity costs less than indexing it
+    const typenameNode = tape.get(entity, TYPENAME_KEY);
+    const typename =
+      typenameNode === -1 || tape.isNull(typenameNode)
+        ? undefined
+        : tape.typename(typenameNode);
+    const hash =
+      flatRequires && typename !== undefined
+        ? hashEntityKey(
+            tape,
+            entity,
+            typenameNode,
+            typename,
+            flatRequires,
+            possibleTypes,
+            key,
+          )
+        : undefined;
+    if (typename === undefined) {
+      return;
+    }
+    let index: number | undefined;
+    const seen = hash === undefined ? undefined : seenByHash.get(hash);
+    if (seen) {
+      for (const candidate of seen) {
+        if (
+          candidate.typename === typename &&
+          sameKey(tape, candidate.key, key)
+        ) {
+          index = candidate.index;
+          break;
+        }
+      }
+    }
+    if (index === undefined) {
+      const representation = projectRequires(
+        requires,
+        readRequiredFields(tape, entity, requires, {
+          __typename: typename,
+        }) as EntityRepresentation,
+        possibleTypes,
+        subgraphKeys && Object.hasOwn(subgraphKeys, typename)
+          ? subgraphKeys[typename]
+          : undefined,
+      );
+      if (!representation) {
+        index = -1;
+      } else {
+        const identity = getRepresentationIdentity(representation);
+        index = group.identityToIndex.get(identity);
+        if (index === undefined) {
+          index = group.representations.length;
+          group.identityToIndex.set(identity, index);
+          group.representations.push(representation);
+        }
+      }
+      if (hash !== undefined) {
+        const first = { typename, key: key.slice(), index };
+        if (seen) {
+          seen.push(first);
+        } else {
+          seenByHash.set(hash, [first]);
+        }
+      }
+    }
+    if (index === -1) {
+      return;
+    }
+    entities.push(entity);
+    indexes.push(index);
+    pathPrefixes.push(pathPrefix);
+    listIndexes.push(listIndex);
+  };
+  for (const path of paths) {
+    traverseTape(
+      tape,
+      executionContext.tapeRoot!,
+      path,
+      0,
+      possibleTypes,
+      [],
+      (value, valuePath) => {
+        const pathPrefix = valuePath.slice();
+        if (tape.kind(value) === K_ARR) {
+          tape.forEachItem(value, (item, index) =>
+            collect(item, pathPrefix, index),
+          );
+        } else {
+          collect(value, pathPrefix, -1);
+        }
+      },
+    );
+  }
+  return {
+    groups: [group],
+    offsets: [0, group.representations.length],
+    entities: entities as unknown as EntityRepresentation[],
+    indexes,
+    pathPrefixes,
+    listIndexes,
+  };
+}
+
+/** Like {@link mergeEntities}: links every returned entity into the entities it was for. */
+function mergeEntitiesFromTape(
+  tape: ResponseTape,
+  returned: number,
+  collected: CollectedEntities,
+  range: RepresentationRange,
+) {
+  if (returned === -1 || tape.kind(returned) !== K_ARR) {
+    return;
+  }
+  const items: number[] = [];
+  tape.forEachItem(returned, (item) => items.push(item));
+  const entities = collected.entities as unknown as number[];
+  const { indexes } = collected;
+  for (let position = 0; position < entities.length; position++) {
+    const index = indexes[position]!;
+    if (index < range.start || index >= range.end) {
+      continue;
+    }
+    const entity = items[index - range.start];
+    if (entity === undefined || tape.isNull(entity)) {
+      continue;
+    }
+    tape.link(entities[position]!, entity);
+  }
+}
+
+/** Like {@link toExecutionResult}, writing the response straight from the tape. */
+function writeResponseFromTape(
+  executionContext: QueryPlanExecutionContext,
+  projection: QueryPlan['projection'],
+): ExecutionResult {
+  const tape = executionContext.tape!;
+  // the same bodies, every one of them shared with another request in flight, write the same
+  // response, the last one written for the plan is taken as it is
+  const reusable =
+    tape.unsharedBodies === 0 &&
+    executionContext.errors.length === 0 &&
+    !readsVariables(projection);
+  const last = reusable ? lastWrittenResponses.get(projection) : undefined;
+  if (last && sameBodies(last.bodies, tape.bodies)) {
+    releaseToPool(tapePool, tape);
+    executionContext.tape = undefined;
+    return createWrittenResult(last.response, undefined);
+  }
+  const fields = getProjectedFields(projection);
+  const writer = writerPool.pop() ?? new ResponseWriter();
+  executionContext.missedNonNullField = false;
+  // the whole response, `{"data":...}`, its data is between the two
+  writer.bytes(DATA_PREFIX);
+  writeObjectFromTape(
+    writer,
+    executionContext,
+    executionContext.tapeRoot!,
+    fields,
+    projection.rootType,
+    null,
+  );
+  if (executionContext.missedNonNullField) {
+    writer.reset();
+    writer.bytes(DATA_PREFIX);
+    writeObjectFromTape(
+      writer,
+      executionContext,
+      executionContext.tapeRoot!,
+      fields,
+      projection.rootType,
+      [],
+    );
+  }
+  writer.byte(125);
+  const response = writer.take();
+  if (reusable && executionContext.errors.length === 0) {
+    lastWrittenResponses.set(projection, {
+      bodies: tape.bodies.slice(),
+      response,
+    });
+  }
+  // nothing reads them after the response is written, the next request can have them
+  releaseToPool(writerPool, writer);
+  releaseToPool(tapePool, executionContext.tape!);
+  executionContext.tape = undefined;
+  return createWrittenResult(
+    response,
+    executionContext.errors.length > 0
+      ? executionContext.errors.map((error) =>
+          trimErrorPath(error, projection.fields),
+        )
+      : undefined,
+  );
+}
+
+/**
+ * The last response written from bodies all shared, by the plan's projection, see
+ * {@link writeResponseFromTape}. A body is shared only by requests in flight at once, so taking
+ * its response is like deduplicating the request, nothing older than what a request got is sent.
+ */
+const lastWrittenResponses = new WeakMap<
+  QueryPlan['projection'],
+  { bodies: Uint8Array[]; response: Uint8Array }
+>();
+
+function sameBodies(a: Uint8Array[], b: Uint8Array[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Whether a field of the projection has a condition, which reads the request's variables. */
+const readsVariables = memoize1(function readsVariables(
+  projection: QueryPlan['projection'],
+): boolean {
+  const reads = (fields: ProjectionField[]): boolean =>
+    fields.some(
+      (field) =>
+        !!field.condition || (!!field.selections && reads(field.selections)),
+    );
+  return reads(projection.fields);
+});
+
+/** Tapes and writers ready for the next request, so their memory doesn't have to grow again. */
+const tapePool: ResponseTape[] = [];
+const writerPool: ResponseWriter[] = [];
+function releaseToPool<T extends { reset(): void }>(pool: T[], item: T) {
+  // as many as there are requests in flight at once, a few more aren't worth keeping
+  if (pool.length < 64) {
+    item.reset();
+    pool.push(item);
+  }
+}
+
+/** Like {@link projectObject}, `false` when it wrote `null`. */
+function writeObjectFromTape(
+  writer: ResponseWriter,
+  executionContext: QueryPlanExecutionContext,
+  view: number,
+  fields: ProjectedField[],
+  typeName: string,
+  path: (string | number)[] | null,
+): boolean {
+  const tape = executionContext.tape!;
+  const start = writer.length;
+  // the fields of a merged object are resolved at once, the fields of a single one are read in
+  // the order the subgraph wrote them
+  const merged = tape.isMerged(view);
+  const index = merged ? tape.resolve(view, fieldKeys(fields)) : -1;
+  const cursors = merged ? -1 : tape.openCursors(view);
+  writer.byte(123);
+  let first = true;
+  // scalar fields whose members follow each other in a subgraph's body are written as a run of
+  // its bytes at once, keys and commas included: a field is found by its response key, so the
+  // bytes are what writing them one by one would write. From the value of the first member of the
+  // run to the value of the last one
+  let runFirst = -1;
+  let runLast = -1;
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i]!;
+    if (field.parentTypes && !field.parentTypes.includes(typeName)) {
+      continue;
+    }
+    // the tape only takes conditions that don't read the value
+    const failure =
+      field.condition &&
+      evaluateCondition(
+        field.condition,
+        field,
+        typeName,
+        undefined,
+        executionContext,
+      );
+    if (failure === 'skip') {
+      continue;
+    }
+    const value =
+      failure || field.typename
+        ? -1
+        : merged
+          ? tape.resolved(index + i)
+          : tape.memberAt(view, field.quotedResponseKey, cursors);
+    if (
+      value !== -1 &&
+      !field.projectedSelections &&
+      tape.isScalar(value) &&
+      !(field.nonNull && tape.isNull(value))
+    ) {
+      if (runLast !== -1 && tape.follows(runLast, value)) {
+        runLast = value;
+        continue;
+      }
+      if (runFirst !== -1) {
+        tape.copyMembers(writer, runFirst, runLast);
+      }
+      if (!first) {
+        writer.byte(44);
+      }
+      first = false;
+      runFirst = runLast = value;
+      continue;
+    }
+    if (runFirst !== -1) {
+      tape.copyMembers(writer, runFirst, runLast);
+      runFirst = runLast = -1;
+    }
+    writer.bytes(field.responseKeyPrefix, first ? 1 : 0);
+    first = false;
+    let written: boolean;
+    if (failure) {
+      writer.null();
+      written = false;
+    } else if (field.typename) {
+      writer.string(typeName);
+      written = true;
+    } else {
+      if (value === -1) {
+        writer.null();
+        written = false;
+        if (field.nonNull && !path) {
+          executionContext.missedNonNullField = true;
+        } else if (field.nonNull && path) {
+          const fieldPath = [...path, field.responseKey];
+          // an upstream error (like a failed entity lookup) already explains the missing value
+          const explained = executionContext.errors.some(
+            (error) =>
+              error.path &&
+              error.path.length <= fieldPath.length &&
+              error.path.every((segment, i) => segment === fieldPath[i]),
+          );
+          if (!explained) {
+            executionContext.errors.push(
+              new GraphQLError(
+                `Cannot return null for non-nullable field ${typeName}.${field.name}.`,
+                { path: fieldPath },
+              ),
+            );
+          }
+        }
+      } else {
+        path?.push(field.responseKey);
+        written = writeValueFromTape(
+          writer,
+          executionContext,
+          value,
+          field,
+          typeName,
+          0,
+          path,
+        );
+        path?.pop();
+      }
+    }
+    // a `null` in a non-null field makes the parent `null`
+    if (!written && field.nonNull) {
+      closeLookups(tape, merged, index, cursors);
+      writer.length = start;
+      writer.null();
+      return false;
+    }
+  }
+  if (runFirst !== -1) {
+    tape.copyMembers(writer, runFirst, runLast);
+  }
+  closeLookups(tape, merged, index, cursors);
+  writer.byte(125);
+  return true;
+}
+
+/** Like {@link projectValue}, `false` when it wrote `null`. */
+function writeValueFromTape(
+  writer: ResponseWriter,
+  executionContext: QueryPlanExecutionContext,
+  value: number,
+  field: ProjectedField,
+  parentTypeName: string,
+  depth: number,
+  path: (string | number)[] | null,
+): boolean {
+  const tape = executionContext.tape!;
+  if (tape.isNull(value)) {
+    writer.null();
+    return false;
+  }
+  const kind = tape.kind(value);
+  if (kind === K_ARR) {
+    const start = writer.length;
+    const itemNonNull = field.itemNonNull?.[depth];
+    writer.byte(91);
+    const length = tape.listLength(value);
+    for (let i = 0; i < length; i++) {
+      if (i) {
+        writer.byte(44);
+      }
+      path?.push(i);
+      const written = writeValueFromTape(
+        writer,
+        executionContext,
+        tape.itemOf(value, i),
+        field,
+        parentTypeName,
+        depth + 1,
+        path,
+      );
+      path?.pop();
+      // a `null` in a list of non-null items makes the list `null`
+      if (!written && itemNonNull) {
+        writer.length = start;
+        writer.null();
+        return false;
+      }
+    }
+    writer.byte(93);
+    return true;
+  }
+  if (kind === K_OBJ && field.projectedSelections) {
+    // the errors of the second pass name the type
+    const typename =
+      field.selectionsNeedTypename || path
+        ? (tape.typename(tape.memberOf(value, TYPENAME_KEY)) ??
+          getFieldTypeName(executionContext, parentTypeName, field.name))
+        : '';
+    return writeObjectFromTape(
+      writer,
+      executionContext,
+      value,
+      field.projectedSelections,
+      typename,
+      path,
+    );
+  }
+  // a scalar, or an object of a custom scalar, as it is
+  tape.copyTo(writer, value);
+  return true;
+}
+
+/**
+ * The result of the written response: `data` is parsed only when something reads it, and Yoga's
+ * `stringify` writes the response from the written bytes when nothing did.
+ */
+function createWrittenResult(
+  response: Uint8Array,
+  errors: GraphQLError[] | undefined,
+): ExecutionResult {
+  const data = response.subarray(DATA_PREFIX.length, response.length - 1);
+  let parsed: unknown;
+  let read = false;
+  const result = {} as ExecutionResult;
+  Object.defineProperty(result, 'data', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (!read) {
+        parsed = JSON.parse(textDecoder.decode(data));
+        read = true;
+      }
+      return parsed;
+    },
+    set(value) {
+      parsed = value;
+      read = true;
+    },
+  });
+  if (errors) {
+    result.errors = errors;
+  }
+  Object.defineProperty(result, 'stringify', {
+    enumerable: false,
+    value(toStringify: ExecutionResult) {
+      if (toStringify !== result || read) {
+        return JSON.stringify(toStringify);
+      }
+      if (!result.errors && !result.extensions) {
+        // the bytes as they are, the server sends them without encoding a string again
+        return new JsonBytes(
+          response.buffer as ArrayBuffer,
+          response.byteOffset,
+          response.length,
+        ) as unknown as string;
+      }
+      let json = `{"data":${textDecoder.decode(data)}`;
+      if (result.errors) {
+        json += `,"errors":${JSON.stringify(result.errors)}`;
+      }
+      if (result.extensions) {
+        json += `,"extensions":${JSON.stringify(result.extensions)}`;
+      }
+      return json + '}';
+    },
+  });
+  return result;
+}
+
+const DATA_PREFIX = textEncoder.encode('{"data":');
+
+/**
+ * JSON as bytes, where a string is expected: a `Response` takes it as bytes, and it's the JSON
+ * string where it's made one, like Yoga joining a batch's responses.
+ */
+class JsonBytes extends Uint8Array {
+  override toString() {
+    return textDecoder.decode(this);
+  }
+}
+
+function closeLookups(
+  tape: ResponseTape,
+  merged: boolean,
+  index: number,
+  cursors: number,
+) {
+  if (merged) {
+    tape.closeIndex(index);
+  } else {
+    tape.closeCursors(cursors);
+  }
 }

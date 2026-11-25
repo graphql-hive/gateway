@@ -4,6 +4,10 @@ import {
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
 import {
+  createRawExecutionResult,
+  getRawResponseBytes,
+} from '@graphql-tools/executor-common';
+import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
 } from '@internal/testing';
@@ -11,8 +15,37 @@ import { Response } from '@whatwg-node/fetch';
 import { GraphQLError, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
+import { useSubgraphErrorPlugin } from '../src/plugins/useSubgraphErrorPlugin';
 
 describe('Subgraph Errors', () => {
+  it('extends the errors of a result still in its raw bytes once they are parsed', () => {
+    let parsed = 0;
+    const result = createRawExecutionResult(
+      new TextEncoder().encode('{"data":null,"errors":[{"message":"boom"}]}'),
+      (bytes) => {
+        parsed++;
+        const { errors } = JSON.parse(new TextDecoder().decode(bytes));
+        return {
+          data: null,
+          errors: errors.map(
+            ({ message }: { message: string }) => new GraphQLError(message),
+          ),
+        };
+      },
+    );
+    const onDone = useSubgraphErrorPlugin().onSubgraphExecute!({
+      subgraphName: 'upstream',
+    } as any) as (payload: any) => void;
+    onDone({ result });
+    // the plugin didn't need the errors yet, so nothing was parsed
+    expect(parsed).toBe(0);
+    expect(getRawResponseBytes(result)).toBeDefined();
+    expect(result.errors![0]!.extensions).toEqual({
+      code: 'DOWNSTREAM_SERVICE_ERROR',
+      serviceName: 'upstream',
+    });
+  });
+
   it('shows the error with the subgraph name', async () => {
     const upstreamServiceName = Math.random().toString(36).substring(7);
     const randomErrorMessage = Math.random().toString(36).substring(7);

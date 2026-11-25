@@ -1,0 +1,5 @@
+import { defineConfig } from '@graphql-hive/gateway';
+import { fetch } from '@whatwg-node/fetch';
+
+// like `dedup`, with `@whatwg-node/fetch` for subgraph requests, the gateway's fetch before undici's
+export const gatewayConfig = defineConfig({ fetchAPI: { fetch } });

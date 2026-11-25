@@ -1,0 +1,19 @@
+query InlineFragments {
+  users {
+    ... on User {
+      id
+      name
+    }
+    reviews {
+      ... on Review {
+        id
+        product {
+          ... on Product {
+            upc
+            inStock
+          }
+        }
+      }
+    }
+  }
+}

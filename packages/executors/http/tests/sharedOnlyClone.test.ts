@@ -1,53 +1,96 @@
+import { getEventListeners } from 'node:events';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';
 
-describe('HTTP deduplication result cloning', () => {
-  it('clones data for every consumer of a shared inflight request', async () => {
-    const clone = vi.spyOn(globalThis, 'structuredClone');
-    try {
-      let finish!: (response: Response) => void;
-      const response = new Promise<Response>((resolve) => {
-        finish = resolve;
+function createSharedRequest(body: string) {
+  let finish!: (response: Response) => void;
+  const response = new Promise<Response>((resolve) => {
+    finish = resolve;
+  });
+  const fetch = vi.fn(() => response);
+  return {
+    fetch,
+    finish: () =>
+      finish(
+        new Response(body, {
+          headers: { 'content-type': 'application/json' },
+        }),
+      ),
+  };
+}
+
+describe('HTTP deduplication result copying', () => {
+  it('gives every consumer of a shared inflight request its own data', async () => {
+    const { fetch, finish } = createSharedRequest(
+      JSON.stringify({ data: { node: { value: 'original', list: [1] } } }),
+    );
+    await using executor = buildHTTPExecutor({
+      endpoint: 'http://shared-copy-test/graphql',
+      fetch,
+    });
+    const document = parse('{ node { value list } }');
+    const pending = [
+      executor({ document }),
+      executor({ document }),
+      executor({ document }),
+    ];
+    finish();
+    const results = await Promise.all(pending);
+    for (const result of results) {
+      assertSingleExecutionValue(result);
+      expect(result).toEqual({
+        data: { node: { value: 'original', list: [1] } },
       });
-      const fetch = vi.fn(() => response);
-      await using executor = buildHTTPExecutor({
-        endpoint: 'http://shared-clone-test/graphql',
-        fetch,
-      });
-      const document = parse('{ node { value } }');
-      const first = executor({ document });
-      const second = executor({ document });
-      finish(Response.json({ data: { node: { value: 'original' } } }));
-      const [firstResult, secondResult] = await Promise.all([first, second]);
-      assertSingleExecutionValue(firstResult);
-      assertSingleExecutionValue(secondResult);
-      expect(firstResult).toEqual({ data: { node: { value: 'original' } } });
-      expect(secondResult).toEqual({ data: { node: { value: 'original' } } });
-      expect(firstResult.data).not.toBe(secondResult.data);
-      expect(fetch).toHaveBeenCalledTimes(1);
-      expect(clone).toHaveBeenCalledTimes(2);
-    } finally {
-      clone.mockRestore();
     }
+    const datas = results.map((result) => (result as any).data);
+    expect(new Set(datas).size).toBe(3);
+    // changing one consumer's data leaves the others as they are
+    datas[2].node.value = 'changed';
+    datas[2].node.list.push(2);
+    for (const data of datas.slice(0, 2)) {
+      expect(data).toEqual({ node: { value: 'original', list: [1] } });
+    }
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('does not clone data for a query without another in-flight consumer', async () => {
-    const clone = vi.spyOn(globalThis, 'structuredClone');
-    try {
-      await using executor = buildHTTPExecutor({
-        endpoint: 'http://isolated-clone-test/graphql',
-        fetch: async () =>
-          Response.json({ data: { node: { value: 'original' } } }),
+  it('leaves no listener on the request signal once the result is in', async () => {
+    await using executor = buildHTTPExecutor({
+      endpoint: 'http://signal-release-test/graphql',
+      fetch: async () => Response.json({ data: { node: { value: 'v' } } }),
+    });
+    const ctrl = new AbortController();
+    for (let i = 0; i < 3; i++) {
+      const result = await executor({
+        document: parse('{ node { value } }'),
+        signal: ctrl.signal,
       });
-      const result = await executor({ document: parse('{ node { value } }') });
       assertSingleExecutionValue(result);
-      expect(result).toEqual({ data: { node: { value: 'original' } } });
-      expect(clone).not.toHaveBeenCalled();
-    } finally {
-      clone.mockRestore();
+      expect(result.data).toEqual({ node: { value: 'v' } });
+    }
+    // every request combined it with the executor's own signal, and let go of it once done
+    expect(getEventListeners(ctrl.signal, 'abort')).toHaveLength(0);
+  });
+
+  it('keeps an own __proto__ key of the response as data in the copies', async () => {
+    const { fetch, finish } = createSharedRequest(
+      '{"data":{"node":{"__proto__":{"polluted":true},"value":"original"}}}',
+    );
+    await using executor = buildHTTPExecutor({
+      endpoint: 'http://shared-proto-test/graphql',
+      fetch,
+    });
+    const document = parse('{ node { value } }');
+    const pending = [executor({ document }), executor({ document })];
+    finish();
+    for (const result of await Promise.all(pending)) {
+      assertSingleExecutionValue(result);
+      const node = (result as any).data.node;
+      expect(Object.getPrototypeOf(node)).toBe(Object.prototype);
+      expect(Object.hasOwn(node, '__proto__')).toBe(true);
+      expect(node.polluted).toBeUndefined();
     }
   });
 });

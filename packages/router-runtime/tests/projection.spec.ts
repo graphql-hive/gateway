@@ -54,4 +54,11 @@ it('does not pollute Object.prototype through a __proto__ alias', async () => {
 
   expect(Object.hasOwn(Object.prototype, 'poc')).toBe(false);
   expect(res.errors).toBeUndefined();
+  // the alias is an own field of the response, not the prototype of its object
+  const field1 = (res.data as any).field1;
+  expect(Object.getPrototypeOf(field1)).toBe(Object.prototype);
+  expect(Object.hasOwn(field1, '__proto__')).toBe(true);
+  expect(JSON.stringify(res.data)).toBe(
+    '{"field1":{"__proto__":{"poc":"go"}}}',
+  );
 });
