@@ -99,7 +99,12 @@ export async function unifiedGraphHandler(
     await import(moduleName);
   const supergraphSdl = opts.getUnifiedGraphSDL();
   // the planner validates the limits and throws on invalid ones
-  let plannerOptions: QueryPlannerOptions | undefined;
+  let plannerOptions:
+    | (QueryPlannerOptions & {
+        /** Plans `entityReuse` on the fetches, see `executeQueryPlan`. */
+        entityReuse?: boolean;
+      })
+    | undefined;
   if (typeof opts.maxAliasesPerRequest === 'object') {
     const { '*': all, ...subgraphs } = opts.maxAliasesPerRequest;
     plannerOptions = {
@@ -108,6 +113,9 @@ export async function unifiedGraphHandler(
     };
   } else if (opts.maxAliasesPerRequest != null) {
     plannerOptions = { maxAliasesPerRequest: opts.maxAliasesPerRequest };
+  }
+  if (opts.entityReuse) {
+    plannerOptions = { ...plannerOptions, entityReuse: true };
   }
   const queryPlanner = new QueryPlanner(supergraphSdl, plannerOptions);
   const entityResolutionMap = getEntityResolutionMap(opts.unifiedGraph);
@@ -130,8 +138,8 @@ export async function unifiedGraphHandler(
   // redeploy pointing at a new supergraph) naturally stops reusing old plans,
   // without needing to explicitly invalidate anything in the shared cache.
   // the planner version keeps plans of other versions out, their shape may differ.
-  // plans carry the alias limits they were planned with, so gateways with other limits can't
-  // share them either
+  // plans carry the alias limits and the entity reuse they were planned with, so gateways with
+  // other options can't share them either
   const remotePlanCacheKeyPrefix = opts.cache
     ? `hive-gateway:query-plan:${QUERY_PLANNER_VERSION}:${await sha256(supergraphSdl)}:${await sha256(
         JSON.stringify([
@@ -139,6 +147,8 @@ export async function unifiedGraphHandler(
           Object.entries(
             plannerOptions?.subgraphMaxAliasesPerRequest ?? {},
           ).sort(),
+          // only when on, so the keys of the plans without it stay as they were
+          ...(plannerOptions?.entityReuse ? ['entityReuse'] : []),
         ]),
       )}:`
     : undefined;

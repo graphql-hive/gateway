@@ -288,6 +288,36 @@ interface EntityTarget {
   requires: RequiresSelection[];
   inputRewrites: FetchRewrite[] | undefined;
   context: PreparedContext;
+  reuse: PreparedEntityReuse | undefined;
+}
+
+/**
+ * Where the entities of a fetch or a batch alias might already be in the response, what the
+ * planner gives with its `entityReuse` option. `sources` are flatten paths to objects of the
+ * entity type, put there by the fetches it waits for. An entity whose representation is the same
+ * as one of those objects' gets the `copy` fields copied from it, instead of being sent.
+ */
+interface EntityReuse {
+  sources: FlattenNodePathSegment[][];
+  copy: RequiresSelection[];
+}
+
+interface PreparedEntityReuse {
+  sources: NormalizedFlattenNodePathSegment[][];
+  copy: RequiresSelection[];
+}
+
+function prepareEntityReuse(
+  node: object,
+): PreparedEntityReuse | undefined {
+  // only with the planner's `entityReuse` option, the planner types don't have it
+  const reuse = (node as { entityReuse?: EntityReuse }).entityReuse;
+  return reuse
+    ? {
+        sources: reuse.sources.map(normalizeFlattenNodePath),
+        copy: reuse.copy,
+      }
+    : undefined;
 }
 
 interface BatchAliasTarget extends EntityTarget {
@@ -393,6 +423,7 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
             requires: fetchNode.requires ?? [],
             inputRewrites: fetchNode.inputRewrites,
             context: prepareContext(fetchNode),
+            reuse: prepareEntityReuse(fetchNode),
           },
         });
         ids.push({ completes: [fetchNode.id], dependsOn: fetchNode.dependsOn });
@@ -409,6 +440,7 @@ const getPlanSchedule = memoize1(function getPlanSchedule(
             requires: alias.requires,
             inputRewrites: alias.inputRewrites,
             context: prepareContext(alias),
+            reuse: prepareEntityReuse(alias),
           })),
         });
         ids.push({ completes: node.completes, dependsOn: node.dependsOn });
@@ -919,11 +951,21 @@ function selectContextValue(
  */
 function collectEntities(
   data: Record<string, any>,
-  { paths, requires, inputRewrites, context }: EntityTarget,
-  { possibleTypes }: QueryPlanExecutionContext,
+  { paths, requires, inputRewrites, context, reuse }: EntityTarget,
+  { possibleTypes, errors }: QueryPlanExecutionContext,
   subgraphKeys: Record<string, string[][]> | undefined,
 ): CollectedEntities {
   const { names, sources, depths } = context;
+  const keysOf = (entity: EntityRepresentation) =>
+    subgraphKeys && Object.hasOwn(subgraphKeys, entity.__typename)
+      ? subgraphKeys[entity.__typename]
+      : undefined;
+  // once anything failed, a value in the response might be a `null` from the error, so the
+  // subgraph is asked like the router does
+  const reusable =
+    reuse && !errors.length
+      ? indexReusableEntities(data, reuse, requires, possibleTypes, keysOf)
+      : undefined;
   const groups: ContextGroup[] = [];
   const groupIndexByValues = new Map<string, number>();
   if (!names.length) {
@@ -1002,9 +1044,7 @@ function collectEntities(
       requires,
       entity,
       possibleTypes,
-      subgraphKeys && Object.hasOwn(subgraphKeys, entity.__typename)
-        ? subgraphKeys[entity.__typename]
-        : undefined,
+      keysOf(entity),
     );
     if (!representation) {
       return;
@@ -1013,6 +1053,16 @@ function collectEntities(
       applyRewrites(representation, inputRewrites, possibleTypes);
     }
     const identity = getRepresentationIdentity(representation);
+    if (reusable) {
+      const source = reusable.get(identity);
+      // the planner never reuses with rewrites or context, so the identities are comparable
+      const copied = source && copyFields(source, reuse!.copy, {});
+      if (copied) {
+        // nothing is sent for it, so there are no errors or rewrites to apply
+        deepMerge(entity, copied, undefined);
+        return;
+      }
+    }
     let indexInGroup = group.identityToIndex.get(identity);
     if (indexInGroup == null) {
       indexInGroup = group.representations.length;
@@ -1088,6 +1138,145 @@ function getRepresentationIdentity(representation: EntityRepresentation) {
     }
   }
   return serializeRepresentation(representation);
+}
+
+/**
+ * The objects at the reuse sources that have every field of a representation, by the identity
+ * their representation would have. The first of the same identity is kept.
+ */
+function indexReusableEntities(
+  data: Record<string, any>,
+  reuse: PreparedEntityReuse,
+  requires: RequiresSelection[],
+  possibleTypes: PossibleTypes,
+  keysOf: (entity: EntityRepresentation) => string[][] | undefined,
+): Map<string, Record<string, unknown>> {
+  const reusable = new Map<string, Record<string, unknown>>();
+  const index = (source: unknown) => {
+    if (!isEntityRepresentation(source) || !holdsEveryField(source, requires)) {
+      return;
+    }
+    const representation = projectRequires(
+      requires,
+      source,
+      possibleTypes,
+      keysOf(source),
+    );
+    if (!representation) {
+      return;
+    }
+    const identity = getRepresentationIdentity(representation);
+    if (!reusable.has(identity)) {
+      reusable.set(identity, source);
+    }
+  };
+  for (const source of reuse.sources) {
+    traverseFlattenPath(data, source, 0, possibleTypes, [], [], (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(index);
+      } else {
+        index(value);
+      }
+    });
+  }
+  return reusable;
+}
+
+/**
+ * Whether `value` has every field of `selections`, none of them null, like the router checks. An
+ * entity with a missing or null key can't be told apart from another one like it, so it's never
+ * copied from. A field is read under its name, like the representation reads it.
+ */
+function holdsEveryField(
+  value: unknown,
+  selections: RequiresSelection[] | undefined,
+): boolean {
+  if (value == null) {
+    return false;
+  }
+  if (Array.isArray(value)) {
+    return value.every((item) => holdsEveryField(item, selections));
+  }
+  if (typeof value !== 'object') {
+    return !selections?.length;
+  }
+  return (selections ?? []).every((selection) =>
+    selection.kind === 'InlineFragment'
+      ? holdsEveryField(value, selection.selections)
+      : selection.kind === 'Field' &&
+        Object.hasOwn(value, selection.name) &&
+        holdsEveryField(
+          (value as Record<string, unknown>)[selection.name],
+          selection.selections,
+        ),
+  );
+}
+
+/**
+ * Copies the fields of `source` that `selections` select into `copied`, under their response
+ * keys like a subgraph would return them. `null` when any is missing, the subgraph is asked then.
+ */
+function copyFields(
+  source: Record<string, unknown>,
+  selections: RequiresSelection[],
+  copied: Record<string, unknown>,
+): Record<string, unknown> | null {
+  for (const selection of selections) {
+    if (selection.kind === 'InlineFragment') {
+      if (!copyFields(source, selection.selections, copied)) {
+        return null;
+      }
+      continue;
+    }
+    if (selection.kind !== 'Field') {
+      return null;
+    }
+    const key = selection.alias ?? selection.name;
+    if (!Object.hasOwn(source, key)) {
+      return null;
+    }
+    const value = selection.selections?.length
+      ? copyNestedValue(source[key], selection.selections)
+      : copyLeafValue(source[key]);
+    if (value === undefined) {
+      return null;
+    }
+    copied[key] = value;
+  }
+  return copied;
+}
+
+function copyNestedValue(
+  value: unknown,
+  selections: RequiresSelection[],
+): unknown {
+  if (value === null) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    const items = new Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      const item = copyNestedValue(value[i], selections);
+      if (item === undefined) {
+        return undefined;
+      }
+      items[i] = item;
+    }
+    return items;
+  }
+  if (typeof value === 'object') {
+    return (
+      copyFields(value as Record<string, unknown>, selections, {}) ?? undefined
+    );
+  }
+  return undefined;
+}
+
+/** A scalar, an object of a custom scalar gets its own copy so no merge changes the source. */
+function copyLeafValue(value: unknown): unknown {
+  return value !== null && typeof value === 'object'
+    ? structuredClone(value)
+    : value;
 }
 
 function serializeRepresentation(representation: EntityRepresentation) {

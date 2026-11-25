@@ -98,6 +98,12 @@ export interface UnifiedGraphHandlerOpts {
    */
   maxAliasesPerRequest?: number | Record<string, number>;
 
+  /**
+   * Copies entities an earlier fetch already put in the response, instead of asking a subgraph
+   * for them again. Handlers that plan it, like the Hive Router runtime, follow it.
+   */
+  entityReuse?: boolean;
+
   log?: Logger;
   /** Shared cache instance (e.g. Redis), used by handlers that support cross-process caching. */
   cache?: KeyValueCache;
@@ -163,6 +169,12 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * not batched, because batching would merge the split requests back into one.
    */
   maxAliasesPerRequest?: number | Record<string, number>;
+
+  /**
+   * Copies entities an earlier fetch already put in the response, instead of asking a subgraph
+   * for them again. Handlers that plan it, like the Hive Router runtime, follow it.
+   */
+  entityReuse?: boolean;
 
   instrumentation?: () => Instrumentation | undefined;
   /**
@@ -523,6 +535,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             batchDelegateOptions: this.opts.batchDelegateOptions,
             subgraphDefer: this.opts.subgraphDefer,
             maxAliasesPerRequest: this.opts.maxAliasesPerRequest,
+            entityReuse: this.opts.entityReuse,
             log: this.opts.transportContext?.log,
             cache: this.opts.transportContext?.cache,
             handleProgressiveOverride: this.opts.handleProgressiveOverride
