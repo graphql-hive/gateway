@@ -16,6 +16,11 @@ import type {
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
 import {
+  getRawResponseBytes,
+  isSharedRawResponse,
+  requestRawResponse,
+} from '@graphql-tools/executor-common';
+import {
   coerceGetVariableValuesResult,
   ExecutionRequest,
   getOperationASTFromDocument,
@@ -50,6 +55,14 @@ import {
   VariableDefinitionNode,
   visit,
 } from 'graphql';
+import {
+  K_ARR,
+  K_OBJ,
+  quotedKey,
+  ResponseTape,
+  ResponseWriter,
+  type TapeKey,
+} from './tape';
 import { handleMaybePromiseMaybeAsyncIterable } from './utils';
 
 export interface QueryPlanExecutionContext {
@@ -102,6 +115,14 @@ export interface QueryPlanExecutionContext {
    * needs its path.
    */
   missedNonNullField?: boolean;
+
+  /**
+   * The data as the subgraphs' response bytes, when the plan runs on a {@link ResponseTape}
+   * instead of parsed objects. `data` isn't used then.
+   */
+  tape?: ResponseTape;
+  /** The tape index of the root object, what every root fetch's data is merged into. */
+  tapeRoot?: number;
 }
 
 export interface EntityRepresentation {
@@ -171,6 +192,11 @@ export interface QueryPlanExecutorOptions {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  /**
+   * Experimental: keeps the data as the subgraphs' response bytes and writes the response
+   * straight from them, see {@link ResponseTape}, for the plans it supports.
+   */
+  responseTape?: boolean;
 }
 
 export function executeQueryPlan({
@@ -180,6 +206,7 @@ export function executeQueryPlan({
   supergraphSchema,
   entityKeys,
   possibleTypes,
+  responseTape,
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
@@ -195,6 +222,15 @@ export function executeQueryPlan({
     return { errors: executionContext };
   }
   const subscription = schedule.subscription;
+  if (
+    responseTape &&
+    executionContext.operationType === OperationTypeNode.QUERY &&
+    supportsResponseTape(queryPlan)
+  ) {
+    executionContext.tape = tapePool.pop() ?? new ResponseTape();
+    // what the root fetches merge into, the data is an object even when none ran
+    executionContext.tapeRoot = executionContext.tape.add(EMPTY_OBJECT);
+  }
   if (!subscription) {
     return handleMaybePromise(
       () => runFetches(schedule, executionContext, schedule.waits),
@@ -239,6 +275,9 @@ function toExecutionResult(
   executionContext: QueryPlanExecutionContext,
   { projection }: QueryPlan,
 ): ExecutionResult {
+  if (executionContext.tape) {
+    return writeResponseFromTape(executionContext, projection);
+  }
   const fields = getProjectedFields(projection);
   // without the paths first, only a missing non-null field needs them for its error, then the
   // response is projected again with them
@@ -317,7 +356,12 @@ interface EntityTarget {
  * Requires of scalar fields only, under an inline fragment or not, like the most common
  * `... on User { __typename id }`. The fields of each fragment, by name.
  */
-type FlatRequires = { typeCondition: string | undefined; names: string[] }[];
+type FlatRequires = {
+  typeCondition: string | undefined;
+  names: string[];
+  /** The names as `"name"` bytes, to look for in a response, see {@link ResponseTape}. */
+  quotedNames: TapeKey[];
+}[];
 
 /** The requires as {@link FlatRequires}, `null` when they select any object. */
 function getFlatRequires(requires: RequiresSelection[]): FlatRequires | null {
@@ -346,6 +390,7 @@ function getFlatRequires(requires: RequiresSelection[]): FlatRequires | null {
           ? selection.typeCondition
           : undefined,
       names,
+      quotedNames: names.map(quotedKey),
     });
   }
   return flat;
@@ -417,9 +462,7 @@ interface PreparedEntityReuse {
   copy: RequiresSelection[];
 }
 
-function prepareEntityReuse(
-  node: object,
-): PreparedEntityReuse | undefined {
+function prepareEntityReuse(node: object): PreparedEntityReuse | undefined {
   // only with the planner's `entityReuse` option, the planner types don't have it
   const reuse = (node as { entityReuse?: EntityReuse }).entityReuse;
   return reuse
@@ -722,12 +765,18 @@ function executeFetch(
       if (!fetch.node.requires) {
         return executeRootFetch(fetch, executionContext);
       }
-      const collected = collectEntities(
-        executionContext.data,
-        fetch.target,
-        executionContext,
-        executionContext.entityKeys[fetch.node.serviceName],
-      );
+      const collected = executionContext.tape
+        ? collectEntitiesFromTape(
+            fetch.target,
+            executionContext,
+            executionContext.entityKeys[fetch.node.serviceName],
+          )
+        : collectEntities(
+            executionContext.data,
+            fetch.target,
+            executionContext,
+            executionContext.entityKeys[fetch.node.serviceName],
+          );
       if (!collected.entities.length) {
         return;
       }
@@ -848,7 +897,7 @@ function createQueryPlanExecutionContext({
 }
 
 type NormalizedFlattenNodePathSegment =
-  | { kind: 'Field'; name: string }
+  | { kind: 'Field'; name: string; key: TapeKey }
   | { kind: 'Cast'; typeCondition: string[] }
   | { kind: 'List' };
 
@@ -975,7 +1024,11 @@ function normalizeFlattenNodePath(
       normalized.push({ kind: 'List' });
       continue;
     } else if ('Field' in segment) {
-      normalized.push({ kind: 'Field', name: segment.Field });
+      normalized.push({
+        kind: 'Field',
+        name: segment.Field,
+        key: quotedKey(segment.Field),
+      });
     } else if ('TypeCondition' in segment) {
       normalized.push({ kind: 'Cast', typeCondition: segment.TypeCondition });
     } else {
@@ -1063,7 +1116,14 @@ function selectContextValue(
  */
 function collectEntities(
   data: Record<string, any>,
-  { paths, requires, flatRequires, inputRewrites, context, reuse }: EntityTarget,
+  {
+    paths,
+    requires,
+    flatRequires,
+    inputRewrites,
+    context,
+    reuse,
+  }: EntityTarget,
   { possibleTypes, errors }: QueryPlanExecutionContext,
   subgraphKeys: Record<string, string[][]> | undefined,
 ): CollectedEntities {
@@ -1573,12 +1633,18 @@ function prepareBatchFetchContext(
       alias.alias.representationsVariableName,
     );
     if (!collected) {
-      collected = collectEntities(
-        executionContext.data,
-        alias,
-        executionContext,
-        executionContext.entityKeys[batchFetch.node.serviceName],
-      );
+      collected = executionContext.tape
+        ? collectEntitiesFromTape(
+            alias,
+            executionContext,
+            executionContext.entityKeys[batchFetch.node.serviceName],
+          )
+        : collectEntities(
+            executionContext.data,
+            alias,
+            executionContext,
+            executionContext.entityKeys[batchFetch.node.serviceName],
+          );
       collectedByVariableName.set(
         alias.alias.representationsVariableName,
         collected,
@@ -1795,6 +1861,30 @@ function executeBatchFetch(
             variablesForFetch,
           ),
         (fetchResult: ExecutionResult) => {
+          if (executionContext.tape) {
+            // the plan has no context groups, so nothing was aliased per group
+            const { data, errors } = addSubgraphResult(
+              executionContext.tape,
+              fetchResult,
+            );
+            if (errors?.length) {
+              executionContext.errors.push(
+                ...normalizeBatchFetchErrors(errors, batchContext, ranges),
+              );
+            }
+            if (data === -1) {
+              return;
+            }
+            for (const [aliasName, aliasContext] of byAlias) {
+              mergeEntitiesFromTape(
+                executionContext.tape,
+                executionContext.tape.member(data, quotedKey(aliasName)),
+                aliasContext,
+                ranges.get(aliasName)!,
+              );
+            }
+            return;
+          }
           if (aliased) {
             fetchResult = unaliasContextResult(
               fetchResult,
@@ -1911,6 +2001,29 @@ function executeFlattenFetch(
             variablesForFetch,
           ),
         (fetchResult: ExecutionResult) => {
+          if (executionContext.tape) {
+            const { data, errors } = addSubgraphResult(
+              executionContext.tape,
+              fetchResult,
+            );
+            if (errors?.length) {
+              executionContext.errors.push(
+                ...normalizeFetchErrors(errors, errorPath, {
+                  collected,
+                  range,
+                }),
+              );
+            }
+            if (data !== -1) {
+              mergeEntitiesFromTape(
+                executionContext.tape,
+                executionContext.tape.member(data, ENTITIES_KEY),
+                collected,
+                range,
+              );
+            }
+            return;
+          }
           if (aliased) {
             const counts = chunk.map(
               (groupIndex) =>
@@ -1975,7 +2088,7 @@ function executeSubgraphRequest(
   const operationName = getOperationASTFromRequest(
     executionContext.executionRequest,
   ).name?.value;
-  return executionContext.onSubgraphExecute(fetch.node.serviceName, {
+  const request: ExecutionRequest = {
     document: operationName
       ? getNamedDocument(document, operationName)
       : document,
@@ -1990,7 +2103,12 @@ function executeSubgraphRequest(
     subgraphName: fetch.node.serviceName,
     info: executionContext.executionRequest.info,
     signal: executionContext.executionRequest.signal,
-  });
+  };
+  return executionContext.onSubgraphExecute(
+    fetch.node.serviceName,
+    // the tape reads the response bytes, there's no need to parse them
+    executionContext.tape ? requestRawResponse(request) : request,
+  );
 }
 
 function waitAll(values: MaybePromise<unknown>[]): MaybePromise<unknown> {
@@ -2320,6 +2438,22 @@ function mergeRootFetchResult(
   executionContext: QueryPlanExecutionContext,
   fetchResult: ExecutionResult,
 ) {
+  if (executionContext.tape) {
+    // only root fetches of a query run on the tape, the root re-entries don't
+    const { data, errors } = addSubgraphResult(
+      executionContext.tape,
+      fetchResult,
+    );
+    if (errors?.length) {
+      executionContext.errors.push(
+        ...normalizeFetchErrors(errors, rootFetch.errorPath),
+      );
+    }
+    if (data !== -1) {
+      executionContext.tape.link(executionContext.tapeRoot!, data);
+    }
+    return;
+  }
   if (fetchResult.errors?.length) {
     executionContext.errors.push(
       ...normalizeFetchErrors(fetchResult.errors, rootFetch.errorPath),
@@ -2727,19 +2861,42 @@ interface ProjectedField extends ProjectionField {
   responseKey: string;
   /** Whether `Object.prototype` has the response key, so reading it needs an own check. */
   inheritedKey: boolean;
+  /** `"responseKey"` as bytes, to look for in a subgraph's response, see {@link ResponseTape}. */
+  quotedResponseKey: TapeKey;
+  /** `,"responseKey":` as bytes, to write in the response, without the comma for the first field. */
+  responseKeyPrefix: Uint8Array;
   projectedSelections: ProjectedField[] | undefined;
+  /**
+   * Whether projecting the selections needs the type name of the object: a field has a type
+   * condition, is `__typename` or has a condition, or a selection below needs it, since an object
+   * without `__typename` gets its type from its parent's.
+   */
+  selectionsNeedTypename: boolean;
 }
 
 function prepareProjectedFields(fields: ProjectionField[]): ProjectedField[] {
   return fields.map((field) => {
     const responseKey = field.alias ?? field.name;
+    const projectedSelections = field.selections
+      ? prepareProjectedFields(field.selections)
+      : undefined;
     return {
       ...field,
       responseKey,
       inheritedKey: responseKey in Object.prototype,
-      projectedSelections: field.selections
-        ? prepareProjectedFields(field.selections)
-        : undefined,
+      quotedResponseKey: quotedKey(responseKey),
+      responseKeyPrefix: textEncoder.encode(
+        ',' + JSON.stringify(responseKey) + ':',
+      ),
+      projectedSelections,
+      selectionsNeedTypename:
+        projectedSelections?.some(
+          (selection) =>
+            selection.parentTypes ||
+            selection.typename ||
+            selection.condition ||
+            selection.selectionsNeedTypename,
+        ) ?? false,
     };
   });
 }
@@ -3129,4 +3286,760 @@ function applyRequires(
         : projected;
   }
   return applied;
+}
+
+// ---------------------------------------------------------------- the response tape
+// Experimental: a query whose plan only uses what's below runs on a `ResponseTape`, the data is
+// the subgraphs' response bytes and the response is written straight from them. Anything else
+// runs on parsed objects like before.
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+const EMPTY_OBJECT = textEncoder.encode('{}');
+const DATA_KEY = quotedKey('data');
+const ERRORS_KEY = quotedKey('errors');
+const ENTITIES_KEY = quotedKey('_entities');
+const TYPENAME_KEY = quotedKey('__typename');
+
+/** Whether the plan only uses what the tape supports. */
+const supportsResponseTape = memoize1(function supportsResponseTape(
+  queryPlan: QueryPlan,
+): boolean {
+  const schedule = getPlanSchedule(queryPlan);
+  if (schedule.subscription) {
+    return false;
+  }
+  const plainNode = (node: FetchNode | BatchFetchNode) =>
+    !node.customScalarPaths &&
+    !(node as { entityReuse?: unknown }).entityReuse &&
+    (node.operationKind ?? 'query') === 'query';
+  const plainTarget = (target: EntityTarget) =>
+    !target.inputRewrites?.length &&
+    !target.context.names.length &&
+    !target.reuse;
+  for (const fetch of schedule.fetches) {
+    if (!plainNode(fetch.node)) {
+      return false;
+    }
+    if (fetch.kind === 'Fetch') {
+      if (fetch.node.outputRewrites?.length) {
+        return false;
+      }
+    } else if (fetch.kind === 'Flatten') {
+      // a root type re-entry merges into every object it reaches
+      if (
+        !fetch.node.requires ||
+        fetch.node.outputRewrites?.length ||
+        !plainTarget(fetch.target)
+      ) {
+        return false;
+      }
+    } else if (
+      fetch.aliases.some(
+        (alias) => alias.alias.outputRewrites?.length || !plainTarget(alias),
+      )
+    ) {
+      return false;
+    }
+  }
+  // the conditions that read the value would need it parsed
+  const plainCondition = (condition: ProjectionCondition): boolean =>
+    'and' in condition
+      ? condition.and.every(plainCondition)
+      : 'or' in condition
+        ? condition.or.every(plainCondition)
+        : 'include' in condition ||
+          'skip' in condition ||
+          'parentType' in condition;
+  const plainFields = (fields: ProjectionField[]): boolean =>
+    fields.every(
+      (field) =>
+        (!field.condition || plainCondition(field.condition)) &&
+        (!field.selections || plainFields(field.selections)),
+    );
+  return plainFields(queryPlan.projection.fields);
+});
+
+/**
+ * Adds a subgraph's result to the tape: its response bytes when they're there, or its data
+ * written as JSON when something parsed it already. Returns the tape index of its data, -1 for
+ * none, and its errors. The errors are only parsed when the body has some.
+ */
+function addSubgraphResult(
+  tape: ResponseTape,
+  result: ExecutionResult,
+): { data: number; errors: readonly GraphQLError[] | undefined } {
+  const bytes = getRawResponseBytes(result);
+  if (bytes) {
+    const top = tape.add(bytes, isSharedRawResponse(result));
+    if (top !== -1 && tape.kind(top) === K_OBJ) {
+      const data = tape.member(top, DATA_KEY);
+      if (data !== -1 && tape.kind(data) === K_OBJ) {
+        const errors = tape.member(top, ERRORS_KEY);
+        return {
+          data,
+          errors:
+            errors !== -1 && !tape.isNull(errors) ? result.errors : undefined,
+        };
+      }
+    }
+    // no data, or not what the tape can read: the parsed result tells, like the http executor
+    // would, with its errors for an empty or broken response
+  }
+  const data = result.data;
+  return {
+    data:
+      data != null && typeof data === 'object'
+        ? tape.add(textEncoder.encode(JSON.stringify(data)))
+        : -1,
+    errors: result.errors,
+  };
+}
+
+/**
+ * Like {@link traverseFlattenPath}, over the tape: calls `callback` with every value at the path,
+ * from `index` on, and its path.
+ */
+function traverseTape(
+  tape: ResponseTape,
+  current: number,
+  flattenPath: NormalizedFlattenNodePathSegment[],
+  index: number,
+  possibleTypes: PossibleTypes,
+  path: (string | number)[],
+  callback: (value: number, path: (string | number)[]) => void,
+): void {
+  if (current === -1 || tape.isNull(current)) {
+    return;
+  }
+  const segment = flattenPath[index];
+  if (!segment) {
+    callback(current, path);
+    return;
+  }
+  const kind = tape.kind(current);
+  if (kind === K_ARR && segment.kind !== 'List') {
+    tape.forEachItem(current, (item) =>
+      traverseTape(
+        tape,
+        item,
+        flattenPath,
+        index,
+        possibleTypes,
+        path,
+        callback,
+      ),
+    );
+    return;
+  }
+  switch (segment.kind) {
+    case 'Field': {
+      if (kind !== K_OBJ) {
+        return;
+      }
+      path.push(segment.name);
+      traverseTape(
+        tape,
+        tape.memberOf(current, segment.key),
+        flattenPath,
+        index + 1,
+        possibleTypes,
+        path,
+        callback,
+      );
+      path.pop();
+      return;
+    }
+    case 'List': {
+      if (kind !== K_ARR) {
+        return;
+      }
+      tape.forEachItem(current, (item, i) => {
+        path.push(i);
+        traverseTape(
+          tape,
+          item,
+          flattenPath,
+          index + 1,
+          possibleTypes,
+          path,
+          callback,
+        );
+        path.pop();
+      });
+      return;
+    }
+    case 'Cast': {
+      if (kind !== K_OBJ) {
+        return;
+      }
+      // an object without `__typename` satisfies any type condition
+      const typename = tape.typename(tape.memberOf(current, TYPENAME_KEY));
+      if (
+        typename === undefined ||
+        segment.typeCondition.some((typeCondition) =>
+          satisfiesTypeCondition(possibleTypes, typename, typeCondition),
+        )
+      ) {
+        traverseTape(
+          tape,
+          current,
+          flattenPath,
+          index + 1,
+          possibleTypes,
+          path,
+          callback,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * The fields of the entity that the requires select, read from the tape, for
+ * {@link projectRequires} to make the representation of.
+ */
+function readRequiredFields(
+  tape: ResponseTape,
+  entity: number,
+  requires: RequiresSelection[],
+  out: Record<string, unknown>,
+): Record<string, unknown> {
+  for (const selection of requires) {
+    if (selection.kind === 'InlineFragment') {
+      readRequiredFields(tape, entity, selection.selections, out);
+      continue;
+    }
+    if (selection.kind !== 'Field' || Object.hasOwn(out, selection.name)) {
+      continue;
+    }
+    const value = tape.memberOf(entity, quotedKey(selection.name));
+    if (value !== -1) {
+      out[selection.name] = tape.read(value);
+    }
+  }
+  return out;
+}
+
+const appliesTo = (
+  typeCondition: string | undefined,
+  typename: string,
+  possibleTypes: PossibleTypes,
+) =>
+  // like `applyRequires`, both directions count
+  typeCondition === undefined ||
+  satisfiesTypeCondition(possibleTypes, typename, typeCondition) ||
+  satisfiesTypeCondition(possibleTypes, typeCondition, typename);
+
+/**
+ * Like {@link getEntityKey}, a hash of the bytes of the typename and the fields, without making a
+ * string of them. The typename and the field values it read are left in `values`, for
+ * {@link sameKey} to confirm a match with. `undefined` when a field is an object.
+ */
+function hashEntityKey(
+  tape: ResponseTape,
+  entity: number,
+  index: number,
+  typenameNode: number,
+  typename: string,
+  flat: FlatRequires,
+  possibleTypes: PossibleTypes,
+  values: number[],
+): number | undefined {
+  values.length = 0;
+  values.push(typenameNode);
+  let hash = tape.hashBytes(typenameNode, 0x811c9dc5);
+  for (const { typeCondition, quotedNames } of flat) {
+    if (!appliesTo(typeCondition, typename, possibleTypes)) {
+      continue;
+    }
+    for (const name of quotedNames) {
+      const value = tape.get(entity, name, index);
+      values.push(value);
+      // a missing field and every byte are told apart by what's mixed in before them
+      hash = Math.imul(hash ^ (value === -1 ? 0x75 : 0x2c), 0x01000193);
+      if (value === -1) {
+        continue;
+      }
+      const kind = tape.kind(value);
+      if (kind === K_OBJ || kind === K_ARR) {
+        return undefined;
+      }
+      // the bytes as they are, a string keeps its quotes so it can't pass for a number
+      hash = tape.hashBytes(value, hash);
+    }
+  }
+  return hash;
+}
+
+/**
+ * Whether two entities' fields, from {@link hashEntityKey}, have the same bytes. Their typenames,
+ * first, are compared by their strings by the caller.
+ */
+function sameKey(tape: ResponseTape, a: number[], b: number[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 1; i < a.length; i++) {
+    const aValue = a[i]!;
+    const bValue = b[i]!;
+    if (aValue === -1 || bValue === -1) {
+      if (aValue !== bValue) {
+        return false;
+      }
+      continue;
+    }
+    if (!tape.sameBytes(aValue, bValue)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Like {@link collectEntities}, for a target without context groups, rewrites or reuse. */
+function collectEntitiesFromTape(
+  { paths, requires, flatRequires }: EntityTarget,
+  executionContext: QueryPlanExecutionContext,
+  subgraphKeys: Record<string, string[][]> | undefined,
+): CollectedEntities {
+  const tape = executionContext.tape!;
+  const { possibleTypes } = executionContext;
+  const group: ContextGroup = {
+    variables: {},
+    representations: [],
+    identityToIndex: new Map(),
+  };
+  // by the hash of their key, the key of every entity seen first and its representation's index,
+  // -1 when it isn't sent
+  const seenByHash = new Map<
+    number,
+    { typename: string; key: number[]; index: number }[]
+  >();
+  const key: number[] = [];
+  // tape indexes, not objects
+  const entities: number[] = [];
+  const indexes: number[] = [];
+  const pathPrefixes: (string | number)[][] = [];
+  const listIndexes: number[] = [];
+  const collect = (
+    entity: number,
+    pathPrefix: (string | number)[],
+    listIndex: number,
+  ) => {
+    if (tape.kind(entity) !== K_OBJ) {
+      return;
+    }
+    // a merged entity is indexed once for its typename and key fields
+    const lookup = tape.isMerged(entity) ? tape.openIndex(entity) : -1;
+    const typenameNode = tape.get(entity, TYPENAME_KEY, lookup);
+    const typename =
+      typenameNode === -1 || tape.isNull(typenameNode)
+        ? undefined
+        : tape.typename(typenameNode);
+    const hash =
+      flatRequires && typename !== undefined
+        ? hashEntityKey(
+            tape,
+            entity,
+            lookup,
+            typenameNode,
+            typename,
+            flatRequires,
+            possibleTypes,
+            key,
+          )
+        : undefined;
+    if (lookup !== -1) {
+      tape.closeIndex(lookup);
+    }
+    if (typename === undefined) {
+      return;
+    }
+    let index: number | undefined;
+    const seen = hash === undefined ? undefined : seenByHash.get(hash);
+    if (seen) {
+      for (const candidate of seen) {
+        if (
+          candidate.typename === typename &&
+          sameKey(tape, candidate.key, key)
+        ) {
+          index = candidate.index;
+          break;
+        }
+      }
+    }
+    if (index === undefined) {
+      const representation = projectRequires(
+        requires,
+        readRequiredFields(tape, entity, requires, {
+          __typename: typename,
+        }) as EntityRepresentation,
+        possibleTypes,
+        subgraphKeys && Object.hasOwn(subgraphKeys, typename)
+          ? subgraphKeys[typename]
+          : undefined,
+      );
+      if (!representation) {
+        index = -1;
+      } else {
+        const identity = getRepresentationIdentity(representation);
+        index = group.identityToIndex.get(identity);
+        if (index === undefined) {
+          index = group.representations.length;
+          group.identityToIndex.set(identity, index);
+          group.representations.push(representation);
+        }
+      }
+      if (hash !== undefined) {
+        const first = { typename, key: key.slice(), index };
+        if (seen) {
+          seen.push(first);
+        } else {
+          seenByHash.set(hash, [first]);
+        }
+      }
+    }
+    if (index === -1) {
+      return;
+    }
+    entities.push(entity);
+    indexes.push(index);
+    pathPrefixes.push(pathPrefix);
+    listIndexes.push(listIndex);
+  };
+  for (const path of paths) {
+    traverseTape(
+      tape,
+      executionContext.tapeRoot!,
+      path,
+      0,
+      possibleTypes,
+      [],
+      (value, valuePath) => {
+        const pathPrefix = valuePath.slice();
+        if (tape.kind(value) === K_ARR) {
+          tape.forEachItem(value, (item, index) =>
+            collect(item, pathPrefix, index),
+          );
+        } else {
+          collect(value, pathPrefix, -1);
+        }
+      },
+    );
+  }
+  return {
+    groups: [group],
+    offsets: [0, group.representations.length],
+    entities: entities as unknown as EntityRepresentation[],
+    indexes,
+    pathPrefixes,
+    listIndexes,
+  };
+}
+
+/** Like {@link mergeEntities}: links every returned entity into the entities it was for. */
+function mergeEntitiesFromTape(
+  tape: ResponseTape,
+  returned: number,
+  collected: CollectedEntities,
+  range: RepresentationRange,
+) {
+  if (returned === -1 || tape.kind(returned) !== K_ARR) {
+    return;
+  }
+  const items: number[] = [];
+  tape.forEachItem(returned, (item) => items.push(item));
+  const entities = collected.entities as unknown as number[];
+  const { indexes } = collected;
+  for (let position = 0; position < entities.length; position++) {
+    const index = indexes[position]!;
+    if (index < range.start || index >= range.end) {
+      continue;
+    }
+    const entity = items[index - range.start];
+    if (entity === undefined || tape.isNull(entity)) {
+      continue;
+    }
+    tape.link(entities[position]!, entity);
+  }
+}
+
+/** Like {@link toExecutionResult}, writing the response straight from the tape. */
+function writeResponseFromTape(
+  executionContext: QueryPlanExecutionContext,
+  projection: QueryPlan['projection'],
+): ExecutionResult {
+  const fields = getProjectedFields(projection);
+  const writer = writerPool.pop() ?? new ResponseWriter();
+  executionContext.missedNonNullField = false;
+  writeObjectFromTape(
+    writer,
+    executionContext,
+    executionContext.tapeRoot!,
+    fields,
+    projection.rootType,
+    null,
+  );
+  if (executionContext.missedNonNullField) {
+    writer.reset();
+    writeObjectFromTape(
+      writer,
+      executionContext,
+      executionContext.tapeRoot!,
+      fields,
+      projection.rootType,
+      [],
+    );
+  }
+  const data = writer.take();
+  // nothing reads them after the response is written, the next request can have them
+  releaseToPool(writerPool, writer);
+  releaseToPool(tapePool, executionContext.tape!);
+  executionContext.tape = undefined;
+  return createWrittenResult(
+    data,
+    executionContext.errors.length > 0
+      ? executionContext.errors.map((error) =>
+          trimErrorPath(error, projection.fields),
+        )
+      : undefined,
+  );
+}
+
+/** Tapes and writers ready for the next request, so their memory doesn't have to grow again. */
+const tapePool: ResponseTape[] = [];
+const writerPool: ResponseWriter[] = [];
+function releaseToPool<T extends { reset(): void }>(pool: T[], item: T) {
+  // as many as there are requests in flight at once, a few more aren't worth keeping
+  if (pool.length < 64) {
+    item.reset();
+    pool.push(item);
+  }
+}
+
+/** Like {@link projectObject}, `false` when it wrote `null`. */
+function writeObjectFromTape(
+  writer: ResponseWriter,
+  executionContext: QueryPlanExecutionContext,
+  view: number,
+  fields: ProjectedField[],
+  typeName: string,
+  path: (string | number)[] | null,
+): boolean {
+  const tape = executionContext.tape!;
+  const start = writer.length;
+  // a merged object is indexed once, the fields of a single one are read in the order the
+  // subgraph wrote them
+  const merged = tape.isMerged(view);
+  const index = merged ? tape.openIndex(view) : -1;
+  const cursors = merged ? -1 : tape.openCursors(view);
+  writer.byte(123);
+  let first = true;
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i]!;
+    if (field.parentTypes && !field.parentTypes.includes(typeName)) {
+      continue;
+    }
+    // the tape only takes conditions that don't read the value
+    const failure =
+      field.condition &&
+      evaluateCondition(
+        field.condition,
+        field,
+        typeName,
+        undefined,
+        executionContext,
+      );
+    if (failure === 'skip') {
+      continue;
+    }
+    writer.bytes(field.responseKeyPrefix, first ? 1 : 0);
+    first = false;
+    let written: boolean;
+    if (failure) {
+      writer.null();
+      written = false;
+    } else if (field.typename) {
+      writer.string(typeName);
+      written = true;
+    } else {
+      const value = merged
+        ? tape.indexGet(index, field.quotedResponseKey)
+        : tape.memberAt(view, field.quotedResponseKey, cursors);
+      if (value === -1) {
+        writer.null();
+        written = false;
+        if (field.nonNull && !path) {
+          executionContext.missedNonNullField = true;
+        } else if (field.nonNull && path) {
+          const fieldPath = [...path, field.responseKey];
+          // an upstream error (like a failed entity lookup) already explains the missing value
+          const explained = executionContext.errors.some(
+            (error) =>
+              error.path &&
+              error.path.length <= fieldPath.length &&
+              error.path.every((segment, i) => segment === fieldPath[i]),
+          );
+          if (!explained) {
+            executionContext.errors.push(
+              new GraphQLError(
+                `Cannot return null for non-nullable field ${typeName}.${field.name}.`,
+                { path: fieldPath },
+              ),
+            );
+          }
+        }
+      } else {
+        path?.push(field.responseKey);
+        written = writeValueFromTape(
+          writer,
+          executionContext,
+          value,
+          field,
+          typeName,
+          0,
+          path,
+        );
+        path?.pop();
+      }
+    }
+    // a `null` in a non-null field makes the parent `null`
+    if (!written && field.nonNull) {
+      closeLookups(tape, merged, index, cursors);
+      writer.length = start;
+      writer.null();
+      return false;
+    }
+  }
+  closeLookups(tape, merged, index, cursors);
+  writer.byte(125);
+  return true;
+}
+
+/** Like {@link projectValue}, `false` when it wrote `null`. */
+function writeValueFromTape(
+  writer: ResponseWriter,
+  executionContext: QueryPlanExecutionContext,
+  value: number,
+  field: ProjectedField,
+  parentTypeName: string,
+  depth: number,
+  path: (string | number)[] | null,
+): boolean {
+  const tape = executionContext.tape!;
+  if (tape.isNull(value)) {
+    writer.null();
+    return false;
+  }
+  const kind = tape.kind(value);
+  if (kind === K_ARR) {
+    const start = writer.length;
+    const itemNonNull = field.itemNonNull?.[depth];
+    writer.byte(91);
+    const length = tape.listLength(value);
+    for (let i = 0; i < length; i++) {
+      if (i) {
+        writer.byte(44);
+      }
+      path?.push(i);
+      const written = writeValueFromTape(
+        writer,
+        executionContext,
+        tape.itemOf(value, i),
+        field,
+        parentTypeName,
+        depth + 1,
+        path,
+      );
+      path?.pop();
+      // a `null` in a list of non-null items makes the list `null`
+      if (!written && itemNonNull) {
+        writer.length = start;
+        writer.null();
+        return false;
+      }
+    }
+    writer.byte(93);
+    return true;
+  }
+  if (kind === K_OBJ && field.projectedSelections) {
+    // the errors of the second pass name the type
+    const typename =
+      field.selectionsNeedTypename || path
+        ? (tape.typename(tape.memberOf(value, TYPENAME_KEY)) ??
+          getFieldTypeName(executionContext, parentTypeName, field.name))
+        : '';
+    return writeObjectFromTape(
+      writer,
+      executionContext,
+      value,
+      field.projectedSelections,
+      typename,
+      path,
+    );
+  }
+  // a scalar, or an object of a custom scalar, as it is
+  tape.copyTo(writer, value);
+  return true;
+}
+
+/**
+ * The result of the written response: `data` is parsed only when something reads it, and Yoga's
+ * `stringify` writes the response from the written bytes when nothing did.
+ */
+function createWrittenResult(
+  data: Uint8Array,
+  errors: GraphQLError[] | undefined,
+): ExecutionResult {
+  let parsed: unknown;
+  let read = false;
+  const result = {} as ExecutionResult;
+  Object.defineProperty(result, 'data', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (!read) {
+        parsed = JSON.parse(textDecoder.decode(data));
+        read = true;
+      }
+      return parsed;
+    },
+    set(value) {
+      parsed = value;
+      read = true;
+    },
+  });
+  if (errors) {
+    result.errors = errors;
+  }
+  Object.defineProperty(result, 'stringify', {
+    enumerable: false,
+    value(toStringify: ExecutionResult) {
+      if (toStringify !== result || read) {
+        return JSON.stringify(toStringify);
+      }
+      let json = `{"data":${textDecoder.decode(data)}`;
+      if (result.errors) {
+        json += `,"errors":${JSON.stringify(result.errors)}`;
+      }
+      if (result.extensions) {
+        json += `,"extensions":${JSON.stringify(result.extensions)}`;
+      }
+      return json + '}';
+    },
+  });
+  return result;
+}
+
+function closeLookups(
+  tape: ResponseTape,
+  merged: boolean,
+  index: number,
+  cursors: number,
+) {
+  if (merged) {
+    tape.closeIndex(index);
+  } else {
+    tape.closeCursors(cursors);
+  }
 }

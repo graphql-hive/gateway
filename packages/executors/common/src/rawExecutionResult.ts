@@ -27,6 +27,8 @@ interface RawResponse {
   /** Applied to the errors when they're parsed. */
   errorTransforms: ((error: GraphQLError) => void)[];
   parse: (bytes: Uint8Array) => ExecutionResult;
+  /** Whether other results have the same bytes, see {@link isSharedRawResponse}. */
+  shared: boolean;
 }
 
 const rawResponses = new WeakMap<ExecutionResult, RawResponse>();
@@ -48,6 +50,7 @@ export function createRawExecutionResult(
     parsed: undefined,
     errorTransforms: [],
     parse,
+    shared: false,
   };
   const materialize = () => {
     if (!raw.parsed) {
@@ -108,8 +111,18 @@ export function cloneRawExecutionResult(
     return undefined;
   }
   const clone = createRawExecutionResult(raw.bytes, raw.parse);
-  rawResponses.get(clone)!.errorTransforms.push(...raw.errorTransforms);
+  const cloned = rawResponses.get(clone)!;
+  cloned.errorTransforms.push(...raw.errorTransforms);
+  raw.shared = cloned.shared = true;
   return clone;
+}
+
+/**
+ * Whether other results from {@link cloneRawExecutionResult} have the same bytes as this one, so
+ * what a consumer works out from the bytes once is worth keeping for the others.
+ */
+export function isSharedRawResponse(result: ExecutionResult): boolean {
+  return rawResponses.get(result)?.shared ?? false;
 }
 
 /**

@@ -67,61 +67,68 @@ const queryPlan: QueryPlan = {
   },
 };
 
-it('sends every distinct entity once and gives every duplicate its result', async () => {
-  const representations: unknown[] = [];
-  const result = (await executeQueryPlan({
-    queryPlan,
-    supergraphSchema,
-    // only `id` is the key, `org` is sent as `null` when missing
-    entityKeys: { b: { User: [['id']] } },
-    possibleTypes: {},
-    executionRequest: { document: parse('{ users { id name } }') },
-    onSubgraphExecute(subgraph, request) {
-      if (subgraph === 'a') {
+it.each([
+  ['objects', false],
+  ['the response tape', true],
+])(
+  'sends every distinct entity once and gives every duplicate its result, on %s',
+  async (_, responseTape) => {
+    const representations: unknown[] = [];
+    const result = (await executeQueryPlan({
+      responseTape,
+      queryPlan,
+      supergraphSchema,
+      // only `id` is the key, `org` is sent as `null` when missing
+      entityKeys: { b: { User: [['id']] } },
+      possibleTypes: {},
+      executionRequest: { document: parse('{ users { id name } }') },
+      onSubgraphExecute(subgraph, request) {
+        if (subgraph === 'a') {
+          return {
+            data: {
+              users: [
+                // the same values split differently, they must not pass for each other
+                { __typename: 'User', id: 'xsy', org: 'z' },
+                { __typename: 'User', id: 'x', org: 'ysz' },
+                { __typename: 'User', id: 'xsy', org: 'z' },
+                // without a key it isn't sent, also when seen again
+                { __typename: 'User', org: 'y' },
+                { __typename: 'User', org: 'y' },
+                // a missing `org` and a `null` one are sent alike
+                { __typename: 'User', id: '2' },
+                { __typename: 'User', id: '2', org: null },
+              ],
+            },
+          };
+        }
+        const sent = request.variables!['representations'] as {
+          id: string;
+          org: string | null;
+        }[];
+        representations.push(...sent);
         return {
           data: {
-            users: [
-              // the same values split differently, they must not pass for each other
-              { __typename: 'User', id: 'xsy', org: 'z' },
-              { __typename: 'User', id: 'x', org: 'ysz' },
-              { __typename: 'User', id: 'xsy', org: 'z' },
-              // without a key it isn't sent, also when seen again
-              { __typename: 'User', org: 'y' },
-              { __typename: 'User', org: 'y' },
-              // a missing `org` and a `null` one are sent alike
-              { __typename: 'User', id: '2' },
-              { __typename: 'User', id: '2', org: null },
-            ],
+            _entities: sent.map(({ id, org }) => ({ name: `${id}/${org}` })),
           },
         };
-      }
-      const sent = request.variables!['representations'] as {
-        id: string;
-        org: string | null;
-      }[];
-      representations.push(...sent);
-      return {
-        data: {
-          _entities: sent.map(({ id, org }) => ({ name: `${id}/${org}` })),
-        },
-      };
-    },
-  })) as ExecutionResult;
+      },
+    })) as ExecutionResult;
 
-  expect(representations).toEqual([
-    { __typename: 'User', id: 'xsy', org: 'z' },
-    { __typename: 'User', id: 'x', org: 'ysz' },
-    { __typename: 'User', id: '2', org: null },
-  ]);
-  expect(result.data).toEqual({
-    users: [
-      { id: 'xsy', name: 'xsy/z' },
-      { id: 'x', name: 'x/ysz' },
-      { id: 'xsy', name: 'xsy/z' },
-      null,
-      null,
-      { id: '2', name: '2/null' },
-      { id: '2', name: '2/null' },
-    ],
-  });
-});
+    expect(representations).toEqual([
+      { __typename: 'User', id: 'xsy', org: 'z' },
+      { __typename: 'User', id: 'x', org: 'ysz' },
+      { __typename: 'User', id: '2', org: null },
+    ]);
+    expect(result.data).toEqual({
+      users: [
+        { id: 'xsy', name: 'xsy/z' },
+        { id: 'x', name: 'x/ysz' },
+        { id: 'xsy', name: 'xsy/z' },
+        null,
+        null,
+        { id: '2', name: '2/null' },
+        { id: '2', name: '2/null' },
+      ],
+    });
+  },
+);

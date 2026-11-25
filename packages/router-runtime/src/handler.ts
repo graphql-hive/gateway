@@ -164,6 +164,10 @@ export async function unifiedGraphHandler(
   // read once because the labels never change for a planner, and the native getter
   // throws when called while a `planAsync` of a concurrent request is in flight
   const overrideLabels = queryPlanner.overrideLabels;
+
+  // experimental, see `executeQueryPlan`
+  const responseTape =
+    globalThis.process?.env?.['HIVE_ROUTER_RUNTIME_RESPONSE_TAPE'] === '1';
   const hasProgressiveOverride =
     overrideLabels.length > 0 || queryPlanner.overridePercentages.length > 0;
 
@@ -337,6 +341,7 @@ export async function unifiedGraphHandler(
             executionRequest,
             onSubgraphExecute,
             queryPlan,
+            responseTape,
           });
         },
       );

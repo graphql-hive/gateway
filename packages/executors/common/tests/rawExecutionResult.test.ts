@@ -5,6 +5,7 @@ import {
   cloneRawExecutionResult,
   createRawExecutionResult,
   getRawResponseBytes,
+  isSharedRawResponse,
   requestRawResponse,
   wantsRawResponse,
 } from '../src/rawExecutionResult.js';
@@ -95,6 +96,10 @@ describe('raw execution results', () => {
     expect(clone.data).not.toBe(result.data);
     expect(clone.data).toEqual(result.data);
     expect(clone.errors![0]).toMatchObject({ seen: true });
+    // both know their bytes are shared, a lone result doesn't
+    expect(isSharedRawResponse(result)).toBe(true);
+    expect(isSharedRawResponse(clone)).toBe(true);
+    expect(isSharedRawResponse(create('{"data":{}}').result)).toBe(false);
     // and once the data was read, there's nothing to share anymore
     expect(cloneRawExecutionResult(result)).toBeUndefined();
   });
