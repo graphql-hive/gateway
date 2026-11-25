@@ -83,14 +83,14 @@ describe('ResponseTape', () => {
     // merged, the index finds them the same way
     const merged = add(tape, { extra: true });
     tape.link(top, merged);
-    const index = tape.openIndex(top);
-    for (const [key, expected] of Object.entries(value)) {
-      expect(tape.read(tape.indexGet(index, quotedKey(key))), key).toBe(
-        expected,
-      );
-    }
-    expect(tape.read(tape.indexGet(index, quotedKey('extra')))).toBe(true);
-    expect(tape.indexGet(index, quotedKey('abcf'))).toBe(-1);
+    const keys = [...Object.keys(value), 'extra', 'abcf'].map(quotedKey);
+    const index = tape.resolve(top, keys);
+    expect(keys.map((_, i) => tape.read(tape.resolved(index + i)))).toEqual([
+      ...Object.values(value),
+      true,
+      undefined,
+    ]);
+    expect(tape.resolved(index + keys.length - 1)).toBe(-1);
     tape.closeIndex(index);
   });
 
@@ -102,11 +102,14 @@ describe('ResponseTape', () => {
     expect(tape.read(tape.member(top, quotedKey(long + 'b')))).toBe(2);
     expect(tape.member(top, quotedKey(long + 'c'))).toBe(-1);
     tape.link(top, add(tape, { [long + 'a']: 4, [long + 'c']: 5 }));
-    const index = tape.openIndex(top);
-    expect(tape.read(tape.indexGet(index, quotedKey(long + 'a')))).toBe(4);
-    expect(tape.read(tape.indexGet(index, quotedKey(long + 'b')))).toBe(2);
-    expect(tape.read(tape.indexGet(index, quotedKey(long + 'c')))).toBe(5);
-    expect(tape.indexGet(index, quotedKey(long + 'd'))).toBe(-1);
+    const index = tape.resolve(
+      top,
+      ['a', 'b', 'c', 'd'].map((end) => quotedKey(long + end)),
+    );
+    expect(tape.read(tape.resolved(index))).toBe(4);
+    expect(tape.read(tape.resolved(index + 1))).toBe(2);
+    expect(tape.read(tape.resolved(index + 2))).toBe(5);
+    expect(tape.resolved(index + 3)).toBe(-1);
     tape.closeIndex(index);
     expect(tape.read(top)).toEqual({
       ...value,

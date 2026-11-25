@@ -2901,6 +2901,11 @@ function prepareProjectedFields(fields: ProjectionField[]): ProjectedField[] {
   });
 }
 
+/** The keys of the fields, to resolve them in a merged object at once. */
+const fieldKeys = memoize1(function fieldKeys(fields: ProjectedField[]) {
+  return fields.map((field) => field.quotedResponseKey);
+});
+
 const getProjectedFields = memoize1(function getProjectedFields(
   projection: QueryPlan['projection'],
 ): ProjectedField[] {
@@ -3826,10 +3831,10 @@ function writeObjectFromTape(
 ): boolean {
   const tape = executionContext.tape!;
   const start = writer.length;
-  // a merged object is indexed once, the fields of a single one are read in the order the
-  // subgraph wrote them
+  // the fields of a merged object are resolved at once, the fields of a single one are read in
+  // the order the subgraph wrote them
   const merged = tape.isMerged(view);
-  const index = merged ? tape.openIndex(view) : -1;
+  const index = merged ? tape.resolve(view, fieldKeys(fields)) : -1;
   const cursors = merged ? -1 : tape.openCursors(view);
   writer.byte(123);
   let first = true;
@@ -3862,7 +3867,7 @@ function writeObjectFromTape(
       written = true;
     } else {
       const value = merged
-        ? tape.indexGet(index, field.quotedResponseKey)
+        ? tape.resolved(index + i)
         : tape.memberAt(view, field.quotedResponseKey, cursors);
       if (value === -1) {
         writer.null();

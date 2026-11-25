@@ -58,6 +58,14 @@ const MAX_ID_KEY_LENGTH = 64;
 /** Open addressing, by {@link hashKey}, of key ids, half full when every id is given. */
 const keyIdTable = new Int32Array(MAX_KEY_IDS * 2).fill(-1);
 const keyIdBytes: Uint8Array[] = [];
+/**
+ * By key id, the value found for it by {@link ResponseTape.resolve}, current only when its stamp is
+ * the last one given: nothing is cleared between objects. Shared by every tape, a resolve is done
+ * in one go.
+ */
+const idStamps = new Int32Array(MAX_KEY_IDS);
+const idValues = new Int32Array(MAX_KEY_IDS);
+let idStamp = 0;
 /** Type names by the id of their bytes, see {@link ResponseTape.typename}. */
 const typenamesById: (string | undefined)[] = [];
 
@@ -594,51 +602,26 @@ export class ResponseTape {
     return this.tape[node + 5] !== -1;
   }
 
-  // An index of the keys of merged objects: an open addressing table of key node and value node
-  // pairs, after the mask, on a stack like `cursors`. Looking up every field of a merged object
-  // otherwise scans every object of the chain for it, and a field is usually in only one of them.
+  // The values of the keys a merged object is read for, on a stack like `cursors`. Reading every
+  // field of a merged object otherwise scans every object of the chain for it, and a field is
+  // usually in only one of them.
   private index = new Int32Array(1 << 12);
   private indexTop = 0;
 
   /**
-   * Indexes the keys of the objects merged at `view`, their values folded like `deepMerge` (see
-   * {@link fold}), for {@link indexGet}. Returns what {@link closeIndex} takes when done.
+   * The values of `keys` in the objects merged at `view`, folded like `deepMerge` (see
+   * {@link fold}), -1 for a key none of them has: the one of `keys[i]` is at `index[base + i]`.
+   * Returns `base`, what {@link closeIndex} takes when done. The values are found before any is
+   * read, so reading them can resolve other objects.
    */
-  openIndex(view: number): number {
+  resolve(view: number, keys: TapeKey[]): number {
     const tape = this.tape;
-    let members = 0;
-    for (let p = view; p !== -1; p = tape[p + 5]!) {
-      if (tape[p] !== K_OBJ) {
-        continue;
-      }
-      for (
-        let k = p + SLOTS, end = tape[p + 3]!;
-        k < end;
-        k = tape[k + SLOTS + 3]!
-      ) {
-        members++;
-      }
+    // the value of every key of the objects by its id, see `idStamps`
+    if (++idStamp === 0x7fffffff) {
+      idStamps.fill(0);
+      idStamp = 1;
     }
-    let capacity = 8;
-    while (capacity < members * 2) {
-      capacity *= 2;
-    }
-    const base = this.indexTop;
-    const top = base + 1 + capacity * 2;
-    if (top > this.index.length) {
-      let size = this.index.length * 2;
-      while (size < top) {
-        size *= 2;
-      }
-      const grown = new Int32Array(size);
-      grown.set(this.index.subarray(0, base));
-      this.index = grown;
-    }
-    const index = this.index;
-    const mask = capacity - 1;
-    index[base] = mask;
-    index.fill(-1, base + 1, top);
-    this.indexTop = top;
+    const stamp = idStamp;
     for (let p = view; p !== -1; p = tape[p + 5]!) {
       if (tape[p] !== K_OBJ) {
         continue;
@@ -649,62 +632,47 @@ export class ResponseTape {
         k = tape[k + SLOTS + 3]!
       ) {
         const id = tape[k + 5]!;
-        let slot = id & mask;
-        for (;;) {
-          const at = base + 1 + slot * 2;
-          const keyNode = index[at]!;
-          if (keyNode === -1) {
-            index[at] = k;
-            index[at + 1] = k + SLOTS;
-            break;
-          }
-          if (
-            tape[keyNode + 5] === id &&
-            (id >= 0 || this.sameBytes(keyNode, k))
-          ) {
-            index[at + 1] = this.foldPair(index[at + 1]!, k + SLOTS);
-            break;
-          }
-          slot = (slot + 1) & mask;
+        // a key without an id is never one of `keys` with an id, see `keyId`
+        if (id < 0) {
+          continue;
+        }
+        if (idStamps[id] === stamp) {
+          idValues[id] = this.foldPair(idValues[id]!, k + SLOTS);
+        } else {
+          idStamps[id] = stamp;
+          idValues[id] = k + SLOTS;
         }
       }
     }
+    const base = this.indexTop;
+    const top = base + keys.length;
+    if (top > this.index.length) {
+      let size = this.index.length * 2;
+      while (size < top) {
+        size *= 2;
+      }
+      const grown = new Int32Array(size);
+      grown.set(this.index.subarray(0, base));
+      this.index = grown;
+    }
+    const index = this.index;
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]!;
+      const id = key.id;
+      index[base + i] =
+        id < 0
+          ? this.memberOf(view, key)
+          : idStamps[id] === stamp
+            ? idValues[id]!
+            : -1;
+    }
+    this.indexTop = top;
     return base;
   }
 
-  /** The value of the key in the index at `base`, -1 when none of the objects has it. */
-  indexGet(base: number, key: TapeKey): number {
-    const index = this.index;
-    const tape = this.tape;
-    const mask = index[base]!;
-    const id = key.id;
-    const bytes = key.bytes;
-    const len = bytes.length;
-    let slot = id & mask;
-    for (;;) {
-      const at = base + 1 + slot * 2;
-      const keyNode = index[at]!;
-      if (keyNode === -1) {
-        return -1;
-      }
-      if (tape[keyNode + 5] === id) {
-        if (id >= 0) {
-          return index[at + 1]!;
-        }
-        const start = tape[keyNode + 1]!;
-        if (tape[keyNode + 2]! - start === len) {
-          const body = this.bodies[tape[keyNode + 4]!]!;
-          let j = 0;
-          while (j < len && body[start + j] === bytes[j]) {
-            j++;
-          }
-          if (j === len) {
-            return index[at + 1]!;
-          }
-        }
-      }
-      slot = (slot + 1) & mask;
-    }
+  /** The value {@link resolve} found at `at`. */
+  resolved(at: number): number {
+    return this.index[at]!;
   }
 
   closeIndex(base: number) {
