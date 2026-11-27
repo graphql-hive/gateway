@@ -115,9 +115,9 @@
     "@graphql-mesh/plugin-prometheus": "workspace:^",
     "@graphql-mesh/plugin-snapshot": "^0.107.3",
     "@graphql-mesh/string-interpolation": "^0.5.18",
-    "@graphql-mesh/transport-http": "workspace:^",
-    "@graphql-mesh/transport-http-callback": "workspace:^",
-    "@graphql-mesh/transport-ws": "workspace:^",
+    "@graphql-mesh/transport-http": "^2.0.0",
+    "@graphql-mesh/transport-http-callback": "^2.0.0",
+    "@graphql-mesh/transport-ws": "^3.0.0",
     "@graphql-mesh/types": "^0.107.3",
     "@graphql-mesh/utils": "^0.107.3",
     "@graphql-tools/code-file-loader": "^9.1.2",
@@ -144,7 +144,7 @@
     "ws": "^8.23.0"
   },
   "devDependencies": {
-    "@graphql-mesh/transport-common": "workspace:^",
+    "@graphql-mesh/transport-common": "^2.0.0",
     "@graphql-mesh/transport-soap": "^0.13.3",
     "@graphql-tools/executor": "^4.1.8",
     "@rollup/plugin-commonjs": "^29.0.3",

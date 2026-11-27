@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-sts": "^3.1173.0",
-    "@graphql-mesh/fusion-runtime": "workspace:^",
+    "@graphql-mesh/fusion-runtime": "^2.0.0",
     "@whatwg-node/promise-helpers": "^2.0.2",
     "aws4": "1.13.2",
     "tslib": "^2.9.1"

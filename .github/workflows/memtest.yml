@@ -72,7 +72,8 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      # Same as Test e2e: Yoga resolves @graphql-hive/logger to workspace dist/.
+      # Memtest needs heapsnapshot (worker script; not on tsconfig paths) built.
+      # node/bun gateway still runs from src via workspace-paths-hook / bun paths.
       - name: Build
         run: yarn build
       - name: Test

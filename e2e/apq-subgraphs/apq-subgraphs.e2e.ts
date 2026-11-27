@@ -1,9 +1,18 @@
 import { createTenv } from '@internal/e2e';
 import { stripIgnoredCharacters } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import { hashSHA256 } from '../../packages/executors/http/src/utils';
 
 const { service, gateway } = createTenv(__dirname);
+
+async function hashSHA256(str: string) {
+  const utf8 = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+  let hashHex = '';
+  for (const bytes of new Uint8Array(hashBuffer)) {
+    hashHex += bytes.toString(16).padStart(2, '0');
+  }
+  return hashHex;
+}
 
 describe('APQ to the upstream', () => {
   it('works', async () => {
