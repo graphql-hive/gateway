@@ -217,10 +217,10 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      # Workspace packages (incl. @graphql-hive/logger) ship dist/ via package
-      # exports; Yoga imports the logger from node_modules, so node/bun e2e
-      # children need a build too.
-      - name: Build
+      # node/bun e2e stay buildless: gateway runs from src (tsx + workspace-paths-hook,
+      # or bun tsconfig paths). docker/bin need a built workspace + bundle image/binary.
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
+        name: Build
         run: yarn build
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle

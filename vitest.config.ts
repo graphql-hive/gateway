@@ -4,21 +4,18 @@ import { timeout as testTimeout } from './internal/e2e/src/timeout.mts';
 import { isCI, usingHiveRouterRuntime } from './internal/env/src/index.ts';
 import { isNotPlatform } from './internal/env/src/node.ts';
 
-// By default, Vite bypasses node_packages to native Node; meaning, imports to
-// packages that match the tsconfig paths wont work because Node will require the
-// packages as per the Node resolution spec.
-//
-// Vite will process inlined modules.
+// Unit (and vitest-hosted e2e parents) must run without `yarn build`.
+// By default Vite externalizes node_modules to native Node, so package exports
+// pointing at unbuilt workspace dist/ break. Inline those importers/packages
+// so the tsconfig-paths plugin below remaps them to src/.
 const inline = [
   /@graphql-mesh\/.*/,
-  // npm @graphql-tools/* import workspace @graphql-hive/signal via package
-  // exports (dist/). Inline both so Vite can remap signal to tsconfig source.
+  // npm @graphql-tools/* (moved out of this workspace) import @graphql-hive/signal
   /@graphql-tools\/.*/,
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
   /@graphql-hive\/yoga/,
-  // Yoga depends on @graphql-hive/logger; inline so Vite applies tsconfig
-  // paths to the workspace package instead of requiring a prebuilt dist/.
+  // Yoga / tools depend on workspace logger + signal via package exports (dist/)
   /@graphql-hive\/logger/,
   /@graphql-hive\/signal/,
   /graphql-yoga/,
