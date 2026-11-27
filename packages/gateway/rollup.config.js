@@ -60,15 +60,15 @@ const deps = {
     '../../node_modules/@envelop/core/esm/index.js',
   // default transports should be in the container because they're dynamically imported
   'node_modules/@graphql-mesh/transport-common/index':
-    '../transports/common/src/index.ts',
+    '../../node_modules/@graphql-mesh/transport-common/dist/index.js',
   'node_modules/@graphql-mesh/transport-http/index':
-    '../transports/http/src/index.ts',
+    '../../node_modules/@graphql-mesh/transport-http/dist/index.js',
   'node_modules/@graphql-mesh/transport-rest/index':
     '../../node_modules/@graphql-mesh/transport-rest/esm/index.js',
   'node_modules/@graphql-mesh/transport-ws/index':
-    '../transports/ws/src/index.ts',
+    '../../node_modules/@graphql-mesh/transport-ws/dist/index.js',
   'node_modules/@graphql-mesh/transport-http-callback/index':
-    '../transports/http-callback/src/index.ts',
+    '../../node_modules/@graphql-mesh/transport-http-callback/dist/index.js',
   // security plugins are built-in but are dynamically imported
   'node_modules/@escape.tech/graphql-armor-max-tokens/index':
     '../../node_modules/@escape.tech/graphql-armor-max-tokens/dist/graphql-armor-max-tokens.esm.js',

@@ -11,12 +11,16 @@ import { isNotPlatform } from './internal/env/src/node.ts';
 // Vite will process inlined modules.
 const inline = [
   /@graphql-mesh\/.*/,
+  // npm @graphql-tools/* import workspace @graphql-hive/signal via package
+  // exports (dist/). Inline both so Vite can remap signal to tsconfig source.
+  /@graphql-tools\/.*/,
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
   /@graphql-hive\/yoga/,
   // Yoga depends on @graphql-hive/logger; inline so Vite applies tsconfig
   // paths to the workspace package instead of requiring a prebuilt dist/.
   /@graphql-hive\/logger/,
+  /@graphql-hive\/signal/,
   /graphql-yoga/,
   /@whatwg-node\/server/,
   // the audit runs its subgraphs with yoga, inline it so that yoga is inlined too
